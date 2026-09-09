@@ -114,8 +114,8 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 #syncProjectActions .actions .btn { width:92px !important; min-width:92px !important; height:34px !important; min-height:34px !important; padding:0 6px !important; font-size:10px !important; letter-spacing:-.04em !important; line-height:1 !important; white-space:nowrap !important; overflow:hidden !important; }
 .shared-project-description { margin-top:6px !important; }
 .shared-online { font-size:11px !important; padding:4px 8px !important; white-space:nowrap !important; line-height:1.2 !important; }
-.settings .card, #tab-settings .card { width:100%; max-width:100%; }
-@media (min-width: 700px){ #tab-settings .card { width:100%; } }
+/* Keep settings cards sized exactly like cards on every other tab. */
+#settings .card { width:auto; max-width:none; box-sizing:border-box; }
 </style>
 </head>
 <body>
