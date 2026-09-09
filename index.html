@@ -69,6 +69,10 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 .theme-reset{font-size:11px;padding:7px 10px}
 
 .shared-online{color:var(--good-ink)!important;background:var(--good-soft)!important}.shared-syncing{color:var(--accent-ink)!important;background:var(--accent-soft)!important}.shared-error{color:var(--danger-ink)!important;background:var(--danger-soft)!important}.shared-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em;font-weight:800}
+
+/* Latest layout refinements */
+.schedule-selected-card{margin-top:14px}
+.backup-card{margin-top:14px}
 </style>
 <style>
 .compact{padding:8px 11px;font-size:12px;min-width:54px}#sharedCard{min-width:0;overflow:hidden}
@@ -91,7 +95,7 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 <div class="app">
 <header class="top">
   <div><div class="eyebrow">OUR WEDDING • 2026–2027</div><div class="title">우리 결혼 플래너 💍</div></div>
-  <button class="dday" id="dday" type="button" onclick="openModal('settings')" aria-label="본식 날짜 설정"><small>본식 D-DAY</small><strong>날짜 미정</strong></button>
+  <button class="dday" id="dday" type="button" onclick="openModal('settings')" aria-label="본식 날짜 설정"><small>본식 D-DAY</small><strong id="ddayValue">날짜 미정</strong></button>
 </header>
 <nav class="nav" id="nav"></nav>
 <main>
@@ -146,13 +150,13 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
    <div class="calendar-week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
    <div class="calendar-grid" id="calendarGrid"></div>
  </div>
- <div class="card"><div class="row between" style="margin-bottom:10px"><div><b id="selectedDateTitle">선택한 날짜의 일정</b><div class="small">날짜를 누르면 해당 날짜의 일정이 보여요.</div></div><button class="btn primary section-primary-btn" onclick="openModal('event')">일정 추가</button></div><div class="list" id="scheduleList"></div></div>
+ <div class="card schedule-selected-card"><div class="row between" style="margin-bottom:10px"><div><b id="selectedDateTitle">선택한 날짜의 일정</b><div class="small">날짜를 누르면 해당 날짜의 일정이 보여요.</div></div><button class="btn primary section-primary-btn" onclick="openModal('event')">일정 추가</button></div><div class="list" id="scheduleList"></div></div>
  <div class="section-title event-list-title">전체 일정 목록</div>
  <div class="card event-list-card"><div class="event-list-head"><div><b>전체 일정 목록</b><div class="small">등록된 일정을 날짜순으로 모아봤어요.</div></div><select id="scheduleFilter" class="schedule-filter" aria-label="일정 기간 필터"><option value="all">전체</option><option value="upcoming">다가오는</option><option value="past">지난</option></select></div><input id="scheduleAllSearch" class="toolbar-search" type="search" placeholder="일정 검색 (제목, 장소, 분류, 메모)" aria-label="전체 일정 검색"><div class="list" id="scheduleAllList"></div></div>
 </section>
 
 <section class="page" id="budget">
- <div class="section-title" style="margin-top:10px">예산</div>
+ <div class="section-title">예산</div>
  <div class="card budget-summary">
    <div class="stat"><div class="small">총 예상</div><b id="totalPlan">₩0</b></div>
    <div class="stat"><div class="small">실제 지출</div><b id="totalActual">₩0</b></div>
@@ -194,7 +198,7 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
    <div class="theme-item"><label for="thButtonText">버튼 글자</label><input type="color" id="thButtonText"></div>
    <div class="theme-item"><label for="thDanger">삭제/경고 색상</label><input type="color" id="thDanger"></div>
   </div><div class="theme-controls" style="margin-top:12px"><label for="thRadius">모서리 둥글기</label><input id="thRadius" class="theme-range" type="range" min="0" max="40" value="20" oninput="previewTheme()"><span class="pill" id="thRadiusVal">20px</span></div><div class="theme-actions"><button class="btn theme-action-btn" onclick="resetTheme()">기본 테마</button><button class="btn primary theme-action-btn" onclick="saveTheme()">테마 적용</button></div></div></div>
-  <div class="card col12"><h3>데이터 백업</h3><p class="small">입력한 내용은 이 브라우저에 저장됩니다. 중요한 내용은 정기적으로 백업 파일을 만들어두세요.</p><div class="actions"><button class="btn primary" onclick="exportData()">백업하기</button><button class="btn" onclick="document.getElementById('importFile').click()">복구하기</button></div><input type="file" id="importFile" accept="application/json" hidden onchange="importData(event)"></div>
+  <div class="card col12 backup-card"><h3>데이터 백업</h3><p class="small">입력한 내용은 이 브라우저에 저장됩니다. 중요한 내용은 정기적으로 백업 파일을 만들어두세요.</p><div class="actions"><button class="btn primary section-primary-btn" onclick="exportData()">백업하기</button><button class="btn section-primary-btn" onclick="document.getElementById('importFile').click()">복구하기</button></div><input type="file" id="importFile" accept="application/json" hidden onchange="importData(event)"></div>
  </div>
 </section>
 </main>
@@ -249,6 +253,19 @@ function moveCategory(cat,dir){const cats=getOrderedCats().slice(),i=cats.indexO
 function navInit(){const items=[['home','홈'],['tasks','할 일'],['schedule','일정'],['budget','예산'],['plans','부부계획'],['data','메모'],['settings','설정']];document.getElementById('nav').innerHTML=items.map((x,i)=>`<button class="${i===0?'active':''}" data-page="${x[0]}">${x[1]}</button>`).join('');document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));}
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));window.scrollTo({top:0,behavior:'smooth'});}
 function calc(){const total=state.tasks.length,done=state.tasks.filter(t=>t.status==='done').length,pct=total?Math.round(done/total*100):0;document.getElementById('overallPct').textContent=pct+'%';document.getElementById('overallBar').style.width=pct+'%';document.getElementById('overallText').textContent=`${done}개 완료 / ${total}개`;document.getElementById('todoCount')&&(document.getElementById('todoCount').textContent=total-done);document.getElementById('highCount')&&(document.getElementById('highCount').textContent=state.tasks.filter(t=>t.status!=='done'&&t.priority==='높음').length);const plan=state.budgets.reduce((a,b)=>a+Number(b.planned||0),0),act=state.budgets.reduce((a,b)=>a+Number(b.actual||0),0),over=Math.max(0,act-plan),bp=plan?Math.round(act/plan*100):0;document.getElementById('budgetPctLabel').textContent=bp+'%';document.getElementById('budgetPctBig').textContent=bp+'%';document.getElementById('totalPlan').textContent=won(plan);document.getElementById('totalActual').textContent=won(act);document.getElementById('overBudget').textContent=won(over);document.getElementById('budgetBar').style.width=Math.min(100,bp)+'%';document.getElementById('budgetBar').classList.toggle('over',bp>100);document.getElementById('homeTotalPlan').textContent=won(plan);document.getElementById('homeTotalActual').textContent=won(act);document.getElementById('homeOverBudget').textContent=won(over);document.getElementById('homeBudgetPct').textContent=bp+'%';}
+function renderDday(){
+ const el=document.getElementById('ddayValue');
+ if(!el)return;
+ const value=String(state.weddingDate||'').trim();
+ if(!value){el.textContent='날짜 미정';return;}
+ const target=new Date(value+'T00:00:00');
+ if(Number.isNaN(target.getTime())){el.textContent='날짜 미정';return;}
+ const today=new Date();today.setHours(0,0,0,0);
+ const diff=Math.round((target-today)/86400000);
+ if(diff===0)el.textContent='D-DAY';
+ else if(diff>0)el.textContent='D-'+diff;
+ else el.textContent='D+'+Math.abs(diff);
+}
 function renderHome(){
  const cats=getOrderedCats();
  const upcoming=state.tasks.filter(t=>t.status!=='done').sort((a,b)=>{const ap=a.due?'0':'1',bp=b.due?'0':'1';return ap.localeCompare(bp)||(a.due||'9999-12-31').localeCompare(b.due||'9999-12-31')||((a.priority||'보통')===(b.priority||'보통')?0:(a.priority==='높음'?-1:1))});
@@ -366,7 +383,7 @@ function renderPlans(){
 function movePlan(id,dir){const i=state.plans.findIndex(x=>String(x.id)===String(id)),j=i+dir;if(i<0||j<0||j>=state.plans.length)return;[state.plans[i],state.plans[j]]=[state.plans[j],state.plans[i]];save()}
 function deletePlan(id){if(!confirm('삭제하시겠습니까?'))return;state.plans=state.plans.filter(x=>x.id!==id);save()}
 
-function renderAll(){calc();renderHome();renderTasks();renderSchedule();renderBudget();renderPlans();renderMemos();document.getElementById('quickMemo').value='';}
+function renderAll(){calc();renderDday();renderHome();renderTasks();renderSchedule();renderBudget();renderPlans();renderMemos();document.getElementById('quickMemo').value='';}
 function toggleTask(id){const t=state.tasks.find(x=>x.id===id);if(t){t.status=t.status==='done'?'todo':'done';save()}}
 function updatePlan(id,v){const p=state.plans.find(x=>x.id===id);if(p){p.status=v;save()}}
 function savePlan(id){const name=document.getElementById('pName').value.trim();if(!name)return;const data={name,details:document.getElementById('pDetails').value.trim(),note:document.getElementById('pNote').value.trim(),status:document.getElementById('pStatus').value};if(id==null || String(id)==='null')state.plans.push({id:Date.now()+Math.floor(Math.random()*1000),...data});else{const target=state.plans.find(p=>String(p.id)===String(id));if(!target){alert('수정할 부부계획을 찾지 못했어요.');return}Object.assign(target,data)}save();closeModal()}
