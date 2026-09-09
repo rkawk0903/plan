@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'wedding-planner-v4';
+const CACHE_VERSION = 'wedding-planner-v5';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const APP_SHELL = [
   './',
@@ -37,8 +37,6 @@ self.addEventListener('fetch', event => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // Always prefer the newest app shell. If the network is unavailable,
-  // fall back to the cached copy so the installed PWA can still open.
   const isAppShell = url.pathname.endsWith('/index.html') ||
                      url.pathname.endsWith('/manifest.webmanifest') ||
                      url.pathname.endsWith('/sw.js');
