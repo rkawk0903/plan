@@ -87,6 +87,14 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 #syncProjectActions .actions .btn{width:92px;min-width:92px;height:34px;min-height:34px;padding:0 10px;font-size:11px;line-height:1;white-space:nowrap}
 #syncProjectActions .actions{gap:7px}
 
+
+/* v17: sync project + backup primary buttons follow the theme button background */
+#syncProjectActions .actions .btn.primary,
+.backup-card .actions .btn.primary {
+  background:var(--button-bg)!important;
+  color:var(--button-text)!important;
+  border-color:var(--line)!important;
+}
 </style>
 <style>
 .compact{padding:8px 11px;font-size:12px;min-width:54px}#sharedCard{min-width:0;overflow:hidden}
