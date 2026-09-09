@@ -440,7 +440,13 @@ save=function(){saveLocalOnly();renderAll();queueSharedSave()};
 window.addEventListener('beforeunload',()=>{if(sharedSync.pushTimer)clearTimeout(sharedSync.pushTimer)});
 window.addEventListener('online',()=>{if(sharedSync.projectId)sharedPushNow(true)});
 window.addEventListener('offline',()=>{if(sharedSync.projectId)sharedSetStatus('오프라인','shared-syncing')});
-if('serviceWorker' in navigator && location.protocol !== 'file:'){navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('PWA service worker registration failed',e))}
+if('serviceWorker' in navigator && location.protocol !== 'file:'){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js?v=4',{updateViaCache:'none'})
+      .then(reg=>reg.update())
+      .catch(e=>console.warn('PWA service worker registration failed',e));
+  });
+}
 syncSharedInputs();
 const initialShared=sharedConfig();
 if(initialShared.email)document.getElementById('syncEmail').value=initialShared.email;
