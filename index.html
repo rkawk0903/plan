@@ -532,4 +532,18 @@ sharedConnect().catch(console.error)
 applyTheme();syncThemeInputs();navInit();renderAll();
 startScheduleDateWatcher();
 </script>
+
+<style>
+/* v24: 프로젝트 카드 텍스트만 미세 조정 */
+#currentProjectBox .row:first-child > div > div {
+  font-size:12px !important;
+  font-weight:600 !important;
+  color:var(--muted) !important;
+}
+#syncJoinCode::placeholder {
+  font-size:11px !important;
+  color:var(--muted) !important;
+  opacity:.85;
+}
+</style>
 </body></html>
