@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="우리 결혼 플래너" />
 <meta name="format-detection" content="telephone=no,email=no,address=no,date=no" />
-<script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;ri=AAAG%2FQAcY29tLnNlYy5hbmRyb2lkLmFwcC5zYnJvd3NlcgDmaHR0cHM6Ly9jaGF0Z3B0LmNvbS9iYWNrZW5kLWFwaS9lc3R1YXJ5L2NvbnRlbnQ%2FaWQ9ZmlsZV8wMDAwMDAwMDc5ODg4MWZiOGY2MzkwMDg0YTllNmU4MSZmbj13ZWRkaW5nX3BsYW5uZXJfdjdfYnVnZml4Lmh0bWwmY2Q9YXR0YWNobWVudCZ0cz00OTY5NzcmcD1mcyZjaWQ9MSZzaWc9N2EzYzZmOWZkN2Q2YzM5ZmRlYjBkMTY1OTI2NTViM2E2OGQ0YzY2YzM1NWMwZGUwMWM5ZTgxZjI5NmQ5YzIxYiZ2PTA"></script>
+<script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;ri=AAAH%2BwAcY29tLnNlYy5hbmRyb2lkLmFwcC5zYnJvd3NlcgDnaHR0cHM6Ly9jaGF0Z3B0LmNvbS9iYWNrZW5kLWFwaS9lc3R1YXJ5L2NvbnRlbnQ%2FaWQ9ZmlsZV8wMDAwMDAwMGQwNjA4MjExYmY5Y2U4MDI2NWZkNjI4OCZmbj13ZWRkaW5nX3BsYW5uZXJfdjdfYXVkaXRlZC5odG1sJmNkPWF0dGFjaG1lbnQmdHM9NDk2OTc4JnA9ZnMmY2lkPTEmc2lnPTIyY2UwMTMzZTY2MmZiMTExYTM1ZmUyODY3OWMzN2U3NDlhMTBjYmNjNmUxODUxMjA1N2FmOTIzNTg5MWM5Yzkmdj0w"></script>
 <link rel="manifest" href="manifest.webmanifest" />
 <title>우리 결혼 플래너</title>
 
@@ -923,17 +923,26 @@ const seedTasks=[
 ].map((x,i)=>({id:i+1,cat:x[0],title:x[1],due:x[2],owner:x[3],priority:x[4],status:'todo',memo:''}));
 const seedBudgets=[['입주·가구/가전',0,0],['스드메',0,0],['웨딩촬영',0,0],['예물·웨딩밴드·예복',0,0],['본식',0,0],['신혼여행',0,0],['기타 결혼비용',0,0]];
 const seedPlans=[['자녀 계획','논의 전'],['생활비 관리','논의 전'],['집안일 분담','논의 전'],['명절·양가 방문','논의 전'],['개인시간·취미','논의 전'],['갈등 해결 방식','논의 전'],['주택 구입 목표','논의 전'],['부부 장기목표','논의 전']];
-let state=JSON.parse(localStorage.getItem(KEY)||'null')||{tasks:seedTasks,budgets:seedBudgets.map((x,i)=>({id:i+1,name:x[0],planned:x[1],actual:x[2]})),events:[],plans:seedPlans.map((x,i)=>({id:i+1,name:x[0],status:x[1],note:''})),goals:[['2027','결혼·신혼생활 안정'],['2030','자녀·자산 기반 만들기'],['2037','내 집 마련 목표']],weddingDate:'',memo:'',memos:[],homeTaskLimit:5,homeEventLimit:5};
-state.memos=Array.isArray(state.memos)?state.memos:((state.memo||'').trim()?[{id:Date.now(),text:String(state.memo).trim()}]:[]);
-state.tasks=Array.isArray(state.tasks)?state.tasks:[];
-state.budgets=Array.isArray(state.budgets)?state.budgets:[];
-state.events=Array.isArray(state.events)?state.events:[];
-state.plans=Array.isArray(state.plans)?state.plans:[];
-const stateNow=Date.now();
-state.plans=(state.plans||[]).map((p,i)=>({...p,id:p.id||stateNow+i,details:p.details||'',note:p.note||'',status:p.status||'논의 전'}));
-state.events=(state.events||[]).map(e=>({...e,time:e.time||'',location:e.location||'',category:e.category||'',note:e.note||''}));
-state.tasks=(state.tasks||[]).map(t=>({...t,memo:t.memo||''}));
-state.homeTaskLimit=Number(state.homeTaskLimit)||5;state.homeEventLimit=Number(state.homeEventLimit)||5;state.theme=state.theme||{};
+function defaultState(){return {tasks:seedTasks.map(t=>({...t})),budgets:seedBudgets.map((x,i)=>({id:i+1,name:x[0],planned:x[1],actual:x[2],details:''})),events:[],plans:seedPlans.map((x,i)=>({id:i+1,name:x[0],status:x[1],details:'',note:''})),goals:[['2027','결혼·신혼생활 안정'],['2030','자녀·자산 기반 만들기'],['2037','내 집 마련 목표']],weddingDate:'',memo:'',memos:[],homeTaskLimit:5,homeEventLimit:5,categoryOrder:[]}}
+function loadStoredState(){try{const raw=localStorage.getItem(KEY);return raw?JSON.parse(raw):defaultState()}catch(e){console.warn('저장 데이터 복구 실패',e);return defaultState()}}
+function normalizeState(input){
+ const base=defaultState(), src=(input&&typeof input==='object'&&!Array.isArray(input))?input:{};
+ const cleanId=(v,fallback)=>v===undefined||v===null||String(v)===''?fallback:v;
+ const state={...base,...src};
+ const stateNow=Date.now();
+ state.tasks=Array.isArray(src.tasks)?src.tasks.map((t,i)=>({id:cleanId(t?.id,stateNow+i),cat:String(t?.cat??'기타'),title:String(t?.title??''),due:String(t?.due??''),owner:String(t?.owner??'함께'),priority:String(t?.priority??'보통'),status:t?.status==='done'?'done':'todo',memo:String(t?.memo??'')})):base.tasks;
+ state.budgets=Array.isArray(src.budgets)?src.budgets.map((b,i)=>({id:cleanId(b?.id,stateNow+1000+i),name:String(b?.name??''),planned:num(b?.planned),actual:num(b?.actual),details:String(b?.details??'')})):base.budgets;
+ state.events=Array.isArray(src.events)?src.events.map((e,i)=>({id:cleanId(e?.id,stateNow+2000+i),title:String(e?.title??''),date:String(e?.date??'').slice(0,10),time:String(e?.time??''),location:String(e?.location??''),category:String(e?.category??''),note:String(e?.note??'')})):base.events;
+ state.plans=Array.isArray(src.plans)?src.plans.map((p,i)=>({id:cleanId(p?.id,stateNow+3000+i),name:String(p?.name??''),status:['논의 전','논의 중','합의 완료'].includes(p?.status)?p.status:'논의 전',details:String(p?.details??''),note:String(p?.note??'')})):base.plans;
+ state.memos=Array.isArray(src.memos)?src.memos.map((m,i)=>({id:cleanId(m?.id,stateNow+4000+i),text:String(m?.text??'')})).filter(m=>m.text.trim()):((String(src.memo??'').trim())?[{id:stateNow+5000,text:String(src.memo).trim()}]:[]);
+ state.goals=Array.isArray(src.goals)?src.goals.filter(g=>Array.isArray(g)&&g.length>=2).map(g=>[String(g[0]??''),String(g[1]??'')]):base.goals.map(g=>[...g]);
+ state.weddingDate=String(src.weddingDate??'').slice(0,10);
+ state.homeTaskLimit=Math.max(1,Number(src.homeTaskLimit)||5);state.homeEventLimit=Math.max(1,Number(src.homeEventLimit)||5);
+ state.categoryOrder=Array.isArray(src.categoryOrder)?src.categoryOrder.map(String):[];
+ state.theme=(src.theme&&typeof src.theme==='object'&&!Array.isArray(src.theme))?{...src.theme}:{};
+ return state;
+}
+let state=normalizeState(loadStoredState());
 const defaultTheme={bg:'#f7f5f2',card:'#ffffff',ink:'#222222',muted:'#777777',line:'#e8e3dd',accent:'#9b6b52',accent2:'#d9b8a7',nav:'#f7f5f2',soft:'#faf8f5',button:'#ffffff',buttonText:'#222222',danger:'#b55b5b',good:'#5c8a69',radius:20};
 /* ===== THEME ===== */
 function themeData(){return {...defaultTheme,...state.theme}}const THEME_INPUT_MAP={thBg:'bg',thCard:'card',thInk:'ink',thMuted:'muted',thLine:'line',thAccent:'accent',thAccent2:'accent2',thNav:'nav',thSoft:'soft',thButton:'button',thButtonText:'buttonText',thDanger:'danger'};
@@ -1221,7 +1230,7 @@ function saveMemo(){const text=document.getElementById('quickMemo').value.trim()
 function saveMemoEdit(id){const text=document.getElementById('mText').value.trim();if(!text){alert('메모 내용을 입력해주세요.');return}const m=state.memos.find(x=>String(x.id)===String(id));if(!m){alert('수정할 메모를 찾지 못했어요.');return}m.text=text;save('memos');closeModal()}
 function deleteMemo(id){if(!confirm('삭제하시겠습니까?'))return;state.memos=state.memos.filter(m=>String(m.id)!==String(id));save('memos')}
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='우리_결혼_플래너_백업.json';a.click();URL.revokeObjectURL(a.href)}
-function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);save();alert('백업을 복구했어요.')}catch(e){alert('복구 파일을 읽을 수 없어요.')}};r.readAsText(f)}
+function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const parsed=JSON.parse(r.result);state=normalizeState(parsed);applyTheme();syncThemeInputs();save();alert('백업을 복구했어요.')}catch(e){console.error(e);alert('복구 파일을 읽을 수 없어요.')}};r.readAsText(f);ev.target.value=''}
 function handleAction(el){
  const a=el?.dataset?.action;if(!a)return;
  const id=el.dataset.id, delta=Number(el.dataset.delta||0);
@@ -1277,7 +1286,12 @@ document.addEventListener('click',e=>{
  const nav=e.target.closest('#nav [data-page]');
  if(nav){showPage(nav.dataset.page);return;}
  const action=e.target.closest('[data-action]');
- if(action){e.preventDefault();handleAction(action);}
+ if(action){
+  const a=action.dataset.action;
+  if(['update-plan','format-money','import-data','home-limit'].includes(a))return;
+  e.preventDefault();
+  handleAction(action);
+ }
 });
 ['taskSearch','taskCat','taskStatus','taskSort'].forEach(id=>$(id)?.addEventListener('input',()=>requestRender('tasks')));
 $('scheduleFilter')?.addEventListener('change',()=>requestRender('schedule'));
@@ -1313,7 +1327,7 @@ function val(id,fallback=''){return $(id)?.value??fallback}
 function setDisplay(id,show){const el=$(id);if(el)el.style.display=show?'':'none'}
 const moneyFmt=new Intl.NumberFormat('ko-KR',{maximumFractionDigits:0});
 const moneyWonFmt=new Intl.NumberFormat('ko-KR',{style:'currency',currency:'KRW',maximumFractionDigits:0});
-function num(v){return Number(v)||0}
+function num(v){return Number(String(v??'').replace(/,/g,''))||0}
 function newId(){return Date.now()+Math.floor(Math.random()*1000)}
 function isoDate(v){return v instanceof Date?localDateISO(v):String(v||'').slice(0,10)}
 function parseLocalDate(iso){return new Date(String(iso||'')+'T00:00:00')}
