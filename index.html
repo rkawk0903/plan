@@ -1880,6 +1880,7 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 
 <!-- ===== GLOBAL MODAL ===== -->
 <div class="modal" id="modal"><div class="sheet"><div id="modalBody"></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>/* ============================================================================
    PAGE MODULE DIRECTORY
    ============================================================================
@@ -2926,7 +2927,7 @@ if(new URLSearchParams(location.search).get('test')==='1'){
 /* ===== DOMAIN: STARTUP / PWA ===== */
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js?v=88',{updateViaCache:'none'})
+    navigator.serviceWorker.register('./sw.js?v=89',{updateViaCache:'none'})
       .then(reg=>reg.update())
       .catch(e=>console.warn('PWA service worker registration failed',e));
   });
