@@ -11,7 +11,43 @@
 <meta name="format-detection" content="telephone=no,email=no,address=no,date=no" />
 <link rel="manifest" href="manifest.webmanifest" />
 <title>우리 결혼 플래너</title>
-<style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style id="app-styles-cleaned">
+/* CSS consolidated from the existing stylesheet blocks in original order.
+   Rules are intentionally kept in cascade order to preserve the current UI behavior. */
+
+/* ===== Consolidated style block 1 ===== */
 :root{--bg:#f7f5f2;--card:#fff;--ink:#222;--muted:#777;--line:#e8e3dd;--accent:#9b6b52;--accent2:#d9b8a7;--good:#5c8a69;--warn:#bd7b3e;--danger:#b55b5b;--nav-bg:rgba(247,245,242,.9);--soft:#faf8f5;--button-bg:#fff;--button-text:#222;--shadow:0 8px 28px rgba(30,20,10,.07);--radius:20px;--radius-sm:max(0px,calc(var(--radius)*.6));--radius-xs:max(0px,calc(var(--radius)*.48));--radius-lg:max(0px,calc(var(--radius)*.9));--accent-soft:color-mix(in srgb,var(--accent) 12%,var(--card));--accent-soft-2:color-mix(in srgb,var(--accent2) 18%,var(--card));--accent-ink:color-mix(in srgb,var(--accent) 70%,var(--ink));--danger-soft:color-mix(in srgb,var(--danger) 12%,var(--card));--danger-ink:color-mix(in srgb,var(--danger) 82%,var(--ink));--good-soft:color-mix(in srgb,var(--good) 14%,var(--card));--good-ink:color-mix(in srgb,var(--good) 78%,var(--ink));--calendar-muted-bg:color-mix(in srgb,var(--soft) 75%,var(--bg));--calendar-selected-bg:color-mix(in srgb,var(--accent) 7%,var(--card));--calendar-today-bg:color-mix(in srgb,var(--accent) 10%,var(--card));--weekend-sat:color-mix(in srgb,#4a80c1 78%,var(--accent));--weekend-sun:color-mix(in srgb,#d15454 78%,var(--danger));--holiday-color:color-mix(in srgb,var(--danger) 86%,var(--accent))}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;letter-spacing:-.02em}button,input,select,textarea{font:inherit}button{cursor:pointer}
 a,a:visited,a:hover,a:active{color:inherit!important;text-decoration:none!important;-webkit-text-fill-color:currentColor!important}button{color:inherit;-webkit-appearance:none}
@@ -109,8 +145,9 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   color:var(--button-text)!important;
   border-color:var(--line)!important;
 }
-</style>
-<style>
+
+
+/* ===== Consolidated style block 2 ===== */
 .compact{padding:8px 11px;font-size:12px;min-width:54px}#sharedCard{min-width:0;overflow:hidden}
 #sharedCard .row{min-width:0}
 #sharedCard .row.between{align-items:flex-start}
@@ -124,10 +161,10 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 #sharedCard .actions .btn{min-width:0;flex:1 1 120px;white-space:normal}
 #sharedCard .compact{flex:0 0 auto;width:auto}
 @media(max-width:600px){#sharedCard .row.between>.pill{font-size:10px;padding:5px 7px;margin-left:6px}#sharedCard .actions{gap:6px}#sharedCard .actions .btn{flex:1 1 100px;padding:9px 8px;font-size:11px}}
-.shared-online{background:var(--soft)!important;color:var(--accent)!important;border-color:var(--accent2)!important}.shared-syncing{background:var(--soft)!important;color:var(--accent)!important;border-color:var(--line)!important}.shared-error{background:rgba(181,91,91,.10)!important;color:#b55b5b!important;border-color:rgba(181,91,91,.25)!important}.sync-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:5px}.sync-off-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:5px}</style>
+.shared-online{background:var(--soft)!important;color:var(--accent)!important;border-color:var(--accent2)!important}.shared-syncing{background:var(--soft)!important;color:var(--accent)!important;border-color:var(--line)!important}.shared-error{background:rgba(181,91,91,.10)!important;color:#b55b5b!important;border-color:rgba(181,91,91,.25)!important}.sync-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:5px}.sync-off-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:5px}
 
 
-<style>
+/* ===== Consolidated style block 3 ===== */
 /* v11 targeted UI fixes */
 #syncProjectActions{margin-top:12px !important}
 #syncProjectActions label, #syncJoinCodeLabel { font-size:11px !important; font-weight:700 !important; line-height:1.4 !important; display:block; margin-bottom:6px !important; }
@@ -159,9 +196,9 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .budget-home .budget-stat-row span{font-size:8.5px}
   .budget-home .budget-stat-row b{font-size:11px}
 }
-</style>
 
-<style id="budget-tab-true-arc">
+
+/* ===== Consolidated style block 4 ===== */
 /* Reference-style open arch gauge: a real SVG arc, not a cropped circle. */
 .budget-page-reference-gauge .budget-gauge-arc{
   position:relative!important;
@@ -192,16 +229,17 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .budget-arc-value{top:63%}
   .budget-arc-value strong{font-size:20px!important}
 }
-</style>
-<style id="budget-arc-final-override">
+
+
+/* ===== Consolidated style block 5 ===== */
 .budget-page-reference-gauge .budget-gauge-arc{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
 .budget-page-reference-gauge .budget-gauge-arc::before{display:none!important}
 .budget-page-reference-gauge .budget-arc-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1}
 .budget-page-reference-gauge .budget-arc-value{z-index:4}
 .budget-page-reference-gauge .budget-arc-value strong{display:block!important;visibility:visible!important;opacity:1!important}
-</style>
 
-<style id="home-budget-true-arc-v54">
+
+/* ===== Consolidated style block 6 ===== */
 /* Home budget card: same open SVG arc as the budget tab, in the compact reference-card layout. */
 .home-top-grid > .budget-home{min-width:0;min-height:0;}
 .budget-home{padding:10px!important;display:block!important;overflow:hidden;align-self:start;}
@@ -236,14 +274,15 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .budget-home-reference-total>b{font-size:16px;}
   .budget-home-reference-total>div{font-size:10px;}
 }
-</style>
-<style id="home-budget-compact-v55">
+
+
+/* ===== Consolidated style block 7 ===== */
 /* v55: tighten home budget card whitespace only. */
 .budget-home{align-self:start!important;}
 .budget-home-reference{height:auto!important;}
-</style>
 
-<style id="home-budget-whitespace-v56">
+
+/* ===== Consolidated style block 8 ===== */
 /* v56: reduce outer whitespace of the two top home cards. */
 .home-top-grid > .card{padding:12px !important;min-height:0 !important;box-sizing:border-box;}
 .home-top-grid > .budget-home{padding:8px !important;min-height:0 !important;height:auto !important;align-self:start !important;}
@@ -251,9 +290,9 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .home-top-grid > .card{padding:10px !important;}
   .home-top-grid > .budget-home{padding:7px !important;min-height:0 !important;height:auto !important;}
 }
-</style>
 
-<style id="home-budget-title-spacing-v57">
+
+/* ===== Consolidated style block 9 ===== */
 /* v57: add a small, balanced inset around the home budget title and bottom edge. */
 .budget-home-reference{padding:3px 4px 5px!important;}
 .budget-home-reference-title{margin-top:2px!important;margin-left:2px!important;margin-bottom:4px!important;}
@@ -268,15 +307,14 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .budget-home-reference-title{margin-top:2px!important;margin-left:1px!important;margin-bottom:3px!important;}
   .budget-home-reference-total{margin-bottom:2px!important;}
 }
-</style>
 
-<style>
+
+/* ===== Consolidated style block 10 ===== */
 /* v58: budget tab summary vertical spacing */
 #budget .budget-page-summary{padding:6px 10px !important;}
-</style>
 
 
-<style id="home-progress-reference-match">
+/* ===== Consolidated style block 11 ===== */
 /* Home top-left card: match the supplied reference image. */
 .home-top-grid > .card:first-child{
   min-width:0!important;
@@ -332,10 +370,9 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .home-top-grid > .card:first-child #overallText{margin-top:18px!important;font-size:12px!important}
   .home-top-grid > .card:first-child .progress{height:22px!important}
 }
-</style>
 
 
-<style id="v61-home-top-tight">
+/* ===== Consolidated style block 12 ===== */
 /* v61: keep the two home summary cards compact and aligned. */
 .home-top-grid{align-items:stretch!important;}
 .home-top-grid > .card:first-child,
@@ -385,10 +422,9 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .home-top-grid > .card:first-child #overallText{margin-top:10px!important;font-size:11px!important;}
   .home-top-grid > .budget-home{padding:8px!important;}
 }
-</style>
 
 
-<style id="home-top-spacing-v62">
+/* ===== Consolidated style block 13 ===== */
 /* v62: tighten home top cards and bring the completion count close to the progress bar. */
 .home-top-grid{align-items:stretch!important;}
 .home-top-grid > .card:first-child,
@@ -417,9 +453,9 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .home-top-grid > .card:first-child .progress{margin-top:5px!important;height:18px!important;}
   .home-top-grid > .budget-home{padding:8px!important;}
 }
-</style>
 
-<style id="v64-home-bottom-align-fix">
+
+/* ===== Consolidated style block 14 ===== */
 /* v64: pin the count and progress gauge to the bottom of the left home card. */
 .home-top-grid > .card:first-child{position:relative!important;}
 .home-top-grid > .card:first-child #overallText{
@@ -447,10 +483,9 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .home-top-grid > .card:first-child #overallText{left:12px!important;right:12px!important;bottom:39px!important;font-size:10.5px!important;}
   .home-top-grid > .card:first-child .progress{left:12px!important;right:12px!important;bottom:11px!important;}
 }
-</style>
 
 
-<style id="home-v70-title-progress-fix">
+/* ===== Consolidated style block 15 ===== */
 /* v70: 아래 카드 제목(.section-title)의 실제 시작점 17px을 기준으로 상단 제목도 정확히 일치 */
 
 /* 1) 폰트 크기/굵기/행간을 아래 제목과 동일하게 고정 */
@@ -505,6 +540,458 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
     transform:none!important;
   }
 }
+
+
+/* ===== Consolidated style block 16 ===== */
+/* v24: 프로젝트 카드 텍스트만 미세 조정 */
+#currentProjectBox .row:first-child > div > div {
+  font-size:12px !important;
+  font-weight:600 !important;
+  color:var(--muted) !important;
+}
+#syncJoinCode::placeholder {
+  font-size:11px !important;
+  color:var(--muted) !important;
+  opacity:.85;
+}
+
+/* v25: 프로젝트 코드/초대 코드 입력 여백 및 글자 조정 */
+#syncCode {
+  padding-left:8px !important;
+  font-size:12px !important;
+  color:var(--muted) !important;
+  font-weight:700 !important;
+}
+#syncJoinCode {
+  height:38px !important;
+  min-height:38px !important;
+  padding:0 8px !important;
+  line-height:38px !important;
+  box-sizing:border-box !important;
+}
+#syncJoinCode::placeholder {
+  font-size:10px !important;
+  color:var(--muted) !important;
+  opacity:.75;
+  line-height:36px !important;
+  transform:translateY(-2px);
+}
+
+/* v35 layout fix: keep home cards self-contained and align schedule heights */
+.home-secondary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch;margin-top:12px}
+.home-secondary-item{min-width:0;display:flex}
+.home-secondary-item>.card{width:100%;height:100%;display:flex;flex-direction:column}
+.home-card-title-row{margin:0 0 8px;gap:8px;align-items:center}
+.home-card-title-row .section-title{margin:0;font-size:18px;line-height:1.2;flex:1}
+.home-card-head{margin:0}
+.home-card-head .small{line-height:1.35}
+.home-secondary-item .home-card-head{min-height:30px}
+.schedule-main-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}
+.schedule-main-item{min-width:0;display:flex}
+.schedule-main-item>.card{width:100%;height:100%;margin-top:0}
+.schedule-selected-card{margin-top:0!important}
+@media(max-width:720px){
+  .home-secondary-grid,.schedule-main-grid{grid-template-columns:1fr;gap:12px;margin-top:12px}
+  .home-secondary-item+.home-secondary-item,.schedule-main-item+.schedule-main-item{margin-top:0}
+  .home-card-title-row .section-title{font-size:18px}
+}
+
+/* v37 budget widget redesign */
+.budget-widget{display:grid;grid-template-columns:minmax(0,1fr) 150px;align-items:center;gap:16px;width:100%;min-width:0}.budget-widget-left{display:flex;flex-direction:column;gap:5px;min-width:0}.budget-stat-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:6px 9px}.budget-stat-row span{font-size:10px;color:var(--muted);white-space:nowrap}.budget-stat-row b{font-size:13px;line-height:1.15;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}.budget-gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px}.budget-gauge{width:108px;height:108px;border-radius:50%;background:conic-gradient(var(--accent) 0 var(--budget-pct),var(--accent-soft-2) var(--budget-pct) 100%);display:flex;align-items:center;justify-content:center;position:relative;box-sizing:border-box}.budget-gauge::before{content:"";position:absolute;inset:9px;background:var(--card);border-radius:50%;box-shadow:inset 0 0 0 1px var(--line)}.budget-gauge>div{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}.budget-gauge strong{font-size:22px;line-height:1.1;font-weight:800;letter-spacing:-.03em}.budget-gauge-caption{font-size:10px;color:var(--muted);white-space:nowrap}.budget-page-summary{padding:10px}.budget-page-summary .budget-widget{grid-template-columns:minmax(0,1fr) 170px;gap:14px}.budget-page-summary .budget-stat-row{padding:7px 10px;border-radius:12px}.budget-page-summary .budget-stat-row span{font-size:10px}.budget-page-summary .budget-stat-row b{font-size:15px}.budget-page-summary .budget-gauge{width:124px;height:124px}.budget-page-summary .budget-gauge::before{inset:10px}.budget-page-summary .budget-gauge strong{font-size:25px}.budget-page-summary .budget-gauge-caption{font-size:10px}.budget-summary-progress{display:none!important}.budget-summary{display:block!important}.budget-home .budget-widget{grid-template-columns:minmax(0,1fr) 112px;gap:9px}.budget-home .budget-stat-row{padding:5px 8px;border-radius:10px}.budget-home .budget-stat-row span{font-size:9px}.budget-home .budget-stat-row b{font-size:11.5px}.budget-home .budget-gauge{width:78px;height:78px}.budget-home .budget-gauge::before{inset:7px}.budget-home .budget-gauge strong{font-size:16px}.budget-home .budget-gauge-caption{font-size:8px}.budget-home>.budget-widget{height:100%;align-items:center}
+@media(max-width:720px){.budget-page-summary{padding:9px}.budget-page-summary .budget-widget{grid-template-columns:minmax(0,1fr) 128px;gap:9px}.budget-page-summary .budget-stat-row{padding:6px 8px}.budget-page-summary .budget-stat-row span{font-size:9px}.budget-page-summary .budget-stat-row b{font-size:12px}.budget-page-summary .budget-gauge{width:92px;height:92px}.budget-page-summary .budget-gauge::before{inset:8px}.budget-page-summary .budget-gauge strong{font-size:20px}.budget-page-summary .budget-gauge-caption{font-size:9px}}
+@media(max-width:420px){.budget-page-summary .budget-widget{grid-template-columns:minmax(0,1fr) 104px}.budget-page-summary .budget-stat-row{gap:5px;padding:5px 7px}.budget-page-summary .budget-stat-row span{font-size:8.5px}.budget-page-summary .budget-stat-row b{font-size:11px}.budget-page-summary .budget-gauge{width:78px;height:78px}.budget-page-summary .budget-gauge::before{inset:7px}.budget-page-summary .budget-gauge strong{font-size:17px}.budget-home .budget-widget{grid-template-columns:minmax(0,1fr) 88px}.budget-home .budget-gauge{width:68px;height:68px}}
+
+
+/* ===== Consolidated style block 17 ===== */
+/* Reference-card layouts */
+.budget-home{
+  padding:18px 18px 19px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  min-width:0;
+}
+.budget-home-title{
+  align-self:flex-start;
+  font-size:15px;
+  line-height:1.2;
+  font-weight:800;
+  margin-bottom:6px;
+}
+.budget-home-gauge{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+.budget-home .budget-gauge{
+  width:152px;
+  height:152px;
+}
+.budget-home .budget-gauge::before{
+  inset:11px;
+}
+.budget-home .budget-gauge strong{
+  font-size:24px;
+}
+.budget-home .budget-home-total{
+  margin-top:13px;
+  text-align:center;
+}
+.budget-home-total>b{
+  display:block;
+  font-size:20px;
+  line-height:1.1;
+  font-weight:800;
+}
+.budget-home-total>div{
+  margin-top:7px;
+  font-size:14px;
+  line-height:1.1;
+  font-weight:600;
+}
+.budget-home .budget-gauge-caption{display:none!important}
+
+.budget-page-summary{
+  padding:10px 16px;
+}
+.budget-page-widget{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 185px;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+  width:100%;
+}
+.budget-page-stats{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:0;
+}
+.budget-page-stat{
+  display:grid;
+  grid-template-columns:110px minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.budget-page-stat span{
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink);
+  white-space:nowrap;
+}
+.budget-page-stat b{
+  font-size:19px;
+  font-weight:800;
+  line-height:1.15;
+  text-align:right;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.budget-page-gauge{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.budget-page-summary .budget-gauge{
+  width:154px;
+  height:154px;
+}
+.budget-page-summary .budget-gauge::before{
+  inset:11px;
+}
+.budget-page-summary .budget-gauge strong{
+  font-size:25px;
+}
+.budget-page-summary .budget-gauge-caption{display:none!important}
+
+@media(max-width:720px){
+  .budget-home .budget-gauge{width:136px;height:136px}
+  .budget-home .budget-gauge::before{inset:10px}
+  .budget-home .budget-gauge strong{font-size:22px}
+  .budget-page-summary{padding:10px 14px}
+  .budget-page-widget{
+    grid-template-columns:minmax(0,1fr) 145px;
+    gap:8px;
+  }
+  .budget-page-stat{
+    grid-template-columns:78px minmax(0,1fr);
+    gap:6px;
+  }
+  .budget-page-stat span{font-size:11px}
+  .budget-page-stat b{font-size:14px}
+  .budget-page-summary .budget-gauge{width:124px;height:124px}
+  .budget-page-summary .budget-gauge::before{inset:9px}
+  .budget-page-summary .budget-gauge strong{font-size:21px}
+}
+@media(max-width:420px){
+  .budget-home{padding:15px 14px 16px}
+  .budget-home .budget-gauge{width:124px;height:124px}
+  .budget-home .budget-gauge::before{inset:9px}
+  .budget-home .budget-gauge strong{font-size:20px}
+  .budget-home-total>b{font-size:18px}
+  .budget-page-summary{padding:9px 11px}
+  .budget-page-widget{
+    grid-template-columns:minmax(0,1fr) 122px;
+    gap:6px;
+  }
+  .budget-page-stat{
+    grid-template-columns:66px minmax(0,1fr);
+    gap:4px;
+  }
+  .budget-page-stat span{font-size:10px}
+  .budget-page-stat b{font-size:12px}
+  .budget-page-summary .budget-gauge{width:106px;height:106px}
+  .budget-page-summary .budget-gauge::before{inset:8px}
+  .budget-page-summary .budget-gauge strong{font-size:19px}
+}
+
+
+/* ===== Consolidated style block 18 ===== */
+/* Final reference-image layout: home and budget summary cards */
+.home-top-grid{
+  grid-template-columns:minmax(0,1.46fr) minmax(0,1fr) !important;
+  gap:14px !important;
+  align-items:stretch !important;
+}
+.home-top-grid > .card:first-child{grid-column:1 !important;min-width:0;height:100% !important;}
+.home-top-grid > .budget-home{grid-column:2 !important;min-width:0;height:100% !important;}
+
+.budget-home{
+  padding:18px !important;
+  min-height:270px !important;
+  display:flex !important;
+  align-items:stretch !important;
+  justify-content:center !important;
+}
+.budget-home-widget{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 160px;
+  gap:14px;
+  align-items:center;
+  min-width:0;
+}
+.budget-home-stats{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:9px;
+  min-width:0;
+}
+.budget-home-stat{
+  display:grid;
+  grid-template-columns:86px minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.budget-home-stat span{
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink);
+  white-space:nowrap;
+}
+.budget-home-stat b{
+  font-size:20px;
+  font-weight:800;
+  line-height:1.15;
+  text-align:right;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.budget-home-gauge-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+}
+.budget-home .budget-gauge{
+  width:166px;
+  height:166px;
+}
+.budget-home .budget-gauge::before{inset:12px}
+.budget-home .budget-gauge strong{font-size:26px}
+
+.budget-page-summary{
+  width:270px !important;
+  max-width:100% !important;
+  aspect-ratio:1 / 1 !important;
+  padding:18px !important;
+  margin-right:auto !important;
+  overflow:hidden !important;
+}
+.budget-page-reference{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-width:0;
+}
+.budget-page-reference-title{
+  align-self:flex-start;
+  font-size:15px;
+  line-height:1.2;
+  font-weight:800;
+}
+.budget-page-reference-gauge{
+  flex:1 1 auto;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:0;
+}
+.budget-page-reference-gauge .budget-gauge{
+  width:154px;
+  height:154px;
+}
+.budget-page-reference-gauge .budget-gauge::before{inset:11px}
+.budget-page-reference-gauge .budget-gauge strong{font-size:24px}
+.budget-page-reference-total{
+  width:100%;
+  text-align:center;
+  margin-top:2px;
+}
+.budget-page-reference-total>b{
+  display:block;
+  font-size:20px;
+  line-height:1.1;
+  font-weight:800;
+  white-space:nowrap;
+}
+.budget-page-reference-total>div{
+  margin-top:7px;
+  font-size:13px;
+  line-height:1.1;
+  font-weight:600;
+  color:var(--muted);
+  white-space:nowrap;
+}
+@media(max-width:720px){
+  .home-top-grid{
+    grid-template-columns:minmax(0,1.46fr) minmax(0,1fr) !important;
+    gap:10px !important;
+  }
+  .budget-home{padding:14px !important;min-height:245px !important;}
+  .budget-home-widget{grid-template-columns:minmax(0,1fr) 126px;gap:8px}
+  .budget-home-stat{grid-template-columns:62px minmax(0,1fr);gap:5px}
+  .budget-home-stat span{font-size:10px}
+  .budget-home-stat b{font-size:14px}
+  .budget-home .budget-gauge{width:130px;height:130px}
+  .budget-home .budget-gauge::before{inset:9px}
+  .budget-home .budget-gauge strong{font-size:21px}
+  .budget-page-summary{width:270px !important;height:270px !important;aspect-ratio:auto !important;padding:16px !important}
+}
+@media(max-width:420px){
+  .home-top-grid{gap:8px !important}
+  .budget-home{padding:12px 10px !important;min-height:220px !important}
+  .budget-home-widget{grid-template-columns:minmax(0,1fr) 104px;gap:5px}
+  .budget-home-stat{grid-template-columns:55px minmax(0,1fr);gap:3px}
+  .budget-home-stat span{font-size:9px}
+  .budget-home-stat b{font-size:12px}
+  .budget-home .budget-gauge{width:104px;height:104px}
+  .budget-home .budget-gauge::before{inset:8px}
+  .budget-home .budget-gauge strong{font-size:18px}
+}
+
+
+/* ===== Consolidated style block 19 ===== */
+.budget-gauge{
+  background:conic-gradient(from -45deg,var(--accent) 0 var(--budget-angle,0deg),var(--accent-soft-2) var(--budget-angle,0deg) 270deg,transparent 270deg 360deg) !important;
+}
+
+
+/* ===== Consolidated style block 20 ===== */
+.budget-page-summary{width:100%!important;max-width:none!important;aspect-ratio:auto!important;height:160px!important;padding:18px!important;margin:0!important;overflow:hidden!important}
+.budget-page-reference-card{height:100%;display:grid!important;grid-template-columns:minmax(0,1fr) 185px!important;align-items:center!important;gap:18px!important;min-width:0!important}
+.budget-page-reference-stats{display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:0}
+.budget-page-reference-stat{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px;min-width:0}
+.budget-page-reference-stat span{font-size:11px;color:var(--ink);white-space:nowrap}
+.budget-page-reference-stat b{font-size:19px;line-height:1.15;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.budget-page-reference-title,.budget-page-reference-total{display:none!important}
+.budget-page-reference-gauge{width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;min-height:0!important}
+.budget-page-reference-gauge .budget-gauge{width:128px!important;height:128px!important}
+.budget-page-reference-gauge .budget-gauge::before{inset:10px!important}
+.budget-page-reference-gauge .budget-gauge strong{font-size:23px!important}
+@media(max-width:720px){
+  .budget-page-summary{height:150px!important;padding:14px!important}
+  .budget-page-reference-card{grid-template-columns:minmax(0,1fr) 150px!important;gap:10px!important}
+  .budget-page-reference-stats{gap:7px}
+  .budget-page-reference-stat{grid-template-columns:58px minmax(0,1fr);gap:6px}
+  .budget-page-reference-stat span{font-size:10px}
+  .budget-page-reference-stat b{font-size:15px}
+  .budget-page-reference-gauge .budget-gauge{width:112px!important;height:112px!important}
+  .budget-page-reference-gauge .budget-gauge::before{inset:9px!important}
+  .budget-page-reference-gauge .budget-gauge strong{font-size:21px!important}
+}
+@media(max-width:420px){
+  .budget-page-summary{height:136px!important;padding:12px!important}
+  .budget-page-reference-card{grid-template-columns:minmax(0,1fr) 122px!important;gap:6px!important}
+  .budget-page-reference-stats{gap:5px}
+  .budget-page-reference-stat{grid-template-columns:52px minmax(0,1fr);gap:4px}
+  .budget-page-reference-stat span{font-size:9px}
+  .budget-page-reference-stat b{font-size:13px}
+  .budget-page-reference-gauge .budget-gauge{width:94px!important;height:94px!important}
+  .budget-page-reference-gauge .budget-gauge::before{inset:8px!important}
+  .budget-page-reference-gauge .budget-gauge strong{font-size:18px!important}
+}
+
+
+/* ===== Consolidated style block 21 ===== */
+/* v53: reduce vertical whitespace and slightly enlarge the arc gauge */
+.budget-page-summary{
+  height:120px !important;
+  padding:5px 12px !important;
+}
+.budget-page-reference-card{
+  gap:14px !important;
+}
+.budget-page-reference-stats{
+  gap:6px !important;
+}
+.budget-page-reference-gauge .budget-gauge{
+  width:138px !important;
+  height:138px !important;
+}
+@media(max-width:720px){
+  .budget-page-summary{
+    height:112px !important;
+    padding:5px 10px !important;
+  }
+  .budget-page-reference-card{
+    gap:8px !important;
+  }
+  .budget-page-reference-gauge .budget-gauge{
+    width:120px !important;
+    height:120px !important;
+  }
+}
+@media(max-width:420px){
+  .budget-page-summary{
+    height:104px !important;
+    padding:5px 9px !important;
+  }
+  .budget-page-reference-card{
+    gap:5px !important;
+  }
+  .budget-page-reference-gauge .budget-gauge{
+    width:102px !important;
+    height:102px !important;
+  }
+}
+
+<style id="budget-page-final-tuning-v59">
+/* v59: visibly reduce budget summary card vertical whitespace */
+#budget .budget-page-summary{height:120px!important;padding:5px 12px!important;box-sizing:border-box!important;}
+#budget .budget-page-reference-card{height:100%!important;}
+#budget .budget-page-reference-stats{gap:4px!important;}
+#budget .budget-page-reference-stat{min-height:0!important;}
+@media(max-width:720px){#budget .budget-page-summary{height:112px!important;padding:5px 10px!important;}#budget .budget-page-reference-stats{gap:3px!important;}}
+@media(max-width:420px){#budget .budget-page-summary{height:104px!important;padding:4px 8px!important;}}
+
 </style>
 
 </head>
@@ -935,455 +1422,16 @@ applyTheme();syncThemeInputs();navInit();renderAll();
 startScheduleDateWatcher();
 </script>
 
-<style>
-/* v24: 프로젝트 카드 텍스트만 미세 조정 */
-#currentProjectBox .row:first-child > div > div {
-  font-size:12px !important;
-  font-weight:600 !important;
-  color:var(--muted) !important;
-}
-#syncJoinCode::placeholder {
-  font-size:11px !important;
-  color:var(--muted) !important;
-  opacity:.85;
-}
 
-/* v25: 프로젝트 코드/초대 코드 입력 여백 및 글자 조정 */
-#syncCode {
-  padding-left:8px !important;
-  font-size:12px !important;
-  color:var(--muted) !important;
-  font-weight:700 !important;
-}
-#syncJoinCode {
-  height:38px !important;
-  min-height:38px !important;
-  padding:0 8px !important;
-  line-height:38px !important;
-  box-sizing:border-box !important;
-}
-#syncJoinCode::placeholder {
-  font-size:10px !important;
-  color:var(--muted) !important;
-  opacity:.75;
-  line-height:36px !important;
-  transform:translateY(-2px);
-}
 
-/* v35 layout fix: keep home cards self-contained and align schedule heights */
-.home-secondary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch;margin-top:12px}
-.home-secondary-item{min-width:0;display:flex}
-.home-secondary-item>.card{width:100%;height:100%;display:flex;flex-direction:column}
-.home-card-title-row{margin:0 0 8px;gap:8px;align-items:center}
-.home-card-title-row .section-title{margin:0;font-size:18px;line-height:1.2;flex:1}
-.home-card-head{margin:0}
-.home-card-head .small{line-height:1.35}
-.home-secondary-item .home-card-head{min-height:30px}
-.schedule-main-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}
-.schedule-main-item{min-width:0;display:flex}
-.schedule-main-item>.card{width:100%;height:100%;margin-top:0}
-.schedule-selected-card{margin-top:0!important}
-@media(max-width:720px){
-  .home-secondary-grid,.schedule-main-grid{grid-template-columns:1fr;gap:12px;margin-top:12px}
-  .home-secondary-item+.home-secondary-item,.schedule-main-item+.schedule-main-item{margin-top:0}
-  .home-card-title-row .section-title{font-size:18px}
-}
 
-/* v37 budget widget redesign */
-.budget-widget{display:grid;grid-template-columns:minmax(0,1fr) 150px;align-items:center;gap:16px;width:100%;min-width:0}.budget-widget-left{display:flex;flex-direction:column;gap:5px;min-width:0}.budget-stat-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:6px 9px}.budget-stat-row span{font-size:10px;color:var(--muted);white-space:nowrap}.budget-stat-row b{font-size:13px;line-height:1.15;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}.budget-gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px}.budget-gauge{width:108px;height:108px;border-radius:50%;background:conic-gradient(var(--accent) 0 var(--budget-pct),var(--accent-soft-2) var(--budget-pct) 100%);display:flex;align-items:center;justify-content:center;position:relative;box-sizing:border-box}.budget-gauge::before{content:"";position:absolute;inset:9px;background:var(--card);border-radius:50%;box-shadow:inset 0 0 0 1px var(--line)}.budget-gauge>div{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}.budget-gauge strong{font-size:22px;line-height:1.1;font-weight:800;letter-spacing:-.03em}.budget-gauge-caption{font-size:10px;color:var(--muted);white-space:nowrap}.budget-page-summary{padding:10px}.budget-page-summary .budget-widget{grid-template-columns:minmax(0,1fr) 170px;gap:14px}.budget-page-summary .budget-stat-row{padding:7px 10px;border-radius:12px}.budget-page-summary .budget-stat-row span{font-size:10px}.budget-page-summary .budget-stat-row b{font-size:15px}.budget-page-summary .budget-gauge{width:124px;height:124px}.budget-page-summary .budget-gauge::before{inset:10px}.budget-page-summary .budget-gauge strong{font-size:25px}.budget-page-summary .budget-gauge-caption{font-size:10px}.budget-summary-progress{display:none!important}.budget-summary{display:block!important}.budget-home .budget-widget{grid-template-columns:minmax(0,1fr) 112px;gap:9px}.budget-home .budget-stat-row{padding:5px 8px;border-radius:10px}.budget-home .budget-stat-row span{font-size:9px}.budget-home .budget-stat-row b{font-size:11.5px}.budget-home .budget-gauge{width:78px;height:78px}.budget-home .budget-gauge::before{inset:7px}.budget-home .budget-gauge strong{font-size:16px}.budget-home .budget-gauge-caption{font-size:8px}.budget-home>.budget-widget{height:100%;align-items:center}
-@media(max-width:720px){.budget-page-summary{padding:9px}.budget-page-summary .budget-widget{grid-template-columns:minmax(0,1fr) 128px;gap:9px}.budget-page-summary .budget-stat-row{padding:6px 8px}.budget-page-summary .budget-stat-row span{font-size:9px}.budget-page-summary .budget-stat-row b{font-size:12px}.budget-page-summary .budget-gauge{width:92px;height:92px}.budget-page-summary .budget-gauge::before{inset:8px}.budget-page-summary .budget-gauge strong{font-size:20px}.budget-page-summary .budget-gauge-caption{font-size:9px}}
-@media(max-width:420px){.budget-page-summary .budget-widget{grid-template-columns:minmax(0,1fr) 104px}.budget-page-summary .budget-stat-row{gap:5px;padding:5px 7px}.budget-page-summary .budget-stat-row span{font-size:8.5px}.budget-page-summary .budget-stat-row b{font-size:11px}.budget-page-summary .budget-gauge{width:78px;height:78px}.budget-page-summary .budget-gauge::before{inset:7px}.budget-page-summary .budget-gauge strong{font-size:17px}.budget-home .budget-widget{grid-template-columns:minmax(0,1fr) 88px}.budget-home .budget-gauge{width:68px;height:68px}}
-</style>
-<style id="budget-reference-layout">
-/* Reference-card layouts */
-.budget-home{
-  padding:18px 18px 19px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-start;
-  min-width:0;
-}
-.budget-home-title{
-  align-self:flex-start;
-  font-size:15px;
-  line-height:1.2;
-  font-weight:800;
-  margin-bottom:6px;
-}
-.budget-home-gauge{
-  width:100%;
-  display:flex;
-  justify-content:center;
-}
-.budget-home .budget-gauge{
-  width:152px;
-  height:152px;
-}
-.budget-home .budget-gauge::before{
-  inset:11px;
-}
-.budget-home .budget-gauge strong{
-  font-size:24px;
-}
-.budget-home .budget-home-total{
-  margin-top:13px;
-  text-align:center;
-}
-.budget-home-total>b{
-  display:block;
-  font-size:20px;
-  line-height:1.1;
-  font-weight:800;
-}
-.budget-home-total>div{
-  margin-top:7px;
-  font-size:14px;
-  line-height:1.1;
-  font-weight:600;
-}
-.budget-home .budget-gauge-caption{display:none!important}
 
-.budget-page-summary{
-  padding:10px 16px;
-}
-.budget-page-widget{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 185px;
-  align-items:center;
-  gap:12px;
-  min-width:0;
-  width:100%;
-}
-.budget-page-stats{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  min-width:0;
-}
-.budget-page-stat{
-  display:grid;
-  grid-template-columns:110px minmax(0,1fr);
-  align-items:center;
-  gap:8px;
-  min-width:0;
-}
-.budget-page-stat span{
-  font-size:13px;
-  font-weight:600;
-  color:var(--ink);
-  white-space:nowrap;
-}
-.budget-page-stat b{
-  font-size:19px;
-  font-weight:800;
-  line-height:1.15;
-  text-align:right;
-  white-space:nowrap;
-  font-variant-numeric:tabular-nums;
-}
-.budget-page-gauge{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.budget-page-summary .budget-gauge{
-  width:154px;
-  height:154px;
-}
-.budget-page-summary .budget-gauge::before{
-  inset:11px;
-}
-.budget-page-summary .budget-gauge strong{
-  font-size:25px;
-}
-.budget-page-summary .budget-gauge-caption{display:none!important}
 
-@media(max-width:720px){
-  .budget-home .budget-gauge{width:136px;height:136px}
-  .budget-home .budget-gauge::before{inset:10px}
-  .budget-home .budget-gauge strong{font-size:22px}
-  .budget-page-summary{padding:10px 14px}
-  .budget-page-widget{
-    grid-template-columns:minmax(0,1fr) 145px;
-    gap:8px;
-  }
-  .budget-page-stat{
-    grid-template-columns:78px minmax(0,1fr);
-    gap:6px;
-  }
-  .budget-page-stat span{font-size:11px}
-  .budget-page-stat b{font-size:14px}
-  .budget-page-summary .budget-gauge{width:124px;height:124px}
-  .budget-page-summary .budget-gauge::before{inset:9px}
-  .budget-page-summary .budget-gauge strong{font-size:21px}
-}
-@media(max-width:420px){
-  .budget-home{padding:15px 14px 16px}
-  .budget-home .budget-gauge{width:124px;height:124px}
-  .budget-home .budget-gauge::before{inset:9px}
-  .budget-home .budget-gauge strong{font-size:20px}
-  .budget-home-total>b{font-size:18px}
-  .budget-page-summary{padding:9px 11px}
-  .budget-page-widget{
-    grid-template-columns:minmax(0,1fr) 122px;
-    gap:6px;
-  }
-  .budget-page-stat{
-    grid-template-columns:66px minmax(0,1fr);
-    gap:4px;
-  }
-  .budget-page-stat span{font-size:10px}
-  .budget-page-stat b{font-size:12px}
-  .budget-page-summary .budget-gauge{width:106px;height:106px}
-  .budget-page-summary .budget-gauge::before{inset:8px}
-  .budget-page-summary .budget-gauge strong{font-size:19px}
-}
-</style>
 
-<style id="reference-budget-layout-final">
-/* Final reference-image layout: home and budget summary cards */
-.home-top-grid{
-  grid-template-columns:minmax(0,1.46fr) minmax(0,1fr) !important;
-  gap:14px !important;
-  align-items:stretch !important;
-}
-.home-top-grid > .card:first-child{grid-column:1 !important;min-width:0;height:100% !important;}
-.home-top-grid > .budget-home{grid-column:2 !important;min-width:0;height:100% !important;}
 
-.budget-home{
-  padding:18px !important;
-  min-height:270px !important;
-  display:flex !important;
-  align-items:stretch !important;
-  justify-content:center !important;
-}
-.budget-home-widget{
-  width:100%;
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 160px;
-  gap:14px;
-  align-items:center;
-  min-width:0;
-}
-.budget-home-stats{
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  gap:9px;
-  min-width:0;
-}
-.budget-home-stat{
-  display:grid;
-  grid-template-columns:86px minmax(0,1fr);
-  align-items:center;
-  gap:8px;
-  min-width:0;
-}
-.budget-home-stat span{
-  font-size:13px;
-  font-weight:600;
-  color:var(--ink);
-  white-space:nowrap;
-}
-.budget-home-stat b{
-  font-size:20px;
-  font-weight:800;
-  line-height:1.15;
-  text-align:right;
-  white-space:nowrap;
-  font-variant-numeric:tabular-nums;
-}
-.budget-home-gauge-wrap{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-width:0;
-}
-.budget-home .budget-gauge{
-  width:166px;
-  height:166px;
-}
-.budget-home .budget-gauge::before{inset:12px}
-.budget-home .budget-gauge strong{font-size:26px}
 
-.budget-page-summary{
-  width:270px !important;
-  max-width:100% !important;
-  aspect-ratio:1 / 1 !important;
-  padding:18px !important;
-  margin-right:auto !important;
-  overflow:hidden !important;
-}
-.budget-page-reference{
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  min-width:0;
-}
-.budget-page-reference-title{
-  align-self:flex-start;
-  font-size:15px;
-  line-height:1.2;
-  font-weight:800;
-}
-.budget-page-reference-gauge{
-  flex:1 1 auto;
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:0;
-}
-.budget-page-reference-gauge .budget-gauge{
-  width:154px;
-  height:154px;
-}
-.budget-page-reference-gauge .budget-gauge::before{inset:11px}
-.budget-page-reference-gauge .budget-gauge strong{font-size:24px}
-.budget-page-reference-total{
-  width:100%;
-  text-align:center;
-  margin-top:2px;
-}
-.budget-page-reference-total>b{
-  display:block;
-  font-size:20px;
-  line-height:1.1;
-  font-weight:800;
-  white-space:nowrap;
-}
-.budget-page-reference-total>div{
-  margin-top:7px;
-  font-size:13px;
-  line-height:1.1;
-  font-weight:600;
-  color:var(--muted);
-  white-space:nowrap;
-}
-@media(max-width:720px){
-  .home-top-grid{
-    grid-template-columns:minmax(0,1.46fr) minmax(0,1fr) !important;
-    gap:10px !important;
-  }
-  .budget-home{padding:14px !important;min-height:245px !important;}
-  .budget-home-widget{grid-template-columns:minmax(0,1fr) 126px;gap:8px}
-  .budget-home-stat{grid-template-columns:62px minmax(0,1fr);gap:5px}
-  .budget-home-stat span{font-size:10px}
-  .budget-home-stat b{font-size:14px}
-  .budget-home .budget-gauge{width:130px;height:130px}
-  .budget-home .budget-gauge::before{inset:9px}
-  .budget-home .budget-gauge strong{font-size:21px}
-  .budget-page-summary{width:270px !important;height:270px !important;aspect-ratio:auto !important;padding:16px !important}
-}
-@media(max-width:420px){
-  .home-top-grid{gap:8px !important}
-  .budget-home{padding:12px 10px !important;min-height:220px !important}
-  .budget-home-widget{grid-template-columns:minmax(0,1fr) 104px;gap:5px}
-  .budget-home-stat{grid-template-columns:55px minmax(0,1fr);gap:3px}
-  .budget-home-stat span{font-size:9px}
-  .budget-home-stat b{font-size:12px}
-  .budget-home .budget-gauge{width:104px;height:104px}
-  .budget-home .budget-gauge::before{inset:8px}
-  .budget-home .budget-gauge strong{font-size:18px}
-}
-</style>
 
-<style id="budget-gauge-final-shape">
-.budget-gauge{
-  background:conic-gradient(from -45deg,var(--accent) 0 var(--budget-angle,0deg),var(--accent-soft-2) var(--budget-angle,0deg) 270deg,transparent 270deg 360deg) !important;
-}
-</style>
 
-<style id="budget-page-reference-image-match">
-.budget-page-summary{width:100%!important;max-width:none!important;aspect-ratio:auto!important;height:160px!important;padding:18px!important;margin:0!important;overflow:hidden!important}
-.budget-page-reference-card{height:100%;display:grid!important;grid-template-columns:minmax(0,1fr) 185px!important;align-items:center!important;gap:18px!important;min-width:0!important}
-.budget-page-reference-stats{display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:0}
-.budget-page-reference-stat{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px;min-width:0}
-.budget-page-reference-stat span{font-size:11px;color:var(--ink);white-space:nowrap}
-.budget-page-reference-stat b{font-size:19px;line-height:1.15;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
-.budget-page-reference-title,.budget-page-reference-total{display:none!important}
-.budget-page-reference-gauge{width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;min-height:0!important}
-.budget-page-reference-gauge .budget-gauge{width:128px!important;height:128px!important}
-.budget-page-reference-gauge .budget-gauge::before{inset:10px!important}
-.budget-page-reference-gauge .budget-gauge strong{font-size:23px!important}
-@media(max-width:720px){
-  .budget-page-summary{height:150px!important;padding:14px!important}
-  .budget-page-reference-card{grid-template-columns:minmax(0,1fr) 150px!important;gap:10px!important}
-  .budget-page-reference-stats{gap:7px}
-  .budget-page-reference-stat{grid-template-columns:58px minmax(0,1fr);gap:6px}
-  .budget-page-reference-stat span{font-size:10px}
-  .budget-page-reference-stat b{font-size:15px}
-  .budget-page-reference-gauge .budget-gauge{width:112px!important;height:112px!important}
-  .budget-page-reference-gauge .budget-gauge::before{inset:9px!important}
-  .budget-page-reference-gauge .budget-gauge strong{font-size:21px!important}
-}
-@media(max-width:420px){
-  .budget-page-summary{height:136px!important;padding:12px!important}
-  .budget-page-reference-card{grid-template-columns:minmax(0,1fr) 122px!important;gap:6px!important}
-  .budget-page-reference-stats{gap:5px}
-  .budget-page-reference-stat{grid-template-columns:52px minmax(0,1fr);gap:4px}
-  .budget-page-reference-stat span{font-size:9px}
-  .budget-page-reference-stat b{font-size:13px}
-  .budget-page-reference-gauge .budget-gauge{width:94px!important;height:94px!important}
-  .budget-page-reference-gauge .budget-gauge::before{inset:8px!important}
-  .budget-page-reference-gauge .budget-gauge strong{font-size:18px!important}
-}
-</style>
-
-<style id="budget-page-final-tuning">
-/* v53: reduce vertical whitespace and slightly enlarge the arc gauge */
-.budget-page-summary{
-  height:120px !important;
-  padding:5px 12px !important;
-}
-.budget-page-reference-card{
-  gap:14px !important;
-}
-.budget-page-reference-stats{
-  gap:6px !important;
-}
-.budget-page-reference-gauge .budget-gauge{
-  width:138px !important;
-  height:138px !important;
-}
-@media(max-width:720px){
-  .budget-page-summary{
-    height:112px !important;
-    padding:5px 10px !important;
-  }
-  .budget-page-reference-card{
-    gap:8px !important;
-  }
-  .budget-page-reference-gauge .budget-gauge{
-    width:120px !important;
-    height:120px !important;
-  }
-}
-@media(max-width:420px){
-  .budget-page-summary{
-    height:104px !important;
-    padding:5px 9px !important;
-  }
-  .budget-page-reference-card{
-    gap:5px !important;
-  }
-  .budget-page-reference-gauge .budget-gauge{
-    width:102px !important;
-    height:102px !important;
-  }
-}
-
-<style id="budget-page-final-tuning-v59">
-/* v59: visibly reduce budget summary card vertical whitespace */
-#budget .budget-page-summary{height:120px!important;padding:5px 12px!important;box-sizing:border-box!important;}
-#budget .budget-page-reference-card{height:100%!important;}
-#budget .budget-page-reference-stats{gap:4px!important;}
-#budget .budget-page-reference-stat{min-height:0!important;}
-@media(max-width:720px){#budget .budget-page-summary{height:112px!important;padding:5px 10px!important;}#budget .budget-page-reference-stats{gap:3px!important;}}
-@media(max-width:420px){#budget .budget-page-summary{height:104px!important;padding:4px 8px!important;}}
-</style>
 </style>
 
 </body></html>
