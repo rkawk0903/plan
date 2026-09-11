@@ -519,7 +519,7 @@ window.addEventListener('online',()=>{if(sharedSync.projectId)sharedPushNow(true
 window.addEventListener('offline',()=>{if(sharedSync.projectId)sharedSetStatus('오프라인','shared-syncing')});
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js?v=20',{updateViaCache:'none'})
+    navigator.serviceWorker.register('./sw.js?v=25',{updateViaCache:'none'})
       .then(reg=>reg.update())
       .catch(e=>console.warn('PWA service worker registration failed',e));
   });
@@ -544,6 +544,22 @@ startScheduleDateWatcher();
   font-size:11px !important;
   color:var(--muted) !important;
   opacity:.85;
+}
+
+/* v25: 프로젝트 코드/초대 코드 입력 여백 및 글자 조정 */
+#syncCode {
+  padding-left:8px !important;
+  font-size:12px !important;
+  color:var(--muted) !important;
+  font-weight:700 !important;
+}
+#syncJoinCode {
+  padding-left:8px !important;
+}
+#syncJoinCode::placeholder {
+  font-size:10px !important;
+  color:var(--muted) !important;
+  opacity:.75;
 }
 </style>
 </body></html>
