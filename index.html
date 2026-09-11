@@ -1705,21 +1705,26 @@ function defaultState(){return {tasks:seedTasks.map(t=>({...t})),budgets:seedBud
 function loadStoredState(){try{const raw=localStorage.getItem(KEY);return raw?JSON.parse(raw):defaultState()}catch(e){console.warn('저장 데이터 복구 실패',e);return defaultState()}}
 function normalizeState(input){
  const base=defaultState(), src=(input&&typeof input==='object'&&!Array.isArray(input))?input:{};
- const cleanId=(v,fallback)=>v===undefined||v===null||String(v)===''?fallback:v;
- const state={...base,...src};
- const stateNow=Date.now();
- state.tasks=Array.isArray(src.tasks)?src.tasks.map((t,i)=>({id:cleanId(t?.id,stateNow+i),cat:String(t?.cat??'기타'),title:String(t?.title??''),due:String(t?.due??''),owner:String(t?.owner??'함께'),priority:String(t?.priority??'보통'),status:t?.status==='done'?'done':'todo',memo:String(t?.memo??'')})):base.tasks;
- state.budgets=Array.isArray(src.budgets)?src.budgets.map((b,i)=>({id:cleanId(b?.id,stateNow+1000+i),name:String(b?.name??''),planned:num(b?.planned),actual:num(b?.actual),details:String(b?.details??'')})):base.budgets;
- state.events=Array.isArray(src.events)?src.events.map((e,i)=>({id:cleanId(e?.id,stateNow+2000+i),title:String(e?.title??''),date:String(e?.date??'').slice(0,10),time:String(e?.time??''),location:String(e?.location??''),category:String(e?.category??''),note:String(e?.note??'')})):base.events;
- state.plans=Array.isArray(src.plans)?src.plans.map((p,i)=>({id:cleanId(p?.id,stateNow+3000+i),name:String(p?.name??''),status:['논의 전','논의 중','합의 완료'].includes(p?.status)?p.status:'논의 전',details:String(p?.details??''),note:String(p?.note??'')})):base.plans;
- state.memos=Array.isArray(src.memos)?src.memos.map((m,i)=>({id:cleanId(m?.id,stateNow+4000+i),text:String(m?.text??'')})).filter(m=>m.text.trim()):((String(src.memo??'').trim())?[{id:stateNow+5000,text:String(src.memo).trim()}]:[]);
- state.goals=Array.isArray(src.goals)?src.goals.filter(g=>Array.isArray(g)&&g.length>=2).map(g=>[String(g[0]??''),String(g[1]??'')]):base.goals.map(g=>[...g]);
- state.weddingDate=String(src.weddingDate??'').slice(0,10);
- state.homeTaskLimit=Math.max(1,Number(src.homeTaskLimit)||5);state.homeEventLimit=Math.max(1,Number(src.homeEventLimit)||5);
- state.categoryOrder=Array.isArray(src.categoryOrder)?src.categoryOrder.map(String):[];
- state.theme=(src.theme&&typeof src.theme==='object'&&!Array.isArray(src.theme))?{...src.theme}:{};
- return state;
+ const now=Date.now();
+ const fallbackId=(v,offset)=>v===undefined||v===null||String(v)===''?now+offset:v;
+ const normalizeList=(value,map,fallback)=>Array.isArray(value)?value.map(map):fallback;
+ const normalized={...base,...src};
+ normalized.tasks=normalizeList(src.tasks,(t,i)=>({id:fallbackId(t?.id,i),cat:String(t?.cat??'기타'),title:String(t?.title??''),due:String(t?.due??''),owner:String(t?.owner??'함께'),priority:String(t?.priority??'보통'),status:t?.status==='done'?'done':'todo',memo:String(t?.memo??'')}),base.tasks);
+ normalized.budgets=normalizeList(src.budgets,(b,i)=>({id:fallbackId(b?.id,1000+i),name:String(b?.name??''),planned:num(b?.planned),actual:num(b?.actual),details:String(b?.details??'')}),base.budgets);
+ normalized.events=normalizeList(src.events,(e,i)=>({id:fallbackId(e?.id,2000+i),title:String(e?.title??''),date:String(e?.date??'').slice(0,10),time:String(e?.time??''),location:String(e?.location??''),category:String(e?.category??''),note:String(e?.note??'')}),base.events);
+ normalized.plans=normalizeList(src.plans,(p,i)=>({id:fallbackId(p?.id,3000+i),name:String(p?.name??''),status:['논의 전','논의 중','합의 완료'].includes(p?.status)?p.status:'논의 전',details:String(p?.details??''),note:String(p?.note??'')}),base.plans);
+ normalized.memos=Array.isArray(src.memos)?src.memos.map((m,i)=>({id:fallbackId(m?.id,4000+i),text:String(m?.text??'')})).filter(m=>m.text.trim()):((String(src.memo??'').trim())?[{id:now+5000,text:String(src.memo).trim()}]:[]);
+ normalized.goals=Array.isArray(src.goals)?src.goals.filter(g=>Array.isArray(g)&&g.length>=2).map(g=>[String(g[0]??''),String(g[1]??'')]):base.goals.map(g=>[...g]);
+ normalized.weddingDate=String(src.weddingDate??'').slice(0,10);
+ normalized.homeTaskLimit=Math.max(1,Number(src.homeTaskLimit)||5);
+ normalized.homeEventLimit=Math.max(1,Number(src.homeEventLimit)||5);
+ const cats=[...new Set(normalized.tasks.map(t=>t.cat).filter(Boolean))];
+ const incomingOrder=Array.isArray(src.categoryOrder)?src.categoryOrder.map(String):[];
+ normalized.categoryOrder=[...incomingOrder.filter(c=>cats.includes(c)),...cats.filter(c=>!incomingOrder.includes(c))];
+ normalized.theme=(src.theme&&typeof src.theme==='object'&&!Array.isArray(src.theme))?{...src.theme}:{};
+ return normalized;
 }
+
 let state=normalizeState(loadStoredState());
 const defaultTheme={bg:'#f7f5f2',card:'#ffffff',ink:'#222222',muted:'#777777',line:'#e8e3dd',accent:'#9b6b52',accent2:'#d9b8a7',nav:'#f7f5f2',soft:'#faf8f5',button:'#ffffff',buttonText:'#222222',danger:'#b55b5b',good:'#5c8a69',radius:20};
 /* ===== THEME ===== */
@@ -1728,14 +1733,14 @@ function applyTheme(){const t=themeData(),r=document.documentElement.style;r.set
 function hexToRgba(hex,a){const h=String(hex||'').replace('#','');if(h.length!==6)return `rgba(247,245,242,${a})`;const n=parseInt(h,16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`}
 function syncThemeInputs(){const t=themeData();const m=THEME_INPUT_MAP;Object.entries(m).forEach(([id,k])=>{const el=document.getElementById(id);if(el){el.value=t[k];el.style.setProperty('--theme-color',t[k]);el.style.background=t[k]}});const rr=document.getElementById('thRadius'),rv=document.getElementById('thRadiusVal');if(rr)rr.value=t.radius;if(rv)rv.textContent=(Number(t.radius)||20)+'px'}
 function previewTheme(){const t=themeData();const m=THEME_INPUT_MAP;Object.entries(m).forEach(([id,k])=>{const el=document.getElementById(id);if(el){t[k]=el.value;el.style.setProperty('--theme-color',el.value);el.style.background=el.value}});t.radius=Number(document.getElementById('thRadius')?.value||20);state.theme=t;applyTheme();document.getElementById('thRadiusVal').textContent=t.radius+'px'}
-function saveTheme(){previewTheme();saveLocalOnly();alert('테마를 적용했어요.')}
-function resetTheme(){state.theme={...defaultTheme};applyTheme();syncThemeInputs();saveLocalOnly();alert('기본 테마로 돌아갔어요.')}
-function applyPreset(name){const p={warm:{bg:'#f7f5f2',card:'#ffffff',ink:'#2a2623',muted:'#77716c',line:'#e8e3dd',accent:'#9b6b52',accent2:'#d9b8a7',nav:'#f7f5f2',soft:'#faf8f5',button:'#ffffff',buttonText:'#2a2623',danger:'#b55b5b',good:'#5c8a69',radius:20},sage:{bg:'#f4f6f2',card:'#ffffff',ink:'#243027',muted:'#707a72',line:'#dde4de',accent:'#6f8f78',accent2:'#b8cbbd',nav:'#f4f6f2',soft:'#f6f8f5',button:'#ffffff',buttonText:'#243027',danger:'#b45f63',good:'#6f8f78',radius:20},blue:{bg:'#f3f6fb',card:'#ffffff',ink:'#243044',muted:'#727d8d',line:'#dce4ef',accent:'#5a78a8',accent2:'#b5c6df',nav:'#f3f6fb',soft:'#f6f8fc',button:'#ffffff',buttonText:'#243044',danger:'#b45f63',good:'#6f8f78',radius:20},rose:{bg:'#faf4f5',card:'#ffffff',ink:'#34272b',muted:'#827278',line:'#eadcdf',accent:'#ad6f7a',accent2:'#dcb8c0',nav:'#faf4f5',soft:'#fcf7f8',button:'#ffffff',buttonText:'#34272b',danger:'#b55b5b',good:'#5c8a69',radius:20},lavender:{bg:'#f6f3fa',card:'#ffffff',ink:'#2e2940',muted:'#777185',line:'#e3ddec',accent:'#806aa8',accent2:'#c7b9dd',nav:'#f6f3fa',soft:'#f8f6fb',button:'#ffffff',buttonText:'#2e2940',danger:'#b55b67',good:'#788e7a',radius:20}};state.theme={...p[name]||p.warm};applyTheme();syncThemeInputs();saveLocalOnly()}
+function saveTheme(){previewTheme();persistState({sync:true});alert('테마를 적용했어요.')}
+function resetTheme(){state.theme={...defaultTheme};applyTheme();syncThemeInputs();persistState({sync:true});alert('기본 테마로 돌아갔어요.')}
+function applyPreset(name){const p={warm:{bg:'#f7f5f2',card:'#ffffff',ink:'#2a2623',muted:'#77716c',line:'#e8e3dd',accent:'#9b6b52',accent2:'#d9b8a7',nav:'#f7f5f2',soft:'#faf8f5',button:'#ffffff',buttonText:'#2a2623',danger:'#b55b5b',good:'#5c8a69',radius:20},sage:{bg:'#f4f6f2',card:'#ffffff',ink:'#243027',muted:'#707a72',line:'#dde4de',accent:'#6f8f78',accent2:'#b8cbbd',nav:'#f4f6f2',soft:'#f6f8f5',button:'#ffffff',buttonText:'#243027',danger:'#b45f63',good:'#6f8f78',radius:20},blue:{bg:'#f3f6fb',card:'#ffffff',ink:'#243044',muted:'#727d8d',line:'#dce4ef',accent:'#5a78a8',accent2:'#b5c6df',nav:'#f3f6fb',soft:'#f6f8fc',button:'#ffffff',buttonText:'#243044',danger:'#b45f63',good:'#6f8f78',radius:20},rose:{bg:'#faf4f5',card:'#ffffff',ink:'#34272b',muted:'#827278',line:'#eadcdf',accent:'#ad6f7a',accent2:'#dcb8c0',nav:'#faf4f5',soft:'#fcf7f8',button:'#ffffff',buttonText:'#34272b',danger:'#b55b5b',good:'#5c8a69',radius:20},lavender:{bg:'#f6f3fa',card:'#ffffff',ink:'#2e2940',muted:'#777185',line:'#e3ddec',accent:'#806aa8',accent2:'#c7b9dd',nav:'#f6f3fa',soft:'#f8f6fb',button:'#ffffff',buttonText:'#2e2940',danger:'#b55b67',good:'#788e7a',radius:20}};state.theme={...p[name]||p.warm};applyTheme();syncThemeInputs();persistState({sync:true})}
 function won(n){return moneyWonFmt.format(num(n))}
 function wonUnit(n){return moneyFmt.format(num(n))+' 원'}
 function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function getCats(){return [...new Set(state.tasks.map(t=>t.cat).filter(Boolean))]}
-function getOrderedCats(){const cats=getCats();const order=Array.isArray(state.categoryOrder)?state.categoryOrder:[];const ordered=order.filter(c=>cats.includes(c));cats.forEach(c=>{if(!ordered.includes(c))ordered.push(c)});if(JSON.stringify(order)!==JSON.stringify(ordered)){state.categoryOrder=ordered;saveLocalOnly();}return ordered}
+function getOrderedCats(){const cats=getCats(),order=Array.isArray(state.categoryOrder)?state.categoryOrder:[];return [...order.filter(c=>cats.includes(c)),...cats.filter(c=>!order.includes(c))]}
 function moveCategory(cat,dir){const cats=getOrderedCats().slice(),i=cats.indexOf(String(cat)),j=i+Number(dir);if(i<0||j<0||j>=cats.length)return;const next=cats.slice();[next[i],next[j]]=[next[j],next[i]];state.categoryOrder=next;save('home');}
 /* ===== NAVIGATION & HOME ===== */
 function navInit(){const items=[['home','홈'],['tasks','할 일'],['schedule','일정'],['budget','예산'],['plans','부부계획'],['data','메모'],['settings','설정']];document.getElementById('nav').innerHTML=items.map((x,i)=>`<button class="${i===0?'active':''}" data-page="${x[0]}">${x[1]}</button>`).join('');}
@@ -1757,8 +1762,53 @@ const RENDER_DEPENDENCIES={
 };
 let dirtyViews=new Set();
 let renderScheduled=false;
+let derivedViewCache=null;
+
+function invalidateViewData(){derivedViewCache=null}
+function buildViewData(){
+  const tasks=Array.isArray(state.tasks)?state.tasks:[];
+  const events=Array.isArray(state.events)?state.events:[];
+  const budgets=Array.isArray(state.budgets)?state.budgets:[];
+  const plans=Array.isArray(state.plans)?state.plans:[];
+  const memos=Array.isArray(state.memos)?state.memos:[];
+  const today=new Date(); today.setHours(0,0,0,0);
+  const priorityRank={'높음':1,'보통':2,'낮음':3};
+  const cats=getOrderedCats();
+  const tasksByCat=new Map();
+  const taskCategorySet=new Set();
+  let doneTasks=0, highOpenTasks=0;
+  for(const t of tasks){
+    const cat=String(t.cat||'기타');
+    taskCategorySet.add(cat);
+    if(!tasksByCat.has(cat))tasksByCat.set(cat,[]);
+    tasksByCat.get(cat).push(t);
+    if(t.status==='done')doneTasks++;
+    else if(t.priority==='높음')highOpenTasks++;
+  }
+  const upcomingTasks=tasks.filter(t=>t.status!=='done').slice().sort((a,b)=>{
+    const ap=a.due?'0':'1',bp=b.due?'0':'1';
+    return ap.localeCompare(bp)||(a.due||'9999-12-31').localeCompare(b.due||'9999-12-31')||((a.priority||'보통')===(b.priority||'보통')?0:(a.priority==='높음'?-1:1));
+  });
+  const sortedEvents=events.slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||String(a.time||'').localeCompare(String(b.time||'')));
+  const upcomingEvents=events.filter(e=>e.date&&parseLocalDate(e.date)>=today).slice().sort((a,b)=>(a.date||'9999-12-31').localeCompare(b.date||'9999-12-31')||String(a.time||'').localeCompare(String(b.time||'')));
+  const eventCountByDate=new Map();
+  for(const e of events){if(e.date)eventCountByDate.set(e.date,(eventCountByDate.get(e.date)||0)+1)}
+  const totalPlan=budgets.reduce((sum,b)=>sum+Number(b.planned||0),0);
+  const totalActual=budgets.reduce((sum,b)=>sum+Number(b.actual||0),0);
+  const planDone=plans.filter(p=>p.status==='합의 완료').length;
+  return {
+    tasks,events,budgets,plans,memos,today,cats,tasksByCat,taskCategorySet,upcomingTasks,sortedEvents,upcomingEvents,eventCountByDate,
+    taskTotal:tasks.length,taskDone:doneTasks,highOpenTasks,priorityRank,
+    budgetPlan:totalPlan,budgetActual:totalActual,budgetOver:Math.max(0,totalActual-totalPlan),
+    budgetPct:totalPlan?Math.round(totalActual/totalPlan*100):0,
+    planTotal:plans.length,planTodo:plans.filter(p=>p.status==='논의 전').length,planProgress:plans.filter(p=>p.status==='논의 중').length,planDone,
+    planDonePct:plans.length?Math.round(planDone/plans.length*100):0
+  };
+}
+function getViewData(){return derivedViewCache||(derivedViewCache=buildViewData())}
 
 function requestRender(...views){
+  invalidateViewData();
   const expanded=views.flatMap(v=>RENDER_DEPENDENCIES[v]||[v]);
   expanded.forEach(v=>dirtyViews.add(v));
   if(renderScheduled)return;
@@ -1777,11 +1827,7 @@ function flushRender(){
   if(views.has('memos'))renderMemos();
 }
 function renderAll(){requestRender('all');}
-function save(views='all'){
-  saveLocalOnly();
-  requestRender(...(Array.isArray(views)?views:[views]));
-  queueSharedSave();
-}
+function save(views='all'){persistState({sync:true});requestRender(...(Array.isArray(views)?views:[views]));}
 
 /* UI components: preserve the original DOM shape so CSS layout remains stable. */
 const UI={
@@ -1813,7 +1859,30 @@ const UI={
   }
 };
 
-function calc(){const total=state.tasks.length,done=state.tasks.filter(t=>t.status==='done').length,pct=total?Math.round(done/total*100):0;document.getElementById('overallPct').textContent=pct+'%';document.getElementById('overallBar').style.width=pct+'%';document.getElementById('overallText').textContent=`${done}/${total}`;document.getElementById('todoCount')&&(document.getElementById('todoCount').textContent=total-done);document.getElementById('highCount')&&(document.getElementById('highCount').textContent=state.tasks.filter(t=>t.status!=='done'&&t.priority==='높음').length);const plan=state.budgets.reduce((a,b)=>a+Number(b.planned||0),0),act=state.budgets.reduce((a,b)=>a+Number(b.actual||0),0),over=Math.max(0,act-plan),bp=plan?Math.round(act/plan*100):0;document.getElementById('totalPlan').textContent=wonUnit(plan);document.getElementById('totalActual').textContent=wonUnit(act);document.getElementById('overBudget').textContent=wonUnit(over);const budgetPlanDisplay=document.getElementById('budgetPlanDisplay');if(budgetPlanDisplay)budgetPlanDisplay.textContent=wonUnit(plan);document.getElementById('budgetPctBig').textContent=bp+'%';document.getElementById('homeTotalPlan').textContent='/'+wonUnit(plan);document.getElementById('homeTotalActual').textContent=wonUnit(act);document.getElementById('homeBudgetPct').textContent=bp+'%';const capped=Math.min(100,Math.max(0,bp))+'%';const angle=Math.min(270,Math.max(0,bp*2.7))+'deg';const gauge=document.getElementById('budgetGauge'),homeGauge=document.getElementById('homeBudgetGauge');if(gauge){gauge.style.setProperty('--budget-pct',capped);gauge.style.setProperty('--budget-angle',angle);const arc=document.getElementById('budgetGaugeProgress');if(arc)arc.style.strokeDasharray=bp+' 100';}if(homeGauge){homeGauge.style.setProperty('--budget-pct',capped);homeGauge.style.setProperty('--budget-angle',angle);const homeArc=document.getElementById('homeBudgetGaugeProgress');if(homeArc)homeArc.style.strokeDasharray=bp+' 100';}}
+function calc(){
+ const v=getViewData();
+ const pct=v.taskTotal?Math.round(v.taskDone/v.taskTotal*100):0;
+ document.getElementById('overallPct').textContent=pct+'%';
+ document.getElementById('overallBar').style.width=pct+'%';
+ document.getElementById('overallText').textContent=`${v.taskDone}/${v.taskTotal}`;
+ document.getElementById('todoCount')&&(document.getElementById('todoCount').textContent=v.taskTotal-v.taskDone);
+ document.getElementById('highCount')&&(document.getElementById('highCount').textContent=v.highOpenTasks);
+ const {budgetPlan:plan,budgetActual:act,budgetOver:over,budgetPct:bp}=v;
+ document.getElementById('totalPlan').textContent=wonUnit(plan);
+ document.getElementById('totalActual').textContent=wonUnit(act);
+ document.getElementById('overBudget').textContent=wonUnit(over);
+ const budgetPlanDisplay=document.getElementById('budgetPlanDisplay'); if(budgetPlanDisplay)budgetPlanDisplay.textContent=wonUnit(plan);
+ document.getElementById('budgetPctBig').textContent=bp+'%';
+ document.getElementById('homeTotalPlan').textContent='/'+wonUnit(plan);
+ document.getElementById('homeTotalActual').textContent=wonUnit(act);
+ document.getElementById('homeBudgetPct').textContent=bp+'%';
+ const capped=Math.min(100,Math.max(0,bp))+'%';
+ const angle=Math.min(270,Math.max(0,bp*2.7))+'deg';
+ const gauge=document.getElementById('budgetGauge'),homeGauge=document.getElementById('homeBudgetGauge');
+ if(gauge){gauge.style.setProperty('--budget-pct',capped);gauge.style.setProperty('--budget-angle',angle);const arc=document.getElementById('budgetGaugeProgress');if(arc)arc.style.strokeDasharray=bp+' 100';}
+ if(homeGauge){homeGauge.style.setProperty('--budget-pct',capped);homeGauge.style.setProperty('--budget-angle',angle);const homeArc=document.getElementById('homeBudgetGaugeProgress');if(homeArc)homeArc.style.strokeDasharray=bp+' 100';}
+}
+
 function renderDday(){
  const el=document.getElementById('ddayValue');
  if(!el)return;
@@ -1828,45 +1897,46 @@ function renderDday(){
  else el.textContent='D+'+Math.abs(diff);
 }
 function renderHome(){
- const cats=getOrderedCats();
- const upcoming=state.tasks.filter(t=>t.status!=='done').sort((a,b)=>{const ap=a.due?'0':'1',bp=b.due?'0':'1';return ap.localeCompare(bp)||(a.due||'9999-12-31').localeCompare(b.due||'9999-12-31')||((a.priority||'보통')===(b.priority||'보통')?0:(a.priority==='높음'?-1:1))});
+ const v=getViewData();
  const taskLimit=Number(state.homeTaskLimit)||5;
- const taskEl=document.getElementById('homeTasks'); if(taskEl)taskEl.innerHTML=upcoming.slice(0,taskLimit).map(t=>taskHtml(t,true)).join('')||'<div class="empty">모든 할 일을 완료했어요 🎉</div>';
+ const taskEl=document.getElementById('homeTasks'); if(taskEl)taskEl.innerHTML=v.upcomingTasks.slice(0,taskLimit).map(t=>taskHtml(t,true)).join('')||'<div class="empty">모든 할 일을 완료했어요 🎉</div>';
  const taskSel=document.getElementById('homeTaskLimit'); if(taskSel)taskSel.value=String(taskLimit);
- const today=new Date();today.setHours(0,0,0,0);
- const events=[...state.events].filter(e=>e.date&&parseLocalDate(e.date)>=today).sort((a,b)=>(a.date||'9999-12-31').localeCompare(b.date||'9999-12-31')||String(a.time||'').localeCompare(String(b.time||'')));
  const eventLimit=Number(state.homeEventLimit)||5;
  const eventEl=document.getElementById('homeEvents');
- if(eventEl)eventEl.innerHTML=events.slice(0,eventLimit).map(e=>{const meta=[e.time,e.location,e.category].filter(Boolean).map(x=>`<span class="event-tag">${esc(x)}</span>`).join('');return `<div class="home-event"><b>${esc(e.title)}</b>${meta?`<div class="event-meta">${meta}</div>`:''}<span class="small">${e.date.replaceAll('-','.')}</span>${e.note?`<span class="small">${esc(e.note)}</span>`:''}</div>`}).join('')||'<div class="empty">다가오는 일정이 없어요.</div>';
+ if(eventEl)eventEl.innerHTML=v.upcomingEvents.slice(0,eventLimit).map(e=>{const meta=[e.time,e.location,e.category].filter(Boolean).map(x=>`<span class="event-tag">${esc(x)}</span>`).join('');return `<div class="home-event"><b>${esc(e.title)}</b>${meta?`<div class="event-meta">${meta}</div>`:''}<span class="small">${e.date.replaceAll('-','.')}</span>${e.note?`<span class="small">${esc(e.note)}</span>`:''}</div>`}).join('')||'<div class="empty">다가오는 일정이 없어요.</div>';
  const eventSel=document.getElementById('homeEventLimit'); if(eventSel)eventSel.value=String(eventLimit);
- let html='';for(let ci=0;ci<cats.length;ci++){const c=cats[ci],arr=state.tasks.filter(t=>t.cat===c),d=arr.filter(t=>t.status==='done').length,p=arr.length?Math.round(d/arr.length*100):0;html+=`<div class="card col4 category-card"><div class="row category-card-head"><b>${esc(c)}</b><div class="category-move"><button class="iconbtn" data-action="move-category" data-delta="-1" data-cat="${esc(c)}" ${ci===0?'disabled':''} aria-label="위로">↑</button><button class="iconbtn" data-action="move-category" data-delta="1" data-cat="${esc(c)}" ${ci===cats.length-1?'disabled':''} aria-label="아래로">↓</button></div></div><div class="category-progress-meta small">${d}/${arr.length}</div><div class="progress" style="margin-top:7px"><i style="width:${p}%"></i></div></div>`}document.getElementById('categoryCards').innerHTML=html||'<div class="empty">등록된 분야가 없어요.</div>';
- const planTotal=state.plans.length, planTodo=state.plans.filter(p=>p.status==='논의 전').length, planProgress=state.plans.filter(p=>p.status==='논의 중').length, planDone=state.plans.filter(p=>p.status==='합의 완료').length;
- const planDonePct=planTotal?Math.round(planDone/planTotal*100):0;
- document.getElementById('homePlanTodo').textContent=planTodo;
- document.getElementById('homePlanProgress').textContent=planProgress;
- document.getElementById('homePlanDone').textContent=planDone;
- document.getElementById('homePlanDonePct').textContent=planDonePct+'%';
- document.getElementById('homePlanTotal').textContent=planTotal;
+ let html='';
+ for(let ci=0;ci<v.cats.length;ci++){
+   const c=v.cats[ci],arr=v.tasksByCat.get(c)||[],d=arr.filter(t=>t.status==='done').length,p=arr.length?Math.round(d/arr.length*100):0;
+   html+=`<div class="card col4 category-card"><div class="row category-card-head"><b>${esc(c)}</b><div class="category-move"><button class="iconbtn" data-action="move-category" data-delta="-1" data-cat="${esc(c)}" ${ci===0?'disabled':''} aria-label="위로">↑</button><button class="iconbtn" data-action="move-category" data-delta="1" data-cat="${esc(c)}" ${ci===v.cats.length-1?'disabled':''} aria-label="아래로">↓</button></div></div><div class="category-progress-meta small">${d}/${arr.length}</div><div class="progress" style="margin-top:7px"><i style="width:${p}%"></i></div></div>`;
+ }
+ document.getElementById('categoryCards').innerHTML=html||'<div class="empty">등록된 분야가 없어요.</div>';
+ document.getElementById('homePlanTodo').textContent=v.planTodo;
+ document.getElementById('homePlanProgress').textContent=v.planProgress;
+ document.getElementById('homePlanDone').textContent=v.planDone;
+ document.getElementById('homePlanDonePct').textContent=v.planDonePct+'%';
+ document.getElementById('homePlanTotal').textContent=v.planTotal;
 }
+
 function setHomeLimit(type,value){const n=Math.max(1,Number(value)||5);if(type==='tasks')state.homeTaskLimit=n;else state.homeEventLimit=n;save('home');}
 
 function taskHtml(t,compact=false){return UI.task(t,compact)}
 function renderTasks(){
+ const v=getViewData();
  const select=document.getElementById('taskCat');
  const currentCat=select.value||'all';
- const cats2=[...new Set(state.tasks.map(t=>t.cat))];
+ const cats2=[...v.taskCategorySet];
  select.innerHTML='<option value="all">전체 분야</option>'+cats2.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
  select.value=cats2.includes(currentCat)?currentCat:'all';
  const q=(document.getElementById('taskSearch').value||'').toLowerCase();
  const c=select.value;
  const st=document.getElementById('taskStatus').value;
  const sort=document.getElementById('taskSort').value;
- let arr=state.tasks.filter(t=>(!q||t.title.toLowerCase().includes(q)||t.cat.toLowerCase().includes(q))&&(c==='all'||t.cat===c)&&(st==='all'||(st==='done'?t.status==='done':t.status!=='done')));
- const pri={'높음':1,'보통':2,'낮음':3};
+ let arr=v.tasks.filter(t=>(!q||String(t.title||'').toLowerCase().includes(q)||String(t.cat||'').toLowerCase().includes(q))&&(c==='all'||t.cat===c)&&(st==='all'||(st==='done'?t.status==='done':t.status!=='done')));
  if(sort==='dueAsc') arr.sort((a,b)=>(a.due||'9999-12-31').localeCompare(b.due||'9999-12-31'));
  else if(sort==='dueDesc') arr.sort((a,b)=>(b.due||'0000-01-01').localeCompare(a.due||'0000-01-01'));
- else if(sort==='priority') arr.sort((a,b)=>(pri[a.priority]||9)-(pri[b.priority]||9));
- else if(sort==='category') arr.sort((a,b)=>a.cat.localeCompare(b.cat,'ko') || a.title.localeCompare(b.title,'ko'));
+ else if(sort==='priority') arr.sort((a,b)=>(v.priorityRank[a.priority]||9)-(v.priorityRank[b.priority]||9));
+ else if(sort==='category') arr.sort((a,b)=>String(a.cat||'').localeCompare(String(b.cat||''),'ko') || String(a.title||'').localeCompare(String(b.title||''),'ko'));
  document.getElementById('taskList').innerHTML=arr.map(t=>taskHtml(t,false)).join('')||'<div class="empty">조건에 맞는 할 일이 없어요.</div>';
 }
 
@@ -1914,6 +1984,8 @@ function startScheduleDateWatcher(){
 }
 
 function renderCalendar(){
+ const v=getViewData();
+ const eventCountByDate=v.eventCountByDate;
  const y=calendarCursor.getFullYear(),m=calendarCursor.getMonth(),pad=n=>String(n).padStart(2,'0');
  document.getElementById('calendarTitle').textContent=`${y}년 ${m+1}월`;
  const todayIso=localDateISO();
@@ -1926,33 +1998,34 @@ function renderCalendar(){
   const iso=`${yy}-${pad(mm+1)}-${pad(dd)}`;
   const dateObj=new Date(yy,mm,dd);
   const day=dateObj.getDay();
-  const count=state.events.filter(e=>e.date===iso).length;
+  const count=eventCountByDate.get(iso)||0;
   const holiday=koreaHolidays[iso];
   const dayClass=day===0?'sunday':day===6?'saturday':'';
   grid.push(`<button class="calendar-cell ${muted?'muted':''} ${dayClass} ${holiday?'holiday':''} ${iso===selectedScheduleDate?'selected':''} ${iso===todayIso?'today':''}" data-action="select-date" data-date="${iso}"><div class="calendar-num">${dd}</div>${holiday?`<div class="calendar-holiday" title="${holiday}">${holiday}</div>`:''}${count?`<div class="calendar-dots">${Array.from({length:Math.min(count,4)}).map(()=>'<i class="calendar-dot"></i>').join('')}</div>${count>4?`<div class="calendar-more">+${count-4}</div>`:''}`:''}</button>`);
  }
  document.getElementById('calendarGrid').innerHTML=grid.join('');
- const count=state.events.filter(e=>e.date===selectedScheduleDate).length;
+ const count=eventCountByDate.get(selectedScheduleDate)||0;
  const holiday=koreaHolidays[selectedScheduleDate];
  document.getElementById('calendarHint').textContent=[count?`${count}개의 일정`:'일정 없음',holiday?`공휴일 · ${holiday}`:''].filter(Boolean).join(' · ');
 }
 function selectScheduleDate(iso){selectedScheduleDate=iso;const d=parseLocalDate(iso);calendarCursor=new Date(d.getFullYear(),d.getMonth(),1);renderSchedule()}
 function changeCalendarMonth(delta){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+delta,1);renderCalendar()}
 function renderSchedule(){
+ const v=getViewData();
  renderCalendar();
  const filter=(document.getElementById('scheduleFilter')||{}).value||'all';
- const today=new Date();today.setHours(0,0,0,0);
- let ev=[...state.events].sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||String(a.time||'').localeCompare(String(b.time||'')));
- if(filter==='all')ev=ev.filter(e=>e.date===selectedScheduleDate);if(filter==='upcoming')ev=ev.filter(e=>parseLocalDate(e.date)>=today);if(filter==='past')ev=ev.filter(e=>parseLocalDate(e.date)<today);
- const d=parseLocalDate(selectedScheduleDate);document.getElementById('selectedDateTitle').textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 일정`;
- document.getElementById('scheduleList').innerHTML=ev.map(e=>UI.event(e,today)).join('')||'<div class="empty">해당 조건의 일정이 없어요.</div>';
- let all=[...state.events].sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||String(a.time||'').localeCompare(String(b.time||'')));
+ let ev=v.sortedEvents;
+ if(filter==='all')ev=ev.filter(e=>e.date===selectedScheduleDate);
+ else if(filter==='upcoming')ev=ev.filter(e=>parseLocalDate(e.date)>=v.today);
+ else if(filter==='past')ev=ev.filter(e=>parseLocalDate(e.date)<v.today);
+ const d=parseLocalDate(selectedScheduleDate); document.getElementById('selectedDateTitle').textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 일정`;
+ document.getElementById('scheduleList').innerHTML=ev.map(e=>UI.event(e,v.today)).join('')||'<div class="empty">해당 조건의 일정이 없어요.</div>';
  const scheduleSearch=(document.getElementById('scheduleAllSearch')?.value||'').trim().toLowerCase();
- if(scheduleSearch){all=all.filter(e=>[e.title,e.date,e.time,e.location,e.category,e.note].filter(Boolean).some(v=>String(v).toLowerCase().includes(scheduleSearch)));}
- document.getElementById('scheduleAllList').innerHTML=all.map(e=>UI.event(e,today)).join('')||'<div class="empty">검색 결과가 없어요.</div>';
+ let all=v.sortedEvents;
+ if(scheduleSearch){all=all.filter(e=>[e.title,e.date,e.time,e.location,e.category,e.note].filter(Boolean).some(x=>String(x).toLowerCase().includes(scheduleSearch)));}
+ document.getElementById('scheduleAllList').innerHTML=all.map(e=>UI.event(e,v.today)).join('')||'<div class="empty">검색 결과가 없어요.</div>';
 }
 
-/* ===== BUDGET ===== */
 function renderBudget(){
  const el=$('budgetLines'); if(!el)return;
  el.innerHTML=state.budgets.map((b,i)=>UI.budget(b,i,state.budgets.length)).join('')||UI.empty('등록된 예산 항목이 없어요.');
@@ -1967,6 +2040,7 @@ function renderPlans(){
 }
 
 function movePlan(id,dir){const i=state.plans.findIndex(x=>String(x.id)===String(id)),j=i+dir;if(i<0||j<0||j>=state.plans.length)return;[state.plans[i],state.plans[j]]=[state.plans[j],state.plans[i]];save('plans')}
+function moveBudget(id,dir){const i=state.budgets.findIndex(x=>String(x.id)===String(id)),j=i+dir;if(i<0||j<0||j>=state.budgets.length)return;[state.budgets[i],state.budgets[j]]=[state.budgets[j],state.budgets[i]];save('budget')}
 function deletePlan(id){if(!confirm('삭제하시겠습니까?'))return;state.plans=state.plans.filter(x=>String(x.id)!==String(id));save('plans')}
 
 
@@ -2010,80 +2084,84 @@ function saveMemo(){const text=document.getElementById('quickMemo').value.trim()
 function saveMemoEdit(id){const text=document.getElementById('mText').value.trim();if(!text){alert('메모 내용을 입력해주세요.');return}const m=state.memos.find(x=>String(x.id)===String(id));if(!m){alert('수정할 메모를 찾지 못했어요.');return}m.text=text;save('memos');closeModal()}
 function deleteMemo(id){if(!confirm('삭제하시겠습니까?'))return;state.memos=state.memos.filter(m=>String(m.id)!==String(id));save('memos')}
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='우리_결혼_플래너_백업.json';a.click();URL.revokeObjectURL(a.href)}
-function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const parsed=JSON.parse(r.result);state=normalizeState(parsed);applyTheme();syncThemeInputs();save();alert('백업을 복구했어요.')}catch(e){console.error(e);alert('복구 파일을 읽을 수 없어요.')}};r.readAsText(f);ev.target.value=''}
+function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const parsed=JSON.parse(r.result);replaceState(parsed,{persist:true,render:true,sync:true,views:'all',theme:true});alert('백업을 복구했어요.')}catch(e){console.error(e);alert('복구 파일을 읽을 수 없어요.')}};r.readAsText(f);ev.target.value=''}
+const ACTION_HANDLERS={
+  'open-modal':el=>openModal(el.dataset.modal),
+  'calendar-month':el=>changeCalendarMonth(Number(el.dataset.delta||0)),
+  'save-memo':()=>saveMemo(),
+  'shared-sign-up':()=>sharedSignUp(),
+  'shared-sign-in':()=>sharedSignIn(),
+  'shared-sign-out':()=>sharedSignOut(),
+  'shared-pull':()=>sharedPull(),
+  'shared-copy-code':()=>sharedCopyCode(),
+  'shared-create-project':()=>sharedCreateProject(),
+  'shared-join-project':()=>sharedJoinProject(),
+  'theme-preset':el=>applyPreset(el.dataset.preset),
+  'theme-reset':()=>resetTheme(),
+  'theme-save':()=>saveTheme(),
+  'export-data':()=>exportData(),
+  'import-file':()=>$('importFile')?.click(),
+  'move-category':(el)=>moveCategory(el.closest('[data-cat]')?.dataset.cat,Number(el.dataset.delta||0)),
+  'toggle-task':el=>toggleTask(el.dataset.id),
+  'edit-task':el=>openTaskEdit(el.dataset.id),
+  'delete-task':el=>deleteTask(el.dataset.id),
+  'select-date':el=>selectScheduleDate(el.dataset.date),
+  'edit-event':el=>openEventEdit(el.dataset.id),
+  'delete-event':el=>deleteEvent(el.dataset.id),
+  'delete-event-close':el=>{deleteEvent(el.dataset.id);return closeModal()},
+  'move-budget':el=>moveBudget(el.dataset.id,Number(el.dataset.delta||0)),
+  'edit-budget':el=>openModal('budget',el.dataset.id),
+  'delete-budget':el=>deleteBudget(el.dataset.id),
+  'move-plan':el=>movePlan(el.dataset.id,Number(el.dataset.delta||0)),
+  'edit-plan':el=>openModal('plan',el.dataset.id),
+  'delete-plan':el=>deletePlan(el.dataset.id),
+  'close-modal':()=>closeModal(),
+  'save-wedding-date':()=>saveWeddingDate(),
+  'save-task':el=>saveTask(el.dataset.id==='null'?null:el.dataset.id),
+  'save-plan':el=>savePlan(el.dataset.id==='null'?null:el.dataset.id),
+  'save-event':el=>saveEvent(el.dataset.id==='null'?null:el.dataset.id),
+  'save-budget':el=>saveBudget(el.dataset.id==='null'?null:el.dataset.id),
+  'save-memo-edit':el=>saveMemoEdit(el.dataset.id),
+  'update-plan':el=>updatePlan(el.dataset.id,el.value),
+  'preview-theme':()=>previewTheme(),
+  'format-money':el=>formatMoneyInput(el),
+  'import-data':el=>importData({target:{files:el.files}}),
+  'home-limit':el=>setHomeLimit(el.dataset.limitType,el.value),
+  'edit-memo':el=>openModal('memo',el.dataset.id),
+  'delete-memo':el=>deleteMemo(el.dataset.id),
+  'switch-project':el=>sharedSwitchProject(el.dataset.project)
+};
+const NON_CLICK_ACTIONS=new Set(['update-plan','format-money','preview-theme','import-data','home-limit']);
+
 function handleAction(el){
- const a=el?.dataset?.action;if(!a)return;
- const id=el.dataset.id, delta=Number(el.dataset.delta||0);
- switch(a){
-  case 'open-modal': return openModal(el.dataset.modal);
-  case 'calendar-month': return changeCalendarMonth(delta);
-  case 'save-memo': return saveMemo();
-  case 'shared-sign-up': return sharedSignUp();
-  case 'shared-sign-in': return sharedSignIn();
-  case 'shared-sign-out': return sharedSignOut();
-  case 'shared-pull': return sharedPull();
-  case 'shared-copy-code': return sharedCopyCode();
-  case 'shared-create-project': return sharedCreateProject();
-  case 'shared-join-project': return sharedJoinProject();
-  case 'theme-preset': return applyPreset(el.dataset.preset);
-  case 'theme-reset': return resetTheme();
-  case 'theme-save': return saveTheme();
-  case 'export-data': return exportData();
-  case 'import-file': return $('importFile')?.click();
-  case 'move-category': return moveCategory(el.closest('[data-cat]')?.dataset.cat,delta);
-  case 'toggle-task': return toggleTask(id);
-  case 'edit-task': openTaskEdit(id);break;
-  case 'delete-task': return deleteTask(id);
-  case 'select-date': return selectScheduleDate(el.dataset.date);
-  case 'edit-event': return openEventEdit(id);
-  case 'delete-event': return deleteEvent(id);
-  case 'delete-event-close': deleteEvent(id);return closeModal();
-  case 'move-budget': return moveBudget(id,delta);
-  case 'edit-budget': return openModal('budget',id);
-  case 'delete-budget': return deleteBudget(id);
-  case 'move-plan': return movePlan(id,delta);
-  case 'edit-plan': openModal('plan',id);break;
-  case 'delete-plan': return deletePlan(id);
-  case 'close-modal': return closeModal();
-  case 'save-wedding-date': return saveWeddingDate();
-  case 'save-task': return saveTask(id==='null'?null:id);
-  case 'save-plan': return savePlan(id==='null'?null:id);
-  case 'save-event': return saveEvent(id==='null'?null:id);
-  case 'save-budget': return saveBudget(id==='null'?null:id);
-  case 'save-memo-edit': return saveMemoEdit(id);
-  case 'update-plan': return updatePlan(id,el.value);
-  case 'preview-theme': return previewTheme();
-  case 'format-money': return formatMoneyInput(el);
-  case 'import-data': return importData({target:{files:el.files}});
-  case 'home-limit': return setHomeLimit(el.dataset.limitType,el.value);
-  case 'edit-memo': openModal('memo',id);break;
-  case 'delete-memo': return deleteMemo(id);
-  case 'switch-project': return sharedSwitchProject(el.dataset.project);
- }
- el.closest('details')?.removeAttribute('open');
+  const action=el?.dataset?.action;
+  const handler=ACTION_HANDLERS[action];
+  if(!handler)return;
+  handler(el);
+  el.closest('details')?.removeAttribute('open');
 }
+
 document.addEventListener('click',e=>{
- const nav=e.target.closest('#nav [data-page]');
- if(nav){showPage(nav.dataset.page);return;}
- const action=e.target.closest('[data-action]');
- if(action){
-  const a=action.dataset.action;
-  if(['update-plan','format-money','preview-theme','import-data','home-limit'].includes(a))return;
+  const nav=e.target.closest('#nav [data-page]');
+  if(nav){showPage(nav.dataset.page);return;}
+  const action=e.target.closest('[data-action]');
+  if(!action)return;
+  if(NON_CLICK_ACTIONS.has(action.dataset.action))return;
   e.preventDefault();
   handleAction(action);
- }
 });
+
 ['taskSearch','taskCat','taskStatus','taskSort'].forEach(id=>$(id)?.addEventListener('input',()=>requestRender('tasks')));
 $('scheduleFilter')?.addEventListener('change',()=>requestRender('schedule'));
 $('scheduleAllSearch')?.addEventListener('input',()=>requestRender('schedule'));
 $('memoSearch')?.addEventListener('input',()=>requestRender('memos'));
 document.addEventListener('input',e=>{
-  const action=e.target.closest?.('[data-action="format-money"],[data-action="preview-theme"]');
-  if(action)handleAction(action);
+  const action=e.target.closest?.('[data-action]');
+  if(action&&NON_CLICK_ACTIONS.has(action.dataset.action))handleAction(action);
 });
 document.addEventListener('change',e=>{
-  const action=e.target.closest?.('[data-action="update-plan"],[data-action="import-data"],[data-action="home-limit"]');
-  if(action)handleAction(action);
+  const action=e.target.closest?.('[data-action]');
+  if(action&&NON_CLICK_ACTIONS.has(action.dataset.action))handleAction(action);
 });
 
 /* ===== SHARED SYNC / SUPABASE ===== */
@@ -2111,8 +2189,17 @@ function num(v){return Number(String(v??'').replace(/,/g,''))||0}
 function newId(){return Date.now()+Math.floor(Math.random()*1000)}
 function isoDate(v){return v instanceof Date?localDateISO(v):String(v||'').slice(0,10)}
 function parseLocalDate(iso){return new Date(String(iso||'')+'T00:00:00')}
-function saveLocalOnly(){localStorage.setItem(KEY,JSON.stringify(state))}
-function cloneSharedState(){return JSON.parse(JSON.stringify(state))}
+function saveLocalOnly(){try{localStorage.setItem(KEY,JSON.stringify(state));return true}catch(e){console.error('로컬 저장 실패',e);return false}}
+function cloneSharedState(){return typeof structuredClone==='function'?structuredClone(state):JSON.parse(JSON.stringify(state))}
+function persistState({sync=false}={}){saveLocalOnly();if(sync)queueSharedSave()}
+function replaceState(next,{persist=true,render=true,sync=false,views='all',theme=false}={}){
+ state=normalizeState(next);
+ if(theme){applyTheme();syncThemeInputs()}
+ if(persist)saveLocalOnly();
+ if(sync)queueSharedSave();
+ if(render)requestRender(...(Array.isArray(views)?views:[views]));
+ return state;
+}
 function queueSharedSave(){if(!sharedSync.client||!sharedSync.projectId||sharedSync.busy)return;clearTimeout(sharedSync.pushTimer);sharedSync.pushTimer=setTimeout(()=>sharedPushNow(true),500)}
 async function sharedConnect(){try{if(!window.supabase?.createClient){alert('공유 기능 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해주세요.');return false}const cfg=sharedConfig();const url=(cfg.url||DEFAULT_SUPABASE_URL).replace(/\/$/,''),key=cfg.key||DEFAULT_SUPABASE_KEY,email=document.getElementById('syncEmail')?.value.trim()||cfg.email||'';setSharedConfig({...cfg,url,key,email});if(sharedSync.client){try{await sharedSync.client.removeAllChannels()}catch(e){} }sharedSync.client=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});if(!sharedSync.authBound){sharedSync.authBound=true;sharedSync.client.auth.onAuthStateChange((_event,session)=>{sharedSync.user=session?.user||null;sharedSetStatus(sharedSync.user?(sharedSync.projectId?'실시간 공유 중':'로그인됨'):'로컬 사용 중',sharedSync.user?'shared-online':'');});}const {data,error}=await sharedSync.client.auth.getSession();if(error)throw error;sharedSync.user=data.session?.user||null;if(sharedSync.user)await sharedAfterLogin();else sharedSetStatus('로컬 사용 중','');return true}catch(e){console.error(e);sharedSetStatus('연결 실패','shared-error');alert(e.message||'연결에 실패했어요. Supabase URL/키를 확인해주세요.');return false}}
 async function ensureSharedClient(){if(sharedSync.client)return true;return await sharedConnect()}
@@ -2123,8 +2210,8 @@ function generateInviteCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let
 async function sharedCreateProject(){try{if(!(await ensureSharedClient()))return;if(!sharedSync.user){alert('먼저 로그인해주세요.');return}if(sharedSync.projectId&&!confirm('현재 프로젝트가 이미 있습니다.\n\n새 프로젝트를 만들면 현재 프로젝트와 별개의 프로젝트가 생성되고, 기존 프로젝트도 계정에 그대로 남습니다.\n\n새 프로젝트로 전환할까요?'))return;const name='우리 결혼 플래너',code=generateInviteCode();const {data,error}=await sharedSync.client.rpc('create_wedding_project',{p_name:name,p_invite_code:code});if(error)throw error;const row=Array.isArray(data)?data[0]:data;if(!row?.project_id)throw new Error('프로젝트 생성 응답이 올바르지 않아요.');sharedSync.projectId=row.project_id;const c={...sharedConfig(),inviteCode:row.invite_code||code,projectId:row.project_id||sharedSync.projectId,email:sharedSync.user.email};setSharedConfig(c);document.getElementById('syncCode').value=c.inviteCode;try{await sharedRefreshProjects()}catch(e){console.warn(e)}await sharedPushNow(false);await sharedSubscribe();sharedSetStatus('실시간 공유 중','shared-online');sharedSetLastSync('지금 이 기기의 데이터를 공동 프로젝트에 올렸어요.');alert(`공동 프로젝트를 만들었어요.\n\n초대 코드: ${c.inviteCode}\n\n상대방이 같은 Supabase 설정으로 로그인한 뒤 이 코드를 입력하면 참여할 수 있어요.`)}catch(e){console.error(e);alert(e.message||'프로젝트 생성에 실패했어요.')}}
 async function sharedJoinProject(){try{if(!(await ensureSharedClient()))return;if(!sharedSync.user){alert('먼저 로그인해주세요.');return}const code=(document.getElementById('syncJoinCode')?.value||'').trim().toUpperCase();if(!code){alert('공유 프로젝트 코드를 입력해주세요.');return}const {data,error}=await sharedSync.client.rpc('join_wedding_project',{p_invite_code:code});if(error)throw error;const pid=typeof data==='string'?data:data?.project_id||data?.[0]?.project_id;if(!pid)throw new Error('프로젝트를 찾지 못했어요.');if(!confirm('공동 데이터를 불러올까요? 이 기기의 현재 데이터가 공동 데이터로 바뀝니다.'))return;sharedSync.projectId=pid;setSharedConfig({...sharedConfig(),inviteCode:code,projectId:pid,email:sharedSync.user.email});try{await sharedRefreshProjects()}catch(e){console.warn(e)}const ok=await sharedPull(false);if(!ok)throw new Error('공동 데이터를 불러오지 못했어요.');await sharedSubscribe();sharedSetStatus('실시간 공유 중','shared-online');alert('공동 프로젝트에 참여했어요.')}catch(e){console.error(e);alert(e.message||'프로젝트 참여에 실패했어요.')}}
 async function sharedCopyCode(){const code=document.getElementById('syncCode')?.value.trim();if(!code){alert('복사할 공유 코드가 없어요.');return}try{await navigator.clipboard.writeText(code);alert('공유 코드를 복사했어요.')}catch(e){const t=document.createElement('textarea');t.value=code;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();alert('공유 코드를 복사했어요.')}}
-async function sharedSubscribe(){if(!sharedSync.client||!sharedSync.projectId)return;if(sharedSync.channel)await sharedSync.client.removeChannel(sharedSync.channel);sharedSync.channel=sharedSync.client.channel('wedding-project-'+sharedSync.projectId).on('postgres_changes',{event:'*',schema:'public',table:'project_state',filter:`project_id=eq.${sharedSync.projectId}`},payload=>{if(payload.eventType==='DELETE'||!payload.new?.state)return;if(payload.new.updated_by&&sharedSync.user?.id&&String(payload.new.updated_by)===String(sharedSync.user.id))return;sharedSync.busy=true;try{state=payload.new.state||state;saveLocalOnly();applyTheme();syncThemeInputs();renderAll();sharedSync.lastSyncAt=payload.new.updated_at||new Date().toISOString();sharedSetLastSync(`마지막 동기화 · ${new Date(sharedSync.lastSyncAt).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`);sharedSetStatus('실시간 공유 중','shared-online')}finally{sharedSync.busy=false}}).subscribe(status=>{if(status==='SUBSCRIBED')sharedSetStatus('실시간 공유 중','shared-online');else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')sharedSetStatus('동기화 오류','shared-error')})}
-async function sharedPull(showAlert=true){try{if(!sharedSync.client||!sharedSync.projectId){if(showAlert)alert('먼저 공동 프로젝트에 연결해주세요.');return false}const {data,error}=await sharedSync.client.from('project_state').select('state,updated_at').eq('project_id',sharedSync.projectId).maybeSingle();if(error)throw error;if(!data){if(showAlert)alert('공동 데이터가 아직 없어요.');return false}sharedSync.busy=true;state=data.state||state;saveLocalOnly();applyTheme();syncThemeInputs();renderAll();sharedSync.lastSyncAt=data.updated_at||new Date().toISOString();sharedSetLastSync(`마지막 동기화 · ${new Date(sharedSync.lastSyncAt).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`);sharedSetStatus('실시간 공유 중','shared-online');if(showAlert)alert('공동 데이터를 불러왔어요.');return true}catch(e){console.error(e);if(showAlert)alert(e.message||'공동 데이터를 불러오지 못했어요.');return false}finally{sharedSync.busy=false}}
+async function sharedSubscribe(){if(!sharedSync.client||!sharedSync.projectId)return;if(sharedSync.channel)await sharedSync.client.removeChannel(sharedSync.channel);sharedSync.channel=sharedSync.client.channel('wedding-project-'+sharedSync.projectId).on('postgres_changes',{event:'*',schema:'public',table:'project_state',filter:`project_id=eq.${sharedSync.projectId}`},payload=>{if(payload.eventType==='DELETE'||!payload.new?.state)return;if(payload.new.updated_by&&sharedSync.user?.id&&String(payload.new.updated_by)===String(sharedSync.user.id))return;sharedSync.busy=true;try{replaceState(payload.new.state||state,{persist:true,render:true,sync:false,views:'all',theme:true});sharedSync.lastSyncAt=payload.new.updated_at||new Date().toISOString();sharedSetLastSync(`마지막 동기화 · ${new Date(sharedSync.lastSyncAt).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`);sharedSetStatus('실시간 공유 중','shared-online')}finally{sharedSync.busy=false}}).subscribe(status=>{if(status==='SUBSCRIBED')sharedSetStatus('실시간 공유 중','shared-online');else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')sharedSetStatus('동기화 오류','shared-error')})}
+async function sharedPull(showAlert=true){try{if(!sharedSync.client||!sharedSync.projectId){if(showAlert)alert('먼저 공동 프로젝트에 연결해주세요.');return false}const {data,error}=await sharedSync.client.from('project_state').select('state,updated_at').eq('project_id',sharedSync.projectId).maybeSingle();if(error)throw error;if(!data){if(showAlert)alert('공동 데이터가 아직 없어요.');return false}sharedSync.busy=true;replaceState(data.state||state,{persist:true,render:true,sync:false,views:'all',theme:true});sharedSync.lastSyncAt=data.updated_at||new Date().toISOString();sharedSetLastSync(`마지막 동기화 · ${new Date(sharedSync.lastSyncAt).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`);sharedSetStatus('실시간 공유 중','shared-online');if(showAlert)alert('공동 데이터를 불러왔어요.');return true}catch(e){console.error(e);if(showAlert)alert(e.message||'공동 데이터를 불러오지 못했어요.');return false}finally{sharedSync.busy=false}}
 async function sharedPushNow(silent=false){try{if(!sharedSync.client||!sharedSync.projectId||!sharedSync.user)return false;const now=new Date().toISOString();const payload={project_id:sharedSync.projectId,state:cloneSharedState(),updated_by:sharedSync.user.id,updated_at:now};const {error}=await sharedSync.client.from('project_state').upsert(payload,{onConflict:'project_id'});if(error)throw error;sharedSync.lastSyncAt=now;sharedSetLastSync(`마지막 동기화 · ${new Date(now).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`);sharedSetStatus('실시간 공유 중','shared-online');return true}catch(e){console.error(e);sharedSetStatus('동기화 오류','shared-error');if(!silent)alert(e.message||'공유 데이터 저장에 실패했어요.');return false}}
 async function sharedSignOut(){try{if(sharedSync.channel&&sharedSync.client)await sharedSync.client.removeChannel(sharedSync.channel);if(sharedSync.client)await sharedSync.client.auth.signOut()}finally{const c=sharedConfig();const emailEl=document.getElementById('syncEmail');const passwordEl=document.getElementById('syncPassword');if(emailEl&&c.email)emailEl.value=c.email;if(passwordEl)passwordEl.value='';const confirmEl=document.getElementById('syncPasswordConfirm');if(confirmEl)confirmEl.value='';sharedSync={client:sharedSync.client,user:null,projectId:null,channel:null,pushTimer:null,busy:false,lastSyncAt:null,authBound:true};sharedSetLastSync('');sharedSetStatus('로그아웃됨');alert('로그아웃했어요. 다음 로그인부터는 저장된 설정과 이메일을 그대로 사용하고 비밀번호만 입력하면 됩니다.')}}
 window.addEventListener('beforeunload',()=>{if(sharedSync.pushTimer)clearTimeout(sharedSync.pushTimer)});
@@ -2133,7 +2220,7 @@ window.addEventListener('offline',()=>{if(sharedSync.projectId)sharedSetStatus('
 /* ===== APP STARTUP / PWA ===== */
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js?v=71',{updateViaCache:'none'})
+    navigator.serviceWorker.register('./sw.js?v=72',{updateViaCache:'none'})
       .then(reg=>reg.update())
       .catch(e=>console.warn('PWA service worker registration failed',e));
   });
