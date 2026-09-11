@@ -139,7 +139,316 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 /* Keep settings cards inside the settings grid on narrow screens. */
 #settings .grid{width:100%;min-width:0;box-sizing:border-box}
 #settings .card{width:100%;min-width:0;max-width:none;box-sizing:border-box}
+
+/* Compact budget stat rows: reduce both typography and occupied space. */
+.budget-widget-left{gap:5px}
+.budget-stat-row{gap:8px;padding:7px 9px;border-radius:11px}
+.budget-stat-row span{font-size:9.5px}
+.budget-stat-row b{font-size:13px;line-height:1.15}
+.budget-page-summary .budget-stat-row{padding:8px 10px;border-radius:12px}
+.budget-page-summary .budget-stat-row span{font-size:10px}
+.budget-page-summary .budget-stat-row b{font-size:14px}
+.budget-home .budget-stat-row{padding:6px 8px;border-radius:10px}
+.budget-home .budget-stat-row span{font-size:9px}
+.budget-home .budget-stat-row b{font-size:11.5px}
+@media(max-width:720px){
+  .budget-page-summary .budget-stat-row{padding:7px 8px}
+  .budget-page-summary .budget-stat-row span{font-size:9px}
+  .budget-page-summary .budget-stat-row b{font-size:12px}
+  .budget-home .budget-stat-row{padding:6px 7px}
+  .budget-home .budget-stat-row span{font-size:8.5px}
+  .budget-home .budget-stat-row b{font-size:11px}
+}
 </style>
+
+<style id="budget-tab-true-arc">
+/* Reference-style open arch gauge: a real SVG arc, not a cropped circle. */
+.budget-page-reference-gauge .budget-gauge-arc{
+  position:relative!important;
+  width:196px!important;
+  height:146px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  display:block!important;
+  flex:0 0 auto!important;
+  overflow:visible!important;
+  box-shadow:none!important;
+}
+.budget-page-reference-gauge .budget-gauge-arc::before{display:none!important;content:none!important}
+.budget-arc-svg{width:100%;height:100%;display:block;overflow:visible}
+.budget-arc-track,.budget-arc-progress{fill:none;stroke-width:11.5;stroke-linecap:round;stroke-linejoin:round}
+.budget-arc-track{stroke:color-mix(in srgb,var(--line) 88%,var(--card))}
+.budget-arc-progress{stroke:var(--accent);stroke-dasharray:0 100;transition:stroke-dasharray .25s ease}
+.budget-arc-value{position:absolute;left:50%;top:63%;transform:translate(-50%,-50%);z-index:3;text-align:center;white-space:nowrap;pointer-events:none}
+.budget-arc-value strong{display:block!important;font-size:24px!important;line-height:1;font-weight:800;letter-spacing:-.03em;color:var(--ink)!important}
+@media(max-width:720px){
+  .budget-page-reference-gauge .budget-gauge-arc{width:174px!important;height:130px!important}
+  .budget-arc-value{top:63%}
+  .budget-arc-value strong{font-size:22px!important}
+}
+@media(max-width:420px){
+  .budget-page-reference-gauge .budget-gauge-arc{width:154px!important;height:116px!important}
+  .budget-arc-value{top:63%}
+  .budget-arc-value strong{font-size:20px!important}
+}
+</style>
+<style id="budget-arc-final-override">
+.budget-page-reference-gauge .budget-gauge-arc{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.budget-page-reference-gauge .budget-gauge-arc::before{display:none!important}
+.budget-page-reference-gauge .budget-arc-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.budget-page-reference-gauge .budget-arc-value{z-index:4}
+.budget-page-reference-gauge .budget-arc-value strong{display:block!important;visibility:visible!important;opacity:1!important}
+</style>
+
+<style id="home-budget-true-arc-v54">
+/* Home budget card: same open SVG arc as the budget tab, in the compact reference-card layout. */
+.home-top-grid > .budget-home{min-width:0;min-height:0;}
+.budget-home{padding:10px!important;display:block!important;overflow:hidden;align-self:start;}
+.budget-home-reference{height:auto;min-height:0;display:flex;flex-direction:column;align-items:center;}
+.budget-home-reference-title{align-self:flex-start;font-size:15px;line-height:1.2;font-weight:800;margin-bottom:1px;}
+.budget-home-reference-gauge{width:100%;display:flex;align-items:center;justify-content:center;min-height:0;margin-top:2px;}
+.budget-home-reference-gauge .budget-gauge-arc{position:relative!important;width:150px!important;height:116px!important;border:0!important;border-radius:0!important;background:transparent!important;display:block!important;overflow:visible!important;box-shadow:none!important;}
+.budget-home-reference-gauge .budget-gauge-arc::before{display:none!important;content:none!important;}
+.budget-home-reference-gauge .budget-arc-svg{width:100%;height:100%;display:block;overflow:visible;}
+.budget-home-reference-gauge .budget-arc-track,.budget-home-reference-gauge .budget-arc-progress{fill:none;stroke-width:11.5;stroke-linecap:round;stroke-linejoin:round;}
+.budget-home-reference-gauge .budget-arc-track{stroke:color-mix(in srgb,var(--line) 88%,var(--card));}
+.budget-home-reference-gauge .budget-arc-progress{stroke:var(--accent);stroke-dasharray:0 100;transition:stroke-dasharray .25s ease;}
+.budget-home-reference-gauge .budget-arc-value{position:absolute;left:50%;top:61%;transform:translate(-50%,-50%);z-index:3;text-align:center;white-space:nowrap;pointer-events:none;}
+.budget-home-reference-gauge .budget-arc-value strong{font-size:24px!important;line-height:1;font-weight:800;letter-spacing:-.03em;color:var(--ink)!important;}
+.budget-home-reference-total{width:100%;text-align:center;margin-top:0;}
+.budget-home-reference-total>b{display:block;font-size:19px;line-height:1.1;font-weight:800;white-space:nowrap;color:var(--ink);font-variant-numeric:tabular-nums;}
+.budget-home-reference-total>div{margin-top:3px;font-size:12px;line-height:1.1;font-weight:600;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;}
+@media(max-width:720px){
+  .budget-home{padding:9px!important;}
+  .budget-home-reference-title{font-size:14px;}
+  .budget-home-reference-gauge .budget-gauge-arc{width:136px!important;height:106px!important;}
+  .budget-home-reference-gauge .budget-arc-value{top:61%;}
+  .budget-home-reference-gauge .budget-arc-value strong{font-size:22px!important;}
+  .budget-home-reference-total>b{font-size:18px;}
+  .budget-home-reference-total>div{font-size:11px;}
+}
+@media(max-width:420px){
+  .budget-home{padding:8px!important;}
+  .budget-home-reference-title{font-size:13px;}
+  .budget-home-reference-gauge .budget-gauge-arc{width:122px!important;height:95px!important;}
+  .budget-home-reference-gauge .budget-arc-value strong{font-size:20px!important;}
+  .budget-home-reference-total>b{font-size:16px;}
+  .budget-home-reference-total>div{font-size:10px;}
+}
+</style>
+<style id="home-budget-compact-v55">
+/* v55: tighten home budget card whitespace only. */
+.budget-home{align-self:start!important;}
+.budget-home-reference{height:auto!important;}
+</style>
+
+<style id="home-budget-whitespace-v56">
+/* v56: reduce outer whitespace of the two top home cards. */
+.home-top-grid > .card{padding:12px !important;min-height:0 !important;box-sizing:border-box;}
+.home-top-grid > .budget-home{padding:8px !important;min-height:0 !important;height:auto !important;align-self:start !important;}
+@media(max-width:600px){
+  .home-top-grid > .card{padding:10px !important;}
+  .home-top-grid > .budget-home{padding:7px !important;min-height:0 !important;height:auto !important;}
+}
+</style>
+
+<style id="home-budget-title-spacing-v57">
+/* v57: add a small, balanced inset around the home budget title and bottom edge. */
+.budget-home-reference{padding:3px 4px 5px!important;}
+.budget-home-reference-title{margin-top:2px!important;margin-left:2px!important;margin-bottom:4px!important;}
+.budget-home-reference-total{margin-bottom:2px!important;}
+@media(max-width:720px){
+  .budget-home-reference{padding:3px 4px 5px!important;}
+  .budget-home-reference-title{margin-top:2px!important;margin-left:1px!important;margin-bottom:4px!important;}
+  .budget-home-reference-total{margin-bottom:2px!important;}
+}
+@media(max-width:420px){
+  .budget-home-reference{padding:2px 3px 4px!important;}
+  .budget-home-reference-title{margin-top:2px!important;margin-left:1px!important;margin-bottom:3px!important;}
+  .budget-home-reference-total{margin-bottom:2px!important;}
+}
+</style>
+
+<style>
+/* v58: budget tab summary vertical spacing */
+#budget .budget-page-summary{padding:6px 10px !important;}
+</style>
+
+
+<style id="home-progress-reference-match">
+/* Home top-left card: match the supplied reference image. */
+.home-top-grid > .card:first-child{
+  min-width:0!important;
+  height:100%!important;
+  min-height:270px!important;
+  padding:18px 20px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  box-sizing:border-box!important;
+}
+.home-top-grid > .card:first-child .row{
+  flex:0 0 auto;
+}
+.home-top-grid > .card:first-child .small:first-child{
+  font-size:15px!important;
+  line-height:1.2!important;
+  color:var(--ink)!important;
+  font-weight:600!important;
+}
+.home-top-grid > .card:first-child #overallPct{
+  margin-top:58px!important;
+  font-size:46px!important;
+  line-height:1!important;
+  font-weight:800!important;
+  letter-spacing:-.04em!important;
+}
+.home-top-grid > .card:first-child #overallText{
+  margin-top:27px!important;
+  font-size:15px!important;
+  line-height:1.2!important;
+  color:var(--muted)!important;
+}
+.home-top-grid > .card:first-child .progress{
+  height:30px!important;
+  margin-top:auto!important;
+  border-radius:999px!important;
+  overflow:hidden!important;
+}
+.home-top-grid > .card:first-child .progress i{
+  border-radius:999px!important;
+}
+@media(max-width:720px){
+  .home-top-grid > .card:first-child{min-height:245px!important;padding:15px 16px!important}
+  .home-top-grid > .card:first-child #overallPct{margin-top:44px!important;font-size:38px!important}
+  .home-top-grid > .card:first-child #overallText{margin-top:22px!important;font-size:13px!important}
+  .home-top-grid > .card:first-child .progress{height:26px!important}
+}
+@media(max-width:420px){
+  .home-top-grid > .card:first-child{min-height:220px!important;padding:13px 14px!important}
+  .home-top-grid > .card:first-child .small:first-child{font-size:13px!important}
+  .home-top-grid > .card:first-child #overallPct{margin-top:36px!important;font-size:32px!important}
+  .home-top-grid > .card:first-child #overallText{margin-top:18px!important;font-size:12px!important}
+  .home-top-grid > .card:first-child .progress{height:22px!important}
+}
+</style>
+
+
+<style id="v61-home-top-tight">
+/* v61: keep the two home summary cards compact and aligned. */
+.home-top-grid{align-items:stretch!important;}
+.home-top-grid > .card:first-child,
+.home-top-grid > .budget-home{
+  height:250px!important;
+  min-height:250px!important;
+  box-sizing:border-box!important;
+}
+.home-top-grid > .card:first-child{
+  padding:16px 18px!important;
+}
+.home-top-grid > .card:first-child #overallPct{
+  margin-top:48px!important;
+}
+.home-top-grid > .card:first-child #overallText{
+  display:block!important;
+  margin-top:14px!important;
+  font-size:13px!important;
+  line-height:1.2!important;
+  color:var(--muted)!important;
+}
+.home-top-grid > .card:first-child .progress{
+  margin-top:auto!important;
+}
+.home-top-grid > .budget-home{
+  padding:12px!important;
+}
+@media(max-width:720px){
+  .home-top-grid > .card:first-child,
+  .home-top-grid > .budget-home{
+    height:230px!important;
+    min-height:230px!important;
+  }
+  .home-top-grid > .card:first-child{padding:14px 15px!important;}
+  .home-top-grid > .card:first-child #overallPct{margin-top:38px!important;font-size:38px!important;}
+  .home-top-grid > .card:first-child #overallText{margin-top:12px!important;font-size:12px!important;}
+  .home-top-grid > .budget-home{padding:10px!important;}
+}
+@media(max-width:420px){
+  .home-top-grid > .card:first-child,
+  .home-top-grid > .budget-home{
+    height:210px!important;
+    min-height:210px!important;
+  }
+  .home-top-grid > .card:first-child{padding:12px 13px!important;}
+  .home-top-grid > .card:first-child #overallPct{margin-top:30px!important;font-size:32px!important;}
+  .home-top-grid > .card:first-child #overallText{margin-top:10px!important;font-size:11px!important;}
+  .home-top-grid > .budget-home{padding:8px!important;}
+}
+</style>
+
+
+<style id="home-top-spacing-v62">
+/* v62: tighten home top cards and bring the completion count close to the progress bar. */
+.home-top-grid{align-items:stretch!important;}
+.home-top-grid > .card:first-child,
+.home-top-grid > .budget-home{height:220px!important;min-height:220px!important;box-sizing:border-box!important;}
+.home-top-grid > .card:first-child{padding:14px 16px!important;display:flex!important;flex-direction:column!important;}
+.home-top-grid > .card:first-child .row.between{flex:0 0 auto!important;}
+.home-top-grid > .card:first-child .big#overallPct{margin-top:20px!important;}
+.home-top-grid > .card:first-child #overallText{margin-top:8px!important;font-size:12px!important;line-height:1.15!important;}
+.home-top-grid > .card:first-child .progress{margin-top:7px!important;height:22px!important;flex:0 0 auto!important;}
+.home-top-grid > .budget-home{padding:10px!important;}
+@media(max-width:720px){
+  .home-top-grid > .card:first-child,
+  .home-top-grid > .budget-home{height:205px!important;min-height:205px!important;}
+  .home-top-grid > .card:first-child{padding:12px 13px!important;}
+  .home-top-grid > .card:first-child .big#overallPct{margin-top:18px!important;font-size:34px!important;}
+  .home-top-grid > .card:first-child #overallText{margin-top:7px!important;font-size:11px!important;}
+  .home-top-grid > .card:first-child .progress{margin-top:6px!important;height:20px!important;}
+  .home-top-grid > .budget-home{padding:9px!important;}
+}
+@media(max-width:420px){
+  .home-top-grid > .card:first-child,
+  .home-top-grid > .budget-home{height:190px!important;min-height:190px!important;}
+  .home-top-grid > .card:first-child{padding:11px 12px!important;}
+  .home-top-grid > .card:first-child .big#overallPct{margin-top:15px!important;font-size:31px!important;}
+  .home-top-grid > .card:first-child #overallText{margin-top:6px!important;font-size:10.5px!important;}
+  .home-top-grid > .card:first-child .progress{margin-top:5px!important;height:18px!important;}
+  .home-top-grid > .budget-home{padding:8px!important;}
+}
+</style>
+
+<style id="v64-home-bottom-align-fix">
+/* v64: pin the count and progress gauge to the bottom of the left home card. */
+.home-top-grid > .card:first-child{position:relative!important;}
+.home-top-grid > .card:first-child #overallText{
+  position:absolute!important;
+  left:16px!important;
+  right:16px!important;
+  bottom:48px!important;
+  margin:0!important;
+  font-size:12px!important;
+  line-height:1.15!important;
+}
+.home-top-grid > .card:first-child .progress{
+  position:absolute!important;
+  left:16px!important;
+  right:16px!important;
+  bottom:14px!important;
+  width:auto!important;
+  margin:0!important;
+}
+@media(max-width:720px){
+  .home-top-grid > .card:first-child #overallText{left:13px!important;right:13px!important;bottom:43px!important;font-size:11px!important;}
+  .home-top-grid > .card:first-child .progress{left:13px!important;right:13px!important;bottom:12px!important;}
+}
+@media(max-width:420px){
+  .home-top-grid > .card:first-child #overallText{left:12px!important;right:12px!important;bottom:39px!important;font-size:10.5px!important;}
+  .home-top-grid > .card:first-child .progress{left:12px!important;right:12px!important;bottom:11px!important;}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -151,8 +460,8 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 <main>
 <section class="page active" id="home">
   <div class="grid home-top-grid">
-    <div class="card col8"><div class="row between"><div><div class="small">전체 준비 진행률</div><div class="big" id="overallPct">0%</div></div></div><div class="progress" style="margin-top:12px"><i id="overallBar" style="width:0%"></i></div><div class="small" id="overallText" style="margin-top:7px">0개 완료 / 0개</div></div>
-    <div class="card col4 budget-home"><div class="small">예산 현황</div><div class="home-budget-grid"><div><span>총 예상</span><b id="homeTotalPlan">₩0</b></div><div><span>실제 지출</span><b id="homeTotalActual">₩0</b></div><div><span>초과 지출</span><b id="homeOverBudget">₩0</b></div><div><span>예산 사용률</span><b id="homeBudgetPct">0%</b></div></div></div>
+    <div class="card col8"><div class="row between"><div><div class="small">전체 준비 진행률</div><div class="big" id="overallPct">0%</div><div class="small" id="overallText">0/0</div></div></div><div class="progress" style="margin-top:12px"><i id="overallBar" style="width:0%"></i></div></div>
+    <div class="card col4 budget-home"><div class="budget-home-reference"><div class="budget-home-reference-title">예산 현황</div><div class="budget-home-reference-gauge"><div class="budget-gauge budget-gauge-arc" id="homeBudgetGauge" style="--budget-pct:0%"><svg class="budget-arc-svg" viewBox="0 0 100 78" aria-hidden="true" focusable="false"><path class="budget-arc-track" d="M 12 58 A 38 38 0 0 1 88 58" pathLength="100"></path><path class="budget-arc-progress" id="homeBudgetGaugeProgress" d="M 12 58 A 38 38 0 0 1 88 58" pathLength="100"></path></svg><div class="budget-arc-value"><strong id="homeBudgetPct">0%</strong></div></div></div><div class="budget-home-reference-total"><b id="homeTotalActual">0 원</b><div id="homeTotalPlan">/0 원</div></div></div></div>
   </div>
   <div class="home-secondary-grid">
     <div class="home-secondary-item">
@@ -218,11 +527,22 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 <section class="page" id="budget">
  <div class="section-title">예산</div>
  <div class="card budget-summary budget-page-summary">
-   <div class="stat"><div class="small">총 예상</div><b id="totalPlan">₩0</b></div>
-   <div class="stat"><div class="small">실제 지출</div><b id="totalActual">₩0</b></div>
-   <div class="stat"><div class="small">초과 지출</div><b id="overBudget">₩0</b></div>
-   <div class="stat"><div class="small">예산 사용률</div><b id="budgetPctBig">0%</b></div>
-   <div class="budget-summary-progress"><div class="row between"><span class="small">전체 예산 사용률</span><b class="small" id="budgetPctLabel">0%</b></div><div class="progress" style="margin-top:8px"><i id="budgetBar" style="width:0%"></i></div></div>
+   <div class="budget-page-reference budget-page-reference-card">
+  <div class="budget-page-reference-stats">
+    <div class="budget-page-reference-stat"><span>예상 지출</span><b id="totalPlan">0 원</b></div>
+    <div class="budget-page-reference-stat"><span>실제 지출</span><b id="totalActual">0 원</b></div>
+    <div class="budget-page-reference-stat"><span>초과 지출</span><b id="overBudget">0 원</b></div>
+  </div>
+  <div class="budget-page-reference-gauge">
+    <div class="budget-gauge budget-gauge-arc" id="budgetGauge" style="--budget-pct:0%">
+      <svg class="budget-arc-svg" viewBox="0 0 100 78" aria-hidden="true" focusable="false">
+        <path class="budget-arc-track" d="M 12 58 A 38 38 0 0 1 88 58" pathLength="100"></path>
+        <path class="budget-arc-progress" id="budgetGaugeProgress" d="M 12 58 A 38 38 0 0 1 88 58" pathLength="100"></path>
+      </svg>
+      <div class="budget-arc-value"><strong id="budgetPctBig">0%</strong></div>
+    </div>
+  </div>
+</div>
  </div>
  <div class="card" style="margin-top:12px"><div class="row between" style="margin-bottom:10px"><div><b>예산 항목</b><div class="small">필요한 항목을 추가하고 순서를 정리해보세요.</div></div><button class="btn primary section-primary-btn" onclick="openModal('budget')">+ 항목 추가</button></div><div id="budgetLines"></div></div>
 </section>
@@ -306,13 +626,14 @@ function resetTheme(){state.theme={...defaultTheme};applyTheme();syncThemeInputs
 function applyPreset(name){const p={warm:{bg:'#f7f5f2',card:'#ffffff',ink:'#2a2623',muted:'#77716c',line:'#e8e3dd',accent:'#9b6b52',accent2:'#d9b8a7',nav:'#f7f5f2',soft:'#faf8f5',button:'#ffffff',buttonText:'#2a2623',danger:'#b55b5b',good:'#5c8a69',radius:20},sage:{bg:'#f4f6f2',card:'#ffffff',ink:'#243027',muted:'#707a72',line:'#dde4de',accent:'#6f8f78',accent2:'#b8cbbd',nav:'#f4f6f2',soft:'#f6f8f5',button:'#ffffff',buttonText:'#243027',danger:'#b45f63',good:'#6f8f78',radius:20},blue:{bg:'#f3f6fb',card:'#ffffff',ink:'#243044',muted:'#727d8d',line:'#dce4ef',accent:'#5a78a8',accent2:'#b5c6df',nav:'#f3f6fb',soft:'#f6f8fc',button:'#ffffff',buttonText:'#243044',danger:'#b45f63',good:'#6f8f78',radius:20},rose:{bg:'#faf4f5',card:'#ffffff',ink:'#34272b',muted:'#827278',line:'#eadcdf',accent:'#ad6f7a',accent2:'#dcb8c0',nav:'#faf4f5',soft:'#fcf7f8',button:'#ffffff',buttonText:'#34272b',danger:'#b55b5b',good:'#5c8a69',radius:20},lavender:{bg:'#f6f3fa',card:'#ffffff',ink:'#2e2940',muted:'#777185',line:'#e3ddec',accent:'#806aa8',accent2:'#c7b9dd',nav:'#f6f3fa',soft:'#f8f6fb',button:'#ffffff',buttonText:'#2e2940',danger:'#b55b67',good:'#788e7a',radius:20}};state.theme={...p[name]||p.warm};applyTheme();syncThemeInputs();localStorage.setItem(KEY,JSON.stringify(state))}
 function save(){localStorage.setItem(KEY,JSON.stringify(state));renderAll()}
 function won(n){return new Intl.NumberFormat('ko-KR',{style:'currency',currency:'KRW',maximumFractionDigits:0}).format(Number(n)||0)}
+function wonUnit(n){return new Intl.NumberFormat('ko-KR',{maximumFractionDigits:0}).format(Number(n)||0)+' 원'} function wonPlain(n){return new Intl.NumberFormat('ko-KR',{maximumFractionDigits:0}).format(Number(n)||0)+'원'}
 function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function getCats(){return [...new Set(state.tasks.map(t=>t.cat).filter(Boolean))]}
 function getOrderedCats(){const cats=getCats();const order=Array.isArray(state.categoryOrder)?state.categoryOrder:[];const ordered=order.filter(c=>cats.includes(c));cats.forEach(c=>{if(!ordered.includes(c))ordered.push(c)});if(JSON.stringify(order)!==JSON.stringify(ordered)){state.categoryOrder=ordered;localStorage.setItem(KEY,JSON.stringify(state));}return ordered}
 function moveCategory(cat,dir){const cats=getOrderedCats().slice(),i=cats.indexOf(String(cat)),j=i+Number(dir);if(i<0||j<0||j>=cats.length)return;const next=cats.slice();[next[i],next[j]]=[next[j],next[i]];state.categoryOrder=next;saveLocalOnly();renderHome();queueSharedSave();}
 function navInit(){const items=[['home','홈'],['tasks','할 일'],['schedule','일정'],['budget','예산'],['plans','부부계획'],['data','메모'],['settings','설정']];document.getElementById('nav').innerHTML=items.map((x,i)=>`<button class="${i===0?'active':''}" data-page="${x[0]}">${x[1]}</button>`).join('');document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));}
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));window.scrollTo({top:0,behavior:'smooth'});}
-function calc(){const total=state.tasks.length,done=state.tasks.filter(t=>t.status==='done').length,pct=total?Math.round(done/total*100):0;document.getElementById('overallPct').textContent=pct+'%';document.getElementById('overallBar').style.width=pct+'%';document.getElementById('overallText').textContent=`${done}개 완료 / ${total}개`;document.getElementById('todoCount')&&(document.getElementById('todoCount').textContent=total-done);document.getElementById('highCount')&&(document.getElementById('highCount').textContent=state.tasks.filter(t=>t.status!=='done'&&t.priority==='높음').length);const plan=state.budgets.reduce((a,b)=>a+Number(b.planned||0),0),act=state.budgets.reduce((a,b)=>a+Number(b.actual||0),0),over=Math.max(0,act-plan),bp=plan?Math.round(act/plan*100):0;document.getElementById('budgetPctLabel').textContent=bp+'%';document.getElementById('budgetPctBig').textContent=bp+'%';document.getElementById('totalPlan').textContent=won(plan);document.getElementById('totalActual').textContent=won(act);document.getElementById('overBudget').textContent=won(over);document.getElementById('budgetBar').style.width=Math.min(100,bp)+'%';document.getElementById('budgetBar').classList.toggle('over',bp>100);document.getElementById('homeTotalPlan').textContent=won(plan);document.getElementById('homeTotalActual').textContent=won(act);document.getElementById('homeOverBudget').textContent=won(over);document.getElementById('homeBudgetPct').textContent=bp+'%';}
+function calc(){const total=state.tasks.length,done=state.tasks.filter(t=>t.status==='done').length,pct=total?Math.round(done/total*100):0;document.getElementById('overallPct').textContent=pct+'%';document.getElementById('overallBar').style.width=pct+'%';document.getElementById('overallText').textContent=`${done}/${total}`;document.getElementById('todoCount')&&(document.getElementById('todoCount').textContent=total-done);document.getElementById('highCount')&&(document.getElementById('highCount').textContent=state.tasks.filter(t=>t.status!=='done'&&t.priority==='높음').length);const plan=state.budgets.reduce((a,b)=>a+Number(b.planned||0),0),act=state.budgets.reduce((a,b)=>a+Number(b.actual||0),0),over=Math.max(0,act-plan),bp=plan?Math.round(act/plan*100):0;document.getElementById('totalPlan').textContent=wonUnit(plan);document.getElementById('totalActual').textContent=wonUnit(act);document.getElementById('overBudget').textContent=wonUnit(over);const budgetPlanDisplay=document.getElementById('budgetPlanDisplay');if(budgetPlanDisplay)budgetPlanDisplay.textContent=wonUnit(plan);document.getElementById('budgetPctBig').textContent=bp+'%';document.getElementById('homeTotalPlan').textContent='/'+wonUnit(plan);document.getElementById('homeTotalActual').textContent=wonUnit(act);document.getElementById('homeBudgetPct').textContent=bp+'%';const capped=Math.min(100,Math.max(0,bp))+'%';const angle=Math.min(270,Math.max(0,bp*2.7))+'deg';const gauge=document.getElementById('budgetGauge'),homeGauge=document.getElementById('homeBudgetGauge');if(gauge){gauge.style.setProperty('--budget-pct',capped);gauge.style.setProperty('--budget-angle',angle);const arc=document.getElementById('budgetGaugeProgress');if(arc)arc.style.strokeDasharray=bp+' 100';}if(homeGauge){homeGauge.style.setProperty('--budget-pct',capped);homeGauge.style.setProperty('--budget-angle',angle);const homeArc=document.getElementById('homeBudgetGaugeProgress');if(homeArc)homeArc.style.strokeDasharray=bp+' 100';}}
 function renderDday(){
  const el=document.getElementById('ddayValue');
  if(!el)return;
@@ -542,7 +863,7 @@ window.addEventListener('online',()=>{if(sharedSync.projectId)sharedPushNow(true
 window.addEventListener('offline',()=>{if(sharedSync.projectId)sharedSetStatus('오프라인','shared-syncing')});
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js?v=33',{updateViaCache:'none'})
+    navigator.serviceWorker.register('./sw.js?v=64',{updateViaCache:'none'})
       .then(reg=>reg.update())
       .catch(e=>console.warn('PWA service worker registration failed',e));
   });
@@ -609,5 +930,402 @@ startScheduleDateWatcher();
   .home-secondary-item+.home-secondary-item,.schedule-main-item+.schedule-main-item{margin-top:0}
   .home-card-title-row .section-title{font-size:18px}
 }
+
+/* v37 budget widget redesign */
+.budget-widget{display:grid;grid-template-columns:minmax(0,1fr) 150px;align-items:center;gap:16px;width:100%;min-width:0}.budget-widget-left{display:flex;flex-direction:column;gap:5px;min-width:0}.budget-stat-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:6px 9px}.budget-stat-row span{font-size:10px;color:var(--muted);white-space:nowrap}.budget-stat-row b{font-size:13px;line-height:1.15;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}.budget-gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px}.budget-gauge{width:108px;height:108px;border-radius:50%;background:conic-gradient(var(--accent) 0 var(--budget-pct),var(--accent-soft-2) var(--budget-pct) 100%);display:flex;align-items:center;justify-content:center;position:relative;box-sizing:border-box}.budget-gauge::before{content:"";position:absolute;inset:9px;background:var(--card);border-radius:50%;box-shadow:inset 0 0 0 1px var(--line)}.budget-gauge>div{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}.budget-gauge strong{font-size:22px;line-height:1.1;font-weight:800;letter-spacing:-.03em}.budget-gauge-caption{font-size:10px;color:var(--muted);white-space:nowrap}.budget-page-summary{padding:10px}.budget-page-summary .budget-widget{grid-template-columns:minmax(0,1fr) 170px;gap:14px}.budget-page-summary .budget-stat-row{padding:7px 10px;border-radius:12px}.budget-page-summary .budget-stat-row span{font-size:10px}.budget-page-summary .budget-stat-row b{font-size:15px}.budget-page-summary .budget-gauge{width:124px;height:124px}.budget-page-summary .budget-gauge::before{inset:10px}.budget-page-summary .budget-gauge strong{font-size:25px}.budget-page-summary .budget-gauge-caption{font-size:10px}.budget-summary-progress{display:none!important}.budget-summary{display:block!important}.budget-home .budget-widget{grid-template-columns:minmax(0,1fr) 112px;gap:9px}.budget-home .budget-stat-row{padding:5px 8px;border-radius:10px}.budget-home .budget-stat-row span{font-size:9px}.budget-home .budget-stat-row b{font-size:11.5px}.budget-home .budget-gauge{width:78px;height:78px}.budget-home .budget-gauge::before{inset:7px}.budget-home .budget-gauge strong{font-size:16px}.budget-home .budget-gauge-caption{font-size:8px}.budget-home>.budget-widget{height:100%;align-items:center}
+@media(max-width:720px){.budget-page-summary{padding:9px}.budget-page-summary .budget-widget{grid-template-columns:minmax(0,1fr) 128px;gap:9px}.budget-page-summary .budget-stat-row{padding:6px 8px}.budget-page-summary .budget-stat-row span{font-size:9px}.budget-page-summary .budget-stat-row b{font-size:12px}.budget-page-summary .budget-gauge{width:92px;height:92px}.budget-page-summary .budget-gauge::before{inset:8px}.budget-page-summary .budget-gauge strong{font-size:20px}.budget-page-summary .budget-gauge-caption{font-size:9px}}
+@media(max-width:420px){.budget-page-summary .budget-widget{grid-template-columns:minmax(0,1fr) 104px}.budget-page-summary .budget-stat-row{gap:5px;padding:5px 7px}.budget-page-summary .budget-stat-row span{font-size:8.5px}.budget-page-summary .budget-stat-row b{font-size:11px}.budget-page-summary .budget-gauge{width:78px;height:78px}.budget-page-summary .budget-gauge::before{inset:7px}.budget-page-summary .budget-gauge strong{font-size:17px}.budget-home .budget-widget{grid-template-columns:minmax(0,1fr) 88px}.budget-home .budget-gauge{width:68px;height:68px}}
 </style>
+<style id="budget-reference-layout">
+/* Reference-card layouts */
+.budget-home{
+  padding:18px 18px 19px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  min-width:0;
+}
+.budget-home-title{
+  align-self:flex-start;
+  font-size:15px;
+  line-height:1.2;
+  font-weight:800;
+  margin-bottom:6px;
+}
+.budget-home-gauge{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+.budget-home .budget-gauge{
+  width:152px;
+  height:152px;
+}
+.budget-home .budget-gauge::before{
+  inset:11px;
+}
+.budget-home .budget-gauge strong{
+  font-size:24px;
+}
+.budget-home .budget-home-total{
+  margin-top:13px;
+  text-align:center;
+}
+.budget-home-total>b{
+  display:block;
+  font-size:20px;
+  line-height:1.1;
+  font-weight:800;
+}
+.budget-home-total>div{
+  margin-top:7px;
+  font-size:14px;
+  line-height:1.1;
+  font-weight:600;
+}
+.budget-home .budget-gauge-caption{display:none!important}
+
+.budget-page-summary{
+  padding:10px 16px;
+}
+.budget-page-widget{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 185px;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+  width:100%;
+}
+.budget-page-stats{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:0;
+}
+.budget-page-stat{
+  display:grid;
+  grid-template-columns:110px minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.budget-page-stat span{
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink);
+  white-space:nowrap;
+}
+.budget-page-stat b{
+  font-size:19px;
+  font-weight:800;
+  line-height:1.15;
+  text-align:right;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.budget-page-gauge{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.budget-page-summary .budget-gauge{
+  width:154px;
+  height:154px;
+}
+.budget-page-summary .budget-gauge::before{
+  inset:11px;
+}
+.budget-page-summary .budget-gauge strong{
+  font-size:25px;
+}
+.budget-page-summary .budget-gauge-caption{display:none!important}
+
+@media(max-width:720px){
+  .budget-home .budget-gauge{width:136px;height:136px}
+  .budget-home .budget-gauge::before{inset:10px}
+  .budget-home .budget-gauge strong{font-size:22px}
+  .budget-page-summary{padding:10px 14px}
+  .budget-page-widget{
+    grid-template-columns:minmax(0,1fr) 145px;
+    gap:8px;
+  }
+  .budget-page-stat{
+    grid-template-columns:78px minmax(0,1fr);
+    gap:6px;
+  }
+  .budget-page-stat span{font-size:11px}
+  .budget-page-stat b{font-size:14px}
+  .budget-page-summary .budget-gauge{width:124px;height:124px}
+  .budget-page-summary .budget-gauge::before{inset:9px}
+  .budget-page-summary .budget-gauge strong{font-size:21px}
+}
+@media(max-width:420px){
+  .budget-home{padding:15px 14px 16px}
+  .budget-home .budget-gauge{width:124px;height:124px}
+  .budget-home .budget-gauge::before{inset:9px}
+  .budget-home .budget-gauge strong{font-size:20px}
+  .budget-home-total>b{font-size:18px}
+  .budget-page-summary{padding:9px 11px}
+  .budget-page-widget{
+    grid-template-columns:minmax(0,1fr) 122px;
+    gap:6px;
+  }
+  .budget-page-stat{
+    grid-template-columns:66px minmax(0,1fr);
+    gap:4px;
+  }
+  .budget-page-stat span{font-size:10px}
+  .budget-page-stat b{font-size:12px}
+  .budget-page-summary .budget-gauge{width:106px;height:106px}
+  .budget-page-summary .budget-gauge::before{inset:8px}
+  .budget-page-summary .budget-gauge strong{font-size:19px}
+}
+</style>
+
+<style id="reference-budget-layout-final">
+/* Final reference-image layout: home and budget summary cards */
+.home-top-grid{
+  grid-template-columns:minmax(0,1.46fr) minmax(0,1fr) !important;
+  gap:14px !important;
+  align-items:stretch !important;
+}
+.home-top-grid > .card:first-child{grid-column:1 !important;min-width:0;height:100% !important;}
+.home-top-grid > .budget-home{grid-column:2 !important;min-width:0;height:100% !important;}
+
+.budget-home{
+  padding:18px !important;
+  min-height:270px !important;
+  display:flex !important;
+  align-items:stretch !important;
+  justify-content:center !important;
+}
+.budget-home-widget{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 160px;
+  gap:14px;
+  align-items:center;
+  min-width:0;
+}
+.budget-home-stats{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:9px;
+  min-width:0;
+}
+.budget-home-stat{
+  display:grid;
+  grid-template-columns:86px minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.budget-home-stat span{
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink);
+  white-space:nowrap;
+}
+.budget-home-stat b{
+  font-size:20px;
+  font-weight:800;
+  line-height:1.15;
+  text-align:right;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.budget-home-gauge-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+}
+.budget-home .budget-gauge{
+  width:166px;
+  height:166px;
+}
+.budget-home .budget-gauge::before{inset:12px}
+.budget-home .budget-gauge strong{font-size:26px}
+
+.budget-page-summary{
+  width:270px !important;
+  max-width:100% !important;
+  aspect-ratio:1 / 1 !important;
+  padding:18px !important;
+  margin-right:auto !important;
+  overflow:hidden !important;
+}
+.budget-page-reference{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-width:0;
+}
+.budget-page-reference-title{
+  align-self:flex-start;
+  font-size:15px;
+  line-height:1.2;
+  font-weight:800;
+}
+.budget-page-reference-gauge{
+  flex:1 1 auto;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:0;
+}
+.budget-page-reference-gauge .budget-gauge{
+  width:154px;
+  height:154px;
+}
+.budget-page-reference-gauge .budget-gauge::before{inset:11px}
+.budget-page-reference-gauge .budget-gauge strong{font-size:24px}
+.budget-page-reference-total{
+  width:100%;
+  text-align:center;
+  margin-top:2px;
+}
+.budget-page-reference-total>b{
+  display:block;
+  font-size:20px;
+  line-height:1.1;
+  font-weight:800;
+  white-space:nowrap;
+}
+.budget-page-reference-total>div{
+  margin-top:7px;
+  font-size:13px;
+  line-height:1.1;
+  font-weight:600;
+  color:var(--muted);
+  white-space:nowrap;
+}
+@media(max-width:720px){
+  .home-top-grid{
+    grid-template-columns:minmax(0,1.46fr) minmax(0,1fr) !important;
+    gap:10px !important;
+  }
+  .budget-home{padding:14px !important;min-height:245px !important;}
+  .budget-home-widget{grid-template-columns:minmax(0,1fr) 126px;gap:8px}
+  .budget-home-stat{grid-template-columns:62px minmax(0,1fr);gap:5px}
+  .budget-home-stat span{font-size:10px}
+  .budget-home-stat b{font-size:14px}
+  .budget-home .budget-gauge{width:130px;height:130px}
+  .budget-home .budget-gauge::before{inset:9px}
+  .budget-home .budget-gauge strong{font-size:21px}
+  .budget-page-summary{width:270px !important;height:270px !important;aspect-ratio:auto !important;padding:16px !important}
+}
+@media(max-width:420px){
+  .home-top-grid{gap:8px !important}
+  .budget-home{padding:12px 10px !important;min-height:220px !important}
+  .budget-home-widget{grid-template-columns:minmax(0,1fr) 104px;gap:5px}
+  .budget-home-stat{grid-template-columns:55px minmax(0,1fr);gap:3px}
+  .budget-home-stat span{font-size:9px}
+  .budget-home-stat b{font-size:12px}
+  .budget-home .budget-gauge{width:104px;height:104px}
+  .budget-home .budget-gauge::before{inset:8px}
+  .budget-home .budget-gauge strong{font-size:18px}
+}
+</style>
+
+<style id="budget-gauge-final-shape">
+.budget-gauge{
+  background:conic-gradient(from -45deg,var(--accent) 0 var(--budget-angle,0deg),var(--accent-soft-2) var(--budget-angle,0deg) 270deg,transparent 270deg 360deg) !important;
+}
+</style>
+
+<style id="budget-page-reference-image-match">
+.budget-page-summary{width:100%!important;max-width:none!important;aspect-ratio:auto!important;height:160px!important;padding:18px!important;margin:0!important;overflow:hidden!important}
+.budget-page-reference-card{height:100%;display:grid!important;grid-template-columns:minmax(0,1fr) 185px!important;align-items:center!important;gap:18px!important;min-width:0!important}
+.budget-page-reference-stats{display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:0}
+.budget-page-reference-stat{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px;min-width:0}
+.budget-page-reference-stat span{font-size:11px;color:var(--ink);white-space:nowrap}
+.budget-page-reference-stat b{font-size:19px;line-height:1.15;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.budget-page-reference-title,.budget-page-reference-total{display:none!important}
+.budget-page-reference-gauge{width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;min-height:0!important}
+.budget-page-reference-gauge .budget-gauge{width:128px!important;height:128px!important}
+.budget-page-reference-gauge .budget-gauge::before{inset:10px!important}
+.budget-page-reference-gauge .budget-gauge strong{font-size:23px!important}
+@media(max-width:720px){
+  .budget-page-summary{height:150px!important;padding:14px!important}
+  .budget-page-reference-card{grid-template-columns:minmax(0,1fr) 150px!important;gap:10px!important}
+  .budget-page-reference-stats{gap:7px}
+  .budget-page-reference-stat{grid-template-columns:58px minmax(0,1fr);gap:6px}
+  .budget-page-reference-stat span{font-size:10px}
+  .budget-page-reference-stat b{font-size:15px}
+  .budget-page-reference-gauge .budget-gauge{width:112px!important;height:112px!important}
+  .budget-page-reference-gauge .budget-gauge::before{inset:9px!important}
+  .budget-page-reference-gauge .budget-gauge strong{font-size:21px!important}
+}
+@media(max-width:420px){
+  .budget-page-summary{height:136px!important;padding:12px!important}
+  .budget-page-reference-card{grid-template-columns:minmax(0,1fr) 122px!important;gap:6px!important}
+  .budget-page-reference-stats{gap:5px}
+  .budget-page-reference-stat{grid-template-columns:52px minmax(0,1fr);gap:4px}
+  .budget-page-reference-stat span{font-size:9px}
+  .budget-page-reference-stat b{font-size:13px}
+  .budget-page-reference-gauge .budget-gauge{width:94px!important;height:94px!important}
+  .budget-page-reference-gauge .budget-gauge::before{inset:8px!important}
+  .budget-page-reference-gauge .budget-gauge strong{font-size:18px!important}
+}
+</style>
+
+<style id="budget-page-final-tuning">
+/* v53: reduce vertical whitespace and slightly enlarge the arc gauge */
+.budget-page-summary{
+  height:120px !important;
+  padding:5px 12px !important;
+}
+.budget-page-reference-card{
+  gap:14px !important;
+}
+.budget-page-reference-stats{
+  gap:6px !important;
+}
+.budget-page-reference-gauge .budget-gauge{
+  width:138px !important;
+  height:138px !important;
+}
+@media(max-width:720px){
+  .budget-page-summary{
+    height:112px !important;
+    padding:5px 10px !important;
+  }
+  .budget-page-reference-card{
+    gap:8px !important;
+  }
+  .budget-page-reference-gauge .budget-gauge{
+    width:120px !important;
+    height:120px !important;
+  }
+}
+@media(max-width:420px){
+  .budget-page-summary{
+    height:104px !important;
+    padding:5px 9px !important;
+  }
+  .budget-page-reference-card{
+    gap:5px !important;
+  }
+  .budget-page-reference-gauge .budget-gauge{
+    width:102px !important;
+    height:102px !important;
+  }
+}
+
+<style id="budget-page-final-tuning-v59">
+/* v59: visibly reduce budget summary card vertical whitespace */
+#budget .budget-page-summary{height:120px!important;padding:5px 12px!important;box-sizing:border-box!important;}
+#budget .budget-page-reference-card{height:100%!important;}
+#budget .budget-page-reference-stats{gap:4px!important;}
+#budget .budget-page-reference-stat{min-height:0!important;}
+@media(max-width:720px){#budget .budget-page-summary{height:112px!important;padding:5px 10px!important;}#budget .budget-page-reference-stats{gap:3px!important;}}
+@media(max-width:420px){#budget .budget-page-summary{height:104px!important;padding:4px 8px!important;}}
+</style>
+</style>
+
 </body></html>
