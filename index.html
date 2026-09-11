@@ -449,6 +449,64 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 }
 </style>
 
+
+<style id="home-v70-title-progress-fix">
+/* v70: 아래 카드 제목(.section-title)의 실제 시작점 17px을 기준으로 상단 제목도 정확히 일치 */
+
+/* 1) 폰트 크기/굵기/행간을 아래 제목과 동일하게 고정 */
+.home-top-grid > .card:first-child .small:first-child,
+.home-top-grid > .budget-home .budget-home-reference-title{
+  font-size:18px!important;
+  line-height:1.2!important;
+  font-weight:800!important;
+  color:var(--ink)!important;
+  letter-spacing:inherit!important;
+}
+
+/* 2) 왼쪽 상단 제목: 카드 기본 padding 17px → 아래 제목과 X/Y 시작점 동일 */
+.home-top-grid > .card:first-child{
+  padding:17px!important;
+}
+.home-top-grid > .card:first-child .small:first-child{
+  margin:0!important;
+}
+
+/* 3) 오른쪽 상단 제목:
+   desktop = 카드 padding 10 + reference 좌측 4 + title margin 3 = 17px
+            카드 padding 10 + reference 상단 3 + title margin-top 4 = 17px */
+.home-top-grid > .budget-home .budget-home-reference-title{
+  margin:4px 0 10px 3px!important;
+  transform:none!important;
+}
+
+/* 진행률 %는 기존 위치 유지 */
+.home-top-grid > .card:first-child .big#overallPct{
+  margin-top:32px!important;
+}
+
+/* 720px 이하: budget-home padding 9px / reference left 4px, top 3px */
+@media(max-width:720px){
+  .home-top-grid > .card:first-child{
+    padding:17px!important;
+  }
+  .home-top-grid > .budget-home .budget-home-reference-title{
+    margin:5px 0 10px 4px!important;
+    transform:none!important;
+  }
+}
+
+/* 420px 이하: budget-home padding 8px / reference left 3px, top 2px */
+@media(max-width:420px){
+  .home-top-grid > .card:first-child{
+    padding:17px!important;
+  }
+  .home-top-grid > .budget-home .budget-home-reference-title{
+    margin:7px 0 10px 6px!important;
+    transform:none!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
