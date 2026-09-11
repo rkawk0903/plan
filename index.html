@@ -728,42 +728,78 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 #budget .budget-page-reference-stat{min-height:0!important;}
 @media(max-width:720px){#budget .budget-page-summary{height:112px!important;padding:5px 10px!important;}#budget .budget-page-reference-stats{gap:3px!important;}}
 @media(max-width:420px){#budget .budget-page-summary{height:104px!important;padding:4px 8px!important;}}
+
+/* =========================================================
+   MAINTAINABILITY LAYER
+   Reusable primitives/components. Edit these instead of
+   scattering one-off inline styles through the app.
+   ========================================================= */
+:root{
+  --space-1:4px;
+  --space-2:6px;
+  --space-3:8px;
+  --space-4:10px;
+  --space-5:12px;
+  --space-6:16px;
+  --space-7:20px;
+  --space-8:24px;
+}
+.u-mt-0{margin:0!important}
+.u-mt-6{margin-top:6px!important}
+.u-mt-8{margin-top:8px!important}
+.u-mt-9{margin-top:9px!important}
+.u-mt-10{margin-top:10px!important}
+.u-mt-12{margin-top:12px!important}
+.u-mb-8{margin-bottom:8px!important}
+.u-mb-10{margin-bottom:10px!important}
+.u-gap-6{gap:6px!important}
+.u-gap-8{gap:8px!important}
+.u-flex-end{display:flex!important;justify-content:flex-end!important}
+.u-hidden{display:none!important}
+.u-code-field{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em;font-weight:800}
+.u-full-input{text-transform:uppercase;width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.u-soft-panel{display:none;margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--soft)}
+.u-soft-panel.compact{padding:10px 12px}
+.u-inline-box{width:100%;min-height:130px;border:1px solid var(--line);border-radius:var(--radius-xs);padding:10px}
+.u-bold{font-weight:800}
+.u-minw-0{min-width:0}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header class="top">
   <div><div class="eyebrow">OUR WEDDING • 2026–2027</div><div class="title">우리 결혼 플래너 💍</div></div>
-  <button class="dday" id="dday" type="button" onclick="openModal('settings')" aria-label="본식 날짜 설정"><small>본식 D-DAY</small><strong id="ddayValue">날짜 미정</strong></button>
+  <button class="dday" id="dday" type="button" data-action="open-modal" data-modal="settings" aria-label="본식 날짜 설정"><small>본식 D-DAY</small><strong id="ddayValue">날짜 미정</strong></button>
 </header>
 <nav class="nav" id="nav"></nav>
 <main>
 <section class="page active" id="home">
   <div class="grid home-top-grid">
-    <div class="card col8"><div class="row between"><div><div class="small">전체 준비 진행률</div><div class="big" id="overallPct">0%</div><div class="small" id="overallText">0/0</div></div></div><div class="progress" style="margin-top:12px"><i id="overallBar" style="width:0%"></i></div></div>
+    <div class="card col8"><div class="row between"><div><div class="small">전체 준비 진행률</div><div class="big" id="overallPct">0%</div><div class="small" id="overallText">0/0</div></div></div><div class="progress" class="u-mt-12"><i id="overallBar" style="width:0%"></i></div></div>
     <div class="card col4 budget-home"><div class="budget-home-reference"><div class="budget-home-reference-title">예산 현황</div><div class="budget-home-reference-gauge"><div class="budget-gauge budget-gauge-arc" id="homeBudgetGauge" style="--budget-pct:0%"><svg class="budget-arc-svg" viewBox="0 0 100 78" aria-hidden="true" focusable="false"><path class="budget-arc-track" d="M 12 58 A 38 38 0 0 1 88 58" pathLength="100"></path><path class="budget-arc-progress" id="homeBudgetGaugeProgress" d="M 12 58 A 38 38 0 0 1 88 58" pathLength="100"></path></svg><div class="budget-arc-value"><strong id="homeBudgetPct">0%</strong></div></div></div><div class="budget-home-reference-total"><b id="homeTotalActual">0 원</b><div id="homeTotalPlan">/0 원</div></div></div></div>
   </div>
   <div class="home-secondary-grid">
     <div class="home-secondary-item">
       <div class="card">
-        <div class="row between home-card-title-row"><div class="section-title">먼저 해야 할 일</div><select id="homeTaskLimit" class="home-limit" onchange="setHomeLimit('tasks',this.value)">
+        <div class="row between home-card-title-row"><div class="section-title">먼저 해야 할 일</div><select id="homeTaskLimit" class="home-limit" data-action="home-limit" data-limit-type="tasks">
           <option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option>
         </select></div>
         <div class="row between home-card-head">
           <div class="small">우선순위와 마감일을 기준으로 보여줘요.</div>
         </div>
-        <div id="homeTasks" style="margin-top:6px"></div>
+        <div id="homeTasks" class="u-mt-6"></div>
       </div>
     </div>
     <div class="home-secondary-item">
       <div class="card">
-        <div class="row between home-card-title-row"><div class="section-title">다가오는 일정</div><select id="homeEventLimit" class="home-limit" onchange="setHomeLimit('events',this.value)">
+        <div class="row between home-card-title-row"><div class="section-title">다가오는 일정</div><select id="homeEventLimit" class="home-limit" data-action="home-limit" data-limit-type="events">
           <option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option>
         </select></div>
         <div class="row between home-card-head">
           <div class="small">오늘 이후 일정만 보여줘요.</div>
         </div>
-        <div id="homeEvents" style="margin-top:6px"></div>
+        <div id="homeEvents" class="u-mt-6"></div>
       </div>
     </div>
   </div>
@@ -782,7 +818,7 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 
 <section class="page" id="tasks">
   <div class="section-title">할 일</div>
-  <div class="task-toolbar"><input id="taskSearch" class="task-search" placeholder="할 일 검색"><div class="task-toolbar-controls"><select id="taskCat"><option value="all">전체 분야</option></select><select id="taskStatus"><option value="all">전체 상태</option><option value="todo">미완료</option><option value="done">완료</option></select><select id="taskSort" class="sort"><option value="dueAsc">날짜순 ↑</option><option value="dueDesc">날짜순 ↓</option><option value="priority">우선순위순</option><option value="category">분야순</option><option value="custom">기본순</option></select><button class="btn primary" onclick="openModal('task')">+ 추가</button></div></div>
+  <div class="task-toolbar"><input id="taskSearch" class="task-search" placeholder="할 일 검색"><div class="task-toolbar-controls"><select id="taskCat"><option value="all">전체 분야</option></select><select id="taskStatus"><option value="all">전체 상태</option><option value="todo">미완료</option><option value="done">완료</option></select><select id="taskSort" class="sort"><option value="dueAsc">날짜순 ↑</option><option value="dueDesc">날짜순 ↓</option><option value="priority">우선순위순</option><option value="category">분야순</option><option value="custom">기본순</option></select><button class="btn primary" data-action="open-modal" data-modal="task">+ 추가</button></div></div>
   <div class="card" id="taskList"></div>
 </section>
 
@@ -791,13 +827,13 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
  <div class="schedule-main-grid">
    <div class="schedule-main-item">
      <div class="card calendar-card">
-       <div class="calendar-head"><button class="iconbtn" onclick="changeCalendarMonth(-1)" aria-label="이전 달">‹</button><div><b id="calendarTitle"></b><div class="small" id="calendarHint"></div></div><button class="iconbtn" onclick="changeCalendarMonth(1)" aria-label="다음 달">›</button></div>
+       <div class="calendar-head"><button class="iconbtn" data-action="calendar-month" data-delta="-1" aria-label="이전 달">‹</button><div><b id="calendarTitle"></b><div class="small" id="calendarHint"></div></div><button class="iconbtn" data-action="calendar-month" data-delta="1" aria-label="다음 달">›</button></div>
        <div class="calendar-week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
        <div class="calendar-grid" id="calendarGrid"></div>
      </div>
    </div>
    <div class="schedule-main-item">
-     <div class="card schedule-selected-card"><div class="row between" style="margin-bottom:10px"><div><b id="selectedDateTitle">선택한 날짜의 일정</b><div class="small">날짜를 누르면 해당 날짜의 일정이 보여요.</div></div><button class="btn primary section-primary-btn" onclick="openModal('event')">일정 추가</button></div><div class="list" id="scheduleList"></div></div>
+     <div class="card schedule-selected-card"><div class="row between" class="u-mb-10"><div><b id="selectedDateTitle">선택한 날짜의 일정</b><div class="small">날짜를 누르면 해당 날짜의 일정이 보여요.</div></div><button class="btn primary section-primary-btn" data-action="open-modal" data-modal="event">일정 추가</button></div><div class="list" id="scheduleList"></div></div>
    </div>
  </div>
  <div class="section-title event-list-title">전체 일정 목록</div>
@@ -824,27 +860,27 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   </div>
 </div>
  </div>
- <div class="card" style="margin-top:12px"><div class="row between" style="margin-bottom:10px"><div><b>예산 항목</b><div class="small">필요한 항목을 추가하고 순서를 정리해보세요.</div></div><button class="btn primary section-primary-btn" onclick="openModal('budget')">+ 항목 추가</button></div><div id="budgetLines"></div></div>
+ <div class="card" class="u-mt-12"><div class="row between" class="u-mb-10"><div><b>예산 항목</b><div class="small">필요한 항목을 추가하고 순서를 정리해보세요.</div></div><button class="btn primary section-primary-btn" data-action="open-modal" data-modal="budget">+ 항목 추가</button></div><div id="budgetLines"></div></div>
 </section>
 
 <section class="page" id="plans">
  <div class="section-title">부부계획</div>
- <div class="card"><div class="row between" style="margin-bottom:8px"><div class="small">결혼식보다 오래 남는 것들을 미리 맞춰보기</div><button class="btn primary section-primary-btn" onclick="openModal('plan')">+ 항목 추가</button></div><div id="planList"></div></div>
+ <div class="card"><div class="row between" style="margin-bottom:8px"><div class="small">결혼식보다 오래 남는 것들을 미리 맞춰보기</div><button class="btn primary section-primary-btn" data-action="open-modal" data-modal="plan">+ 항목 추가</button></div><div id="planList"></div></div>
 </section>
 
 <section class="page" id="data">
  <div class="section-title">메모</div>
  <div class="grid">
-  <div class="card col12"><h3>빠른 메모</h3><textarea id="quickMemo" style="width:100%;min-height:130px;border:1px solid var(--line);border-radius:var(--radius-xs);padding:10px" placeholder="업체 연락처, 궁금한 점, 계약 전 체크할 것 등"></textarea><div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn primary section-primary-btn" onclick="saveMemo()">메모 저장</button></div></div>
-  <div class="card col12"><div class="row between" style="margin-bottom:10px"><div><h3 style="margin:0">메모 목록</h3><div class="small">저장한 메모를 확인하고 필요할 때 수정하거나 삭제할 수 있어요.</div></div></div><div class="memo-toolbar"><input id="memoSearch" class="toolbar-search" type="search" placeholder="메모 검색" aria-label="메모 검색"><span class="pill" id="memoCount">0개</span></div><div id="memoList"></div></div>
+  <div class="card col12"><h3>빠른 메모</h3><textarea id="quickMemo" class="u-inline-box" placeholder="업체 연락처, 궁금한 점, 계약 전 체크할 것 등"></textarea><div class="u-flex-end u-mt-8"><button class="btn primary section-primary-btn" data-action="save-memo">메모 저장</button></div></div>
+  <div class="card col12"><div class="row between" class="u-mb-10"><div><h3 class="u-mt-0">메모 목록</h3><div class="small">저장한 메모를 확인하고 필요할 때 수정하거나 삭제할 수 있어요.</div></div></div><div class="memo-toolbar"><input id="memoSearch" class="toolbar-search" type="search" placeholder="메모 검색" aria-label="메모 검색"><span class="pill" id="memoCount">0개</span></div><div id="memoList"></div></div>
  </div>
 </section>
 
 <section class="page" id="settings">
  <div class="section-title">설정</div>
  <div class="grid">
-  <div class="card col12" id="sharedCard"><div class="row between sync-header"><div><h3 style="margin:0">공유 동기화</h3></div><div class="sync-status-actions"><span class="pill" id="syncStatus">로컬 사용 중</span></div></div><div class="form" style="margin-top:12px"><div id="syncSavedBox" class="small" style="display:none"></div><div id="syncLoginBox"><label>이메일</label><input id="syncEmail" type="email" placeholder="본인 이메일" autocomplete="username"><label id="syncPasswordLabel">비밀번호</label><input id="syncPassword" type="password" placeholder="로그인할 때 입력" autocomplete="current-password"><div id="syncPasswordConfirmWrap"><label>비밀번호 확인 <span class="small">(회원가입 시)</span></label><input id="syncPasswordConfirm" type="password" placeholder="비밀번호를 한 번 더 입력" autocomplete="new-password"></div><div class="actions"><button class="btn" onclick="sharedSignUp()">회원가입</button><button class="btn primary" onclick="sharedSignIn()">로그인</button></div></div><div id="syncLoggedInBox" class="shared-account-panel" style="display:none"><div class="shared-account-row"><div class="small shared-account-text" id="syncUserText">로그인 계정</div><button class="btn shared-logout-btn" onclick="sharedSignOut()">로그아웃</button></div></div><div class="sync-last-row"><div class="small" id="syncLastText"></div><div id="syncDataActions" class="sync-pull-action" style="display:none"><button class="btn primary" onclick="sharedPull()">공유 데이터 불러오기</button></div></div></div></div><div id="syncProjectCard" class="card col12 project-settings-card"><div class="row between"><div><h3 style="margin:0">프로젝트</h3><div class="small shared-project-description">두 사람이 같은 프로젝트에 연결하면 변경 사항을 실시간으로 공유할 수 있어요.</div></div></div><div id="currentProjectBox" style="display:none;margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--soft)"><div class="row between" style="gap:8px"><div style="min-width:0"><div style="font-weight:800">현재 프로젝트</div></div></div><div class="row" style="margin-top:9px;gap:6px"><input id="syncCode" aria-label="현재 프로젝트 코드" readonly style="flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em;font-weight:800"><button class="btn compact" id="copyCodeBtn" onclick="sharedCopyCode()">코드 복사</button></div><div class="small" style="margin-top:6px">상대방을 초대할 때 이 코드를 사용하면 됩니다.</div></div><div id="syncProjectActions" style="display:none"><label id="syncJoinCodeLabel">프로젝트 초대 코드 <span class="small">(기존 프로젝트에 참여할 때만)</span></label><input id="syncJoinCode" placeholder="8자리 코드" maxlength="8" autocomplete="off" value="" style="text-transform:uppercase;width:100%;max-width:100%;min-width:0;box-sizing:border-box"><div class="actions"><button class="btn primary" onclick="sharedCreateProject()">새 프로젝트 만들기</button><button class="btn" onclick="sharedJoinProject()">코드로 참여</button></div></div><div id="syncProjectsBox" class="small" style="display:none;margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--soft)"></div></div>
-  <div class="card col12 settings-only-card"><div class="row between"><div><h3 style="margin:0">테마</h3><div class="small">배경, 카드, 글자, 포인트 색상 등을 원하는 분위기로 바꿔보세요.</div></div></div><div class="theme-presets"><button class="theme-swatch" title="웜 베이지" style="background:#9b6b52" onclick="applyPreset('warm')"></button><button class="theme-swatch" title="세이지" style="background:#6f8f78" onclick="applyPreset('sage')"></button><button class="theme-swatch" title="블루" style="background:#5a78a8" onclick="applyPreset('blue')"></button><button class="theme-swatch" title="로즈" style="background:#ad6f7a" onclick="applyPreset('rose')"></button><button class="theme-swatch" title="라벤더" style="background:#806aa8" onclick="applyPreset('lavender')"></button></div><div class="theme-grid" style="margin-top:12px">
+  <div class="card col12" id="sharedCard"><div class="row between sync-header"><div><h3 class="u-mt-0">공유 동기화</h3></div><div class="sync-status-actions"><span class="pill" id="syncStatus">로컬 사용 중</span></div></div><div class="form" class="u-mt-12"><div id="syncSavedBox" class="small" style="display:none"></div><div id="syncLoginBox"><label>이메일</label><input id="syncEmail" type="email" placeholder="본인 이메일" autocomplete="username"><label id="syncPasswordLabel">비밀번호</label><input id="syncPassword" type="password" placeholder="로그인할 때 입력" autocomplete="current-password"><div id="syncPasswordConfirmWrap"><label>비밀번호 확인 <span class="small">(회원가입 시)</span></label><input id="syncPasswordConfirm" type="password" placeholder="비밀번호를 한 번 더 입력" autocomplete="new-password"></div><div class="actions"><button class="btn" data-action="shared-sign-up">회원가입</button><button class="btn primary" data-action="shared-sign-in">로그인</button></div></div><div id="syncLoggedInBox" class="shared-account-panel" style="display:none"><div class="shared-account-row"><div class="small shared-account-text" id="syncUserText">로그인 계정</div><button class="btn shared-logout-btn" data-action="shared-sign-out">로그아웃</button></div></div><div class="sync-last-row"><div class="small" id="syncLastText"></div><div id="syncDataActions" class="sync-pull-action" style="display:none"><button class="btn primary" data-action="shared-pull">공유 데이터 불러오기</button></div></div></div></div><div id="syncProjectCard" class="card col12 project-settings-card"><div class="row between"><div><h3 class="u-mt-0">프로젝트</h3><div class="small shared-project-description">두 사람이 같은 프로젝트에 연결하면 변경 사항을 실시간으로 공유할 수 있어요.</div></div></div><div id="currentProjectBox" class="u-soft-panel"><div class="row between" class="u-gap-8"><div class="u-minw-0"><div class="u-bold">현재 프로젝트</div></div></div><div class="row" class="u-mt-9 u-gap-6"><input id="syncCode" aria-label="현재 프로젝트 코드" readonly class="u-code-field"><button class="btn compact" id="copyCodeBtn" data-action="shared-copy-code">코드 복사</button></div><div class="small" class="u-mt-6">상대방을 초대할 때 이 코드를 사용하면 됩니다.</div></div><div id="syncProjectActions" style="display:none"><label id="syncJoinCodeLabel">프로젝트 초대 코드 <span class="small">(기존 프로젝트에 참여할 때만)</span></label><input id="syncJoinCode" placeholder="8자리 코드" maxlength="8" autocomplete="off" value="" class="u-full-input"><div class="actions"><button class="btn primary" data-action="shared-create-project">새 프로젝트 만들기</button><button class="btn" data-action="shared-join-project">코드로 참여</button></div></div><div id="syncProjectsBox" class="small" class="u-soft-panel compact"></div></div>
+  <div class="card col12 settings-only-card"><div class="row between"><div><h3 class="u-mt-0">테마</h3><div class="small">배경, 카드, 글자, 포인트 색상 등을 원하는 분위기로 바꿔보세요.</div></div></div><div class="theme-presets"><button class="theme-swatch" title="웜 베이지" style="background:#9b6b52" data-action="theme-preset" data-preset="warm"></button><button class="theme-swatch" title="세이지" style="background:#6f8f78" data-action="theme-preset" data-preset="sage"></button><button class="theme-swatch" title="블루" style="background:#5a78a8" data-action="theme-preset" data-preset="blue"></button><button class="theme-swatch" title="로즈" style="background:#ad6f7a" data-action="theme-preset" data-preset="rose"></button><button class="theme-swatch" title="라벤더" style="background:#806aa8" data-action="theme-preset" data-preset="lavender"></button></div><div class="theme-grid" class="u-mt-12">
    <div class="theme-item"><label for="thBg">배경 색상</label><input type="color" id="thBg"></div>
    <div class="theme-item"><label for="thCard">카드 색상</label><input type="color" id="thCard"></div>
    <div class="theme-item"><label for="thInk">기본 글자 색상</label><input type="color" id="thInk"></div>
@@ -857,8 +893,8 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
    <div class="theme-item"><label for="thButton">버튼 배경</label><input type="color" id="thButton"></div>
    <div class="theme-item"><label for="thButtonText">버튼 글자</label><input type="color" id="thButtonText"></div>
    <div class="theme-item"><label for="thDanger">삭제/경고 색상</label><input type="color" id="thDanger"></div>
-  </div><div class="theme-controls" style="margin-top:12px"><label for="thRadius">모서리 둥글기</label><input id="thRadius" class="theme-range" type="range" min="0" max="40" value="20" oninput="previewTheme()"><span class="pill" id="thRadiusVal">20px</span></div><div class="theme-actions"><button class="btn theme-action-btn" onclick="resetTheme()">기본 테마</button><button class="btn primary theme-action-btn" onclick="saveTheme()">테마 적용</button></div></div>
-  <div class="card col12 backup-card"><h3>데이터 백업</h3><p class="small">입력한 내용은 이 브라우저에 저장됩니다. 중요한 내용은 정기적으로 백업 파일을 만들어두세요.</p><div class="actions"><button class="btn primary section-primary-btn" onclick="exportData()">백업하기</button><button class="btn section-primary-btn" onclick="document.getElementById('importFile').click()">복구하기</button></div><input type="file" id="importFile" accept="application/json" hidden onchange="importData(event)"></div>
+  </div><div class="theme-controls" class="u-mt-12"><label for="thRadius">모서리 둥글기</label><input id="thRadius" class="theme-range" type="range" min="0" max="40" value="20" data-action="preview-theme"><span class="pill" id="thRadiusVal">20px</span></div><div class="theme-actions"><button class="btn theme-action-btn" data-action="theme-reset">기본 테마</button><button class="btn primary theme-action-btn" data-action="theme-save">테마 적용</button></div></div>
+  <div class="card col12 backup-card"><h3>데이터 백업</h3><p class="small">입력한 내용은 이 브라우저에 저장됩니다. 중요한 내용은 정기적으로 백업 파일을 만들어두세요.</p><div class="actions"><button class="btn primary section-primary-btn" data-action="export-data">백업하기</button><button class="btn section-primary-btn" data-action="import-file">복구하기</button></div><input type="file" id="importFile" accept="application/json" hidden data-action="import-data"></div>
  </div>
 </section>
 </main>
@@ -868,6 +904,7 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 <div class="modal" id="modal"><div class="sheet"><div id="modalBody"></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+/* ===== DATA & STATE ===== */
 const KEY='wedding_planner_v2';
 const seedTasks=[
 ['첫인사','장소 후보지 알아보기','2026-12-20','함께','높음'],['첫인사','장소·일정 조율','2026-12-25','함께','높음'],['첫인사','선물 결정','2026-12-25','함께','보통'],
@@ -891,35 +928,108 @@ state.tasks=Array.isArray(state.tasks)?state.tasks:[];
 state.budgets=Array.isArray(state.budgets)?state.budgets:[];
 state.events=Array.isArray(state.events)?state.events:[];
 state.plans=Array.isArray(state.plans)?state.plans:[];
-state.plans=(state.plans||[]).map((p,i)=>({...p,id:p.id||Date.now()+i,details:p.details||'',note:p.note||'',status:p.status||'논의 전'}));state.events=(state.events||[]).map(e=>({...e,time:e.time||'',location:e.location||'',category:e.category||'',note:e.note||''}));
+const stateNow=Date.now();
+state.plans=(state.plans||[]).map((p,i)=>({...p,id:p.id||stateNow+i,details:p.details||'',note:p.note||'',status:p.status||'논의 전'}));
+state.events=(state.events||[]).map(e=>({...e,time:e.time||'',location:e.location||'',category:e.category||'',note:e.note||''}));
 state.tasks=(state.tasks||[]).map(t=>({...t,memo:t.memo||''}));
-state.plans=(state.plans||[]).map(p=>({...p,details:p.details||'',note:p.note||'',status:p.status||'논의 전'}));
 state.homeTaskLimit=Number(state.homeTaskLimit)||5;state.homeEventLimit=Number(state.homeEventLimit)||5;state.theme=state.theme||{};
 const defaultTheme={bg:'#f7f5f2',card:'#ffffff',ink:'#222222',muted:'#777777',line:'#e8e3dd',accent:'#9b6b52',accent2:'#d9b8a7',nav:'#f7f5f2',soft:'#faf8f5',button:'#ffffff',buttonText:'#222222',danger:'#b55b5b',good:'#5c8a69',radius:20};
+/* ===== THEME ===== */
 function themeData(){return {...defaultTheme,...state.theme}}const THEME_INPUT_MAP={thBg:'bg',thCard:'card',thInk:'ink',thMuted:'muted',thLine:'line',thAccent:'accent',thAccent2:'accent2',thNav:'nav',thSoft:'soft',thButton:'button',thButtonText:'buttonText',thDanger:'danger'};
 function applyTheme(){const t=themeData(),r=document.documentElement.style;r.setProperty('--bg',t.bg);r.setProperty('--card',t.card);r.setProperty('--ink',t.ink);r.setProperty('--muted',t.muted);r.setProperty('--line',t.line);r.setProperty('--accent',t.accent);r.setProperty('--accent2',t.accent2);r.setProperty('--nav-bg',hexToRgba(t.nav,.92));r.setProperty('--soft',t.soft);r.setProperty('--button-bg',t.button);r.setProperty('--button-text',t.buttonText);r.setProperty('--danger',t.danger);r.setProperty('--good',t.good || '#5c8a69');r.setProperty('--radius',(Number(t.radius)||20)+'px');document.querySelector('meta[name=theme-color]').setAttribute('content',t.bg)}
 function hexToRgba(hex,a){const h=String(hex||'').replace('#','');if(h.length!==6)return `rgba(247,245,242,${a})`;const n=parseInt(h,16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`}
 function syncThemeInputs(){const t=themeData();const m=THEME_INPUT_MAP;Object.entries(m).forEach(([id,k])=>{const el=document.getElementById(id);if(el){el.value=t[k];el.style.setProperty('--theme-color',t[k]);el.style.background=t[k]}});const rr=document.getElementById('thRadius'),rv=document.getElementById('thRadiusVal');if(rr)rr.value=t.radius;if(rv)rv.textContent=(Number(t.radius)||20)+'px'}
 function previewTheme(){const t=themeData();const m=THEME_INPUT_MAP;Object.entries(m).forEach(([id,k])=>{const el=document.getElementById(id);if(el){t[k]=el.value;el.style.setProperty('--theme-color',el.value);el.style.background=el.value}});t.radius=Number(document.getElementById('thRadius')?.value||20);state.theme=t;applyTheme();document.getElementById('thRadiusVal').textContent=t.radius+'px'}
-function saveTheme(){previewTheme();localStorage.setItem(KEY,JSON.stringify(state));alert('테마를 적용했어요.')}
-function resetTheme(){state.theme={...defaultTheme};applyTheme();syncThemeInputs();localStorage.setItem(KEY,JSON.stringify(state));alert('기본 테마로 돌아갔어요.')}
-function applyPreset(name){const p={warm:{bg:'#f7f5f2',card:'#ffffff',ink:'#2a2623',muted:'#77716c',line:'#e8e3dd',accent:'#9b6b52',accent2:'#d9b8a7',nav:'#f7f5f2',soft:'#faf8f5',button:'#ffffff',buttonText:'#2a2623',danger:'#b55b5b',good:'#5c8a69',radius:20},sage:{bg:'#f4f6f2',card:'#ffffff',ink:'#243027',muted:'#707a72',line:'#dde4de',accent:'#6f8f78',accent2:'#b8cbbd',nav:'#f4f6f2',soft:'#f6f8f5',button:'#ffffff',buttonText:'#243027',danger:'#b45f63',good:'#6f8f78',radius:20},blue:{bg:'#f3f6fb',card:'#ffffff',ink:'#243044',muted:'#727d8d',line:'#dce4ef',accent:'#5a78a8',accent2:'#b5c6df',nav:'#f3f6fb',soft:'#f6f8fc',button:'#ffffff',buttonText:'#243044',danger:'#b45f63',good:'#6f8f78',radius:20},rose:{bg:'#faf4f5',card:'#ffffff',ink:'#34272b',muted:'#827278',line:'#eadcdf',accent:'#ad6f7a',accent2:'#dcb8c0',nav:'#faf4f5',soft:'#fcf7f8',button:'#ffffff',buttonText:'#34272b',danger:'#b55b5b',good:'#5c8a69',radius:20},lavender:{bg:'#f6f3fa',card:'#ffffff',ink:'#2e2940',muted:'#777185',line:'#e3ddec',accent:'#806aa8',accent2:'#c7b9dd',nav:'#f6f3fa',soft:'#f8f6fb',button:'#ffffff',buttonText:'#2e2940',danger:'#b55b67',good:'#788e7a',radius:20}};state.theme={...p[name]||p.warm};applyTheme();syncThemeInputs();localStorage.setItem(KEY,JSON.stringify(state))}
-function save(){localStorage.setItem(KEY,JSON.stringify(state));renderAll()}
-function won(n){return new Intl.NumberFormat('ko-KR',{style:'currency',currency:'KRW',maximumFractionDigits:0}).format(Number(n)||0)}
-function wonUnit(n){return new Intl.NumberFormat('ko-KR',{maximumFractionDigits:0}).format(Number(n)||0)+' 원'}
+function saveTheme(){previewTheme();saveLocalOnly();alert('테마를 적용했어요.')}
+function resetTheme(){state.theme={...defaultTheme};applyTheme();syncThemeInputs();saveLocalOnly();alert('기본 테마로 돌아갔어요.')}
+function applyPreset(name){const p={warm:{bg:'#f7f5f2',card:'#ffffff',ink:'#2a2623',muted:'#77716c',line:'#e8e3dd',accent:'#9b6b52',accent2:'#d9b8a7',nav:'#f7f5f2',soft:'#faf8f5',button:'#ffffff',buttonText:'#2a2623',danger:'#b55b5b',good:'#5c8a69',radius:20},sage:{bg:'#f4f6f2',card:'#ffffff',ink:'#243027',muted:'#707a72',line:'#dde4de',accent:'#6f8f78',accent2:'#b8cbbd',nav:'#f4f6f2',soft:'#f6f8f5',button:'#ffffff',buttonText:'#243027',danger:'#b45f63',good:'#6f8f78',radius:20},blue:{bg:'#f3f6fb',card:'#ffffff',ink:'#243044',muted:'#727d8d',line:'#dce4ef',accent:'#5a78a8',accent2:'#b5c6df',nav:'#f3f6fb',soft:'#f6f8fc',button:'#ffffff',buttonText:'#243044',danger:'#b45f63',good:'#6f8f78',radius:20},rose:{bg:'#faf4f5',card:'#ffffff',ink:'#34272b',muted:'#827278',line:'#eadcdf',accent:'#ad6f7a',accent2:'#dcb8c0',nav:'#faf4f5',soft:'#fcf7f8',button:'#ffffff',buttonText:'#34272b',danger:'#b55b5b',good:'#5c8a69',radius:20},lavender:{bg:'#f6f3fa',card:'#ffffff',ink:'#2e2940',muted:'#777185',line:'#e3ddec',accent:'#806aa8',accent2:'#c7b9dd',nav:'#f6f3fa',soft:'#f8f6fb',button:'#ffffff',buttonText:'#2e2940',danger:'#b55b67',good:'#788e7a',radius:20}};state.theme={...p[name]||p.warm};applyTheme();syncThemeInputs();saveLocalOnly()}
+function won(n){return moneyWonFmt.format(num(n))}
+function wonUnit(n){return moneyFmt.format(num(n))+' 원'}
 function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function getCats(){return [...new Set(state.tasks.map(t=>t.cat).filter(Boolean))]}
-function getOrderedCats(){const cats=getCats();const order=Array.isArray(state.categoryOrder)?state.categoryOrder:[];const ordered=order.filter(c=>cats.includes(c));cats.forEach(c=>{if(!ordered.includes(c))ordered.push(c)});if(JSON.stringify(order)!==JSON.stringify(ordered)){state.categoryOrder=ordered;localStorage.setItem(KEY,JSON.stringify(state));}return ordered}
-function moveCategory(cat,dir){const cats=getOrderedCats().slice(),i=cats.indexOf(String(cat)),j=i+Number(dir);if(i<0||j<0||j>=cats.length)return;const next=cats.slice();[next[i],next[j]]=[next[j],next[i]];state.categoryOrder=next;saveLocalOnly();renderHome();queueSharedSave();}
-function navInit(){const items=[['home','홈'],['tasks','할 일'],['schedule','일정'],['budget','예산'],['plans','부부계획'],['data','메모'],['settings','설정']];document.getElementById('nav').innerHTML=items.map((x,i)=>`<button class="${i===0?'active':''}" data-page="${x[0]}">${x[1]}</button>`).join('');document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));}
+function getOrderedCats(){const cats=getCats();const order=Array.isArray(state.categoryOrder)?state.categoryOrder:[];const ordered=order.filter(c=>cats.includes(c));cats.forEach(c=>{if(!ordered.includes(c))ordered.push(c)});if(JSON.stringify(order)!==JSON.stringify(ordered)){state.categoryOrder=ordered;saveLocalOnly();}return ordered}
+function moveCategory(cat,dir){const cats=getOrderedCats().slice(),i=cats.indexOf(String(cat)),j=i+Number(dir);if(i<0||j<0||j>=cats.length)return;const next=cats.slice();[next[i],next[j]]=[next[j],next[i]];state.categoryOrder=next;save('home');}
+/* ===== NAVIGATION & HOME ===== */
+function navInit(){const items=[['home','홈'],['tasks','할 일'],['schedule','일정'],['budget','예산'],['plans','부부계획'],['data','메모'],['settings','설정']];document.getElementById('nav').innerHTML=items.map((x,i)=>`<button class="${i===0?'active':''}" data-page="${x[0]}">${x[1]}</button>`).join('');}
+
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));window.scrollTo({top:0,behavior:'smooth'});}
+/* ===== RENDER ENGINE =====
+ * State changes declare which views are dirty.
+ * A single flush renders only those views, instead of repainting the whole app.
+ */
+const RENDER_DEPENDENCIES={
+  home:['home'],
+  tasks:['home','tasks'],
+  schedule:['home','schedule'],
+  budget:['home','budget'],
+  plans:['home','plans'],
+  memos:['home','memos'],
+  wedding:['home'],
+  all:['home','tasks','schedule','budget','plans','memos']
+};
+let dirtyViews=new Set();
+let renderScheduled=false;
+
+function requestRender(...views){
+  const expanded=views.flatMap(v=>RENDER_DEPENDENCIES[v]||[v]);
+  expanded.forEach(v=>dirtyViews.add(v));
+  if(renderScheduled)return;
+  renderScheduled=true;
+  queueMicrotask(flushRender);
+}
+function flushRender(){
+  renderScheduled=false;
+  const views=dirtyViews;
+  dirtyViews=new Set();
+  if(views.has('home')){calc();renderDday();renderHome();}
+  if(views.has('tasks'))renderTasks();
+  if(views.has('schedule'))renderSchedule();
+  if(views.has('budget'))renderBudget();
+  if(views.has('plans'))renderPlans();
+  if(views.has('memos'))renderMemos();
+}
+function renderAll(){requestRender('all');}
+function save(views='all'){
+  saveLocalOnly();
+  requestRender(...(Array.isArray(views)?views:[views]));
+  queueSharedSave();
+}
+
+const UI={
+  empty(message){return `<div class="empty">${esc(message)}</div>`},
+  menu(label,id,type){
+    return `<details class="task-menu"><summary aria-label="${esc(label)} 메뉴">⋯</summary><div class="task-menu-pop"><button data-action="edit-${type}" data-id="${id}">수정</button><button class="danger" data-action="delete-${type}" data-id="${id}">삭제</button></div></details>`;
+  },
+  order(id,index,length,type){
+    return `<div class="${type}-order"><button class="iconbtn" data-action="move-${type}" data-id="${id}" data-delta="-1" ${index===0?'disabled aria-disabled="true" tabindex="-1"':''} title="위로">↑</button><button class="iconbtn" data-action="move-${type}" data-id="${id}" data-delta="1" ${index===length-1?'disabled aria-disabled="true" tabindex="-1"':''} title="아래로">↓</button></div>`;
+  },
+  task(t,compact=false){
+    return `<div class="task ${t.status==='done'?'done':''}"><button class="check ${t.status==='done'?'on':''}" data-action="toggle-task" data-id="${t.id}">${t.status==='done'?'✓':''}</button><div class="task-body"><div class="task-category">${esc(t.cat)}</div><div class="task-title">${esc(t.title)}</div><div class="taskmeta">${t.due?`<span class="pill">${t.due}</span>`:''}<span class="pill ${t.priority==='높음'?'high':t.priority==='낮음'?'low':''}">${esc(t.priority)}</span></div>${t.memo?`<div class="task-note"><span class="task-note-label">메모</span>${esc(t.memo)}</div>`:''}</div>${compact?'':UI.menu('할 일',''+t.id,'task')}</div>`;
+  },
+  event(e,today){
+    const ed=parseLocalDate(e.date), isToday=ed.getTime()===today.getTime();
+    const meta=[e.time,e.location,e.category].filter(Boolean).map(x=>`<span class="event-tag">${esc(x)}</span>`).join('');
+    return `<div class="schedule"><div class="datebox"><span>${e.date.slice(5).replace('-','.')}</span><b>${ed.getDate()}</b><span>${['일','월','화','수','목','금','토'][ed.getDay()]}요일</span></div><div class="event ${isToday?'event-today':''}"><div class="event-main"><b>${esc(e.title)}</b>${meta?`<div class="event-meta">${meta}</div>`:''}<small>${esc(e.note||'메모 없음')}</small></div><div class="event-actions"><button class="btn" data-action="edit-event" data-id="${e.id}">수정</button><button class="btn danger" data-action="delete-event" data-id="${e.id}">삭제</button></div></div></div>`;
+  },
+  budget(b,index,length){
+    const planned=Number(b.planned||0), actual=Number(b.actual||0);
+    return `<div class="budget-line"><div class="budget-head"><div><div class="budget-name">${esc(b.name)}</div></div><div class="budget-actions">${UI.order(b.id,index,length,'budget')}${UI.menu('예산',''+b.id,'budget')}</div></div><div class="budget-amounts"><div class="budget-box"><div class="label">예상금액</div><b>${won(planned)}</b></div><div class="budget-box"><div class="label">실제금액</div><b>${won(actual)}</b></div></div>${b.details?`<div class="budget-box budget-detail-box"><div class="label">세부 내용</div><div class="budget-detail">${esc(b.details)}</div></div>`:''}</div>`;
+  },
+  plan(p,index,length){
+    return `<div class="plan"><div class="plan-head"><div class="plan-title">${esc(p.name)}</div><div class="plan-actions">${UI.order(p.id,index,length,'plan')}${UI.menu('부부계획',''+p.id,'plan')}<select class="plan-status-select" aria-label="부부계획 상태" data-action="update-plan" data-id="${p.id}"><option ${p.status==='논의 전'?'selected':''}>논의 전</option><option ${p.status==='논의 중'?'selected':''}>논의 중</option><option ${p.status==='합의 완료'?'selected':''}>합의 완료</option></select></div></div><div class="plan-block"><div class="plan-label">논의할 세부 사항</div><div class="plan-text">${esc(p.details||'미입력')}</div></div><div class="plan-block"><div class="plan-label">논의된 사항</div><div class="plan-text">${esc(p.note||'미입력')}</div></div></div>`;
+  },
+  memo(m,index,total){
+    return `<div class="memo-item"><div class="memo-content"><div class="small">메모 ${total-index}</div><div class="memo-text">${esc(m.text||'')}</div></div>${UI.menu('메모',''+m.id,'memo')}</div>`;
+  }
+};
+
 function calc(){const total=state.tasks.length,done=state.tasks.filter(t=>t.status==='done').length,pct=total?Math.round(done/total*100):0;document.getElementById('overallPct').textContent=pct+'%';document.getElementById('overallBar').style.width=pct+'%';document.getElementById('overallText').textContent=`${done}/${total}`;document.getElementById('todoCount')&&(document.getElementById('todoCount').textContent=total-done);document.getElementById('highCount')&&(document.getElementById('highCount').textContent=state.tasks.filter(t=>t.status!=='done'&&t.priority==='높음').length);const plan=state.budgets.reduce((a,b)=>a+Number(b.planned||0),0),act=state.budgets.reduce((a,b)=>a+Number(b.actual||0),0),over=Math.max(0,act-plan),bp=plan?Math.round(act/plan*100):0;document.getElementById('totalPlan').textContent=wonUnit(plan);document.getElementById('totalActual').textContent=wonUnit(act);document.getElementById('overBudget').textContent=wonUnit(over);const budgetPlanDisplay=document.getElementById('budgetPlanDisplay');if(budgetPlanDisplay)budgetPlanDisplay.textContent=wonUnit(plan);document.getElementById('budgetPctBig').textContent=bp+'%';document.getElementById('homeTotalPlan').textContent='/'+wonUnit(plan);document.getElementById('homeTotalActual').textContent=wonUnit(act);document.getElementById('homeBudgetPct').textContent=bp+'%';const capped=Math.min(100,Math.max(0,bp))+'%';const angle=Math.min(270,Math.max(0,bp*2.7))+'deg';const gauge=document.getElementById('budgetGauge'),homeGauge=document.getElementById('homeBudgetGauge');if(gauge){gauge.style.setProperty('--budget-pct',capped);gauge.style.setProperty('--budget-angle',angle);const arc=document.getElementById('budgetGaugeProgress');if(arc)arc.style.strokeDasharray=bp+' 100';}if(homeGauge){homeGauge.style.setProperty('--budget-pct',capped);homeGauge.style.setProperty('--budget-angle',angle);const homeArc=document.getElementById('homeBudgetGaugeProgress');if(homeArc)homeArc.style.strokeDasharray=bp+' 100';}}
 function renderDday(){
  const el=document.getElementById('ddayValue');
  if(!el)return;
  const value=String(state.weddingDate||'').trim();
  if(!value){el.textContent='날짜 미정';return;}
- const target=new Date(value+'T00:00:00');
+ const target=parseLocalDate(value);
  if(Number.isNaN(target.getTime())){el.textContent='날짜 미정';return;}
  const today=new Date();today.setHours(0,0,0,0);
  const diff=Math.round((target-today)/86400000);
@@ -934,12 +1044,12 @@ function renderHome(){
  const taskEl=document.getElementById('homeTasks'); if(taskEl)taskEl.innerHTML=upcoming.slice(0,taskLimit).map(t=>taskHtml(t,true)).join('')||'<div class="empty">모든 할 일을 완료했어요 🎉</div>';
  const taskSel=document.getElementById('homeTaskLimit'); if(taskSel)taskSel.value=String(taskLimit);
  const today=new Date();today.setHours(0,0,0,0);
- const events=[...state.events].filter(e=>e.date&&new Date(e.date+'T00:00:00')>=today).sort((a,b)=>(a.date||'9999-12-31').localeCompare(b.date||'9999-12-31')||String(a.time||'').localeCompare(String(b.time||'')));
+ const events=[...state.events].filter(e=>e.date&&parseLocalDate(e.date)>=today).sort((a,b)=>(a.date||'9999-12-31').localeCompare(b.date||'9999-12-31')||String(a.time||'').localeCompare(String(b.time||'')));
  const eventLimit=Number(state.homeEventLimit)||5;
  const eventEl=document.getElementById('homeEvents');
  if(eventEl)eventEl.innerHTML=events.slice(0,eventLimit).map(e=>{const meta=[e.time,e.location,e.category].filter(Boolean).map(x=>`<span class="event-tag">${esc(x)}</span>`).join('');return `<div class="home-event"><b>${esc(e.title)}</b>${meta?`<div class="event-meta">${meta}</div>`:''}<span class="small">${e.date.replaceAll('-','.')}</span>${e.note?`<span class="small">${esc(e.note)}</span>`:''}</div>`}).join('')||'<div class="empty">다가오는 일정이 없어요.</div>';
  const eventSel=document.getElementById('homeEventLimit'); if(eventSel)eventSel.value=String(eventLimit);
- let html='';for(let ci=0;ci<cats.length;ci++){const c=cats[ci],arr=state.tasks.filter(t=>t.cat===c),d=arr.filter(t=>t.status==='done').length,p=arr.length?Math.round(d/arr.length*100):0;html+=`<div class="card col4 category-card"><div class="row category-card-head"><b>${esc(c)}</b><div class="category-move"><button class="iconbtn" onclick="moveCategory(this.dataset.cat,-1)" data-cat="${esc(c)}" ${ci===0?'disabled':''} aria-label="위로">↑</button><button class="iconbtn" onclick="moveCategory(this.dataset.cat,1)" data-cat="${esc(c)}" ${ci===cats.length-1?'disabled':''} aria-label="아래로">↓</button></div></div><div class="category-progress-meta small">${d}/${arr.length}</div><div class="progress" style="margin-top:7px"><i style="width:${p}%"></i></div></div>`}document.getElementById('categoryCards').innerHTML=html||'<div class="empty">등록된 분야가 없어요.</div>';
+ let html='';for(let ci=0;ci<cats.length;ci++){const c=cats[ci],arr=state.tasks.filter(t=>t.cat===c),d=arr.filter(t=>t.status==='done').length,p=arr.length?Math.round(d/arr.length*100):0;html+=`<div class="card col4 category-card"><div class="row category-card-head"><b>${esc(c)}</b><div class="category-move"><button class="iconbtn" data-action="move-category" data-delta="-1" data-cat="${esc(c)}" ${ci===0?'disabled':''} aria-label="위로">↑</button><button class="iconbtn" data-action="move-category" data-delta="1" data-cat="${esc(c)}" ${ci===cats.length-1?'disabled':''} aria-label="아래로">↓</button></div></div><div class="category-progress-meta small">${d}/${arr.length}</div><div class="progress" style="margin-top:7px"><i style="width:${p}%"></i></div></div>`}document.getElementById('categoryCards').innerHTML=html||'<div class="empty">등록된 분야가 없어요.</div>';
  const planTotal=state.plans.length, planTodo=state.plans.filter(p=>p.status==='논의 전').length, planProgress=state.plans.filter(p=>p.status==='논의 중').length, planDone=state.plans.filter(p=>p.status==='합의 완료').length;
  const planDonePct=planTotal?Math.round(planDone/planTotal*100):0;
  document.getElementById('homePlanTodo').textContent=planTodo;
@@ -948,9 +1058,9 @@ function renderHome(){
  document.getElementById('homePlanDonePct').textContent=planDonePct+'%';
  document.getElementById('homePlanTotal').textContent=planTotal;
 }
-function setHomeLimit(type,value){const n=Math.max(1,Number(value)||5);if(type==='tasks')state.homeTaskLimit=n;else state.homeEventLimit=n;localStorage.setItem(KEY,JSON.stringify(state));renderAll();}
+function setHomeLimit(type,value){const n=Math.max(1,Number(value)||5);if(type==='tasks')state.homeTaskLimit=n;else state.homeEventLimit=n;save('home');}
 
-function taskHtml(t,compact=false){return `<div class="task ${t.status==='done'?'done':''}"><button class="check ${t.status==='done'?'on':''}" onclick="toggleTask(${t.id})">${t.status==='done'?'✓':''}</button><div class="task-body"><div class="task-category">${esc(t.cat)}</div><div class="task-title">${esc(t.title)}</div><div class="taskmeta">${t.due?`<span class="pill">${t.due}</span>`:''}<span class="pill ${t.priority==='높음'?'high':(t.priority==='낮음'?'low':'')}">${esc(t.priority)}</span></div>${t.memo?`<div class="task-note"><span class="task-note-label">메모</span>${esc(t.memo)}</div>`:''}</div>${compact?'':`<details class="task-menu"><summary aria-label="할 일 메뉴">⋯</summary><div class="task-menu-pop"><button onclick="openTaskEdit(${t.id});this.closest('details').removeAttribute('open')">수정</button><button class="danger" onclick="deleteTask(${t.id})">삭제</button></div></details>`}</div>`}
+function taskHtml(t,compact=false){return UI.task(t,compact)}
 function renderTasks(){
  const select=document.getElementById('taskCat');
  const currentCat=select.value||'all';
@@ -970,6 +1080,7 @@ function renderTasks(){
  document.getElementById('taskList').innerHTML=arr.map(t=>taskHtml(t,false)).join('')||'<div class="empty">조건에 맞는 할 일이 없어요.</div>';
 }
 
+/* ===== SCHEDULE / CALENDAR ===== */
 function localDateISO(date=new Date()){const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`;}
 let calendarCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 let selectedScheduleDate=localDateISO();
@@ -1001,7 +1112,7 @@ function refreshScheduleToday(){
  lastLocalDate=now;
  if(wasFollowingToday){
   selectedScheduleDate=now;
-  const d=new Date(now+'T00:00:00');
+  const d=parseLocalDate(now);
   calendarCursor=new Date(d.getFullYear(),d.getMonth(),1);
  }
  renderSchedule();
@@ -1028,67 +1139,64 @@ function renderCalendar(){
   const count=state.events.filter(e=>e.date===iso).length;
   const holiday=koreaHolidays[iso];
   const dayClass=day===0?'sunday':day===6?'saturday':'';
-  grid.push(`<button class="calendar-cell ${muted?'muted':''} ${dayClass} ${holiday?'holiday':''} ${iso===selectedScheduleDate?'selected':''} ${iso===todayIso?'today':''}" onclick="selectScheduleDate('${iso}')"><div class="calendar-num">${dd}</div>${holiday?`<div class="calendar-holiday" title="${holiday}">${holiday}</div>`:''}${count?`<div class="calendar-dots">${Array.from({length:Math.min(count,4)}).map(()=>'<i class="calendar-dot"></i>').join('')}</div>${count>4?`<div class="calendar-more">+${count-4}</div>`:''}`:''}</button>`);
+  grid.push(`<button class="calendar-cell ${muted?'muted':''} ${dayClass} ${holiday?'holiday':''} ${iso===selectedScheduleDate?'selected':''} ${iso===todayIso?'today':''}" data-action="select-date" data-date="${iso}"><div class="calendar-num">${dd}</div>${holiday?`<div class="calendar-holiday" title="${holiday}">${holiday}</div>`:''}${count?`<div class="calendar-dots">${Array.from({length:Math.min(count,4)}).map(()=>'<i class="calendar-dot"></i>').join('')}</div>${count>4?`<div class="calendar-more">+${count-4}</div>`:''}`:''}</button>`);
  }
  document.getElementById('calendarGrid').innerHTML=grid.join('');
  const count=state.events.filter(e=>e.date===selectedScheduleDate).length;
  const holiday=koreaHolidays[selectedScheduleDate];
  document.getElementById('calendarHint').textContent=[count?`${count}개의 일정`:'일정 없음',holiday?`공휴일 · ${holiday}`:''].filter(Boolean).join(' · ');
 }
-function selectScheduleDate(iso){selectedScheduleDate=iso;const d=new Date(iso+'T00:00:00');calendarCursor=new Date(d.getFullYear(),d.getMonth(),1);renderSchedule()}
+function selectScheduleDate(iso){selectedScheduleDate=iso;const d=parseLocalDate(iso);calendarCursor=new Date(d.getFullYear(),d.getMonth(),1);renderSchedule()}
 function changeCalendarMonth(delta){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+delta,1);renderCalendar()}
 function renderSchedule(){
  renderCalendar();
  const filter=(document.getElementById('scheduleFilter')||{}).value||'all';
  const today=new Date();today.setHours(0,0,0,0);
  let ev=[...state.events].sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||String(a.time||'').localeCompare(String(b.time||'')));
- if(filter==='all')ev=ev.filter(e=>e.date===selectedScheduleDate);if(filter==='upcoming')ev=ev.filter(e=>new Date(e.date+'T00:00:00')>=today);if(filter==='past')ev=ev.filter(e=>new Date(e.date+'T00:00:00')<today);
- const d=new Date(selectedScheduleDate+'T00:00:00');document.getElementById('selectedDateTitle').textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 일정`;
- const eventCardHtml=e=>{const ed=new Date(e.date+'T00:00:00'),isToday=ed.getTime()===today.getTime();const meta=[e.time,e.location,e.category].filter(Boolean).map(x=>`<span class="event-tag">${esc(x)}</span>`).join('');return `<div class="schedule"><div class="datebox"><span>${e.date.slice(5).replace('-','.')}</span><b>${ed.getDate()}</b><span>${['일','월','화','수','목','금','토'][ed.getDay()]}요일</span></div><div class="event ${isToday?'event-today':''}"><div class="event-main"><b>${esc(e.title)}</b>${meta?`<div class="event-meta">${meta}</div>`:''}<small>${esc(e.note||'메모 없음')}</small></div><div class="event-actions"><button class="btn" onclick="openEventEdit(${e.id})">수정</button><button class="btn danger" onclick="deleteEvent(${e.id})">삭제</button></div></div></div>`};
- document.getElementById('scheduleList').innerHTML=ev.map(eventCardHtml).join('')||'<div class="empty">해당 조건의 일정이 없어요.</div>';
+ if(filter==='all')ev=ev.filter(e=>e.date===selectedScheduleDate);if(filter==='upcoming')ev=ev.filter(e=>parseLocalDate(e.date)>=today);if(filter==='past')ev=ev.filter(e=>parseLocalDate(e.date)<today);
+ const d=parseLocalDate(selectedScheduleDate);document.getElementById('selectedDateTitle').textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 일정`;
+ document.getElementById('scheduleList').innerHTML=ev.map(e=>UI.event(e,today)).join('')||'<div class="empty">해당 조건의 일정이 없어요.</div>';
  let all=[...state.events].sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||String(a.time||'').localeCompare(String(b.time||'')));
  const scheduleSearch=(document.getElementById('scheduleAllSearch')?.value||'').trim().toLowerCase();
  if(scheduleSearch){all=all.filter(e=>[e.title,e.date,e.time,e.location,e.category,e.note].filter(Boolean).some(v=>String(v).toLowerCase().includes(scheduleSearch)));}
- document.getElementById('scheduleAllList').innerHTML=all.map(eventCardHtml).join('')||'<div class="empty">검색 결과가 없어요.</div>';
+ document.getElementById('scheduleAllList').innerHTML=all.map(e=>UI.event(e,today)).join('')||'<div class="empty">검색 결과가 없어요.</div>';
 }
 
-function renderBudget(){document.getElementById('budgetLines').innerHTML=state.budgets.map((b,i)=>{const planned=Number(b.planned||0),actual=Number(b.actual||0);return `<div class="budget-line"><div class="budget-head"><div><div class="budget-name">${esc(b.name)}</div></div><div class="budget-actions"><button class="iconbtn" onclick="moveBudget(${b.id},-1)" ${i===0?'disabled aria-disabled="true" tabindex="-1"':''} title="위로">↑</button><button class="iconbtn" onclick="moveBudget(${b.id},1)" ${i===state.budgets.length-1?'disabled aria-disabled="true" tabindex="-1"':''} title="아래로">↓</button><details class="task-menu"><summary aria-label="예산 메뉴">⋯</summary><div class="task-menu-pop"><button onclick="openBudgetEdit(${b.id});this.closest('details').removeAttribute('open')">수정</button><button class="danger" onclick="deleteBudget(${b.id})">삭제</button></div></details></div></div><div class="budget-amounts"><div class="budget-box"><div class="label">예상금액</div><b>${won(planned)}</b></div><div class="budget-box"><div class="label">실제금액</div><b>${won(actual)}</b></div></div>${b.details?`<div class="budget-box budget-detail-box"><div class="label">세부 내용</div><div class="budget-detail">${esc(b.details)}</div></div>`:''}</div>`}).join('')||'<div class="empty">등록된 예산 항목이 없어요.</div>';}
-
-function moveBudget(id,dir){const i=state.budgets.findIndex(x=>String(x.id)===String(id)),j=i+dir;if(i<0||j<0||j>=state.budgets.length)return;[state.budgets[i],state.budgets[j]]=[state.budgets[j],state.budgets[i]];save()}
-function openBudgetEdit(id){const b=state.budgets.find(x=>x.id===id);if(b)openModal('budget',b);}
-function renderPlans(){
- document.getElementById('planList').innerHTML=state.plans.map((p,idx)=>`<div class="plan"><div class="plan-head"><div class="plan-title">${esc(p.name)}</div><div class="plan-actions"><div class="plan-order"><button class="iconbtn" onclick="movePlan(${p.id},-1)" ${idx===0?'disabled aria-disabled="true" tabindex="-1"':''} title="위로">↑</button><button class="iconbtn" onclick="movePlan(${p.id},1)" ${idx===state.plans.length-1?'disabled aria-disabled="true" tabindex="-1"':''} title="아래로">↓</button></div><details class="task-menu"><summary aria-label="부부계획 메뉴">⋯</summary><div class="task-menu-pop"><button onclick="openModal('plan',${p.id});this.closest('details').removeAttribute('open')">수정</button><button class="danger" onclick="deletePlan(${p.id})">삭제</button></div></details><select class="plan-status-select" aria-label="부부계획 상태" onchange="updatePlan(${p.id},this.value)"><option ${p.status==='논의 전'?'selected':''}>논의 전</option><option ${p.status==='논의 중'?'selected':''}>논의 중</option><option ${p.status==='합의 완료'?'selected':''}>합의 완료</option></select></div></div><div class="plan-block"><div class="plan-label">논의할 세부 사항</div><div class="plan-text">${esc(p.details||'미입력')}</div></div><div class="plan-block"><div class="plan-label">논의된 사항</div><div class="plan-text">${esc(p.note||'미입력')}</div></div></div>`).join('')||'<div class="empty">등록된 부부계획이 없어요.</div>';
-
+/* ===== BUDGET ===== */
+function renderBudget(){
+ const el=$('budgetLines'); if(!el)return;
+ el.innerHTML=state.budgets.map((b,i)=>UI.budget(b,i,state.budgets.length)).join('')||UI.empty('등록된 예산 항목이 없어요.');
 }
 
-function movePlan(id,dir){const i=state.plans.findIndex(x=>String(x.id)===String(id)),j=i+dir;if(i<0||j<0||j>=state.plans.length)return;[state.plans[i],state.plans[j]]=[state.plans[j],state.plans[i]];save()}
-function deletePlan(id){if(!confirm('삭제하시겠습니까?'))return;state.plans=state.plans.filter(x=>x.id!==id);save()}
+function movePlan(id,dir){const i=state.plans.findIndex(x=>String(x.id)===String(id)),j=i+dir;if(i<0||j<0||j>=state.plans.length)return;[state.plans[i],state.plans[j]]=[state.plans[j],state.plans[i]];save('plans')}
+function deletePlan(id){if(!confirm('삭제하시겠습니까?'))return;state.plans=state.plans.filter(x=>String(x.id)!==String(id));save('plans')}
 
-function renderAll(){calc();renderDday();renderHome();renderTasks();renderSchedule();renderBudget();renderPlans();renderMemos();document.getElementById('quickMemo').value='';}
-function toggleTask(id){const t=state.tasks.find(x=>x.id===id);if(t){t.status=t.status==='done'?'todo':'done';save()}}
-function updatePlan(id,v){const p=state.plans.find(x=>x.id===id);if(p){p.status=v;save()}}
-function savePlan(id){const name=document.getElementById('pName').value.trim();if(!name)return;const data={name,details:document.getElementById('pDetails').value.trim(),note:document.getElementById('pNote').value.trim(),status:document.getElementById('pStatus').value};if(id==null || String(id)==='null')state.plans.push({id:Date.now()+Math.floor(Math.random()*1000),...data});else{const target=state.plans.find(p=>String(p.id)===String(id));if(!target){alert('수정할 부부계획을 찾지 못했어요.');return}Object.assign(target,data)}save();closeModal()}
+
+function toggleTask(id){const t=state.tasks.find(x=>String(x.id)===String(id));if(t){t.status=t.status==='done'?'todo':'done';save('tasks')}}
+function updatePlan(id,v){const p=state.plans.find(x=>String(x.id)===String(id));if(p){p.status=v;save('plans')}}
+function savePlan(id){const name=document.getElementById('pName').value.trim();if(!name)return;const data={name,details:document.getElementById('pDetails').value.trim(),note:document.getElementById('pNote').value.trim(),status:document.getElementById('pStatus').value};if(id==null || String(id)==='null')state.plans.push({id:newId(),...data});else{const target=state.plans.find(p=>String(p.id)===String(id));if(!target){alert('수정할 부부계획을 찾지 못했어요.');return}Object.assign(target,data)}save('plans');closeModal()}
 function openTaskEdit(id){const t=state.tasks.find(x=>x.id===id);openModal('task',t)}
-function openModal(type,data){let body='';if(type==='settings'){body=`<h2>본식 날짜</h2><div class="form"><label>결혼식 날짜</label><input id="weddingDate" type="date" value="${state.weddingDate||''}"><div class="actions"><button class="btn" onclick="closeModal()">취소</button><button class="btn primary" onclick="saveWeddingDate()">저장</button></div></div>`}
-if(type==='task'){const t=data||{id:'',cat:getCats()[0]||'기타',title:'',due:'',owner:'함께',priority:'보통',status:'todo'};body=`<h2>${data?'할 일 수정':'할 일 추가'}</h2><div class="form"><label>분야</label><input id="fCat" value="${esc(t.cat)}"><label>할 일</label><input id="fTitle" value="${esc(t.title)}"><label>메모</label><textarea id="fMemo" placeholder="예약번호, 업체 연락처, 준비할 내용 등을 적어보세요.">${esc(t.memo||'')}</textarea><label>마감일</label><input id="fDue" type="date" value="${t.due||''}"><label>담당</label><select id="fOwner"><option ${t.owner==='함께'?'selected':''}>함께</option><option ${t.owner==='신랑' || t.owner==='형주'?'selected':''}>신랑</option><option ${t.owner==='신부'?'selected':''}>신부</option><option ${t.owner==='각자'?'selected':''}>각자</option></select><label>우선순위</label><select id="fPriority"><option ${t.priority==='높음'?'selected':''}>높음</option><option ${t.priority==='보통'?'selected':''}>보통</option><option ${t.priority==='낮음'?'selected':''}>낮음</option></select><div class="actions"><button class="btn" onclick="closeModal()">취소</button><button class="btn primary" onclick="saveTask(${data?t.id:'null'})">저장</button></div></div>`}
-if(type==='plan'){const p=data?state.plans.find(x=>x.id===data):null;const x=p||{id:'',name:'',details:'',note:'',status:'논의 전'};body=`<h2>${p?'부부계획 수정':'부부계획 추가'}</h2><div class="form"><label>제목</label><input id="pName" value="${esc(x.name)}" placeholder="예: 자녀 계획"><label>논의할 세부 사항</label><textarea id="pDetails" placeholder="서로 이야기해야 할 질문이나 기준을 적어주세요.">${esc(x.details||'')}</textarea><label>논의된 사항</label><textarea id="pNote" placeholder="실제로 이야기하고 합의한 내용을 기록하세요.">${esc(x.note||'')}</textarea><label>상태</label><select id="pStatus"><option ${x.status==='논의 전'?'selected':''}>논의 전</option><option ${x.status==='논의 중'?'selected':''}>논의 중</option><option ${x.status==='합의 완료'?'selected':''}>합의 완료</option></select><div class="actions"><button class="btn" onclick="closeModal()">취소</button><button class="btn primary" onclick="savePlan(${p?p.id:'null'})">저장</button></div></div>`}
-if(type==='event'){const e=data&&typeof data==='object'?data:null;body=`<h2>${e?'일정 수정':'일정 추가'}</h2><div class="form"><label>날짜</label><input id="eDate" type="date" value="${e?e.date||'':selectedScheduleDate}"><label>일정</label><input id="eTitle" value="${e?esc(e.title):''}" placeholder="예: 상견례 장소 예약"><label>시간</label><input id="eTime" type="time" value="${e?e.time||'':''}"><label>장소</label><input id="eLocation" value="${e?esc(e.location||''):''}" placeholder="예: 강남 ○○식당"><label>분류</label><input id="eCategory" value="${e?esc(e.category||''):''}" placeholder="예: 상견례 / 웨딩촬영 / 본식"><label>메모</label><textarea id="eNote" placeholder="준비물, 예약번호, 주차 등">${e?esc(e.note||''):''}</textarea><div class="actions">${e?`<button class="btn" onclick="deleteEvent(${e.id});closeModal()">삭제</button>`:''}<button class="btn" onclick="closeModal()">취소</button><button class="btn primary" onclick="saveEvent(${e?e.id:'null'})">저장</button></div></div>`}
-if(type==='budget'){const b=data||{id:'',name:'',planned:0,actual:0,details:''};body=`<h2>${data?'예산 항목 수정':'예산 항목 추가'}</h2><div class="form"><label>항목</label><input id="bName" value="${esc(b.name)}" placeholder="예: 본식 식대"><label>예상금액</label><input id="bPlan" type="text" inputmode="numeric" autocomplete="off" value="${formatMoneyInputValue(b.planned)}" placeholder="0" oninput="formatMoneyInput(this)"><label>실제금액</label><input id="bActual" type="text" inputmode="numeric" autocomplete="off" value="${formatMoneyInputValue(b.actual)}" placeholder="0" oninput="formatMoneyInput(this)"><label>세부 내용</label><textarea id="bDetails" placeholder="계약 내용, 포함 항목, 메모 등을 적어보세요.">${esc(b.details||'')}</textarea><div class="actions">${data?`<button class="btn" onclick="deleteBudget(${b.id})">삭제</button>`:''}<button class="btn" onclick="closeModal()">취소</button><button class="btn primary" onclick="saveBudget(${data?b.id:'null'})">저장</button></div></div>`}
-if(type==='memo'){const m=state.memos.find(x=>String(x.id)===String(data));if(!m){closeModal();return}body=`<h2>메모 수정</h2><div class="form"><label>메모</label><textarea id="mText" placeholder="메모 내용을 입력하세요.">${esc(m.text||'')}</textarea><div class="actions"><button class="btn" onclick="closeModal()">취소</button><button class="btn primary" onclick="saveMemoEdit(${m.id})">저장</button></div></div>`}
+function openModal(type,data){let body='';if(type==='settings'){body=`<h2>본식 날짜</h2><div class="form"><label>결혼식 날짜</label><input id="weddingDate" type="date" value="${state.weddingDate||''}"><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-wedding-date">저장</button></div></div>`}
+if(type==='task'){const t=data||{id:'',cat:getCats()[0]||'기타',title:'',due:'',owner:'함께',priority:'보통',status:'todo'};body=`<h2>${data?'할 일 수정':'할 일 추가'}</h2><div class="form"><label>분야</label><input id="fCat" value="${esc(t.cat)}"><label>할 일</label><input id="fTitle" value="${esc(t.title)}"><label>메모</label><textarea id="fMemo" placeholder="예약번호, 업체 연락처, 준비할 내용 등을 적어보세요.">${esc(t.memo||'')}</textarea><label>마감일</label><input id="fDue" type="date" value="${t.due||''}"><label>담당</label><select id="fOwner"><option ${t.owner==='함께'?'selected':''}>함께</option><option ${t.owner==='신랑' || t.owner==='형주'?'selected':''}>신랑</option><option ${t.owner==='신부'?'selected':''}>신부</option><option ${t.owner==='각자'?'selected':''}>각자</option></select><label>우선순위</label><select id="fPriority"><option ${t.priority==='높음'?'selected':''}>높음</option><option ${t.priority==='보통'?'selected':''}>보통</option><option ${t.priority==='낮음'?'selected':''}>낮음</option></select><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-task" data-id="${data?t.id:'null'}">저장</button></div></div>`}
+if(type==='plan'){const p=data?state.plans.find(x=>x.id===data):null;const x=p||{id:'',name:'',details:'',note:'',status:'논의 전'};body=`<h2>${p?'부부계획 수정':'부부계획 추가'}</h2><div class="form"><label>제목</label><input id="pName" value="${esc(x.name)}" placeholder="예: 자녀 계획"><label>논의할 세부 사항</label><textarea id="pDetails" placeholder="서로 이야기해야 할 질문이나 기준을 적어주세요.">${esc(x.details||'')}</textarea><label>논의된 사항</label><textarea id="pNote" placeholder="실제로 이야기하고 합의한 내용을 기록하세요.">${esc(x.note||'')}</textarea><label>상태</label><select id="pStatus"><option ${x.status==='논의 전'?'selected':''}>논의 전</option><option ${x.status==='논의 중'?'selected':''}>논의 중</option><option ${x.status==='합의 완료'?'selected':''}>합의 완료</option></select><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-plan" data-id="${p?p.id:'null'}">저장</button></div></div>`}
+if(type==='event'){const e=data&&typeof data==='object'?data:null;body=`<h2>${e?'일정 수정':'일정 추가'}</h2><div class="form"><label>날짜</label><input id="eDate" type="date" value="${e?e.date||'':selectedScheduleDate}"><label>일정</label><input id="eTitle" value="${e?esc(e.title):''}" placeholder="예: 상견례 장소 예약"><label>시간</label><input id="eTime" type="time" value="${e?e.time||'':''}"><label>장소</label><input id="eLocation" value="${e?esc(e.location||''):''}" placeholder="예: 강남 ○○식당"><label>분류</label><input id="eCategory" value="${e?esc(e.category||''):''}" placeholder="예: 상견례 / 웨딩촬영 / 본식"><label>메모</label><textarea id="eNote" placeholder="준비물, 예약번호, 주차 등">${e?esc(e.note||''):''}</textarea><div class="actions">${e?`<button class="btn" data-action="delete-event-close" data-id="${e.id}">삭제</button>`:''}<button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-event" data-id="${e?e.id:'null'}">저장</button></div></div>`}
+if(type==='budget'){const b=data||{id:'',name:'',planned:0,actual:0,details:''};body=`<h2>${data?'예산 항목 수정':'예산 항목 추가'}</h2><div class="form"><label>항목</label><input id="bName" value="${esc(b.name)}" placeholder="예: 본식 식대"><label>예상금액</label><input id="bPlan" type="text" inputmode="numeric" autocomplete="off" value="${formatMoneyInputValue(b.planned)}" placeholder="0" data-action="format-money"><label>실제금액</label><input id="bActual" type="text" inputmode="numeric" autocomplete="off" value="${formatMoneyInputValue(b.actual)}" placeholder="0" data-action="format-money"><label>세부 내용</label><textarea id="bDetails" placeholder="계약 내용, 포함 항목, 메모 등을 적어보세요.">${esc(b.details||'')}</textarea><div class="actions">${data?`<button class="btn" data-action="delete-budget" data-id="${b.id}">삭제</button>`:''}<button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-budget" data-id="${data?b.id:'null'}">저장</button></div></div>`}
+if(type==='memo'){const m=state.memos.find(x=>String(x.id)===String(data));if(!m){closeModal();return}body=`<h2>메모 수정</h2><div class="form"><label>메모</label><textarea id="mText" placeholder="메모 내용을 입력하세요.">${esc(m.text||'')}</textarea><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-memo-edit" data-id="${m.id}">저장</button></div></div>`}
 document.getElementById('modalBody').innerHTML=body;document.getElementById('modal').classList.add('open')}
 function closeModal(){document.getElementById('modal').classList.remove('open')}
-function saveWeddingDate(){state.weddingDate=document.getElementById('weddingDate').value;save();closeModal()}
-function saveTask(id){const data={cat:document.getElementById('fCat').value.trim()||'기타',title:document.getElementById('fTitle').value.trim(),memo:document.getElementById('fMemo').value.trim(),due:document.getElementById('fDue').value,owner:document.getElementById('fOwner').value,priority:document.getElementById('fPriority').value};if(!data.title){alert('할 일을 입력해주세요.');return}if(id==null || String(id)==='null')state.tasks.push({id:Date.now()+Math.floor(Math.random()*1000),...data,status:'todo'});else{const target=state.tasks.find(t=>String(t.id)===String(id));if(!target){alert('수정할 할 일을 찾지 못했어요.');return}Object.assign(target,data)}save();closeModal()}
-function deleteTask(id){if(!confirm('삭제하시겠습니까?'))return;state.tasks=state.tasks.filter(t=>String(t.id)!==String(id));save();closeModal()}
-function saveEvent(id){const title=document.getElementById('eTitle').value.trim(),date=document.getElementById('eDate').value;if(!date){alert('날짜를 입력해주세요.');return}if(!title){alert('일정 제목을 입력해주세요.');return}const data={title,date,time:document.getElementById('eTime').value||'',location:document.getElementById('eLocation').value.trim(),category:document.getElementById('eCategory').value.trim(),note:document.getElementById('eNote').value.trim()};if(String(id)==='null'){state.events=Array.isArray(state.events)?state.events:[];state.events.push({id:Date.now()+Math.floor(Math.random()*1000),...data});}else{const target=state.events.find(e=>String(e.id)===String(id));if(!target){alert('수정할 일정을 찾지 못했어요.');return}Object.assign(target,data)}save();selectedScheduleDate=date;calendarCursor=new Date(date+'T00:00:00');calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1);closeModal();showPage('schedule');}
+function saveWeddingDate(){state.weddingDate=document.getElementById('weddingDate').value;save('wedding');closeModal()}
+function saveTask(id){const data={cat:document.getElementById('fCat').value.trim()||'기타',title:document.getElementById('fTitle').value.trim(),memo:document.getElementById('fMemo').value.trim(),due:document.getElementById('fDue').value,owner:document.getElementById('fOwner').value,priority:document.getElementById('fPriority').value};if(!data.title){alert('할 일을 입력해주세요.');return}if(id==null || String(id)==='null')state.tasks.push({id:newId(),...data,status:'todo'});else{const target=state.tasks.find(t=>String(t.id)===String(id));if(!target){alert('수정할 할 일을 찾지 못했어요.');return}Object.assign(target,data)}save('tasks');closeModal()}
+function deleteTask(id){if(!confirm('삭제하시겠습니까?'))return;state.tasks=state.tasks.filter(t=>String(t.id)!==String(id));save('tasks');closeModal()}
+function saveEvent(id){const title=document.getElementById('eTitle').value.trim(),date=document.getElementById('eDate').value;if(!date){alert('날짜를 입력해주세요.');return}if(!title){alert('일정 제목을 입력해주세요.');return}const data={title,date,time:document.getElementById('eTime').value||'',location:document.getElementById('eLocation').value.trim(),category:document.getElementById('eCategory').value.trim(),note:document.getElementById('eNote').value.trim()};if(String(id)==='null'){state.events=Array.isArray(state.events)?state.events:[];state.events.push({id:newId(),...data});}else{const target=state.events.find(e=>String(e.id)===String(id));if(!target){alert('수정할 일정을 찾지 못했어요.');return}Object.assign(target,data)}save('schedule');selectedScheduleDate=date;calendarCursor=parseLocalDate(date);calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1);closeModal();showPage('schedule');}
 function openEventEdit(id){const e=state.events.find(x=>x.id===id);if(e)openModal('event',e)}
-function deleteEvent(id){if(!confirm('삭제하시겠습니까?'))return;state.events=state.events.filter(e=>String(e.id)!==String(id));save();showPage('schedule')}
+function deleteEvent(id){if(!confirm('삭제하시겠습니까?'))return;state.events=state.events.filter(e=>String(e.id)!==String(id));save('schedule');showPage('schedule')}
 function formatMoneyInputValue(value){const n=Number(String(value??'').replace(/\D/g,''))||0;return n?new Intl.NumberFormat('ko-KR').format(n):''}
 function formatMoneyInput(el){const digits=String(el.value||'').replace(/\D/g,'');el.value=digits?new Intl.NumberFormat('ko-KR').format(Number(digits)):'';el.setSelectionRange(el.value.length,el.value.length)}
 function parseMoneyInput(id){return Number(String(document.getElementById(id)?.value||'').replace(/,/g,'').replace(/\D/g,''))||0}
-function saveBudget(id){const name=document.getElementById('bName').value.trim();if(!name)return;const data={name,planned:parseMoneyInput('bPlan'),actual:parseMoneyInput('bActual'),details:document.getElementById('bDetails').value.trim()};if(id==null || String(id)==='null')state.budgets.push({id:Date.now()+Math.floor(Math.random()*1000),...data});else{const target=state.budgets.find(b=>String(b.id)===String(id));if(!target){alert('수정할 예산 항목을 찾지 못했어요.');return}Object.assign(target,data)}save();closeModal()}
-function deleteBudget(id){if(!confirm('삭제하시겠습니까?'))return;state.budgets=state.budgets.filter(b=>b.id!==id);save();closeModal()}
-function editGoal(i){const v=prompt('목표 내용을 수정하세요',state.goals[i][1]);if(v!==null){state.goals[i][1]=v;save()}}
+function saveBudget(id){const name=document.getElementById('bName').value.trim();if(!name)return;const data={name,planned:parseMoneyInput('bPlan'),actual:parseMoneyInput('bActual'),details:document.getElementById('bDetails').value.trim()};if(id==null || String(id)==='null')state.budgets.push({id:newId(),...data});else{const target=state.budgets.find(b=>String(b.id)===String(id));if(!target){alert('수정할 예산 항목을 찾지 못했어요.');return}Object.assign(target,data)}save('budget');closeModal()}
+function deleteBudget(id){if(!confirm('삭제하시겠습니까?'))return;state.budgets=state.budgets.filter(b=>b.id!==id);save('budget');closeModal()}
+function editGoal(i){const v=prompt('목표 내용을 수정하세요',state.goals[i][1]);if(v!==null){state.goals[i][1]=v;save('home')}}
+/* ===== MEMOS & BACKUP ===== */
 function renderMemos(){
  const el=document.getElementById('memoList');
  const count=document.getElementById('memoCount');
@@ -1098,15 +1206,84 @@ function renderMemos(){
  const q=(searchEl?.value||'').trim().toLowerCase();
  const filtered=q?memos.filter(m=>String(m.text||'').toLowerCase().includes(q)):memos;
  count.textContent=`${filtered.length}개`;
- el.innerHTML=filtered.map((m,idx)=>`<div class="memo-item"><div class="memo-content"><div class="small">메모 ${memos.length-idx}</div><div class="memo-text">${esc(m.text||'')}</div></div><details class="task-menu"><summary aria-label="메모 메뉴">⋯</summary><div class="task-menu-pop"><button onclick="openModal('memo',${m.id});this.closest('details').removeAttribute('open')">수정</button><button class="danger" onclick="deleteMemo(${m.id})">삭제</button></div></details></div>`).join('')||'<div class="empty">검색 결과가 없어요.</div>';
+ el.innerHTML=filtered.map((m,idx)=>UI.memo(m,idx,memos.length)).join('')||UI.empty('검색 결과가 없어요.');
 }
-function saveMemo(){const text=document.getElementById('quickMemo').value.trim();if(!text){alert('메모 내용을 입력해주세요.');return}state.memos=Array.isArray(state.memos)?state.memos:[];state.memos.unshift({id:Date.now()+Math.floor(Math.random()*1000),text});save();document.getElementById('quickMemo').value='';alert('메모를 저장했어요.')}
-function saveMemoEdit(id){const text=document.getElementById('mText').value.trim();if(!text){alert('메모 내용을 입력해주세요.');return}const m=state.memos.find(x=>String(x.id)===String(id));if(!m){alert('수정할 메모를 찾지 못했어요.');return}m.text=text;save();closeModal()}
-function deleteMemo(id){if(!confirm('삭제하시겠습니까?'))return;state.memos=state.memos.filter(m=>String(m.id)!==String(id));save()}
+function saveMemo(){const text=document.getElementById('quickMemo').value.trim();if(!text){alert('메모 내용을 입력해주세요.');return}state.memos=Array.isArray(state.memos)?state.memos:[];state.memos.unshift({id:newId(),text});save('memos');document.getElementById('quickMemo').value='';alert('메모를 저장했어요.')}
+function saveMemoEdit(id){const text=document.getElementById('mText').value.trim();if(!text){alert('메모 내용을 입력해주세요.');return}const m=state.memos.find(x=>String(x.id)===String(id));if(!m){alert('수정할 메모를 찾지 못했어요.');return}m.text=text;save('memos');closeModal()}
+function deleteMemo(id){if(!confirm('삭제하시겠습니까?'))return;state.memos=state.memos.filter(m=>String(m.id)!==String(id));save('memos')}
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='우리_결혼_플래너_백업.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);save();alert('백업을 복구했어요.')}catch(e){alert('복구 파일을 읽을 수 없어요.')}};r.readAsText(f)}
-['taskSearch','taskCat','taskStatus','taskSort'].forEach(id=>document.getElementById(id).addEventListener('input',renderTasks));document.getElementById('scheduleFilter').addEventListener('change',renderSchedule);document.getElementById('scheduleAllSearch').addEventListener('input',renderSchedule);document.getElementById('memoSearch').addEventListener('input',renderMemos);
+function handleAction(el){
+ const a=el?.dataset?.action;if(!a)return;
+ const id=el.dataset.id, delta=Number(el.dataset.delta||0);
+ switch(a){
+  case 'open-modal': return openModal(el.dataset.modal);
+  case 'calendar-month': return changeCalendarMonth(delta);
+  case 'save-memo': return saveMemo();
+  case 'shared-sign-up': return sharedSignUp();
+  case 'shared-sign-in': return sharedSignIn();
+  case 'shared-sign-out': return sharedSignOut();
+  case 'shared-pull': return sharedPull();
+  case 'shared-copy-code': return sharedCopyCode();
+  case 'shared-create-project': return sharedCreateProject();
+  case 'shared-join-project': return sharedJoinProject();
+  case 'theme-preset': return applyPreset(el.dataset.preset);
+  case 'theme-reset': return resetTheme();
+  case 'theme-save': return saveTheme();
+  case 'export-data': return exportData();
+  case 'import-file': return $('importFile')?.click();
+  case 'move-category': return moveCategory(el.closest('[data-cat]')?.dataset.cat,delta);
+  case 'toggle-task': return toggleTask(id);
+  case 'edit-task': openTaskEdit(id);break;
+  case 'delete-task': return deleteTask(id);
+  case 'select-date': return selectScheduleDate(el.dataset.date);
+  case 'edit-event': return openEventEdit(id);
+  case 'delete-event': return deleteEvent(id);
+  case 'delete-event-close': deleteEvent(id);return closeModal();
+  case 'move-budget': return moveBudget(id,delta);
+  case 'edit-budget': openBudgetEdit(id);break;
+  case 'delete-budget': return deleteBudget(id);
+  case 'move-plan': return movePlan(id,delta);
+  case 'edit-plan': openModal('plan',id);break;
+  case 'delete-plan': return deletePlan(id);
+  case 'close-modal': return closeModal();
+  case 'save-wedding-date': return saveWeddingDate();
+  case 'save-task': return saveTask(id==='null'?null:id);
+  case 'save-plan': return savePlan(id==='null'?null:id);
+  case 'save-event': return saveEvent(id==='null'?null:id);
+  case 'save-budget': return saveBudget(id==='null'?null:id);
+  case 'save-memo-edit': return saveMemoEdit(id);
+  case 'update-plan': return updatePlan(id,el.value);
+  case 'preview-theme': return previewTheme();
+  case 'format-money': return formatMoneyInput(el);
+  case 'import-data': return importData({target:{files:el.files}});
+  case 'home-limit': return setHomeLimit(el.dataset.limitType,el.value);
+  case 'edit-memo': openModal('memo',id);break;
+  case 'delete-memo': return deleteMemo(id);
+  case 'switch-project': return sharedSwitchProject(el.dataset.project);
+ }
+ el.closest('details')?.removeAttribute('open');
+}
+document.addEventListener('click',e=>{
+ const nav=e.target.closest('#nav [data-page]');
+ if(nav){showPage(nav.dataset.page);return;}
+ const action=e.target.closest('[data-action]');
+ if(action){e.preventDefault();handleAction(action);}
+});
+['taskSearch','taskCat','taskStatus','taskSort'].forEach(id=>$(id)?.addEventListener('input',()=>requestRender('tasks')));
+$('scheduleFilter')?.addEventListener('change',()=>requestRender('schedule'));
+$('scheduleAllSearch')?.addEventListener('input',()=>requestRender('schedule'));
+$('memoSearch')?.addEventListener('input',()=>requestRender('memos'));
+document.addEventListener('input',e=>{
+  const action=e.target.closest?.('[data-action="format-money"],[data-action="preview-theme"]');
+  if(action)handleAction(action);
+});
+document.addEventListener('change',e=>{
+  const action=e.target.closest?.('[data-action="update-plan"],[data-action="import-data"],[data-action="home-limit"]');
+  if(action)handleAction(action);
+});
 
+/* ===== SHARED SYNC / SUPABASE ===== */
 // Shared sync (Supabase) — 2-person project mode
 const SHARED_KEY='wedding_planner_shared_v2';
 const DEFAULT_SUPABASE_URL='https://gcabvfdjdglyjpngvyqz.supabase.co';
@@ -1116,11 +1293,21 @@ function sharedConfig(){try{const c=JSON.parse(localStorage.getItem(SHARED_KEY)|
 function setSharedConfig(v){localStorage.setItem(SHARED_KEY,JSON.stringify({...v,url:v.url||DEFAULT_SUPABASE_URL,key:v.key||DEFAULT_SUPABASE_KEY}));syncSharedInputs()}
 function sharedSetStatus(text,kind=''){syncSharedAuthUI();const el=document.getElementById('syncStatus');if(el){const statusText=(kind==='shared-error')?'연결 실패':(text==='동기화 오류'?'동기화 오류':(text==='오프라인'?'오프라인':(sharedSync.user?'실시간 동기화 중':'로컬 저장 중')));el.textContent=statusText;el.className='pill'+((statusText==='실시간 동기화 중')?' shared-online':(statusText==='연결 실패'||statusText==='동기화 오류'?' shared-error':(statusText==='오프라인'?' shared-syncing':'')))}const ut=document.getElementById('syncUserText');if(ut)ut.textContent=sharedSync.user?`로그인: ${sharedSync.user.email}`:'아직 공유 계정에 연결되지 않았어요.';const pt=document.getElementById('syncProjectText');if(pt)pt.textContent='';const label=document.getElementById('syncCodeLabel');if(label)label.textContent=sharedSync.projectId?'현재 프로젝트 코드':'프로젝트 초대 코드';const ft=document.getElementById('footerText');if(ft)ft.textContent=sharedSync.projectId?'우리 둘이 같이 쓰는 결혼 준비 공간 · 실시간 공유 중':'우리 둘이 같이 쓰는 결혼 준비 공간 · 현재는 이 브라우저에 저장됩니다.';renderSharedProjects()}
 function sharedSetLastSync(msg){const el=document.getElementById('syncLastText');if(el)el.innerHTML=msg||''}
-function renderSharedProjects(){const box=document.getElementById('syncProjectsBox');if(!box)return;const projects=sharedConfig().projects||[];const current=projects.find(p=>String(p.id)===String(sharedSync.projectId));const currentBox=document.getElementById('currentProjectBox');const codeEl=document.getElementById('syncCode');if(currentBox){currentBox.style.display=(sharedSync.user&&current)?'block':'none';if(codeEl)codeEl.value=current?.invite_code||'';const joinEl=document.getElementById('syncJoinCode');if(joinEl)joinEl.value=''}if(!sharedSync.user||!projects.length){box.style.display='none';box.innerHTML='';return}box.style.display='block';box.innerHTML='<div style="font-weight:800;margin-bottom:6px">내 프로젝트 목록</div>'+projects.map((p,i)=>{const isCurrent=String(p.id)===String(sharedSync.projectId);return `<div class="row between" style="gap:8px;padding:7px 0;border-top:${i?'1px solid var(--line)':'0'}"><div style="min-width:0"><div class="shared-code">${p.invite_code||'코드 확인 필요'}</div></div>${isCurrent?'<span class="pill">현재 사용 중</span>':`<button class="btn compact" onclick="sharedSwitchProject('${String(p.id).replace(/'/g,"\'")}')">불러오기</button>`}</div>`}).join('')}
+function renderSharedProjects(){const box=document.getElementById('syncProjectsBox');if(!box)return;const projects=sharedConfig().projects||[];const current=projects.find(p=>String(p.id)===String(sharedSync.projectId));const currentBox=document.getElementById('currentProjectBox');const codeEl=document.getElementById('syncCode');if(currentBox){currentBox.style.display=(sharedSync.user&&current)?'block':'none';if(codeEl)codeEl.value=current?.invite_code||'';const joinEl=document.getElementById('syncJoinCode');if(joinEl)joinEl.value=''}if(!sharedSync.user||!projects.length){box.style.display='none';box.innerHTML='';return}box.style.display='block';box.innerHTML='<div style="font-weight:800;margin-bottom:6px">내 프로젝트 목록</div>'+projects.map((p,i)=>{const isCurrent=String(p.id)===String(sharedSync.projectId);return `<div class="row between" style="gap:8px;padding:7px 0;border-top:${i?'1px solid var(--line)':'0'}"><div class="u-minw-0"><div class="shared-code">${p.invite_code||'코드 확인 필요'}</div></div>${isCurrent?'<span class="pill">현재 사용 중</span>':`<button class="btn compact" data-action="switch-project" data-project="${String(p.id).replace(/'/g,"\'")}">불러오기</button>`}</div>`}).join('')}
 async function sharedRefreshProjects(){if(!sharedSync.client||!sharedSync.user)return [];const {data,error}=await sharedSync.client.from('project_members').select('project_id,role,joined_at,projects(id,name,invite_code)').eq('user_id',sharedSync.user.id).order('joined_at',{ascending:true});if(error)throw error;const projects=(data||[]).map(x=>x.projects).filter(Boolean);const c=sharedConfig();setSharedConfig({...c,projects,email:sharedSync.user.email});return projects}
 async function sharedSwitchProject(pid){try{if(!sharedSync.client||!sharedSync.user)return;if(String(pid)===String(sharedSync.projectId))return;const projects=sharedConfig().projects||[];const p=projects.find(x=>String(x.id)===String(pid));if(!p){await sharedRefreshProjects();}const pp=(sharedConfig().projects||[]).find(x=>String(x.id)===String(pid));if(!pp)throw new Error('프로젝트를 찾지 못했어요.');if(!confirm(`'${pp.name||'우리 결혼 플래너'}' 프로젝트의 데이터를 불러올까요?\n\n현재 기기의 플래너 데이터가 해당 프로젝트 데이터로 바뀝니다.`))return;if(sharedSync.channel)await sharedSync.client.removeChannel(sharedSync.channel);sharedSync.projectId=pid;setSharedConfig({...sharedConfig(),projectId:pid,inviteCode:pp.invite_code||'',email:sharedSync.user.email});document.getElementById('syncCode').value=pp.invite_code||'';const ok=await sharedPull(false);if(!ok)throw new Error('프로젝트 데이터를 불러오지 못했어요.');await sharedSubscribe();sharedSetStatus('실시간 공유 중','shared-online');alert('프로젝트를 불러왔어요.')}catch(e){console.error(e);alert(e.message||'프로젝트를 불러오지 못했어요.')}}
 function syncSharedAuthUI(){const logged=!!sharedSync.user;const loginBox=document.getElementById('syncLoginBox'),loggedBox=document.getElementById('syncLoggedInBox'),projectActions=document.getElementById('syncProjectActions'),dataActions=document.getElementById('syncDataActions'),emailEl=document.getElementById('syncEmail'),passwordEl=document.getElementById('syncPassword'),codeEl=document.getElementById('syncCode');if(loginBox)loginBox.style.display=logged?'none':'block';if(loggedBox)loggedBox.style.display=logged?'block':'none';if(projectActions)projectActions.style.display=logged?'block':'none';if(dataActions)dataActions.style.display=logged?'flex':'none';if(emailEl&&logged)emailEl.value=sharedSync.user.email||sharedConfig().email||'';if(passwordEl&&logged)passwordEl.value='';const confirmWrap=document.getElementById('syncPasswordConfirmWrap');if(confirmWrap)confirmWrap.style.display=logged?'none':'block';if(codeEl&&logged&&!codeEl.value)codeEl.value=sharedConfig().inviteCode||'';const joinEl=document.getElementById('syncJoinCode');if(joinEl)joinEl.value='';const saved=document.getElementById('syncSavedBox');if(saved){saved.style.display='none';saved.textContent=''}}
 function syncSharedInputs(){const c=sharedConfig();const emailEl=document.getElementById('syncEmail'),codeEl=document.getElementById('syncCode');if(emailEl&&!sharedSync.user&&c.email)emailEl.value=c.email;if(codeEl&&c.inviteCode)codeEl.value=c.inviteCode;const joinEl=document.getElementById('syncJoinCode');if(joinEl)joinEl.value='';syncSharedAuthUI()}
+function $(id){return document.getElementById(id)}
+function $$(selector,root=document){return [...root.querySelectorAll(selector)]}
+function val(id,fallback=''){return $(id)?.value??fallback}
+function setDisplay(id,show){const el=$(id);if(el)el.style.display=show?'':'none'}
+const moneyFmt=new Intl.NumberFormat('ko-KR',{maximumFractionDigits:0});
+const moneyWonFmt=new Intl.NumberFormat('ko-KR',{style:'currency',currency:'KRW',maximumFractionDigits:0});
+function num(v){return Number(v)||0}
+function newId(){return Date.now()+Math.floor(Math.random()*1000)}
+function isoDate(v){return v instanceof Date?localDateISO(v):String(v||'').slice(0,10)}
+function parseLocalDate(iso){return new Date(String(iso||'')+'T00:00:00')}
 function saveLocalOnly(){localStorage.setItem(KEY,JSON.stringify(state))}
 function cloneSharedState(){return JSON.parse(JSON.stringify(state))}
 function queueSharedSave(){if(!sharedSync.client||!sharedSync.projectId||sharedSync.busy)return;clearTimeout(sharedSync.pushTimer);sharedSync.pushTimer=setTimeout(()=>sharedPushNow(true),500)}
@@ -1137,13 +1324,13 @@ async function sharedSubscribe(){if(!sharedSync.client||!sharedSync.projectId)re
 async function sharedPull(showAlert=true){try{if(!sharedSync.client||!sharedSync.projectId){if(showAlert)alert('먼저 공동 프로젝트에 연결해주세요.');return false}const {data,error}=await sharedSync.client.from('project_state').select('state,updated_at').eq('project_id',sharedSync.projectId).maybeSingle();if(error)throw error;if(!data){if(showAlert)alert('공동 데이터가 아직 없어요.');return false}sharedSync.busy=true;state=data.state||state;saveLocalOnly();applyTheme();syncThemeInputs();renderAll();sharedSync.lastSyncAt=data.updated_at||new Date().toISOString();sharedSetLastSync(`마지막 동기화 · ${new Date(sharedSync.lastSyncAt).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`);sharedSetStatus('실시간 공유 중','shared-online');if(showAlert)alert('공동 데이터를 불러왔어요.');return true}catch(e){console.error(e);if(showAlert)alert(e.message||'공동 데이터를 불러오지 못했어요.');return false}finally{sharedSync.busy=false}}
 async function sharedPushNow(silent=false){try{if(!sharedSync.client||!sharedSync.projectId||!sharedSync.user)return false;const now=new Date().toISOString();const payload={project_id:sharedSync.projectId,state:cloneSharedState(),updated_by:sharedSync.user.id,updated_at:now};const {error}=await sharedSync.client.from('project_state').upsert(payload,{onConflict:'project_id'});if(error)throw error;sharedSync.lastSyncAt=now;sharedSetLastSync(`마지막 동기화 · ${new Date(now).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`);sharedSetStatus('실시간 공유 중','shared-online');return true}catch(e){console.error(e);sharedSetStatus('동기화 오류','shared-error');if(!silent)alert(e.message||'공유 데이터 저장에 실패했어요.');return false}}
 async function sharedSignOut(){try{if(sharedSync.channel&&sharedSync.client)await sharedSync.client.removeChannel(sharedSync.channel);if(sharedSync.client)await sharedSync.client.auth.signOut()}finally{const c=sharedConfig();const emailEl=document.getElementById('syncEmail');const passwordEl=document.getElementById('syncPassword');if(emailEl&&c.email)emailEl.value=c.email;if(passwordEl)passwordEl.value='';const confirmEl=document.getElementById('syncPasswordConfirm');if(confirmEl)confirmEl.value='';sharedSync={client:sharedSync.client,user:null,projectId:null,channel:null,pushTimer:null,busy:false,lastSyncAt:null,authBound:true};sharedSetLastSync('');sharedSetStatus('로그아웃됨');alert('로그아웃했어요. 다음 로그인부터는 저장된 설정과 이메일을 그대로 사용하고 비밀번호만 입력하면 됩니다.')}}
-function save(){saveLocalOnly();renderAll();queueSharedSave()}
 window.addEventListener('beforeunload',()=>{if(sharedSync.pushTimer)clearTimeout(sharedSync.pushTimer)});
 window.addEventListener('online',()=>{if(sharedSync.projectId)sharedPushNow(true)});
 window.addEventListener('offline',()=>{if(sharedSync.projectId)sharedSetStatus('오프라인','shared-syncing')});
+/* ===== APP STARTUP / PWA ===== */
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js?v=70',{updateViaCache:'none'})
+    navigator.serviceWorker.register('./sw.js?v=71',{updateViaCache:'none'})
       .then(reg=>reg.update())
       .catch(e=>console.warn('PWA service worker registration failed',e));
   });
@@ -1153,7 +1340,7 @@ const initialShared=sharedConfig();
 if(initialShared.email)document.getElementById('syncEmail').value=initialShared.email;
 if(initialShared.inviteCode)document.getElementById('syncCode').value=initialShared.inviteCode;
 sharedConnect().catch(console.error)
-applyTheme();syncThemeInputs();navInit();renderAll();
+applyTheme();syncThemeInputs();navInit();requestRender('all');
 startScheduleDateWatcher();
 </script>
 
