@@ -1979,6 +1979,32 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
    - Supabase: SHARED SYNC 영역
    ============================================================================ */
 
+/* ============================================================================
+   SOURCE MAP · v32
+   ----------------------------------------------------------------------------
+   초보 개발자는 기능을 찾을 때 아래 순서로 이동합니다.
+   01 DATA      : 상태 기본값 / 정규화 / 저장
+   02 THEME     : 테마 / 디자인 설정
+   03 HOME      : 대시보드 / 네비게이션 / 카테고리
+   04 TASKS     : 할 일 조회 / 필터 / CRUD
+   05 SCHEDULE  : 일정 / 캘린더 / CRUD
+   06 BUDGET    : 예산 조회 / CRUD
+   07 PLANS     : 부부계획 조회 / CRUD
+   08 MEMOS     : 메모 / 백업 / 복구
+   09 MODALS    : 공용 모달과 입력 UI
+   10 SHARED    : Supabase / 공유 프로젝트
+   11 ACTIONS   : data-action 이벤트 라우팅
+   12 STARTUP   : 초기 실행 / PWA / 테스트
+
+   수정 원칙
+   - 화면 모양만 바꾸기        -> COMPONENTS(UI.*) 먼저 수정
+   - 입력/저장 기능 바꾸기      -> 해당 DOMAIN · MUTATIONS 수정
+   - 목록/필터를 바꾸기         -> 해당 PAGE · VIEW 수정
+   - 상태 구조를 바꾸기         -> DATA / normalizeState 수정
+   - Supabase 동작을 바꾸기     -> SHARED 수정
+   - 클릭 동작을 바꾸기         -> ACTIONS 수정
+   ============================================================================ */
+
 /* ===== 01. DATA & STATE ===== */
 
 const KEY='wedding_planner_v2';
@@ -2079,18 +2105,18 @@ let renderScheduled=false;
 let derivedViewCache=null;
 
 function invalidateViewData(){derivedViewCache=null}
-function buildViewData(){
-  const tasks=Array.isArray(state.tasks)?state.tasks:[];
-  const events=Array.isArray(state.events)?state.events:[];
-  const budgets=Array.isArray(state.budgets)?state.budgets:[];
-  const plans=Array.isArray(state.plans)?state.plans:[];
-  const memos=Array.isArray(state.memos)?state.memos:[];
-  const today=new Date(); today.setHours(0,0,0,0);
+function getTodayStart(){
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  return today;
+}
+function buildTaskViewData(tasks,cats){
   const priorityRank={'높음':1,'보통':2,'낮음':3};
-  const cats=getOrderedCats();
   const tasksByCat=new Map();
   const taskCategorySet=new Set();
-  let doneTasks=0, highOpenTasks=0;
+  let doneTasks=0;
+  let highOpenTasks=0;
+
   for(const t of tasks){
     const cat=String(t.cat||'기타');
     taskCategorySet.add(cat);
@@ -2099,28 +2125,95 @@ function buildViewData(){
     if(t.status==='done')doneTasks++;
     else if(t.priority==='높음')highOpenTasks++;
   }
-  const upcomingTasks=tasks.filter(t=>t.status!=='done').slice().sort((a,b)=>{
-    const ap=a.due?'0':'1',bp=b.due?'0':'1';
-    return ap.localeCompare(bp)||(a.due||'9999-12-31').localeCompare(b.due||'9999-12-31')||((a.priority||'보통')===(b.priority||'보통')?0:(a.priority==='높음'?-1:1));
-  });
-  const sortedEvents=events.slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||String(a.time||'').localeCompare(String(b.time||'')));
-  const upcomingEvents=events.filter(e=>e.date&&parseLocalDate(e.date)>=today).slice().sort((a,b)=>(a.date||'9999-12-31').localeCompare(b.date||'9999-12-31')||String(a.time||'').localeCompare(String(b.time||'')));
+
+  const upcomingTasks=tasks
+    .filter(t=>t.status!=='done')
+    .slice()
+    .sort((a,b)=>{
+      const ap=a.due?'0':'1';
+      const bp=b.due?'0':'1';
+      return ap.localeCompare(bp)
+        || (a.due||'9999-12-31').localeCompare(b.due||'9999-12-31')
+        || ((a.priority||'보통')===(b.priority||'보통')?0:(a.priority==='높음'?-1:1));
+    });
+
+  return {
+    cats,
+    tasksByCat,
+    taskCategorySet,
+    upcomingTasks,
+    taskTotal:tasks.length,
+    taskDone:doneTasks,
+    highOpenTasks,
+    priorityRank
+  };
+}
+function buildScheduleViewData(events,today){
+  const sortedEvents=events.slice().sort((a,b)=>
+    (a.date||'9999').localeCompare(b.date||'9999')
+    || String(a.time||'').localeCompare(String(b.time||''))
+  );
+  const upcomingEvents=events
+    .filter(e=>e.date&&parseLocalDate(e.date)>=today)
+    .slice()
+    .sort((a,b)=>
+      (a.date||'9999-12-31').localeCompare(b.date||'9999-12-31')
+      || String(a.time||'').localeCompare(String(b.time||''))
+    );
   const eventCountByDate=new Map();
-  for(const e of events){if(e.date)eventCountByDate.set(e.date,(eventCountByDate.get(e.date)||0)+1)}
-  const totalPlan=budgets.reduce((sum,b)=>sum+Number(b.planned||0),0);
-  const totalActual=budgets.reduce((sum,b)=>sum+Number(b.actual||0),0);
+  for(const e of events){
+    if(e.date)eventCountByDate.set(e.date,(eventCountByDate.get(e.date)||0)+1);
+  }
+  return {sortedEvents,upcomingEvents,eventCountByDate};
+}
+function buildBudgetViewData(budgets){
+  const budgetPlan=budgets.reduce((sum,b)=>sum+Number(b.planned||0),0);
+  const budgetActual=budgets.reduce((sum,b)=>sum+Number(b.actual||0),0);
+  return {
+    budgetPlan,
+    budgetActual,
+    budgetOver:Math.max(0,budgetActual-budgetPlan),
+    budgetPct:budgetPlan?Math.round(budgetActual/budgetPlan*100):0
+  };
+}
+function buildPlanViewData(plans){
   const planDone=plans.filter(p=>p.status==='합의 완료').length;
   return {
-    tasks,events,budgets,plans,memos,today,cats,tasksByCat,taskCategorySet,upcomingTasks,sortedEvents,upcomingEvents,eventCountByDate,
-    taskTotal:tasks.length,taskDone:doneTasks,highOpenTasks,priorityRank,
-    budgetPlan:totalPlan,budgetActual:totalActual,budgetOver:Math.max(0,totalActual-totalPlan),
-    budgetPct:totalPlan?Math.round(totalActual/totalPlan*100):0,
-    planTotal:plans.length,planTodo:plans.filter(p=>p.status==='논의 전').length,planProgress:plans.filter(p=>p.status==='논의 중').length,planDone,
+    planTotal:plans.length,
+    planTodo:plans.filter(p=>p.status==='논의 전').length,
+    planProgress:plans.filter(p=>p.status==='논의 중').length,
+    planDone,
     planDonePct:plans.length?Math.round(planDone/plans.length*100):0
+  };
+}
+function buildViewData(){
+  const tasks=Array.isArray(state.tasks)?state.tasks:[];
+  const events=Array.isArray(state.events)?state.events:[];
+  const budgets=Array.isArray(state.budgets)?state.budgets:[];
+  const plans=Array.isArray(state.plans)?state.plans:[];
+  const memos=Array.isArray(state.memos)?state.memos:[];
+  const today=getTodayStart();
+  const cats=getOrderedCats();
+
+  return {
+    tasks,
+    events,
+    budgets,
+    plans,
+    memos,
+    today,
+    ...buildTaskViewData(tasks,cats),
+    ...buildScheduleViewData(events,today),
+    ...buildBudgetViewData(budgets),
+    ...buildPlanViewData(plans)
   };
 }
 function getViewData(){return derivedViewCache||(derivedViewCache=buildViewData())}
 
+/* RENDER PIPELINE
+   mutation -> invalidateViewData -> requestRender -> flushRender -> page render
+   페이지 렌더 함수에서는 state를 직접 수정하지 않는 것을 원칙으로 합니다.
+*/
 function requestRender(...views){
   invalidateViewData();
   const expanded=views.flatMap(v=>RENDER_DEPENDENCIES[v]||[v]);
@@ -2160,6 +2253,11 @@ function save(views='all'){persistState({sync:true});requestRender(...(Array.isA
    있는지 확인하고, 기존 컴포넌트를 확장하는 것을 우선합니다.
 */
 
+/* ============================================================================
+   DOMAIN 03 · COMPONENTS / UI
+   공통 카드와 메뉴의 '모양'을 담당합니다.
+   데이터 저장이나 Supabase 코드는 여기에서 처리하지 않습니다.
+   ============================================================================ */
 /* ===== COMPONENT LIBRARY =====
    Each function returns one reusable UI part.
    Component input is data; component output is HTML.
@@ -2216,28 +2314,48 @@ const UI={
   memo:MemoCard
 };
 
+function renderTaskProgressSummary(view){
+  const pct=view.taskTotal?Math.round(view.taskDone/view.taskTotal*100):0;
+  setText('overallPct',pct+'%');
+  const bar=document.getElementById('overallBar');
+  if(bar)bar.style.width=pct+'%';
+  setText('overallText',`${view.taskDone}/${view.taskTotal}`);
+  setText('todoCount',view.taskTotal-view.taskDone);
+  setText('highCount',view.highOpenTasks);
+}
+function renderBudgetSummary(view){
+  const {budgetPlan:plan,budgetActual:actual,budgetOver:over,budgetPct:pct}=view;
+  setText('totalPlan',wonUnit(plan));
+  setText('totalActual',wonUnit(actual));
+  setText('overBudget',wonUnit(over));
+  setText('budgetPlanDisplay',wonUnit(plan));
+  setText('budgetPctBig',pct+'%');
+  setText('homeTotalPlan','/'+wonUnit(plan));
+  setText('homeTotalActual',wonUnit(actual));
+  setText('homeBudgetPct',pct+'%');
+
+  const capped=Math.min(100,Math.max(0,pct))+'%';
+  const angle=Math.min(270,Math.max(0,pct*2.7))+'deg';
+  const gauge=document.getElementById('budgetGauge');
+  const homeGauge=document.getElementById('homeBudgetGauge');
+
+  if(gauge){
+    gauge.style.setProperty('--budget-pct',capped);
+    gauge.style.setProperty('--budget-angle',angle);
+    const arc=document.getElementById('budgetGaugeProgress');
+    if(arc)arc.style.strokeDasharray=pct+' 100';
+  }
+  if(homeGauge){
+    homeGauge.style.setProperty('--budget-pct',capped);
+    homeGauge.style.setProperty('--budget-angle',angle);
+    const homeArc=document.getElementById('homeBudgetGaugeProgress');
+    if(homeArc)homeArc.style.strokeDasharray=pct+' 100';
+  }
+}
 function calc(){
- const v=getViewData();
- const pct=v.taskTotal?Math.round(v.taskDone/v.taskTotal*100):0;
- document.getElementById('overallPct').textContent=pct+'%';
- document.getElementById('overallBar').style.width=pct+'%';
- document.getElementById('overallText').textContent=`${v.taskDone}/${v.taskTotal}`;
- document.getElementById('todoCount')&&(document.getElementById('todoCount').textContent=v.taskTotal-v.taskDone);
- document.getElementById('highCount')&&(document.getElementById('highCount').textContent=v.highOpenTasks);
- const {budgetPlan:plan,budgetActual:act,budgetOver:over,budgetPct:bp}=v;
- document.getElementById('totalPlan').textContent=wonUnit(plan);
- document.getElementById('totalActual').textContent=wonUnit(act);
- document.getElementById('overBudget').textContent=wonUnit(over);
- const budgetPlanDisplay=document.getElementById('budgetPlanDisplay'); if(budgetPlanDisplay)budgetPlanDisplay.textContent=wonUnit(plan);
- document.getElementById('budgetPctBig').textContent=bp+'%';
- document.getElementById('homeTotalPlan').textContent='/'+wonUnit(plan);
- document.getElementById('homeTotalActual').textContent=wonUnit(act);
- document.getElementById('homeBudgetPct').textContent=bp+'%';
- const capped=Math.min(100,Math.max(0,bp))+'%';
- const angle=Math.min(270,Math.max(0,bp*2.7))+'deg';
- const gauge=document.getElementById('budgetGauge'),homeGauge=document.getElementById('homeBudgetGauge');
- if(gauge){gauge.style.setProperty('--budget-pct',capped);gauge.style.setProperty('--budget-angle',angle);const arc=document.getElementById('budgetGaugeProgress');if(arc)arc.style.strokeDasharray=bp+' 100';}
- if(homeGauge){homeGauge.style.setProperty('--budget-pct',capped);homeGauge.style.setProperty('--budget-angle',angle);const homeArc=document.getElementById('homeBudgetGaugeProgress');if(homeArc)homeArc.style.strokeDasharray=bp+' 100';}
+  const view=getViewData();
+  renderTaskProgressSummary(view);
+  renderBudgetSummary(view);
 }
 
 function renderDday(){
@@ -2254,32 +2372,88 @@ function renderDday(){
  else el.textContent='D+'+Math.abs(diff);
 }
 /* ===== PAGE MODULE: HOME ===== */
+function setText(id,value){
+ const el=document.getElementById(id);
+ if(el)el.textContent=value;
+}
+function setHTML(id,value){
+ const el=document.getElementById(id);
+ if(el)el.innerHTML=value;
+}
+function renderList(id,items,renderItem,emptyMessage){
+ const content=Array.isArray(items)&&items.length
+   ? items.map(renderItem).join('')
+   : UI.empty(emptyMessage);
+ setHTML(id,content);
+}
+function selectedValue(id,fallback=''){
+ return document.getElementById(id)?.value||fallback;
+}
+
+function renderHomeTaskPreview(view){
+  const limit=Number(state.homeTaskLimit)||5;
+  renderList(
+    'homeTasks',
+    view.upcomingTasks.slice(0,limit),
+    t=>taskHtml(t,true),
+    '모든 할 일을 완료했어요 🎉'
+  );
+  const select=document.getElementById('homeTaskLimit');
+  if(select)select.value=String(limit);
+}
+function homeEventHtml(event){
+  const meta=[event.time,event.location,event.category]
+    .filter(Boolean)
+    .map(x=>`<span class="event-tag">${esc(x)}</span>`)
+    .join('');
+  return `<div class="home-event"><b>${esc(event.title)}</b>${meta?`<div class="event-meta">${meta}</div>`:''}<span class="small">${event.date.replaceAll('-','.')}</span>${event.note?`<span class="small">${esc(event.note)}</span>`:''}</div>`;
+}
+function renderHomeEventPreview(view){
+  const limit=Number(state.homeEventLimit)||5;
+  renderList(
+    'homeEvents',
+    view.upcomingEvents.slice(0,limit),
+    homeEventHtml,
+    '다가오는 일정이 없어요.'
+  );
+  const select=document.getElementById('homeEventLimit');
+  if(select)select.value=String(limit);
+}
+function categoryCardHtml(category,index,view){
+  const list=view.tasksByCat.get(category)||[];
+  const done=list.filter(t=>t.status==='done').length;
+  const progress=list.length?Math.round(done/list.length*100):0;
+  const first=index===0;
+  const last=index===view.cats.length-1;
+  return `<div class="card col4 category-card"><div class="row category-card-head"><b>${esc(category)}</b><div class="category-move"><button class="iconbtn" data-action="move-category" data-delta="-1" data-cat="${esc(category)}" ${first?'disabled':''} aria-label="위로">↑</button><button class="iconbtn" data-action="move-category" data-delta="1" data-cat="${esc(category)}" ${last?'disabled':''} aria-label="아래로">↓</button></div></div><div class="category-progress-meta small">${done}/${list.length}</div><div class="progress" style="margin-top:7px"><i style="width:${progress}%"></i></div></div>`;
+}
+function renderHomeCategories(view){
+  const html=view.cats.map((category,index)=>categoryCardHtml(category,index,view)).join('');
+  setHTML('categoryCards',html||UI.empty('등록된 분야가 없어요.'));
+}
+function renderHomePlanSummary(view){
+  setText('homePlanTodo',view.planTodo);
+  setText('homePlanProgress',view.planProgress);
+  setText('homePlanDone',view.planDone);
+  setText('homePlanDonePct',view.planDonePct+'%');
+  setText('homePlanTotal',view.planTotal);
+}
 function renderHome(){
- const v=getViewData();
- const taskLimit=Number(state.homeTaskLimit)||5;
- const taskEl=document.getElementById('homeTasks'); if(taskEl)taskEl.innerHTML=v.upcomingTasks.slice(0,taskLimit).map(t=>taskHtml(t,true)).join('')||'<div class="empty">모든 할 일을 완료했어요 🎉</div>';
- const taskSel=document.getElementById('homeTaskLimit'); if(taskSel)taskSel.value=String(taskLimit);
- const eventLimit=Number(state.homeEventLimit)||5;
- const eventEl=document.getElementById('homeEvents');
- if(eventEl)eventEl.innerHTML=v.upcomingEvents.slice(0,eventLimit).map(e=>{const meta=[e.time,e.location,e.category].filter(Boolean).map(x=>`<span class="event-tag">${esc(x)}</span>`).join('');return `<div class="home-event"><b>${esc(e.title)}</b>${meta?`<div class="event-meta">${meta}</div>`:''}<span class="small">${e.date.replaceAll('-','.')}</span>${e.note?`<span class="small">${esc(e.note)}</span>`:''}</div>`}).join('')||'<div class="empty">다가오는 일정이 없어요.</div>';
- const eventSel=document.getElementById('homeEventLimit'); if(eventSel)eventSel.value=String(eventLimit);
- let html='';
- for(let ci=0;ci<v.cats.length;ci++){
-   const c=v.cats[ci],arr=v.tasksByCat.get(c)||[],d=arr.filter(t=>t.status==='done').length,p=arr.length?Math.round(d/arr.length*100):0;
-   html+=`<div class="card col4 category-card"><div class="row category-card-head"><b>${esc(c)}</b><div class="category-move"><button class="iconbtn" data-action="move-category" data-delta="-1" data-cat="${esc(c)}" ${ci===0?'disabled':''} aria-label="위로">↑</button><button class="iconbtn" data-action="move-category" data-delta="1" data-cat="${esc(c)}" ${ci===v.cats.length-1?'disabled':''} aria-label="아래로">↓</button></div></div><div class="category-progress-meta small">${d}/${arr.length}</div><div class="progress" style="margin-top:7px"><i style="width:${p}%"></i></div></div>`;
- }
- document.getElementById('categoryCards').innerHTML=html||'<div class="empty">등록된 분야가 없어요.</div>';
- document.getElementById('homePlanTodo').textContent=v.planTodo;
- document.getElementById('homePlanProgress').textContent=v.planProgress;
- document.getElementById('homePlanDone').textContent=v.planDone;
- document.getElementById('homePlanDonePct').textContent=v.planDonePct+'%';
- document.getElementById('homePlanTotal').textContent=v.planTotal;
+  const view=getViewData();
+  renderHomeTaskPreview(view);
+  renderHomeEventPreview(view);
+  renderHomeCategories(view);
+  renderHomePlanSummary(view);
 }
 
 function setHomeLimit(type,value){const n=Math.max(1,Number(value)||5);if(type==='tasks')state.homeTaskLimit=n;else state.homeEventLimit=n;save('home');}
 
 function taskHtml(t,compact=false){return UI.task(t,compact)}
-/* ===== DOMAIN: TASKS / 할 일 ===== */
+/* ============================================================================
+   DOMAIN 04 · TASKS / 할 일
+   찾기 순서: getTaskFilters → filterAndSortTasks → renderTasks → CRUD
+   카드 모양: TaskCard()
+   ============================================================================ */
 /* ===== PAGE MODULE: TASKS ===== */
 function getTaskFilters(){
   return {
@@ -2321,8 +2495,7 @@ function renderTasks(){
   const filters=getTaskFilters();
   filters.category=syncTaskCategoryOptions(categories);
   const tasks=filterAndSortTasks(v.tasks,filters,v.priorityRank);
-  const target=document.getElementById('taskList');
-  if(target)target.innerHTML=tasks.map(t=>taskHtml(t,false)).join('')||'<div class="empty">조건에 맞는 할 일이 없어요.</div>';
+  renderList('taskList',tasks,t=>taskHtml(t,false),'조건에 맞는 할 일이 없어요.');
 }
 
 
@@ -2352,7 +2525,11 @@ const koreaHolidays={
  '2027-10-03':'개천절', '2027-10-04':'개천절 대체공휴일', '2027-10-09':'한글날', '2027-10-11':'한글날 대체공휴일',
  '2027-12-25':'성탄절', '2027-12-27':'성탄절 대체공휴일'
 };
-/* ===== DOMAIN: SCHEDULE / 일정 ===== */
+/* ============================================================================
+   DOMAIN 05 · SCHEDULE / 일정
+   찾기 순서: renderCalendar → renderSchedule → saveEvent/deleteEvent
+   카드 모양: EventCard()
+   ============================================================================ */
 /* ===== PAGE MODULE: SCHEDULE ===== */
 function refreshScheduleToday(){
  const now=localDateISO();
@@ -2400,40 +2577,81 @@ function renderCalendar(){
 function selectScheduleDate(iso){selectedScheduleDate=iso;const d=parseLocalDate(iso);calendarCursor=new Date(d.getFullYear(),d.getMonth(),1);renderSchedule()}
 function changeCalendarMonth(delta){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+delta,1);renderCalendar()}
 function renderSchedule(){
- const v=getViewData();
- renderCalendar();
- const filter=(document.getElementById('scheduleFilter')||{}).value||'all';
- let ev=v.sortedEvents;
- if(filter==='all')ev=ev.filter(e=>e.date===selectedScheduleDate);
- else if(filter==='upcoming')ev=ev.filter(e=>parseLocalDate(e.date)>=v.today);
- else if(filter==='past')ev=ev.filter(e=>parseLocalDate(e.date)<v.today);
- const d=parseLocalDate(selectedScheduleDate); document.getElementById('selectedDateTitle').textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 일정`;
- document.getElementById('scheduleList').innerHTML=ev.map(e=>UI.event(e,v.today)).join('')||'<div class="empty">해당 조건의 일정이 없어요.</div>';
- const scheduleSearch=(document.getElementById('scheduleAllSearch')?.value||'').trim().toLowerCase();
- let all=v.sortedEvents;
- if(scheduleSearch){all=all.filter(e=>[e.title,e.date,e.time,e.location,e.category,e.note].filter(Boolean).some(x=>String(x).toLowerCase().includes(scheduleSearch)));}
- document.getElementById('scheduleAllList').innerHTML=all.map(e=>UI.event(e,v.today)).join('')||'<div class="empty">검색 결과가 없어요.</div>';
+  const v=getViewData();
+  renderCalendar();
+
+  const filter=selectedValue('scheduleFilter','all');
+  let selectedEvents=v.sortedEvents;
+  if(filter==='all'){
+    selectedEvents=selectedEvents.filter(e=>e.date===selectedScheduleDate);
+  }else if(filter==='upcoming'){
+    selectedEvents=selectedEvents.filter(e=>parseLocalDate(e.date)>=v.today);
+  }else if(filter==='past'){
+    selectedEvents=selectedEvents.filter(e=>parseLocalDate(e.date)<v.today);
+  }
+
+  const d=parseLocalDate(selectedScheduleDate);
+  setText(
+    'selectedDateTitle',
+    `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 일정`
+  );
+  renderList(
+    'scheduleList',
+    selectedEvents,
+    e=>UI.event(e,v.today),
+    '해당 조건의 일정이 없어요.'
+  );
+
+  const search=selectedValue('scheduleAllSearch').trim().toLowerCase();
+  const allEvents=search
+    ? v.sortedEvents.filter(e=>[
+        e.title,e.date,e.time,e.location,e.category,e.note
+      ].filter(Boolean).some(x=>String(x).toLowerCase().includes(search)))
+    : v.sortedEvents;
+
+  renderList(
+    'scheduleAllList',
+    allEvents,
+    e=>UI.event(e,v.today),
+    '검색 결과가 없어요.'
+  );
 }
 
 /* ===== 06. PAGE: BUDGET / 예산 ===== */
-/* ===== DOMAIN: BUDGET / 예산 ===== */
+/* ============================================================================
+   DOMAIN 06 · BUDGET / 예산
+   찾기 순서: renderBudget → readBudgetForm → saveBudget/deleteBudget
+   카드 모양: BudgetCard()
+   ============================================================================ */
 /* ===== PAGE MODULE: BUDGET ===== */
 function renderBudget(){
- const el=$('budgetLines'); if(!el)return;
- el.innerHTML=state.budgets.map((b,i)=>UI.budget(b,i,state.budgets.length)).join('')||UI.empty('등록된 예산 항목이 없어요.');
+ const budgets=Array.isArray(state.budgets)?state.budgets:[];
+ renderList(
+   'budgetLines',
+   budgets,
+   (b,i)=>UI.budget(b,i,budgets.length),
+   '등록된 예산 항목이 없어요.'
+ );
 }
 
 
 /* ===== 06. PAGE: COUPLE PLANS ===== */
 
 /* ===== 06. PAGE: PLANS / 부부계획 ===== */
-/* ===== DOMAIN: PLANS / 부부계획 ===== */
+/* ============================================================================
+   DOMAIN 07 · PLANS / 부부계획
+   찾기 순서: renderPlans → readPlanForm → savePlan/updatePlan/deletePlan
+   카드 모양: PlanCard()
+   ============================================================================ */
 /* ===== PAGE MODULE: PLANS ===== */
 function renderPlans(){
- const el=$('planList');
- if(!el)return;
  const plans=Array.isArray(state.plans)?state.plans:[];
- el.innerHTML=plans.map((p,i)=>UI.plan(p,i,plans.length)).join('')||UI.empty('등록된 부부계획이 없어요.');
+ renderList(
+   'planList',
+   plans,
+   (p,i)=>UI.plan(p,i,plans.length),
+   '등록된 부부계획이 없어요.'
+ );
 }
 
 /* ============================================================================
@@ -2466,6 +2684,23 @@ function updateById(list,id,patch){
   Object.assign(item,patch);
   return item;
 }
+function isNewId(id){
+  return id==null || String(id)==='' || String(id)==='null';
+}
+function upsertById(list,id,data,create){
+  if(isNewId(id)){
+    const item=create?create(data):{id:newId(),...data};
+    list.push(item);
+    return item;
+  }
+  const target=findById(list,id);
+  if(!target)return null;
+  Object.assign(target,data);
+  return target;
+}
+function confirmDelete(message='삭제하시겠습니까?'){
+  return confirm(message);
+}
 
 function movePlan(id,dir){
   if(moveById(state.plans,id,dir))save('plans');
@@ -2474,7 +2709,7 @@ function moveBudget(id,dir){
   if(moveById(state.budgets,id,dir))save('budget');
 }
 function deletePlan(id){
-  if(!confirm('삭제하시겠습니까?'))return;
+  if(!confirmDelete())return;
   state.plans=removeById(state.plans,id);
   save('plans');
 }
@@ -2490,32 +2725,185 @@ function updatePlan(id,v){
   if(updateById(state.plans,id,{status:v}))save('plans');
 }
 /* ----- PLANS · MUTATIONS ----- */
-function savePlan(id){const name=document.getElementById('pName').value.trim();if(!name)return;const data={name,details:document.getElementById('pDetails').value.trim(),note:document.getElementById('pNote').value.trim(),status:document.getElementById('pStatus').value};if(id==null || String(id)==='null')state.plans.push({id:newId(),...data});else{const target=state.plans.find(p=>String(p.id)===String(id));if(!target){alert('수정할 부부계획을 찾지 못했어요.');return}Object.assign(target,data)}save('plans');closeModal()}
-function openTaskEdit(id){const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;openModal('task',t)}
+function readPlanForm(){
+  return {
+    name:document.getElementById('pName').value.trim(),
+    details:document.getElementById('pDetails').value.trim(),
+    note:document.getElementById('pNote').value.trim(),
+    status:document.getElementById('pStatus').value
+  };
+}
+function savePlan(id){
+  const data=readPlanForm();
+  if(!data.name){
+    alert('제목을 입력해주세요.');
+    return;
+  }
+  const saved=upsertById(state.plans,id,data);
+  if(!saved){
+    alert('수정할 부부계획을 찾지 못했어요.');
+    return;
+  }
+  save('plans');
+  closeModal();
+}
+function openTaskEdit(id){
+  const t=findById(state.tasks,id);
+  if(!t)return;
+  openModal('task',t);
+}
 /* ===== 07. MODALS & CRUD ===== */
+/* ============================================================================
+   MODAL RENDER MAP
+   openModal()은 어떤 모달을 열지만 결정하고,
+   renderXModal()은 해당 입력 화면의 HTML만 담당합니다.
+   저장 로직은 각 DOMAIN · MUTATIONS에 있습니다.
+   ============================================================================ */
 /* ===== DOMAIN: MODALS / CRUD ===== */
-function openModal(type,data){let body='';if(type==='settings'){body=`<h2>본식 날짜</h2><div class="form"><label>결혼식 날짜</label><input id="weddingDate" type="date" value="${state.weddingDate||''}"><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-wedding-date">저장</button></div></div>`}
-if(type==='task'){const t=data||{id:'',cat:getCats()[0]||'기타',title:'',due:'',owner:'함께',priority:'보통',status:'todo'};body=`<h2>${data?'할 일 수정':'할 일 추가'}</h2><div class="form"><label>분야</label><input id="fCat" value="${esc(t.cat)}"><label>할 일</label><input id="fTitle" value="${esc(t.title)}"><label>메모</label><textarea id="fMemo" placeholder="예약번호, 업체 연락처, 준비할 내용 등을 적어보세요.">${esc(t.memo||'')}</textarea><label>마감일</label><input id="fDue" type="date" value="${t.due||''}"><label>담당</label><select id="fOwner"><option ${t.owner==='함께'?'selected':''}>함께</option><option ${t.owner==='신랑' || t.owner==='형주'?'selected':''}>신랑</option><option ${t.owner==='신부'?'selected':''}>신부</option><option ${t.owner==='각자'?'selected':''}>각자</option></select><label>우선순위</label><select id="fPriority"><option ${t.priority==='높음'?'selected':''}>높음</option><option ${t.priority==='보통'?'selected':''}>보통</option><option ${t.priority==='낮음'?'selected':''}>낮음</option></select><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-task" data-id="${data?t.id:'null'}">저장</button></div></div>`}
-if(type==='plan'){const p=data?state.plans.find(x=>String(x.id)===String(data)):null;const x=p||{id:'',name:'',details:'',note:'',status:'논의 전'};body=`<h2>${p?'부부계획 수정':'부부계획 추가'}</h2><div class="form"><label>제목</label><input id="pName" value="${esc(x.name)}" placeholder="예: 자녀 계획"><label>논의할 세부 사항</label><textarea id="pDetails" placeholder="서로 이야기해야 할 질문이나 기준을 적어주세요.">${esc(x.details||'')}</textarea><label>논의된 사항</label><textarea id="pNote" placeholder="실제로 이야기하고 합의한 내용을 기록하세요.">${esc(x.note||'')}</textarea><label>상태</label><select id="pStatus"><option ${x.status==='논의 전'?'selected':''}>논의 전</option><option ${x.status==='논의 중'?'selected':''}>논의 중</option><option ${x.status==='합의 완료'?'selected':''}>합의 완료</option></select><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-plan" data-id="${p?p.id:'null'}">저장</button></div></div>`}
-if(type==='event'){const e=data&&typeof data==='object'?data:null;body=`<h2>${e?'일정 수정':'일정 추가'}</h2><div class="form"><label>날짜</label><input id="eDate" type="date" value="${e?e.date||'':selectedScheduleDate}"><label>일정</label><input id="eTitle" value="${e?esc(e.title):''}" placeholder="예: 상견례 장소 예약"><label>시간</label><input id="eTime" type="time" value="${e?e.time||'':''}"><label>장소</label><input id="eLocation" value="${e?esc(e.location||''):''}" placeholder="예: 강남 ○○식당"><label>분류</label><input id="eCategory" value="${e?esc(e.category||''):''}" placeholder="예: 상견례 / 웨딩촬영 / 본식"><label>메모</label><textarea id="eNote" placeholder="준비물, 예약번호, 주차 등">${e?esc(e.note||''):''}</textarea><div class="actions">${e?`<button class="btn" data-action="delete-event-close" data-id="${e.id}">삭제</button>`:''}<button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-event" data-id="${e?e.id:'null'}">저장</button></div></div>`}
-if(type==='budget'){const editing=data!=null&&String(data)!=='null';const b=editing?state.budgets.find(x=>String(x.id)===String(data)):null;if(editing&&!b){alert('수정할 예산 항목을 찾지 못했어요.');return}const item=b||{id:'',name:'',planned:0,actual:0,details:''};body=`<h2>${editing?'예산 항목 수정':'예산 항목 추가'}</h2><div class="form"><label>항목</label><input id="bName" value="${esc(item.name||'')}" placeholder="예: 본식 식대"><label>예상금액</label><input id="bPlan" type="text" inputmode="numeric" autocomplete="off" value="${formatMoneyInputValue(item.planned)}" placeholder="0" data-action="format-money"><label>실제금액</label><input id="bActual" type="text" inputmode="numeric" autocomplete="off" value="${formatMoneyInputValue(item.actual)}" placeholder="0" data-action="format-money"><label>세부 내용</label><textarea id="bDetails" placeholder="계약 내용, 포함 항목, 메모 등을 적어보세요.">${esc(item.details||'')}</textarea><div class="actions">${editing?`<button class="btn" data-action="delete-budget" data-id="${item.id}">삭제</button>`:''}<button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-budget" data-id="${editing?item.id:'null'}">저장</button></div></div>`}
-if(type==='memo'){const m=state.memos.find(x=>String(x.id)===String(data));if(!m){closeModal();return}body=`<h2>메모 수정</h2><div class="form"><label>메모</label><textarea id="mText" placeholder="메모 내용을 입력하세요.">${esc(m.text||'')}</textarea><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-memo-edit" data-id="${m.id}">저장</button></div></div>`}
-document.getElementById('modalBody').innerHTML=body;document.getElementById('modal').classList.add('open')}
+function renderSettingsModal(){
+  return `<h2>본식 날짜</h2><div class="form"><label>결혼식 날짜</label><input id="weddingDate" type="date" value="${state.weddingDate||''}"><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-wedding-date">저장</button></div></div>`;
+}
+
+function renderTaskModal(data){
+  const task=data||{
+    id:'',
+    cat:getCats()[0]||'기타',
+    title:'',
+    due:'',
+    owner:'함께',
+    priority:'보통',
+    status:'todo'
+  };
+  return `<h2>${data?'할 일 수정':'할 일 추가'}</h2><div class="form"><label>분야</label><input id="fCat" value="${esc(task.cat)}"><label>할 일</label><input id="fTitle" value="${esc(task.title)}"><label>메모</label><textarea id="fMemo" placeholder="예약번호, 업체 연락처, 준비할 내용 등을 적어보세요.">${esc(task.memo||'')}</textarea><label>마감일</label><input id="fDue" type="date" value="${task.due||''}"><label>담당</label><select id="fOwner"><option ${task.owner==='함께'?'selected':''}>함께</option><option ${task.owner==='신랑' || task.owner==='형주'?'selected':''}>신랑</option><option ${task.owner==='신부'?'selected':''}>신부</option><option ${task.owner==='각자'?'selected':''}>각자</option></select><label>우선순위</label><select id="fPriority"><option ${task.priority==='높음'?'selected':''}>높음</option><option ${task.priority==='보통'?'selected':''}>보통</option><option ${task.priority==='낮음'?'selected':''}>낮음</option></select><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-task" data-id="${data?task.id:'null'}">저장</button></div></div>`;
+}
+
+function renderPlanModal(data){
+  const plan=data?findById(state.plans,data):null;
+  const item=plan||{id:'',name:'',details:'',note:'',status:'논의 전'};
+  return `<h2>${plan?'부부계획 수정':'부부계획 추가'}</h2><div class="form"><label>제목</label><input id="pName" value="${esc(item.name)}" placeholder="예: 자녀 계획"><label>논의할 세부 사항</label><textarea id="pDetails" placeholder="서로 이야기해야 할 질문이나 기준을 적어주세요.">${esc(item.details||'')}</textarea><label>논의된 사항</label><textarea id="pNote" placeholder="실제로 이야기하고 합의한 내용을 기록하세요.">${esc(item.note||'')}</textarea><label>상태</label><select id="pStatus"><option ${item.status==='논의 전'?'selected':''}>논의 전</option><option ${item.status==='논의 중'?'selected':''}>논의 중</option><option ${item.status==='합의 완료'?'selected':''}>합의 완료</option></select><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-plan" data-id="${plan?plan.id:'null'}">저장</button></div></div>`;
+}
+
+function renderEventModal(data){
+  const event=data&&typeof data==='object'?data:null;
+  return `<h2>${event?'일정 수정':'일정 추가'}</h2><div class="form"><label>날짜</label><input id="eDate" type="date" value="${event?event.date||'':selectedScheduleDate}"><label>일정</label><input id="eTitle" value="${event?esc(event.title):''}" placeholder="예: 상견례 장소 예약"><label>시간</label><input id="eTime" type="time" value="${event?event.time||'':''}"><label>장소</label><input id="eLocation" value="${event?esc(event.location||''):''}" placeholder="예: 강남 ○○식당"><label>분류</label><input id="eCategory" value="${event?esc(event.category||''):''}" placeholder="예: 상견례 / 웨딩촬영 / 본식"><label>메모</label><textarea id="eNote" placeholder="준비물, 예약번호, 주차 등">${event?esc(event.note||''):''}</textarea><div class="actions">${event?`<button class="btn" data-action="delete-event-close" data-id="${event.id}">삭제</button>`:''}<button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-event" data-id="${event?event.id:'null'}">저장</button></div></div>`;
+}
+
+function renderBudgetModal(data){
+  const editing=data!=null&&!isNewId(data);
+  const budget=editing?findById(state.budgets,data):null;
+  if(editing&&!budget){
+    alert('수정할 예산 항목을 찾지 못했어요.');
+    return null;
+  }
+  const item=budget||{id:'',name:'',planned:0,actual:0,details:''};
+  return `<h2>${editing?'예산 항목 수정':'예산 항목 추가'}</h2><div class="form"><label>항목</label><input id="bName" value="${esc(item.name||'')}" placeholder="예: 본식 식대"><label>예상금액</label><input id="bPlan" type="text" inputmode="numeric" autocomplete="off" value="${formatMoneyInputValue(item.planned)}" placeholder="0" data-action="format-money"><label>실제금액</label><input id="bActual" type="text" inputmode="numeric" autocomplete="off" value="${formatMoneyInputValue(item.actual)}" placeholder="0" data-action="format-money"><label>세부 내용</label><textarea id="bDetails" placeholder="계약 내용, 포함 항목, 메모 등을 적어보세요.">${esc(item.details||'')}</textarea><div class="actions">${editing?`<button class="btn" data-action="delete-budget" data-id="${item.id}">삭제</button>`:''}<button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-budget" data-id="${editing?item.id:'null'}">저장</button></div></div>`;
+}
+
+function renderMemoModal(data){
+  const memo=findById(state.memos,data);
+  if(!memo)return null;
+  return `<h2>메모 수정</h2><div class="form"><label>메모</label><textarea id="mText" placeholder="메모 내용을 입력하세요.">${esc(memo.text||'')}</textarea><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-memo-edit" data-id="${memo.id}">저장</button></div></div>`;
+}
+
+function getModalBody(type,data){
+  const renderers={
+    settings:()=>renderSettingsModal(),
+    task:()=>renderTaskModal(data),
+    plan:()=>renderPlanModal(data),
+    event:()=>renderEventModal(data),
+    budget:()=>renderBudgetModal(data),
+    memo:()=>renderMemoModal(data)
+  };
+  return renderers[type]?.()??null;
+}
+
+function openModal(type,data){
+  const body=getModalBody(type,data);
+  if(body===null)return;
+  setHTML('modalBody',body);
+  document.getElementById('modal').classList.add('open');
+}
 function closeModal(){document.getElementById('modal').classList.remove('open')}
 function saveWeddingDate(){state.weddingDate=document.getElementById('weddingDate').value;save('wedding');closeModal()}
 /* ----- TASKS · MUTATIONS ----- */
-function saveTask(id){const data={cat:document.getElementById('fCat').value.trim()||'기타',title:document.getElementById('fTitle').value.trim(),memo:document.getElementById('fMemo').value.trim(),due:document.getElementById('fDue').value,owner:document.getElementById('fOwner').value,priority:document.getElementById('fPriority').value};if(!data.title){alert('할 일을 입력해주세요.');return}if(id==null || String(id)==='null')state.tasks.push({id:newId(),...data,status:'todo'});else{const target=state.tasks.find(t=>String(t.id)===String(id));if(!target){alert('수정할 할 일을 찾지 못했어요.');return}Object.assign(target,data)}save('tasks');closeModal()}
+function readTaskForm(){
+  return {
+    cat:document.getElementById('fCat').value.trim()||'기타',
+    title:document.getElementById('fTitle').value.trim(),
+    memo:document.getElementById('fMemo').value.trim(),
+    due:document.getElementById('fDue').value,
+    owner:document.getElementById('fOwner').value,
+    priority:document.getElementById('fPriority').value
+  };
+}
+function saveTask(id){
+  const data=readTaskForm();
+  if(!data.title){
+    alert('할 일을 입력해주세요.');
+    return;
+  }
+  const saved=upsertById(
+    state.tasks,
+    id,
+    data,
+    item=>({id:newId(),...item,status:'todo'})
+  );
+  if(!saved){
+    alert('수정할 할 일을 찾지 못했어요.');
+    return;
+  }
+  save('tasks');
+  closeModal();
+}
 function deleteTask(id){
-  if(!confirm('삭제하시겠습니까?'))return;
+  if(!confirmDelete())return;
   state.tasks=removeById(state.tasks,id);
   save('tasks');
   closeModal();
 }
 /* ----- SCHEDULE · MUTATIONS ----- */
-function saveEvent(id){const title=document.getElementById('eTitle').value.trim(),date=document.getElementById('eDate').value;if(!date){alert('날짜를 입력해주세요.');return}if(!title){alert('일정 제목을 입력해주세요.');return}const data={title,date,time:document.getElementById('eTime').value||'',location:document.getElementById('eLocation').value.trim(),category:document.getElementById('eCategory').value.trim(),note:document.getElementById('eNote').value.trim()};if(String(id)==='null'){state.events=Array.isArray(state.events)?state.events:[];state.events.push({id:newId(),...data});}else{const target=state.events.find(e=>String(e.id)===String(id));if(!target){alert('수정할 일정을 찾지 못했어요.');return}Object.assign(target,data)}save('schedule');selectedScheduleDate=date;calendarCursor=parseLocalDate(date);calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1);closeModal();showPage('schedule');}
-function openEventEdit(id){const e=state.events.find(x=>String(x.id)===String(id));if(e)openModal('event',e);else alert('수정할 일정을 찾지 못했어요.')}
+function readEventForm(){
+  return {
+    title:document.getElementById('eTitle').value.trim(),
+    date:document.getElementById('eDate').value,
+    time:document.getElementById('eTime').value||'',
+    location:document.getElementById('eLocation').value.trim(),
+    category:document.getElementById('eCategory').value.trim(),
+    note:document.getElementById('eNote').value.trim()
+  };
+}
+function saveEvent(id){
+  const data=readEventForm();
+  if(!data.date){
+    alert('날짜를 입력해주세요.');
+    return;
+  }
+  if(!data.title){
+    alert('일정 제목을 입력해주세요.');
+    return;
+  }
+
+  state.events=Array.isArray(state.events)?state.events:[];
+  const saved=upsertById(state.events,id,data);
+  if(!saved){
+    alert('수정할 일정을 찾지 못했어요.');
+    return;
+  }
+
+  save('schedule');
+  selectedScheduleDate=data.date;
+  calendarCursor=parseLocalDate(data.date);
+  calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1);
+  closeModal();
+  showPage('schedule');
+}
+function openEventEdit(id){
+  const e=findById(state.events,id);
+  if(e)openModal('event',e);
+  else alert('수정할 일정을 찾지 못했어요.');
+}
 function deleteEvent(id){
-  if(!confirm('삭제하시겠습니까?'))return;
+  if(!confirmDelete())return;
   state.events=removeById(state.events,id);
   save('schedule');
   showPage('schedule');
@@ -2524,9 +2912,31 @@ function formatMoneyInputValue(value){const n=Number(String(value??'').replace(/
 function formatMoneyInput(el){const digits=String(el.value||'').replace(/\D/g,'');el.value=digits?new Intl.NumberFormat('ko-KR').format(Number(digits)):'';el.setSelectionRange(el.value.length,el.value.length)}
 function parseMoneyInput(id){return Number(String(document.getElementById(id)?.value||'').replace(/,/g,'').replace(/\D/g,''))||0}
 /* ----- BUDGET · MUTATIONS ----- */
-function saveBudget(id){const name=document.getElementById('bName').value.trim();if(!name)return;const data={name,planned:parseMoneyInput('bPlan'),actual:parseMoneyInput('bActual'),details:document.getElementById('bDetails').value.trim()};if(id==null || String(id)==='null')state.budgets.push({id:newId(),...data});else{const target=state.budgets.find(b=>String(b.id)===String(id));if(!target){alert('수정할 예산 항목을 찾지 못했어요.');return}Object.assign(target,data)}save('budget');closeModal()}
+/* ----- FORM READERS · 도메인별 입력값 ----- */
+function readBudgetForm(){
+  return {
+    name:document.getElementById('bName').value.trim(),
+    planned:parseMoneyInput('bPlan'),
+    actual:parseMoneyInput('bActual'),
+    details:document.getElementById('bDetails').value.trim()
+  };
+}
+function saveBudget(id){
+  const data=readBudgetForm();
+  if(!data.name){
+    alert('항목을 입력해주세요.');
+    return;
+  }
+  const saved=upsertById(state.budgets,id,data);
+  if(!saved){
+    alert('수정할 예산 항목을 찾지 못했어요.');
+    return;
+  }
+  save('budget');
+  closeModal();
+}
 function deleteBudget(id){
-  if(!confirm('삭제하시겠습니까?'))return;
+  if(!confirmDelete())return;
   state.budgets=removeById(state.budgets,id);
   save('budget');
   closeModal();
@@ -2535,21 +2945,42 @@ function editGoal(i){const v=prompt('목표 내용을 수정하세요',state.goa
 
 /* ===== 06. PAGE: MEMOS / BACKUP ===== */
 
-/* ===== DOMAIN: MEMOS / DATA ===== */
+/* ============================================================================
+   DOMAIN 08 · MEMOS / 메모·백업
+   찾기 순서: renderMemos → saveMemo/saveMemoEdit/deleteMemo → backup
+   카드 모양: MemoCard()
+   ============================================================================ */
 /* ===== PAGE MODULE: MEMOS / DATA ===== */
 function renderMemos(){
- const el=document.getElementById('memoList');
- const count=document.getElementById('memoCount');
- const searchEl=document.getElementById('memoSearch');
- if(!el)return;
  const memos=Array.isArray(state.memos)?state.memos:[];
- const q=(searchEl?.value||'').trim().toLowerCase();
- const filtered=q?memos.filter(m=>String(m.text||'').toLowerCase().includes(q)):memos;
- count.textContent=`${filtered.length}개`;
- el.innerHTML=filtered.map((m,idx)=>UI.memo(m,idx,memos.length)).join('')||UI.empty('검색 결과가 없어요.');
+ const q=selectedValue('memoSearch').trim().toLowerCase();
+ const filtered=q
+   ? memos.filter(m=>String(m.text||'').toLowerCase().includes(q))
+   : memos;
+ setText('memoCount',`${filtered.length}개`);
+ renderList(
+   'memoList',
+   filtered,
+   (m,idx)=>UI.memo(m,idx,memos.length),
+   '검색 결과가 없어요.'
+ );
 }
 /* ----- MEMOS · MUTATIONS ----- */
-function saveMemo(){const text=document.getElementById('quickMemo').value.trim();if(!text){alert('메모 내용을 입력해주세요.');return}state.memos=Array.isArray(state.memos)?state.memos:[];state.memos.unshift({id:newId(),text});save('memos');document.getElementById('quickMemo').value='';alert('메모를 저장했어요.')}
+function readQuickMemo(){
+  return document.getElementById('quickMemo')?.value.trim()||'';
+}
+function saveMemo(){
+  const text=readQuickMemo();
+  if(!text){
+    alert('메모 내용을 입력해주세요.');
+    return;
+  }
+  state.memos=Array.isArray(state.memos)?state.memos:[];
+  state.memos.unshift({id:newId(),text});
+  save('memos');
+  document.getElementById('quickMemo').value='';
+  alert('메모를 저장했어요.');
+}
 function saveMemoEdit(id){const text=document.getElementById('mText').value.trim();if(!text){alert('메모 내용을 입력해주세요.');return}const m=state.memos.find(x=>String(x.id)===String(id));if(!m){alert('수정할 메모를 찾지 못했어요.');return}m.text=text;save('memos');closeModal()}
 function deleteMemo(id){
   if(!confirm('삭제하시겠습니까?'))return;
@@ -2579,67 +3010,127 @@ async function importData(ev){
     ev.target.value='';
   }
 }
-/* ===== DOMAIN: ACTIONS / USER INPUT ===== */
-const ACTION_HANDLERS={
-  'open-modal':el=>openModal(el.dataset.modal),
-  'calendar-month':el=>changeCalendarMonth(Number(el.dataset.delta||0)),
-  'save-memo':()=>saveMemo(),
-  'shared-sign-up':()=>sharedSignUp(),
-  'shared-sign-in':()=>sharedSignIn(),
-  'shared-sign-out':()=>sharedSignOut(),
-  'shared-pull':()=>sharedPull(),
-  'shared-copy-code':()=>sharedCopyCode(),
-  'shared-create-project':()=>sharedCreateProject(),
-  'shared-join-project':()=>sharedJoinProject(),
-  'theme-preset':el=>applyPreset(el.dataset.preset),
-  'theme-reset':()=>resetTheme(),
-  'theme-save':()=>saveTheme(),
-  'export-data':()=>exportData(),
-  'import-file':()=>$('importFile')?.click(),
-  'move-category':(el)=>moveCategory(el.closest('[data-cat]')?.dataset.cat,Number(el.dataset.delta||0)),
-  'toggle-task':el=>toggleTask(el.dataset.id),
-  'edit-task':el=>openTaskEdit(el.dataset.id),
-  'delete-task':el=>deleteTask(el.dataset.id),
-  'select-date':el=>selectScheduleDate(el.dataset.date),
-  'edit-event':el=>openEventEdit(el.dataset.id),
-  'delete-event':el=>deleteEvent(el.dataset.id),
-  'delete-event-close':el=>{deleteEvent(el.dataset.id);return closeModal()},
-  'move-budget':el=>moveBudget(el.dataset.id,Number(el.dataset.delta||0)),
-  'edit-budget':el=>openModal('budget',el.dataset.id),
-  'delete-budget':el=>deleteBudget(el.dataset.id),
-  'move-plan':el=>movePlan(el.dataset.id,Number(el.dataset.delta||0)),
-  'edit-plan':el=>openModal('plan',el.dataset.id),
-  'delete-plan':el=>deletePlan(el.dataset.id),
-  'close-modal':()=>closeModal(),
-  'save-wedding-date':()=>saveWeddingDate(),
-  'save-task':el=>saveTask(el.dataset.id==='null'?null:el.dataset.id),
-  'save-plan':el=>savePlan(el.dataset.id==='null'?null:el.dataset.id),
-  'save-event':el=>saveEvent(el.dataset.id==='null'?null:el.dataset.id),
-  'save-budget':el=>saveBudget(el.dataset.id==='null'?null:el.dataset.id),
-  'save-memo-edit':el=>saveMemoEdit(el.dataset.id),
-  'update-plan':el=>updatePlan(el.dataset.id,el.value),
-  'preview-theme':()=>previewTheme(),
-  'format-money':el=>formatMoneyInput(el),
-  'import-data':el=>importData({target:{files:el.files}}),
-  'home-limit':el=>setHomeLimit(el.dataset.limitType,el.value),
-  'edit-memo':el=>openModal('memo',el.dataset.id),
-  'delete-memo':el=>deleteMemo(el.dataset.id),
-  'switch-project':el=>sharedSwitchProject(el.dataset.project)
-};
-const NON_CLICK_ACTIONS=new Set(['update-plan','format-money','preview-theme','import-data','home-limit']);
+/* ===== DOMAIN: MUTATION FLOW GUIDE =====
+   1) readXForm()    : 화면 입력을 데이터 객체로 변환
+   2) validate       : 필수값 검사
+   3) upsertById()   : 추가/수정 공통 처리
+   4) save('domain') : 저장 후 해당 화면만 렌더링
+   새 CRUD 기능도 이 순서를 유지하면 읽기 쉽습니다.
+===== END DOMAIN: MUTATION FLOW GUIDE ===== */
 
+/* ============================================================================
+   DOMAIN 11 · ACTIONS / 사용자 입력
+   data-action → ACTION_HANDLERS → 실제 도메인 함수
+   새로운 버튼 동작은 여기부터 확인합니다.
+   ============================================================================ */
+/* ============================================================================
+   ACTION MAP
+   HTML은 data-action으로 의도를 표시하고,
+   아래 그룹이 실제 함수를 연결합니다.
+   - Common  : 공용 UI / 모달
+   - Home    : 홈
+   - Tasks   : 할 일
+   - Schedule: 일정
+   - Budget  : 예산
+   - Plans   : 부부계획
+   - Memos   : 메모 / 백업
+   - Theme   : 테마
+   - Shared  : Supabase
+   ============================================================================ */
+const ACTION_GROUPS={
+  Common:{
+    'open-modal':el=>openModal(el.dataset.modal),
+    'close-modal':()=>closeModal()
+  },
+  Home:{
+    'move-category':el=>moveCategory(
+      el.closest('[data-cat]')?.dataset.cat,
+      Number(el.dataset.delta||0)
+    ),
+    'home-limit':el=>setHomeLimit(el.dataset.limitType,el.value)
+  },
+  Tasks:{
+    'toggle-task':el=>toggleTask(el.dataset.id),
+    'edit-task':el=>openTaskEdit(el.dataset.id),
+    'delete-task':el=>deleteTask(el.dataset.id),
+    'save-task':el=>saveTask(isNewId(el.dataset.id)?null:el.dataset.id)
+  },
+  Schedule:{
+    'calendar-month':el=>changeCalendarMonth(Number(el.dataset.delta||0)),
+    'select-date':el=>selectScheduleDate(el.dataset.date),
+    'edit-event':el=>openEventEdit(el.dataset.id),
+    'delete-event':el=>deleteEvent(el.dataset.id),
+    'delete-event-close':el=>{deleteEvent(el.dataset.id);closeModal()},
+    'save-event':el=>saveEvent(isNewId(el.dataset.id)?null:el.dataset.id)
+  },
+  Budget:{
+    'move-budget':el=>moveBudget(el.dataset.id,Number(el.dataset.delta||0)),
+    'edit-budget':el=>openModal('budget',el.dataset.id),
+    'delete-budget':el=>deleteBudget(el.dataset.id),
+    'save-budget':el=>saveBudget(isNewId(el.dataset.id)?null:el.dataset.id),
+    'format-money':el=>formatMoneyInput(el)
+  },
+  Plans:{
+    'move-plan':el=>movePlan(el.dataset.id,Number(el.dataset.delta||0)),
+    'edit-plan':el=>openModal('plan',el.dataset.id),
+    'delete-plan':el=>deletePlan(el.dataset.id),
+    'save-plan':el=>savePlan(isNewId(el.dataset.id)?null:el.dataset.id),
+    'update-plan':el=>updatePlan(el.dataset.id,el.value)
+  },
+  Memos:{
+    'save-memo':()=>saveMemo(),
+    'edit-memo':el=>openModal('memo',el.dataset.id),
+    'delete-memo':el=>deleteMemo(el.dataset.id),
+    'save-memo-edit':el=>saveMemoEdit(el.dataset.id),
+    'export-data':()=>exportData(),
+    'import-file':()=>$('importFile')?.click(),
+    'import-data':el=>importData({target:{files:el.files}})
+  },
+  Theme:{
+    'theme-preset':el=>applyPreset(el.dataset.preset),
+    'theme-reset':()=>resetTheme(),
+    'theme-save':()=>saveTheme(),
+    'preview-theme':()=>previewTheme()
+  },
+  Shared:{
+    'shared-sign-up':()=>sharedSignUp(),
+    'shared-sign-in':()=>sharedSignIn(),
+    'shared-sign-out':()=>sharedSignOut(),
+    'shared-pull':()=>sharedPull(),
+    'shared-copy-code':()=>sharedCopyCode(),
+    'shared-create-project':()=>sharedCreateProject(),
+    'shared-join-project':()=>sharedJoinProject(),
+    'switch-project':el=>sharedSwitchProject(el.dataset.project),
+    'save-wedding-date':()=>saveWeddingDate()
+  }
+};
+
+const ACTION_HANDLERS=Object.assign({},...Object.values(ACTION_GROUPS));
+
+const NON_CLICK_ACTIONS=new Set([
+  'update-plan',
+  'format-money',
+  'preview-theme',
+  'import-data',
+  'home-limit'
+]);
+
+function resolveActionElement(target){
+  return target?.closest?.('[data-action]')||null;
+}
 function handleAction(el){
   const action=el?.dataset?.action;
   const handler=ACTION_HANDLERS[action];
-  if(!handler)return;
+  if(!handler)return false;
   handler(el);
   el.closest('details')?.removeAttribute('open');
+  return true;
 }
 
 document.addEventListener('click',e=>{
   const nav=e.target.closest('#nav [data-page]');
   if(nav){showPage(nav.dataset.page);return;}
-  const action=e.target.closest('[data-action]');
+  const action=resolveActionElement(e.target);
   if(!action)return;
   if(NON_CLICK_ACTIONS.has(action.dataset.action))return;
   e.preventDefault();
@@ -2663,13 +3154,24 @@ document.addEventListener('change',e=>{
 /* ===== 08. SHARED DATA / SUPABASE ===== */
 
 // Shared sync (Supabase) — 2-person project mode
-/* ===== DOMAIN: SHARED / SUPABASE ===== */
+/* ============================================================================
+   DOMAIN 10 · SHARED / Supabase
+   인증 / 프로젝트 / pull·push / realtime 순서로 읽습니다.
+   ============================================================================ */
 const SHARED_KEY='wedding_planner_shared_v2';
 const DEFAULT_SUPABASE_URL='https://gcabvfdjdglyjpngvyqz.supabase.co';
 const DEFAULT_SUPABASE_KEY='sb_publishable_KTj3U95VGGzVMcaUWPxLcw_7YXsfPa_';
 let sharedSync={client:null,user:null,projectId:null,channel:null,pushTimer:null,busy:false,lastSyncAt:null,authBound:false};
+/* ----- SHARED · CONFIG / STORAGE ----- */
+function sharedStorageSnapshot(){
+  return sharedConfig();
+}
+function saveSharedConfig(config){
+  setSharedConfig(config);
+}
 function sharedConfig(){try{const c=JSON.parse(localStorage.getItem(SHARED_KEY)||'{}');return {...c,url:c.url||DEFAULT_SUPABASE_URL,key:c.key||DEFAULT_SUPABASE_KEY}}catch(e){return {url:DEFAULT_SUPABASE_URL,key:DEFAULT_SUPABASE_KEY}}}
 function setSharedConfig(v){localStorage.setItem(SHARED_KEY,JSON.stringify({...v,url:v.url||DEFAULT_SUPABASE_URL,key:v.key||DEFAULT_SUPABASE_KEY}));syncSharedInputs()}
+/* ----- SHARED · UI STATE ----- */
 function sharedSetStatus(text,kind=''){syncSharedAuthUI();const el=document.getElementById('syncStatus');if(el){const statusText=(kind==='shared-error')?'연결 실패':(text==='동기화 오류'?'동기화 오류':(text==='오프라인'?'오프라인':(sharedSync.user?'실시간 동기화 중':'로컬 저장 중')));el.textContent=statusText;el.className='pill'+((statusText==='실시간 동기화 중')?' shared-online':(statusText==='연결 실패'||statusText==='동기화 오류'?' shared-error':(statusText==='오프라인'?' shared-syncing':'')))}const ut=document.getElementById('syncUserText');if(ut)ut.textContent=sharedSync.user?`로그인: ${sharedSync.user.email}`:'아직 공유 계정에 연결되지 않았어요.';const pt=document.getElementById('syncProjectText');if(pt)pt.textContent='';const label=document.getElementById('syncCodeLabel');if(label)label.textContent=sharedSync.projectId?'현재 프로젝트 코드':'프로젝트 초대 코드';const ft=document.getElementById('footerText');if(ft)ft.textContent=sharedSync.projectId?'우리 둘이 같이 쓰는 결혼 준비 공간 · 실시간 공유 중':'우리 둘이 같이 쓰는 결혼 준비 공간 · 현재는 이 브라우저에 저장됩니다.';renderSharedProjects()}
 function sharedSetLastSync(msg){const el=document.getElementById('syncLastText');if(el)el.innerHTML=msg||''}
 function renderSharedProjects(){const box=document.getElementById('syncProjectsBox');if(!box)return;const projects=sharedConfig().projects||[];const current=projects.find(p=>String(p.id)===String(sharedSync.projectId));const currentBox=document.getElementById('currentProjectBox');const codeEl=document.getElementById('syncCode');if(currentBox){currentBox.style.display=(sharedSync.user&&current)?'block':'none';if(codeEl)codeEl.value=current?.invite_code||'';const joinEl=document.getElementById('syncJoinCode');if(joinEl)joinEl.value=''}if(!sharedSync.user||!projects.length){box.style.display='none';box.innerHTML='';return}box.style.display='block';box.innerHTML='<div style="font-weight:800;margin-bottom:6px">내 프로젝트 목록</div>'+projects.map((p,i)=>{const isCurrent=String(p.id)===String(sharedSync.projectId);return `<div class="row between" style="gap:8px;padding:7px 0;border-top:${i?'1px solid var(--line)':'0'}"><div class="u-minw-0"><div class="shared-code">${p.invite_code||'코드 확인 필요'}</div></div>${isCurrent?'<span class="pill">현재 사용 중</span>':`<button class="btn compact" data-action="switch-project" data-project="${String(p.id).replace(/'/g,"\'")}">불러오기</button>`}</div>`}).join('')}
@@ -2711,24 +3213,213 @@ function queueSharedSave(){
   };
   sharedSync.pushTimer=setTimeout(flush,500);
 }
+/* ============================================================================
+   SHARED · AUTH
+   Supabase client 생성, session 확인, 회원가입/로그인/로그아웃
+   ============================================================================ */
 async function sharedConnect(){try{if(!window.supabase?.createClient){alert('공유 기능 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해주세요.');return false}const cfg=sharedConfig();const url=(cfg.url||DEFAULT_SUPABASE_URL).replace(/\/$/,''),key=cfg.key||DEFAULT_SUPABASE_KEY,email=document.getElementById('syncEmail')?.value.trim()||cfg.email||'';setSharedConfig({...cfg,url,key,email});if(sharedSync.client){try{await sharedSync.client.removeAllChannels()}catch(e){} }sharedSync.client=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});if(!sharedSync.authBound){sharedSync.authBound=true;sharedSync.client.auth.onAuthStateChange((_event,session)=>{sharedSync.user=session?.user||null;sharedSetStatus(sharedSync.user?(sharedSync.projectId?'실시간 공유 중':'로그인됨'):'로컬 사용 중',sharedSync.user?'shared-online':'');});}const {data,error}=await sharedSync.client.auth.getSession();if(error)throw error;sharedSync.user=data.session?.user||null;if(sharedSync.user)await sharedAfterLogin();else sharedSetStatus('로컬 사용 중','');return true}catch(e){console.error(e);sharedSetStatus('연결 실패','shared-error');alert(e.message||'연결에 실패했어요. Supabase URL/키를 확인해주세요.');return false}}
 async function ensureSharedClient(){if(sharedSync.client)return true;return await sharedConnect()}
 async function sharedSignUp(){try{if(!(await ensureSharedClient()))return;const email=document.getElementById('syncEmail').value.trim(),password=document.getElementById('syncPassword').value,confirm=document.getElementById('syncPasswordConfirm').value;if(!email||!password||!confirm){alert('이메일과 비밀번호, 비밀번호 확인을 모두 입력해주세요.');return}if(password!==confirm){alert('비밀번호가 일치하지 않습니다. 다시 확인해주세요.');document.getElementById('syncPasswordConfirm').focus();return}const {data,error}=await sharedSync.client.auth.signUp({email,password,options:{data:{app_name:'우리 결혼 플래너'}}});if(error)throw error;if(data.session){sharedSync.user=data.user;await sharedAfterLogin();alert('회원가입과 로그인이 완료됐어요.')}else alert('회원가입이 완료됐어요. 이메일 인증이 켜져 있다면 인증 후 로그인해주세요.')}catch(e){console.error(e);alert(e.message||'회원가입에 실패했어요.')}}
 async function sharedSignIn(){try{if(!(await ensureSharedClient()))return;const email=document.getElementById('syncEmail').value.trim(),password=document.getElementById('syncPassword').value;if(!email||!password){alert('이메일과 비밀번호를 입력해주세요.');return}const {data,error}=await sharedSync.client.auth.signInWithPassword({email,password});if(error)throw error;sharedSync.user=data.user;await sharedAfterLogin();alert('로그인했어요.')}catch(e){console.error(e);alert(e.message||'로그인에 실패했어요.')}}
 async function sharedAfterLogin(){sharedSync.user=(await sharedSync.client.auth.getUser()).data.user||sharedSync.user;sharedSetStatus('로그인됨','shared-online');if(!sharedSync.client||!sharedSync.user)return;const c=sharedConfig();try{const projects=await sharedRefreshProjects();let target=projects.find(p=>String(p.id)===String(c.projectId));if(!target)target=projects[0];if(target){sharedSync.projectId=target.id;setSharedConfig({...sharedConfig(),projectId:target.id,inviteCode:target.invite_code||'',email:sharedSync.user.email});const codeEl=document.getElementById('syncCode');if(codeEl)codeEl.value=target.invite_code||'';await sharedPull(false);await sharedSubscribe();sharedSetStatus('실시간 공유 중','shared-online')}else{sharedSync.projectId=null;sharedSetStatus('로그인됨','shared-online')}}catch(e){console.warn('auto project discovery failed',e)}}
 function generateInviteCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<8;i++)s+=chars[Math.floor(Math.random()*chars.length)];return s}
+/* ============================================================================
+   SHARED · PROJECTS
+   프로젝트 생성 / 참여 / 전환
+   ============================================================================ */
 async function sharedCreateProject(){try{if(!(await ensureSharedClient()))return;if(!sharedSync.user){alert('먼저 로그인해주세요.');return}if(sharedSync.projectId&&!confirm('현재 프로젝트가 이미 있습니다.\n\n새 프로젝트를 만들면 현재 프로젝트와 별개의 프로젝트가 생성되고, 기존 프로젝트도 계정에 그대로 남습니다.\n\n새 프로젝트로 전환할까요?'))return;const name='우리 결혼 플래너',code=generateInviteCode();const {data,error}=await sharedSync.client.rpc('create_wedding_project',{p_name:name,p_invite_code:code});if(error)throw error;const row=Array.isArray(data)?data[0]:data;if(!row?.project_id)throw new Error('프로젝트 생성 응답이 올바르지 않아요.');sharedSync.projectId=row.project_id;const c={...sharedConfig(),inviteCode:row.invite_code||code,projectId:row.project_id||sharedSync.projectId,email:sharedSync.user.email};setSharedConfig(c);document.getElementById('syncCode').value=c.inviteCode;try{await sharedRefreshProjects()}catch(e){console.warn(e)}await sharedPushNow(false);await sharedSubscribe();sharedSetStatus('실시간 공유 중','shared-online');sharedSetLastSync('지금 이 기기의 데이터를 공동 프로젝트에 올렸어요.');alert(`공동 프로젝트를 만들었어요.\n\n초대 코드: ${c.inviteCode}\n\n상대방이 같은 Supabase 설정으로 로그인한 뒤 이 코드를 입력하면 참여할 수 있어요.`)}catch(e){console.error(e);alert(e.message||'프로젝트 생성에 실패했어요.')}}
 async function sharedJoinProject(){try{if(!(await ensureSharedClient()))return;if(!sharedSync.user){alert('먼저 로그인해주세요.');return}const code=(document.getElementById('syncJoinCode')?.value||'').trim().toUpperCase();if(!code){alert('공유 프로젝트 코드를 입력해주세요.');return}const {data,error}=await sharedSync.client.rpc('join_wedding_project',{p_invite_code:code});if(error)throw error;const pid=typeof data==='string'?data:data?.project_id||data?.[0]?.project_id;if(!pid)throw new Error('프로젝트를 찾지 못했어요.');if(!confirm('공동 데이터를 불러올까요? 이 기기의 현재 데이터가 공동 데이터로 바뀝니다.'))return;sharedSync.projectId=pid;setSharedConfig({...sharedConfig(),inviteCode:code,projectId:pid,email:sharedSync.user.email});try{await sharedRefreshProjects()}catch(e){console.warn(e)}const ok=await sharedPull(false);if(!ok)throw new Error('공동 데이터를 불러오지 못했어요.');await sharedSubscribe();sharedSetStatus('실시간 공유 중','shared-online');alert('공동 프로젝트에 참여했어요.')}catch(e){console.error(e);alert(e.message||'프로젝트 참여에 실패했어요.')}}
 async function sharedCopyCode(){const code=document.getElementById('syncCode')?.value.trim();if(!code){alert('복사할 공유 코드가 없어요.');return}try{await navigator.clipboard.writeText(code);alert('공유 코드를 복사했어요.')}catch(e){const t=document.createElement('textarea');t.value=code;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();alert('공유 코드를 복사했어요.')}}
+/* ============================================================================
+   SHARED · SYNC / REALTIME
+   pull / push / debounce / realtime subscription
+   ============================================================================ */
 async function sharedSubscribe(){if(!sharedSync.client||!sharedSync.projectId)return;if(sharedSync.channel)await sharedSync.client.removeChannel(sharedSync.channel);sharedSync.channel=sharedSync.client.channel('wedding-project-'+sharedSync.projectId).on('postgres_changes',{event:'*',schema:'public',table:'project_state',filter:`project_id=eq.${sharedSync.projectId}`},payload=>{if(payload.eventType==='DELETE'||!payload.new?.state)return;if(payload.new.updated_by&&sharedSync.user?.id&&String(payload.new.updated_by)===String(sharedSync.user.id))return;sharedSync.busy=true;try{replaceState(payload.new.state||state,{persist:true,render:true,sync:false,views:'all',theme:true});sharedSync.lastSyncAt=payload.new.updated_at||new Date().toISOString();sharedSetLastSync(`마지막 동기화 · ${new Date(sharedSync.lastSyncAt).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`);sharedSetStatus('실시간 공유 중','shared-online')}finally{sharedSync.busy=false}}).subscribe(status=>{if(status==='SUBSCRIBED')sharedSetStatus('실시간 공유 중','shared-online');else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')sharedSetStatus('동기화 오류','shared-error')})}
 async function sharedPull(showAlert=true){try{if(!sharedSync.client||!sharedSync.projectId){if(showAlert)alert('먼저 공동 프로젝트에 연결해주세요.');return false}const {data,error}=await sharedSync.client.from('project_state').select('state,updated_at').eq('project_id',sharedSync.projectId).maybeSingle();if(error)throw error;if(!data){if(showAlert)alert('공동 데이터가 아직 없어요.');return false}sharedSync.busy=true;replaceState(data.state||state,{persist:true,render:true,sync:false,views:'all',theme:true});sharedSync.lastSyncAt=data.updated_at||new Date().toISOString();sharedSetLastSync(`마지막 동기화 · ${new Date(sharedSync.lastSyncAt).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`);sharedSetStatus('실시간 공유 중','shared-online');if(showAlert)alert('공동 데이터를 불러왔어요.');return true}catch(e){console.error(e);if(showAlert)alert(e.message||'공동 데이터를 불러오지 못했어요.');return false}finally{sharedSync.busy=false}}
-async function sharedPushNow(silent=false){try{if(!sharedSync.client||!sharedSync.projectId||!sharedSync.user)return false;const now=new Date().toISOString();const payload={project_id:sharedSync.projectId,state:cloneSharedState(),updated_by:sharedSync.user.id,updated_at:now};const {error}=await sharedSync.client.from('project_state').upsert(payload,{onConflict:'project_id'});if(error)throw error;sharedSync.lastSyncAt=now;sharedSetLastSync(`마지막 동기화 · ${new Date(now).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`);sharedSetStatus('실시간 공유 중','shared-online');return true}catch(e){console.error(e);sharedSetStatus('동기화 오류','shared-error');if(!silent)alert(e.message||'공유 데이터 저장에 실패했어요.');return false}}
+function buildSharedStatePayload(){
+  if(!sharedSync.projectId||!sharedSync.user)return null;
+  const now=new Date().toISOString();
+  return {
+    project_id:sharedSync.projectId,
+    state:cloneSharedState(),
+    updated_by:sharedSync.user.id,
+    updated_at:now
+  };
+}
+async function sharedPushNow(silent=false){
+  try{
+    if(!sharedSync.client)return false;
+    const payload=buildSharedStatePayload();
+    if(!payload)return false;
+
+    const {error}=await sharedSync.client
+      .from('project_state')
+      .upsert(payload,{onConflict:'project_id'});
+
+    if(error)throw error;
+
+    sharedSync.lastSyncAt=payload.updated_at;
+    sharedSetLastSync(
+      `마지막 동기화 · ${new Date(payload.updated_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`
+    );
+    sharedSetStatus('실시간 공유 중','shared-online');
+    return true;
+  }catch(e){
+    console.error(e);
+    sharedSetStatus('동기화 오류','shared-error');
+    if(!silent)alert(e.message||'공유 데이터 저장에 실패했어요.');
+    return false;
+  }
+}
 async function sharedSignOut(){try{if(sharedSync.channel&&sharedSync.client)await sharedSync.client.removeChannel(sharedSync.channel);if(sharedSync.client)await sharedSync.client.auth.signOut()}finally{const c=sharedConfig();const emailEl=document.getElementById('syncEmail');const passwordEl=document.getElementById('syncPassword');if(emailEl&&c.email)emailEl.value=c.email;if(passwordEl)passwordEl.value='';const confirmEl=document.getElementById('syncPasswordConfirm');if(confirmEl)confirmEl.value='';sharedSync={client:sharedSync.client,user:null,projectId:null,channel:null,pushTimer:null,busy:false,lastSyncAt:null,authBound:true};sharedSetLastSync('');sharedSetStatus('로그아웃됨');alert('로그아웃했어요. 다음 로그인부터는 저장된 설정과 이메일을 그대로 사용하고 비밀번호만 입력하면 됩니다.')}}
 window.addEventListener('beforeunload',()=>{if(sharedSync.pushTimer)clearTimeout(sharedSync.pushTimer)});
 window.addEventListener('online',()=>{if(sharedSync.projectId)sharedPushNow(true)});
 window.addEventListener('offline',()=>{if(sharedSync.projectId)sharedSetStatus('오프라인','shared-syncing')});
 
 /* ===== 09. STARTUP / PWA ===== */
+
+
+/* ============================================================================
+   10. APPLICATION MODULES · 공식 기능 진입점
+   ============================================================================
+   Legacy global functions are intentionally kept for compatibility.
+   New code should prefer Planner.<Domain>.<method>.
+
+   Example:
+     Planner.Tasks.save(id)
+     Planner.Budget.remove(id)
+     Planner.Schedule.refreshToday()
+     Planner.Plans.updateStatus(id,value)
+     Planner.Memos.import(fileEvent)
+
+   This is an organizational layer first. It does not change existing behavior.
+   ============================================================================ */
+const Planner={
+  Meta:{
+    version:'v32',
+    rule:'한 기능을 수정할 때 해당 Domain부터 찾습니다.'
+  },
+
+  Data:{
+    normalize:normalizeState,
+    replace:replaceState,
+    persist:persistState,
+    save,
+    render:renderAll,
+    requestRender
+  },
+  Actions:{
+    groups:ACTION_GROUPS,
+    handlers:ACTION_HANDLERS,
+    run:handleAction
+  },
+  View:{
+    build:buildViewData,
+    tasks:buildTaskViewData,
+    schedule:buildScheduleViewData,
+    budget:buildBudgetViewData,
+    plans:buildPlanViewData,
+    list:renderList
+  },
+
+  Tasks:{
+    render:renderTasks,
+    filters:getTaskFilters,
+    filter:filterAndSortTasks,
+    save:saveTask,
+    edit:openTaskEdit,
+    toggle:toggleTask,
+    remove:deleteTask
+  },
+
+  Schedule:{
+    render:renderSchedule,
+    calendar:renderCalendar,
+    save:saveEvent,
+    edit:openEventEdit,
+    remove:deleteEvent,
+    selectDate:selectScheduleDate,
+    refreshToday:refreshScheduleToday
+  },
+
+  Budget:{
+    render:renderBudget,
+    save:saveBudget,
+    edit:id=>openModal('budget',id),
+    move:moveBudget,
+    remove:deleteBudget
+  },
+
+  Plans:{
+    render:renderPlans,
+    save:savePlan,
+    edit:id=>openModal('plan',id),
+    updateStatus:updatePlan,
+    move:movePlan,
+    remove:deletePlan
+  },
+
+  Memos:{
+    render:renderMemos,
+    save:saveMemo,
+    saveEdit:saveMemoEdit,
+    edit:id=>openModal('memo',id),
+    remove:deleteMemo,
+    export:exportData,
+    import:importData
+  },
+
+  UI:{
+    Empty:EmptyState,
+    Menu:ActionMenu,
+    Order:OrderButtons,
+    Task:TaskCard,
+    Event:EventCard,
+    Budget:BudgetCard,
+    Plan:PlanCard,
+    Memo:MemoCard,
+    HomeEvent:homeEventHtml,
+    Category:categoryCardHtml,
+    Modal:{
+      Settings:renderSettingsModal,
+      Task:renderTaskModal,
+      Plan:renderPlanModal,
+      Event:renderEventModal,
+      Budget:renderBudgetModal,
+      Memo:renderMemoModal
+    }
+  },
+
+  Shared:{
+    config:sharedStorageSnapshot,
+    saveConfig:saveSharedConfig,
+    connect:sharedConnect,
+    pull:sharedPull,
+    push:sharedPushNow,
+    subscribe:sharedSubscribe,
+    signUp:sharedSignUp,
+    signIn:sharedSignIn,
+    signOut:sharedSignOut,
+    createProject:sharedCreateProject,
+    joinProject:sharedJoinProject,
+    switchProject:sharedSwitchProject
+  },
+
+  Tests:{
+    run:runPlannerTests
+  }
+};
+
+/* ============================================================================
+   11. DEVELOPMENT RULE
+   ============================================================================
+   새 기능을 추가할 때:
+   1) State가 필요한가? -> Planner.Data / normalizeState
+   2) 새 카드인가? -> Planner.UI
+   3) 어느 화면인가? -> 해당 Planner.<Domain>
+   4) 버튼 동작인가? -> ACTION_HANDLERS
+   5) 공동 데이터인가? -> Planner.Shared
+   ============================================================================ */
 
 /* ============================================================================
    DOMAIN API / CRUD DIRECTORY
@@ -2924,10 +3615,13 @@ if(new URLSearchParams(location.search).get('test')==='1'){
   queueMicrotask(()=>runPlannerTests());
 }
 
-/* ===== DOMAIN: STARTUP / PWA ===== */
+/* ============================================================================
+   DOMAIN 12 · STARTUP / PWA
+   초기화 / 서비스워커 / 날짜 감시 / 테스트 진입점
+   ============================================================================ */
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js?v=89',{updateViaCache:'none'})
+    navigator.serviceWorker.register('./sw.js?v=90',{updateViaCache:'none'})
       .then(reg=>reg.update())
       .catch(e=>console.warn('PWA service worker registration failed',e));
   });
