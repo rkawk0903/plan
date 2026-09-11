@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="우리 결혼 플래너" />
 <meta name="format-detection" content="telephone=no,email=no,address=no,date=no" />
-<script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;ri=AAAAPgAcY29tLnNlYy5hbmRyb2lkLmFwcC5zYnJvd3NlcgDmaHR0cHM6Ly9jaGF0Z3B0LmNvbS9iYWNrZW5kLWFwaS9lc3R1YXJ5L2NvbnRlbnQ%2FaWQ9ZmlsZV8wMDAwMDAwMDRjOTA4MWY1YTYyNjAwMzE3NTBmYzI3ZiZmbj13ZWRkaW5nX3BsYW5uZXJfdjdfYnVnZml4Lmh0bWwmY2Q9YXR0YWNobWVudCZ0cz00OTY5NzcmcD1mcyZjaWQ9MSZzaWc9ZTVjOWUxMTBiNWU3MmIzMjA5NzUxMjQwOTY4ZTQyNjE1MmVmZGRmMThjMGMwN2EzZDc2MzdhMzE1OGUwNGE2OCZ2PTA"></script>
+<script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;ri=AAAD1QAcY29tLnNlYy5hbmRyb2lkLmFwcC5zYnJvd3NlcgDmaHR0cHM6Ly9jaGF0Z3B0LmNvbS9iYWNrZW5kLWFwaS9lc3R1YXJ5L2NvbnRlbnQ%2FaWQ9ZmlsZV8wMDAwMDAwMDIzZDg4MWY4YTUxNWE5YzExNGJkMDNiMSZmbj13ZWRkaW5nX3BsYW5uZXJfdjdfYnVnZml4Lmh0bWwmY2Q9YXR0YWNobWVudCZ0cz00OTY5NzcmcD1mcyZjaWQ9MSZzaWc9NTU4ZDY1Yzc2OWJiZDUzNzUxNTUyNjEwZDFjYTE5YWExZWFlMjY5MGFjNWUyN2I1NTk1ZjE4ODRmMDMzZWIyYSZ2PTA"></script>
 <link rel="manifest" href="manifest.webmanifest" />
 <title>우리 결혼 플래너</title>
 
@@ -1184,7 +1184,7 @@ function deletePlan(id){if(!confirm('삭제하시겠습니까?'))return;state.pl
 function toggleTask(id){const t=state.tasks.find(x=>String(x.id)===String(id));if(t){t.status=t.status==='done'?'todo':'done';save('tasks')}}
 function updatePlan(id,v){const p=state.plans.find(x=>String(x.id)===String(id));if(p){p.status=v;save('plans')}}
 function savePlan(id){const name=document.getElementById('pName').value.trim();if(!name)return;const data={name,details:document.getElementById('pDetails').value.trim(),note:document.getElementById('pNote').value.trim(),status:document.getElementById('pStatus').value};if(id==null || String(id)==='null')state.plans.push({id:newId(),...data});else{const target=state.plans.find(p=>String(p.id)===String(id));if(!target){alert('수정할 부부계획을 찾지 못했어요.');return}Object.assign(target,data)}save('plans');closeModal()}
-function openTaskEdit(id){const t=state.tasks.find(x=>x.id===id);openModal('task',t)}
+function openTaskEdit(id){const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;openModal('task',t)}
 function openModal(type,data){let body='';if(type==='settings'){body=`<h2>본식 날짜</h2><div class="form"><label>결혼식 날짜</label><input id="weddingDate" type="date" value="${state.weddingDate||''}"><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-wedding-date">저장</button></div></div>`}
 if(type==='task'){const t=data||{id:'',cat:getCats()[0]||'기타',title:'',due:'',owner:'함께',priority:'보통',status:'todo'};body=`<h2>${data?'할 일 수정':'할 일 추가'}</h2><div class="form"><label>분야</label><input id="fCat" value="${esc(t.cat)}"><label>할 일</label><input id="fTitle" value="${esc(t.title)}"><label>메모</label><textarea id="fMemo" placeholder="예약번호, 업체 연락처, 준비할 내용 등을 적어보세요.">${esc(t.memo||'')}</textarea><label>마감일</label><input id="fDue" type="date" value="${t.due||''}"><label>담당</label><select id="fOwner"><option ${t.owner==='함께'?'selected':''}>함께</option><option ${t.owner==='신랑' || t.owner==='형주'?'selected':''}>신랑</option><option ${t.owner==='신부'?'selected':''}>신부</option><option ${t.owner==='각자'?'selected':''}>각자</option></select><label>우선순위</label><select id="fPriority"><option ${t.priority==='높음'?'selected':''}>높음</option><option ${t.priority==='보통'?'selected':''}>보통</option><option ${t.priority==='낮음'?'selected':''}>낮음</option></select><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-task" data-id="${data?t.id:'null'}">저장</button></div></div>`}
 if(type==='plan'){const p=data?state.plans.find(x=>String(x.id)===String(data)):null;const x=p||{id:'',name:'',details:'',note:'',status:'논의 전'};body=`<h2>${p?'부부계획 수정':'부부계획 추가'}</h2><div class="form"><label>제목</label><input id="pName" value="${esc(x.name)}" placeholder="예: 자녀 계획"><label>논의할 세부 사항</label><textarea id="pDetails" placeholder="서로 이야기해야 할 질문이나 기준을 적어주세요.">${esc(x.details||'')}</textarea><label>논의된 사항</label><textarea id="pNote" placeholder="실제로 이야기하고 합의한 내용을 기록하세요.">${esc(x.note||'')}</textarea><label>상태</label><select id="pStatus"><option ${x.status==='논의 전'?'selected':''}>논의 전</option><option ${x.status==='논의 중'?'selected':''}>논의 중</option><option ${x.status==='합의 완료'?'selected':''}>합의 완료</option></select><div class="actions"><button class="btn" data-action="close-modal">취소</button><button class="btn primary" data-action="save-plan" data-id="${p?p.id:'null'}">저장</button></div></div>`}
@@ -1250,7 +1250,7 @@ function handleAction(el){
   case 'delete-event': return deleteEvent(id);
   case 'delete-event-close': deleteEvent(id);return closeModal();
   case 'move-budget': return moveBudget(id,delta);
-  case 'edit-budget': openBudgetEdit(id);break;
+  case 'edit-budget': return openModal('budget',id);
   case 'delete-budget': return deleteBudget(id);
   case 'move-plan': return movePlan(id,delta);
   case 'edit-plan': openModal('plan',id);break;
