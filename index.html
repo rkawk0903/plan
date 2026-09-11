@@ -13,41 +13,19 @@
 <title>우리 결혼 플래너</title>
 
 
+<style id="app-styles">
+/*
+ * =========================================================
+ * OUR WEDDING PLANNER — STYLESHEET
+ * =========================================================
+ * Maintenance rules
+ * 1. Edit existing component rules before adding overrides.
+ * 2. Keep shared UI styles in the global/component sections.
+ * 3. Keep responsive rules next to the component they modify.
+ * 4. Page-specific styling belongs in the corresponding section.
+ * =========================================================
+ */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<style id="app-styles-cleaned">
-/* CSS consolidated from the existing stylesheet blocks in original order.
-   Rules are intentionally kept in cascade order to preserve the current UI behavior. */
-
-/* ===== Consolidated style block 1 ===== */
 :root{--bg:#f7f5f2;--card:#fff;--ink:#222;--muted:#777;--line:#e8e3dd;--accent:#9b6b52;--accent2:#d9b8a7;--good:#5c8a69;--warn:#bd7b3e;--danger:#b55b5b;--nav-bg:rgba(247,245,242,.9);--soft:#faf8f5;--button-bg:#fff;--button-text:#222;--shadow:0 8px 28px rgba(30,20,10,.07);--radius:20px;--radius-sm:max(0px,calc(var(--radius)*.6));--radius-xs:max(0px,calc(var(--radius)*.48));--radius-lg:max(0px,calc(var(--radius)*.9));--accent-soft:color-mix(in srgb,var(--accent) 12%,var(--card));--accent-soft-2:color-mix(in srgb,var(--accent2) 18%,var(--card));--accent-ink:color-mix(in srgb,var(--accent) 70%,var(--ink));--danger-soft:color-mix(in srgb,var(--danger) 12%,var(--card));--danger-ink:color-mix(in srgb,var(--danger) 82%,var(--ink));--good-soft:color-mix(in srgb,var(--good) 14%,var(--card));--good-ink:color-mix(in srgb,var(--good) 78%,var(--ink));--calendar-muted-bg:color-mix(in srgb,var(--soft) 75%,var(--bg));--calendar-selected-bg:color-mix(in srgb,var(--accent) 7%,var(--card));--calendar-today-bg:color-mix(in srgb,var(--accent) 10%,var(--card));--weekend-sat:color-mix(in srgb,#4a80c1 78%,var(--accent));--weekend-sun:color-mix(in srgb,#d15454 78%,var(--danger));--holiday-color:color-mix(in srgb,var(--danger) 86%,var(--accent))}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;letter-spacing:-.02em}button,input,select,textarea{font:inherit}button{cursor:pointer}
 a,a:visited,a:hover,a:active{color:inherit!important;text-decoration:none!important;-webkit-text-fill-color:currentColor!important}button{color:inherit;-webkit-appearance:none}
@@ -146,8 +124,6 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   border-color:var(--line)!important;
 }
 
-
-/* ===== Consolidated style block 2 ===== */
 .compact{padding:8px 11px;font-size:12px;min-width:54px}#sharedCard{min-width:0;overflow:hidden}
 #sharedCard .row{min-width:0}
 #sharedCard .row.between{align-items:flex-start}
@@ -163,8 +139,6 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 @media(max-width:600px){#sharedCard .row.between>.pill{font-size:10px;padding:5px 7px;margin-left:6px}#sharedCard .actions{gap:6px}#sharedCard .actions .btn{flex:1 1 100px;padding:9px 8px;font-size:11px}}
 .shared-online{background:var(--soft)!important;color:var(--accent)!important;border-color:var(--accent2)!important}.shared-syncing{background:var(--soft)!important;color:var(--accent)!important;border-color:var(--line)!important}.shared-error{background:rgba(181,91,91,.10)!important;color:#b55b5b!important;border-color:rgba(181,91,91,.25)!important}.sync-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:5px}.sync-off-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:5px}
 
-
-/* ===== Consolidated style block 3 ===== */
 /* v11 targeted UI fixes */
 #syncProjectActions{margin-top:12px !important}
 #syncProjectActions label, #syncJoinCodeLabel { font-size:11px !important; font-weight:700 !important; line-height:1.4 !important; display:block; margin-bottom:6px !important; }
@@ -197,8 +171,6 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .budget-home .budget-stat-row b{font-size:11px}
 }
 
-
-/* ===== Consolidated style block 4 ===== */
 /* Reference-style open arch gauge: a real SVG arc, not a cropped circle. */
 .budget-page-reference-gauge .budget-gauge-arc{
   position:relative!important;
@@ -230,16 +202,12 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .budget-arc-value strong{font-size:20px!important}
 }
 
-
-/* ===== Consolidated style block 5 ===== */
 .budget-page-reference-gauge .budget-gauge-arc{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
 .budget-page-reference-gauge .budget-gauge-arc::before{display:none!important}
 .budget-page-reference-gauge .budget-arc-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1}
 .budget-page-reference-gauge .budget-arc-value{z-index:4}
 .budget-page-reference-gauge .budget-arc-value strong{display:block!important;visibility:visible!important;opacity:1!important}
 
-
-/* ===== Consolidated style block 6 ===== */
 /* Home budget card: same open SVG arc as the budget tab, in the compact reference-card layout. */
 .home-top-grid > .budget-home{min-width:0;min-height:0;}
 .budget-home{padding:10px!important;display:block!important;overflow:hidden;align-self:start;}
@@ -275,14 +243,10 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .budget-home-reference-total>div{font-size:10px;}
 }
 
-
-/* ===== Consolidated style block 7 ===== */
 /* v55: tighten home budget card whitespace only. */
 .budget-home{align-self:start!important;}
 .budget-home-reference{height:auto!important;}
 
-
-/* ===== Consolidated style block 8 ===== */
 /* v56: reduce outer whitespace of the two top home cards. */
 .home-top-grid > .card{padding:12px !important;min-height:0 !important;box-sizing:border-box;}
 .home-top-grid > .budget-home{padding:8px !important;min-height:0 !important;height:auto !important;align-self:start !important;}
@@ -291,8 +255,6 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .home-top-grid > .budget-home{padding:7px !important;min-height:0 !important;height:auto !important;}
 }
 
-
-/* ===== Consolidated style block 9 ===== */
 /* v57: add a small, balanced inset around the home budget title and bottom edge. */
 .budget-home-reference{padding:3px 4px 5px!important;}
 .budget-home-reference-title{margin-top:2px!important;margin-left:2px!important;margin-bottom:4px!important;}
@@ -308,187 +270,26 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .budget-home-reference-total{margin-bottom:2px!important;}
 }
 
-
-/* ===== Consolidated style block 10 ===== */
 /* v58: budget tab summary vertical spacing */
 #budget .budget-page-summary{padding:6px 10px !important;}
 
+/* =========================================================
+   HOME — TOP SUMMARY CARDS
+   Single source of truth for the two top summary cards.
+   ========================================================= */
 
-/* ===== Consolidated style block 11 ===== */
-/* Home top-left card: match the supplied reference image. */
-.home-top-grid > .card:first-child{
-  min-width:0!important;
-  height:100%!important;
-  min-height:270px!important;
-  padding:18px 20px!important;
-  display:flex!important;
-  flex-direction:column!important;
-  justify-content:flex-start!important;
-  box-sizing:border-box!important;
-}
-.home-top-grid > .card:first-child .row{
-  flex:0 0 auto;
-}
-.home-top-grid > .card:first-child .small:first-child{
-  font-size:15px!important;
-  line-height:1.2!important;
-  color:var(--ink)!important;
-  font-weight:600!important;
-}
-.home-top-grid > .card:first-child #overallPct{
-  margin-top:58px!important;
-  font-size:46px!important;
-  line-height:1!important;
-  font-weight:800!important;
-  letter-spacing:-.04em!important;
-}
-.home-top-grid > .card:first-child #overallText{
-  margin-top:27px!important;
-  font-size:15px!important;
-  line-height:1.2!important;
-  color:var(--muted)!important;
-}
-.home-top-grid > .card:first-child .progress{
-  height:30px!important;
-  margin-top:auto!important;
-  border-radius:999px!important;
-  overflow:hidden!important;
-}
-.home-top-grid > .card:first-child .progress i{
-  border-radius:999px!important;
-}
-@media(max-width:720px){
-  .home-top-grid > .card:first-child{min-height:245px!important;padding:15px 16px!important}
-  .home-top-grid > .card:first-child #overallPct{margin-top:44px!important;font-size:38px!important}
-  .home-top-grid > .card:first-child #overallText{margin-top:22px!important;font-size:13px!important}
-  .home-top-grid > .card:first-child .progress{height:26px!important}
-}
-@media(max-width:420px){
-  .home-top-grid > .card:first-child{min-height:220px!important;padding:13px 14px!important}
-  .home-top-grid > .card:first-child .small:first-child{font-size:13px!important}
-  .home-top-grid > .card:first-child #overallPct{margin-top:36px!important;font-size:32px!important}
-  .home-top-grid > .card:first-child #overallText{margin-top:18px!important;font-size:12px!important}
-  .home-top-grid > .card:first-child .progress{height:22px!important}
+.home-top-grid{
+  align-items:stretch!important;
 }
 
-
-/* ===== Consolidated style block 12 ===== */
-/* v61: keep the two home summary cards compact and aligned. */
-.home-top-grid{align-items:stretch!important;}
 .home-top-grid > .card:first-child,
 .home-top-grid > .budget-home{
-  height:250px!important;
-  min-height:250px!important;
+  height:220px!important;
+  min-height:220px!important;
   box-sizing:border-box!important;
 }
-.home-top-grid > .card:first-child{
-  padding:16px 18px!important;
-}
-.home-top-grid > .card:first-child #overallPct{
-  margin-top:48px!important;
-}
-.home-top-grid > .card:first-child #overallText{
-  display:block!important;
-  margin-top:14px!important;
-  font-size:13px!important;
-  line-height:1.2!important;
-  color:var(--muted)!important;
-}
-.home-top-grid > .card:first-child .progress{
-  margin-top:auto!important;
-}
-.home-top-grid > .budget-home{
-  padding:12px!important;
-}
-@media(max-width:720px){
-  .home-top-grid > .card:first-child,
-  .home-top-grid > .budget-home{
-    height:230px!important;
-    min-height:230px!important;
-  }
-  .home-top-grid > .card:first-child{padding:14px 15px!important;}
-  .home-top-grid > .card:first-child #overallPct{margin-top:38px!important;font-size:38px!important;}
-  .home-top-grid > .card:first-child #overallText{margin-top:12px!important;font-size:12px!important;}
-  .home-top-grid > .budget-home{padding:10px!important;}
-}
-@media(max-width:420px){
-  .home-top-grid > .card:first-child,
-  .home-top-grid > .budget-home{
-    height:210px!important;
-    min-height:210px!important;
-  }
-  .home-top-grid > .card:first-child{padding:12px 13px!important;}
-  .home-top-grid > .card:first-child #overallPct{margin-top:30px!important;font-size:32px!important;}
-  .home-top-grid > .card:first-child #overallText{margin-top:10px!important;font-size:11px!important;}
-  .home-top-grid > .budget-home{padding:8px!important;}
-}
 
-
-/* ===== Consolidated style block 13 ===== */
-/* v62: tighten home top cards and bring the completion count close to the progress bar. */
-.home-top-grid{align-items:stretch!important;}
-.home-top-grid > .card:first-child,
-.home-top-grid > .budget-home{height:220px!important;min-height:220px!important;box-sizing:border-box!important;}
-.home-top-grid > .card:first-child{padding:14px 16px!important;display:flex!important;flex-direction:column!important;}
-.home-top-grid > .card:first-child .row.between{flex:0 0 auto!important;}
-.home-top-grid > .card:first-child .big#overallPct{margin-top:20px!important;}
-.home-top-grid > .card:first-child #overallText{margin-top:8px!important;font-size:12px!important;line-height:1.15!important;}
-.home-top-grid > .card:first-child .progress{margin-top:7px!important;height:22px!important;flex:0 0 auto!important;}
-.home-top-grid > .budget-home{padding:10px!important;}
-@media(max-width:720px){
-  .home-top-grid > .card:first-child,
-  .home-top-grid > .budget-home{height:205px!important;min-height:205px!important;}
-  .home-top-grid > .card:first-child{padding:12px 13px!important;}
-  .home-top-grid > .card:first-child .big#overallPct{margin-top:18px!important;font-size:34px!important;}
-  .home-top-grid > .card:first-child #overallText{margin-top:7px!important;font-size:11px!important;}
-  .home-top-grid > .card:first-child .progress{margin-top:6px!important;height:20px!important;}
-  .home-top-grid > .budget-home{padding:9px!important;}
-}
-@media(max-width:420px){
-  .home-top-grid > .card:first-child,
-  .home-top-grid > .budget-home{height:190px!important;min-height:190px!important;}
-  .home-top-grid > .card:first-child{padding:11px 12px!important;}
-  .home-top-grid > .card:first-child .big#overallPct{margin-top:15px!important;font-size:31px!important;}
-  .home-top-grid > .card:first-child #overallText{margin-top:6px!important;font-size:10.5px!important;}
-  .home-top-grid > .card:first-child .progress{margin-top:5px!important;height:18px!important;}
-  .home-top-grid > .budget-home{padding:8px!important;}
-}
-
-
-/* ===== Consolidated style block 14 ===== */
-/* v64: pin the count and progress gauge to the bottom of the left home card. */
-.home-top-grid > .card:first-child{position:relative!important;}
-.home-top-grid > .card:first-child #overallText{
-  position:absolute!important;
-  left:16px!important;
-  right:16px!important;
-  bottom:48px!important;
-  margin:0!important;
-  font-size:12px!important;
-  line-height:1.15!important;
-}
-.home-top-grid > .card:first-child .progress{
-  position:absolute!important;
-  left:16px!important;
-  right:16px!important;
-  bottom:14px!important;
-  width:auto!important;
-  margin:0!important;
-}
-@media(max-width:720px){
-  .home-top-grid > .card:first-child #overallText{left:13px!important;right:13px!important;bottom:43px!important;font-size:11px!important;}
-  .home-top-grid > .card:first-child .progress{left:13px!important;right:13px!important;bottom:12px!important;}
-}
-@media(max-width:420px){
-  .home-top-grid > .card:first-child #overallText{left:12px!important;right:12px!important;bottom:39px!important;font-size:10.5px!important;}
-  .home-top-grid > .card:first-child .progress{left:12px!important;right:12px!important;bottom:11px!important;}
-}
-
-
-/* ===== Consolidated style block 15 ===== */
-/* v70: 아래 카드 제목(.section-title)의 실제 시작점 17px을 기준으로 상단 제목도 정확히 일치 */
-
-/* 1) 폰트 크기/굵기/행간을 아래 제목과 동일하게 고정 */
+/* Shared title treatment */
 .home-top-grid > .card:first-child .small:first-child,
 .home-top-grid > .budget-home .budget-home-reference-title{
   font-size:18px!important;
@@ -498,51 +299,146 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   letter-spacing:inherit!important;
 }
 
-/* 2) 왼쪽 상단 제목: 카드 기본 padding 17px → 아래 제목과 X/Y 시작점 동일 */
+/* Left: overall preparation progress */
 .home-top-grid > .card:first-child{
+  min-width:0!important;
+  position:relative!important;
   padding:17px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
 }
+
+.home-top-grid > .card:first-child .row{
+  flex:0 0 auto!important;
+}
+
 .home-top-grid > .card:first-child .small:first-child{
   margin:0!important;
 }
 
-/* 3) 오른쪽 상단 제목:
-   desktop = 카드 padding 10 + reference 좌측 4 + title margin 3 = 17px
-            카드 padding 10 + reference 상단 3 + title margin-top 4 = 17px */
+.home-top-grid > .card:first-child #overallPct{
+  margin-top:32px!important;
+  font-size:46px!important;
+  line-height:1!important;
+  font-weight:800!important;
+  letter-spacing:-.04em!important;
+}
+
+.home-top-grid > .card:first-child #overallText{
+  position:absolute!important;
+  left:16px!important;
+  right:16px!important;
+  bottom:48px!important;
+  margin:0!important;
+  font-size:12px!important;
+  line-height:1.15!important;
+  color:var(--muted)!important;
+}
+
+.home-top-grid > .card:first-child .progress{
+  position:absolute!important;
+  left:16px!important;
+  right:16px!important;
+  bottom:14px!important;
+  width:auto!important;
+  height:22px!important;
+  margin:0!important;
+  border-radius:999px!important;
+  overflow:hidden!important;
+}
+
+.home-top-grid > .card:first-child .progress i{
+  border-radius:999px!important;
+}
+
+/* Right: budget summary */
+.home-top-grid > .budget-home{
+  padding:10px!important;
+}
+
 .home-top-grid > .budget-home .budget-home-reference-title{
   margin:4px 0 10px 3px!important;
   transform:none!important;
 }
 
-/* 진행률 %는 기존 위치 유지 */
-.home-top-grid > .card:first-child .big#overallPct{
-  margin-top:32px!important;
-}
-
-/* 720px 이하: budget-home padding 9px / reference left 4px, top 3px */
+/* Responsive */
 @media(max-width:720px){
+  .home-top-grid > .card:first-child,
+  .home-top-grid > .budget-home{
+    height:205px!important;
+    min-height:205px!important;
+  }
+
   .home-top-grid > .card:first-child{
     padding:17px!important;
   }
+
+  .home-top-grid > .card:first-child #overallPct{
+    font-size:34px!important;
+  }
+
+  .home-top-grid > .card:first-child #overallText{
+    left:13px!important;
+    right:13px!important;
+    bottom:43px!important;
+    font-size:11px!important;
+  }
+
+  .home-top-grid > .card:first-child .progress{
+    left:13px!important;
+    right:13px!important;
+    bottom:12px!important;
+    height:20px!important;
+  }
+
+  .home-top-grid > .budget-home{
+    padding:9px!important;
+  }
+
   .home-top-grid > .budget-home .budget-home-reference-title{
     margin:5px 0 10px 4px!important;
-    transform:none!important;
   }
 }
 
-/* 420px 이하: budget-home padding 8px / reference left 3px, top 2px */
 @media(max-width:420px){
+  .home-top-grid > .card:first-child,
+  .home-top-grid > .budget-home{
+    height:190px!important;
+    min-height:190px!important;
+  }
+
   .home-top-grid > .card:first-child{
     padding:17px!important;
   }
+
+  .home-top-grid > .card:first-child #overallPct{
+    font-size:31px!important;
+  }
+
+  .home-top-grid > .card:first-child #overallText{
+    left:12px!important;
+    right:12px!important;
+    bottom:39px!important;
+    font-size:10.5px!important;
+  }
+
+  .home-top-grid > .card:first-child .progress{
+    left:12px!important;
+    right:12px!important;
+    bottom:11px!important;
+    height:18px!important;
+  }
+
+  .home-top-grid > .budget-home{
+    padding:8px!important;
+  }
+
   .home-top-grid > .budget-home .budget-home-reference-title{
     margin:7px 0 10px 6px!important;
-    transform:none!important;
   }
 }
 
-
-/* ===== Consolidated style block 16 ===== */
 /* v24: 프로젝트 카드 텍스트만 미세 조정 */
 #currentProjectBox .row:first-child > div > div {
   font-size:12px !important;
@@ -601,8 +497,6 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 @media(max-width:720px){.budget-page-summary{padding:9px}.budget-page-summary .budget-widget{grid-template-columns:minmax(0,1fr) 128px;gap:9px}.budget-page-summary .budget-stat-row{padding:6px 8px}.budget-page-summary .budget-stat-row span{font-size:9px}.budget-page-summary .budget-stat-row b{font-size:12px}.budget-page-summary .budget-gauge{width:92px;height:92px}.budget-page-summary .budget-gauge::before{inset:8px}.budget-page-summary .budget-gauge strong{font-size:20px}.budget-page-summary .budget-gauge-caption{font-size:9px}}
 @media(max-width:420px){.budget-page-summary .budget-widget{grid-template-columns:minmax(0,1fr) 104px}.budget-page-summary .budget-stat-row{gap:5px;padding:5px 7px}.budget-page-summary .budget-stat-row span{font-size:8.5px}.budget-page-summary .budget-stat-row b{font-size:11px}.budget-page-summary .budget-gauge{width:78px;height:78px}.budget-page-summary .budget-gauge::before{inset:7px}.budget-page-summary .budget-gauge strong{font-size:17px}.budget-home .budget-widget{grid-template-columns:minmax(0,1fr) 88px}.budget-home .budget-gauge{width:68px;height:68px}}
 
-
-/* ===== Consolidated style block 17 ===== */
 /* Reference-card layouts */
 .budget-home{
   padding:18px 18px 19px;
@@ -748,8 +642,6 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .budget-page-summary .budget-gauge strong{font-size:19px}
 }
 
-
-/* ===== Consolidated style block 18 ===== */
 /* Final reference-image layout: home and budget summary cards */
 .home-top-grid{
   grid-template-columns:minmax(0,1.46fr) minmax(0,1fr) !important;
@@ -897,14 +789,10 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .budget-home .budget-gauge strong{font-size:18px}
 }
 
-
-/* ===== Consolidated style block 19 ===== */
 .budget-gauge{
   background:conic-gradient(from -45deg,var(--accent) 0 var(--budget-angle,0deg),var(--accent-soft-2) var(--budget-angle,0deg) 270deg,transparent 270deg 360deg) !important;
 }
 
-
-/* ===== Consolidated style block 20 ===== */
 .budget-page-summary{width:100%!important;max-width:none!important;aspect-ratio:auto!important;height:160px!important;padding:18px!important;margin:0!important;overflow:hidden!important}
 .budget-page-reference-card{height:100%;display:grid!important;grid-template-columns:minmax(0,1fr) 185px!important;align-items:center!important;gap:18px!important;min-width:0!important}
 .budget-page-reference-stats{display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:0}
@@ -939,8 +827,6 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   .budget-page-reference-gauge .budget-gauge strong{font-size:18px!important}
 }
 
-
-/* ===== Consolidated style block 21 ===== */
 /* v53: reduce vertical whitespace and slightly enlarge the arc gauge */
 .budget-page-summary{
   height:120px !important;
@@ -983,7 +869,7 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
   }
 }
 
-<style id="budget-page-final-tuning-v59">
+
 /* v59: visibly reduce budget summary card vertical whitespace */
 #budget .budget-page-summary{height:120px!important;padding:5px 12px!important;box-sizing:border-box!important;}
 #budget .budget-page-reference-card{height:100%!important;}
@@ -991,9 +877,7 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 #budget .budget-page-reference-stat{min-height:0!important;}
 @media(max-width:720px){#budget .budget-page-summary{height:112px!important;padding:5px 10px!important;}#budget .budget-page-reference-stats{gap:3px!important;}}
 @media(max-width:420px){#budget .budget-page-summary{height:104px!important;padding:4px 8px!important;}}
-
 </style>
-
 </head>
 <body>
 <div class="app">
@@ -1422,16 +1306,5 @@ applyTheme();syncThemeInputs();navInit();renderAll();
 startScheduleDateWatcher();
 </script>
 
-
-
-
-
-
-
-
-
-
-
-</style>
 
 </body></html>
