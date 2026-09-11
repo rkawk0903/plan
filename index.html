@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="우리 결혼 플래너" />
 <meta name="format-detection" content="telephone=no,email=no,address=no,date=no" />
-<script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;ri=AAAFygAcY29tLnNlYy5hbmRyb2lkLmFwcC5zYnJvd3NlcgDmaHR0cHM6Ly9jaGF0Z3B0LmNvbS9iYWNrZW5kLWFwaS9lc3R1YXJ5L2NvbnRlbnQ%2FaWQ9ZmlsZV8wMDAwMDAwMDQ3ZDQ4MWZiOTk5OTVmZjc5MTc2MGU4OCZmbj13ZWRkaW5nX3BsYW5uZXJfdjdfYnVnZml4Lmh0bWwmY2Q9YXR0YWNobWVudCZ0cz00OTY5NzcmcD1mcyZjaWQ9MSZzaWc9MzA2NjYxMDQ1NDAxNGYxNDI5N2ZlYzM0OTViY2YxNmE3NWNkZjM2MDIxYmIxMjcxZWYwYjBjODAzYTliZDIyZiZ2PTA"></script>
+<script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;ri=AAAG%2FQAcY29tLnNlYy5hbmRyb2lkLmFwcC5zYnJvd3NlcgDmaHR0cHM6Ly9jaGF0Z3B0LmNvbS9iYWNrZW5kLWFwaS9lc3R1YXJ5L2NvbnRlbnQ%2FaWQ9ZmlsZV8wMDAwMDAwMDc5ODg4MWZiOGY2MzkwMDg0YTllNmU4MSZmbj13ZWRkaW5nX3BsYW5uZXJfdjdfYnVnZml4Lmh0bWwmY2Q9YXR0YWNobWVudCZ0cz00OTY5NzcmcD1mcyZjaWQ9MSZzaWc9N2EzYzZmOWZkN2Q2YzM5ZmRlYjBkMTY1OTI2NTViM2E2OGQ0YzY2YzM1NWMwZGUwMWM5ZTgxZjI5NmQ5YzIxYiZ2PTA"></script>
 <link rel="manifest" href="manifest.webmanifest" />
 <title>우리 결혼 플래너</title>
 
@@ -1197,13 +1197,13 @@ function saveWeddingDate(){state.weddingDate=document.getElementById('weddingDat
 function saveTask(id){const data={cat:document.getElementById('fCat').value.trim()||'기타',title:document.getElementById('fTitle').value.trim(),memo:document.getElementById('fMemo').value.trim(),due:document.getElementById('fDue').value,owner:document.getElementById('fOwner').value,priority:document.getElementById('fPriority').value};if(!data.title){alert('할 일을 입력해주세요.');return}if(id==null || String(id)==='null')state.tasks.push({id:newId(),...data,status:'todo'});else{const target=state.tasks.find(t=>String(t.id)===String(id));if(!target){alert('수정할 할 일을 찾지 못했어요.');return}Object.assign(target,data)}save('tasks');closeModal()}
 function deleteTask(id){if(!confirm('삭제하시겠습니까?'))return;state.tasks=state.tasks.filter(t=>String(t.id)!==String(id));save('tasks');closeModal()}
 function saveEvent(id){const title=document.getElementById('eTitle').value.trim(),date=document.getElementById('eDate').value;if(!date){alert('날짜를 입력해주세요.');return}if(!title){alert('일정 제목을 입력해주세요.');return}const data={title,date,time:document.getElementById('eTime').value||'',location:document.getElementById('eLocation').value.trim(),category:document.getElementById('eCategory').value.trim(),note:document.getElementById('eNote').value.trim()};if(String(id)==='null'){state.events=Array.isArray(state.events)?state.events:[];state.events.push({id:newId(),...data});}else{const target=state.events.find(e=>String(e.id)===String(id));if(!target){alert('수정할 일정을 찾지 못했어요.');return}Object.assign(target,data)}save('schedule');selectedScheduleDate=date;calendarCursor=parseLocalDate(date);calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1);closeModal();showPage('schedule');}
-function openEventEdit(id){const e=state.events.find(x=>x.id===id);if(e)openModal('event',e)}
+function openEventEdit(id){const e=state.events.find(x=>String(x.id)===String(id));if(e)openModal('event',e);else alert('수정할 일정을 찾지 못했어요.')}
 function deleteEvent(id){if(!confirm('삭제하시겠습니까?'))return;state.events=state.events.filter(e=>String(e.id)!==String(id));save('schedule');showPage('schedule')}
 function formatMoneyInputValue(value){const n=Number(String(value??'').replace(/\D/g,''))||0;return n?new Intl.NumberFormat('ko-KR').format(n):''}
 function formatMoneyInput(el){const digits=String(el.value||'').replace(/\D/g,'');el.value=digits?new Intl.NumberFormat('ko-KR').format(Number(digits)):'';el.setSelectionRange(el.value.length,el.value.length)}
 function parseMoneyInput(id){return Number(String(document.getElementById(id)?.value||'').replace(/,/g,'').replace(/\D/g,''))||0}
 function saveBudget(id){const name=document.getElementById('bName').value.trim();if(!name)return;const data={name,planned:parseMoneyInput('bPlan'),actual:parseMoneyInput('bActual'),details:document.getElementById('bDetails').value.trim()};if(id==null || String(id)==='null')state.budgets.push({id:newId(),...data});else{const target=state.budgets.find(b=>String(b.id)===String(id));if(!target){alert('수정할 예산 항목을 찾지 못했어요.');return}Object.assign(target,data)}save('budget');closeModal()}
-function deleteBudget(id){if(!confirm('삭제하시겠습니까?'))return;state.budgets=state.budgets.filter(b=>b.id!==id);save('budget');closeModal()}
+function deleteBudget(id){if(!confirm('삭제하시겠습니까?'))return;state.budgets=state.budgets.filter(b=>String(b.id)!==String(id));save('budget');closeModal()}
 function editGoal(i){const v=prompt('목표 내용을 수정하세요',state.goals[i][1]);if(v!==null){state.goals[i][1]=v;save('home')}}
 /* ===== MEMOS & BACKUP ===== */
 function renderMemos(){
