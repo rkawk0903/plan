@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'wedding-planner-v26';
+const CACHE_VERSION = 'wedding-planner-v27';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const APP_SHELL = [
   './',

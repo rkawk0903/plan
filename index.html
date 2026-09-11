@@ -519,7 +519,7 @@ window.addEventListener('online',()=>{if(sharedSync.projectId)sharedPushNow(true
 window.addEventListener('offline',()=>{if(sharedSync.projectId)sharedSetStatus('오프라인','shared-syncing')});
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js?v=25',{updateViaCache:'none'})
+    navigator.serviceWorker.register('./sw.js?v=27',{updateViaCache:'none'})
       .then(reg=>reg.update())
       .catch(e=>console.warn('PWA service worker registration failed',e));
   });
@@ -554,14 +554,17 @@ startScheduleDateWatcher();
   font-weight:700 !important;
 }
 #syncJoinCode {
-  padding-left:8px !important;
-  line-height:1.2 !important;
+  height:38px !important;
+  min-height:38px !important;
+  padding:0 8px !important;
+  line-height:normal !important;
+  box-sizing:border-box !important;
 }
 #syncJoinCode::placeholder {
   font-size:10px !important;
   color:var(--muted) !important;
   opacity:.75;
-  line-height:1.2 !important;
+  line-height:normal !important;
 }
 </style>
 </body></html>
