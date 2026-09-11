@@ -1983,8 +1983,9 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
    SOURCE MAP · v32
    ----------------------------------------------------------------------------
    초보 개발자는 기능을 찾을 때 아래 순서로 이동합니다.
-   01 DATA      : 상태 기본값 / 정규화 / 저장
-   02 THEME     : 테마 / 디자인 설정
+   01 DATA      : 상태 기본값 / 정규화
+   02 CORE      : DOM / 변환 / Persistence
+   03 THEME     : 테마 / 디자인 설정
    03 HOME      : 대시보드 / 네비게이션 / 카테고리
    04 TASKS     : 할 일 조회 / 필터 / CRUD
    05 SCHEDULE  : 일정 / 캘린더 / CRUD
@@ -2003,6 +2004,26 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
    - 상태 구조를 바꾸기         -> DATA / normalizeState 수정
    - Supabase 동작을 바꾸기     -> SHARED 수정
    - 클릭 동작을 바꾸기         -> ACTIONS 수정
+   ============================================================================ */
+
+/* ============================================================================
+   SOURCE ORDER · v38
+   01 DATA / STATE
+   02 THEME
+   CORE PRIMITIVES
+   HOME
+   TASKS
+   SCHEDULE
+   BUDGET
+   PLANS
+   MODALS
+   MEMOS
+   ACTIONS
+   SHARED
+   STARTUP
+
+   Core와 CRUD 공통 도구는 모든 화면에서 사용하므로 Home보다 앞에 둡니다.
+   실제 도메인 로직은 가능한 한 자신의 영역 안에서 찾도록 유지합니다.
    ============================================================================ */
 
 /* ===== 01. DATA & STATE ===== */
@@ -2067,6 +2088,217 @@ function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt
 function getCats(){return [...new Set(state.tasks.map(t=>t.cat).filter(Boolean))]}
 function getOrderedCats(){const cats=getCats(),order=Array.isArray(state.categoryOrder)?state.categoryOrder:[];return [...order.filter(c=>cats.includes(c)),...cats.filter(c=>!order.includes(c))]}
 function moveCategory(cat,dir){const cats=getOrderedCats().slice(),i=cats.indexOf(String(cat)),j=i+Number(dir);if(i<0||j<0||j>=cats.length)return;const next=cats.slice();[next[i],next[j]]=[next[j],next[i]];state.categoryOrder=next;save('home');}
+/* ============================================================================
+   CORE / SHARED PRIMITIVES
+   화면과 도메인이 공통으로 사용하는 최소 기반입니다.
+   위치를 앞쪽에 두어 파일을 위에서 아래로 읽을 때 의존성이 보이도록 합니다.
+   ============================================================================ */
+/* ============================================================================
+   CORE 01 · DOM / VALUE HELPERS
+   화면 요소와 입력값을 짧게 읽기 위한 공용 함수입니다.
+   ============================================================================ */
+function $(id){return document.getElementById(id)}
+function $$(selector,root=document){return [...root.querySelectorAll(selector)]}
+function val(id,fallback=''){return $(id)?.value??fallback}
+function setDisplay(id,show){
+  const el=$(id);
+  if(el)el.style.display=show?'':'none';
+}
+function getCollection(key){
+  return Array.isArray(state[key])?state[key]:[];
+}
+function ensureCollection(key){
+  if(!Array.isArray(state[key]))state[key]=[];
+  return state[key];
+}
+function saveCollectionItem({
+  collection,
+  id,
+  data,
+  view,
+  notFoundMessage,
+  createItem
+}){
+  const list=ensureCollection(collection);
+  const saved=upsertById(list,id,data,createItem);
+  if(!saved){
+    alert(notFoundMessage);
+    return null;
+  }
+  save(view);
+  return saved;
+}
+function updateCollectionItem({
+  collection,
+  id,
+  patch,
+  view,
+  notFoundMessage
+}){
+  const updated=updateById(ensureCollection(collection),id,patch);
+  if(!updated){
+    alert(notFoundMessage);
+    return null;
+  }
+  save(view);
+  return updated;
+}
+function deleteCollectionItem({
+  collection,
+  id,
+  view,
+  close=false
+}){
+  if(!confirmDelete())return false;
+  state[collection]=removeById(getCollection(collection),id);
+  save(view);
+  if(close)closeModal();
+  return true;
+}
+
+/* ============================================================================
+   CORE 02 · FORMAT / PARSE
+   숫자, 날짜처럼 여러 도메인에서 공통으로 사용하는 변환 함수입니다.
+   ============================================================================ */
+const moneyFmt=new Intl.NumberFormat('ko-KR',{maximumFractionDigits:0});
+const moneyWonFmt=new Intl.NumberFormat('ko-KR',{style:'currency',currency:'KRW',maximumFractionDigits:0});
+function num(v){return Number(String(v??'').replace(/,/g,''))||0}
+function newId(){return Date.now()+Math.floor(Math.random()*1000)}
+function isoDate(v){return v instanceof Date?localDateISO(v):String(v||'').slice(0,10)}
+function parseLocalDate(iso){return new Date(String(iso||'')+'T00:00:00')}
+
+/* ============================================================================
+   CORE 03 · PERSISTENCE
+   로컬 저장과 state 교체만 담당합니다.
+   Supabase API 호출은 SHARED 영역에서 처리합니다.
+   ============================================================================ */
+function saveLocalOnly(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify(state));
+    return true;
+  }catch(e){
+    console.error('로컬 저장 실패',e);
+    return false;
+  }
+}
+function cloneSharedState(){
+  return typeof structuredClone==='function'
+    ? structuredClone(state)
+    : JSON.parse(JSON.stringify(state));
+}
+function persistState({sync=false}={}){
+  saveLocalOnly();
+  if(sync)queueSharedSave();
+}
+function replaceState(next,{persist=true,render=true,sync=false,views='all',theme=false}={}){
+  state=normalizeState(next);
+  if(theme){
+    applyTheme();
+    syncThemeInputs();
+  }
+  if(persist)saveLocalOnly();
+  if(sync)queueSharedSave();
+  if(render)requestRender(...(Array.isArray(views)?views:[views]));
+  return state;
+}
+
+function queueSharedSave(){
+  if(!sharedSync.client||!sharedSync.projectId)return;
+  clearTimeout(sharedSync.pushTimer);
+  const flush=()=>{
+    sharedSync.pushTimer=null;
+    if(sharedSync.busy){
+      sharedSync.pushTimer=setTimeout(flush,250);
+      return;
+    }
+    sharedPushNow(true);
+  };
+  sharedSync.pushTimer=setTimeout(flush,500);
+}
+
+
+/* ============================================================================
+   CORE / CRUD HELPERS
+   목록에 대한 찾기 / 추가·수정 / 삭제 / 순서 변경을 공통화합니다.
+   화면별 함수는 이 아래에서 이 도구들을 사용합니다.
+   ============================================================================ */
+/* ============================================================================
+   CRUD HELPERS
+   ============================================================================
+   공통 데이터 연산만 담당합니다.
+   - findById      : ID 타입 차이를 흡수해 항목 찾기
+   - removeById    : ID로 항목 삭제
+   - moveById      : 같은 목록 안에서 위/아래 이동
+   - updateById    : 찾은 항목에 변경값 적용
+   화면 입력/검증/알림은 각 도메인 함수가 담당합니다.
+   ============================================================================ */
+function findById(list,id){
+  return Array.isArray(list)?list.find(item=>String(item?.id)===String(id)):null;
+}
+function removeById(list,id){
+  return Array.isArray(list)?list.filter(item=>String(item?.id)!==String(id)):[];
+}
+function moveById(list,id,dir){
+  if(!Array.isArray(list))return false;
+  const from=list.findIndex(item=>String(item?.id)===String(id));
+  const to=from+Number(dir);
+  if(from<0||to<0||to>=list.length)return false;
+  [list[from],list[to]]=[list[to],list[from]];
+  return true;
+}
+function updateById(list,id,patch){
+  const item=findById(list,id);
+  if(!item)return null;
+  Object.assign(item,patch);
+  return item;
+}
+function isNewId(id){
+  return id==null || String(id)==='' || String(id)==='null';
+}
+function upsertById(list,id,data,create){
+  if(isNewId(id)){
+    const item=create?create(data):{id:newId(),...data};
+    list.push(item);
+    return item;
+  }
+  const target=findById(list,id);
+  if(!target)return null;
+  Object.assign(target,data);
+  return target;
+}
+function confirmDelete(message='삭제하시겠습니까?'){
+  return confirm(message);
+}
+
+function movePlan(id,dir){
+  if(moveById(state.plans,id,dir))save('plans');
+}
+function moveBudget(id,dir){
+  if(moveById(state.budgets,id,dir))save('budget');
+}
+function deletePlan(id){
+  if(!confirmDelete())return;
+  state.plans=removeById(state.plans,id);
+  save('plans');
+}
+
+
+function toggleTask(id){
+  const task=findById(state.tasks,id);
+  if(!task)return;
+  task.status=task.status==='done'?'todo':'done';
+  save('tasks');
+}
+function updatePlan(id,v){
+  updateCollectionItem({
+    collection:'plans',
+    id,
+    patch:{status:v},
+    view:'plans',
+    notFoundMessage:'변경할 부부계획을 찾지 못했어요.'
+  });
+}
+
 /* ===== NAVIGATION & HOME ===== */
 function navInit(){const items=[['home','홈'],['tasks','할 일'],['schedule','일정'],['budget','예산'],['plans','부부계획'],['data','메모'],['settings','설정']];document.getElementById('nav').innerHTML=items.map((x,i)=>`<button class="${i===0?'active':''}" data-page="${x[0]}">${x[1]}</button>`).join('');}
 
@@ -2187,11 +2419,11 @@ function buildPlanViewData(plans){
   };
 }
 function buildViewData(){
-  const tasks=Array.isArray(state.tasks)?state.tasks:[];
-  const events=Array.isArray(state.events)?state.events:[];
-  const budgets=Array.isArray(state.budgets)?state.budgets:[];
-  const plans=Array.isArray(state.plans)?state.plans:[];
-  const memos=Array.isArray(state.memos)?state.memos:[];
+  const tasks=getCollection('tasks');
+  const events=getCollection('events');
+  const budgets=getCollection('budgets');
+  const plans=getCollection('plans');
+  const memos=getCollection('memos');
   const today=getTodayStart();
   const cats=getOrderedCats();
 
@@ -2625,7 +2857,7 @@ function renderSchedule(){
    ============================================================================ */
 /* ===== PAGE MODULE: BUDGET ===== */
 function renderBudget(){
- const budgets=Array.isArray(state.budgets)?state.budgets:[];
+ const budgets=getCollection('budgets');
  renderList(
    'budgetLines',
    budgets,
@@ -2645,7 +2877,7 @@ function renderBudget(){
    ============================================================================ */
 /* ===== PAGE MODULE: PLANS ===== */
 function renderPlans(){
- const plans=Array.isArray(state.plans)?state.plans:[];
+ const plans=getCollection('plans');
  renderList(
    'planList',
    plans,
@@ -2654,83 +2886,13 @@ function renderPlans(){
  );
 }
 
-/* ============================================================================
-   CRUD HELPERS
-   ============================================================================
-   공통 데이터 연산만 담당합니다.
-   - findById      : ID 타입 차이를 흡수해 항목 찾기
-   - removeById    : ID로 항목 삭제
-   - moveById      : 같은 목록 안에서 위/아래 이동
-   - updateById    : 찾은 항목에 변경값 적용
-   화면 입력/검증/알림은 각 도메인 함수가 담당합니다.
-   ============================================================================ */
-function findById(list,id){
-  return Array.isArray(list)?list.find(item=>String(item?.id)===String(id)):null;
-}
-function removeById(list,id){
-  return Array.isArray(list)?list.filter(item=>String(item?.id)!==String(id)):[];
-}
-function moveById(list,id,dir){
-  if(!Array.isArray(list))return false;
-  const from=list.findIndex(item=>String(item?.id)===String(id));
-  const to=from+Number(dir);
-  if(from<0||to<0||to>=list.length)return false;
-  [list[from],list[to]]=[list[to],list[from]];
-  return true;
-}
-function updateById(list,id,patch){
-  const item=findById(list,id);
-  if(!item)return null;
-  Object.assign(item,patch);
-  return item;
-}
-function isNewId(id){
-  return id==null || String(id)==='' || String(id)==='null';
-}
-function upsertById(list,id,data,create){
-  if(isNewId(id)){
-    const item=create?create(data):{id:newId(),...data};
-    list.push(item);
-    return item;
-  }
-  const target=findById(list,id);
-  if(!target)return null;
-  Object.assign(target,data);
-  return target;
-}
-function confirmDelete(message='삭제하시겠습니까?'){
-  return confirm(message);
-}
-
-function movePlan(id,dir){
-  if(moveById(state.plans,id,dir))save('plans');
-}
-function moveBudget(id,dir){
-  if(moveById(state.budgets,id,dir))save('budget');
-}
-function deletePlan(id){
-  if(!confirmDelete())return;
-  state.plans=removeById(state.plans,id);
-  save('plans');
-}
-
-
-function toggleTask(id){
-  const task=findById(state.tasks,id);
-  if(!task)return;
-  task.status=task.status==='done'?'todo':'done';
-  save('tasks');
-}
-function updatePlan(id,v){
-  if(updateById(state.plans,id,{status:v}))save('plans');
-}
 /* ----- PLANS · MUTATIONS ----- */
 function readPlanForm(){
   return {
-    name:document.getElementById('pName').value.trim(),
-    details:document.getElementById('pDetails').value.trim(),
-    note:document.getElementById('pNote').value.trim(),
-    status:document.getElementById('pStatus').value
+    name:$('#pName')?.value.trim()||'',
+    details:$('#pDetails')?.value.trim()||'',
+    note:$('#pNote')?.value.trim()||'',
+    status:$('#pStatus')?.value||'논의 전'
   };
 }
 function savePlan(id){
@@ -2739,13 +2901,14 @@ function savePlan(id){
     alert('제목을 입력해주세요.');
     return;
   }
-  const saved=upsertById(state.plans,id,data);
-  if(!saved){
-    alert('수정할 부부계획을 찾지 못했어요.');
-    return;
-  }
-  save('plans');
-  closeModal();
+  const saved=saveCollectionItem({
+    collection:'plans',
+    id,
+    data,
+    view:'plans',
+    notFoundMessage:'수정할 부부계획을 찾지 못했어요.'
+  });
+  if(saved)closeModal();
 }
 function openTaskEdit(id){
   const t=findById(state.tasks,id);
@@ -2828,12 +2991,12 @@ function saveWeddingDate(){state.weddingDate=document.getElementById('weddingDat
 /* ----- TASKS · MUTATIONS ----- */
 function readTaskForm(){
   return {
-    cat:document.getElementById('fCat').value.trim()||'기타',
-    title:document.getElementById('fTitle').value.trim(),
-    memo:document.getElementById('fMemo').value.trim(),
-    due:document.getElementById('fDue').value,
-    owner:document.getElementById('fOwner').value,
-    priority:document.getElementById('fPriority').value
+    cat:$('#fCat')?.value.trim()||'기타',
+    title:$('#fTitle')?.value.trim()||'',
+    memo:$('#fMemo')?.value.trim()||'',
+    due:$('#fDue')?.value||'',
+    owner:$('#fOwner')?.value||'',
+    priority:$('#fPriority')?.value||'보통'
   };
 }
 function saveTask(id){
@@ -2842,34 +3005,33 @@ function saveTask(id){
     alert('할 일을 입력해주세요.');
     return;
   }
-  const saved=upsertById(
-    state.tasks,
+  const saved=saveCollectionItem({
+    collection:'tasks',
     id,
     data,
-    item=>({id:newId(),...item,status:'todo'})
-  );
-  if(!saved){
-    alert('수정할 할 일을 찾지 못했어요.');
-    return;
-  }
-  save('tasks');
-  closeModal();
+    view:'tasks',
+    notFoundMessage:'수정할 할 일을 찾지 못했어요.',
+    createItem:item=>({id:newId(),...item,status:'todo'})
+  });
+  if(saved)closeModal();
 }
 function deleteTask(id){
-  if(!confirmDelete())return;
-  state.tasks=removeById(state.tasks,id);
-  save('tasks');
-  closeModal();
+  deleteCollectionItem({
+    collection:'tasks',
+    id,
+    view:'tasks',
+    close:true
+  });
 }
 /* ----- SCHEDULE · MUTATIONS ----- */
 function readEventForm(){
   return {
-    title:document.getElementById('eTitle').value.trim(),
-    date:document.getElementById('eDate').value,
-    time:document.getElementById('eTime').value||'',
-    location:document.getElementById('eLocation').value.trim(),
-    category:document.getElementById('eCategory').value.trim(),
-    note:document.getElementById('eNote').value.trim()
+    title:$('#eTitle')?.value.trim()||'',
+    date:$('#eDate')?.value||'',
+    time:$('#eTime')?.value||'',
+    location:$('#eLocation')?.value.trim()||'',
+    category:$('#eCategory')?.value.trim()||'',
+    note:$('#eNote')?.value.trim()||''
   };
 }
 function saveEvent(id){
@@ -2883,14 +3045,15 @@ function saveEvent(id){
     return;
   }
 
-  state.events=Array.isArray(state.events)?state.events:[];
-  const saved=upsertById(state.events,id,data);
-  if(!saved){
-    alert('수정할 일정을 찾지 못했어요.');
-    return;
-  }
+  const saved=saveCollectionItem({
+    collection:'events',
+    id,
+    data,
+    view:'schedule',
+    notFoundMessage:'수정할 일정을 찾지 못했어요.'
+  });
+  if(!saved)return;
 
-  save('schedule');
   selectedScheduleDate=data.date;
   calendarCursor=parseLocalDate(data.date);
   calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1);
@@ -2903,9 +3066,11 @@ function openEventEdit(id){
   else alert('수정할 일정을 찾지 못했어요.');
 }
 function deleteEvent(id){
-  if(!confirmDelete())return;
-  state.events=removeById(state.events,id);
-  save('schedule');
+  deleteCollectionItem({
+    collection:'events',
+    id,
+    view:'schedule'
+  });
   showPage('schedule');
 }
 function formatMoneyInputValue(value){const n=Number(String(value??'').replace(/\D/g,''))||0;return n?new Intl.NumberFormat('ko-KR').format(n):''}
@@ -2915,10 +3080,10 @@ function parseMoneyInput(id){return Number(String(document.getElementById(id)?.v
 /* ----- FORM READERS · 도메인별 입력값 ----- */
 function readBudgetForm(){
   return {
-    name:document.getElementById('bName').value.trim(),
+    name:$('#bName')?.value.trim()||'',
     planned:parseMoneyInput('bPlan'),
     actual:parseMoneyInput('bActual'),
-    details:document.getElementById('bDetails').value.trim()
+    details:$('#bDetails')?.value.trim()||''
   };
 }
 function saveBudget(id){
@@ -2927,19 +3092,22 @@ function saveBudget(id){
     alert('항목을 입력해주세요.');
     return;
   }
-  const saved=upsertById(state.budgets,id,data);
-  if(!saved){
-    alert('수정할 예산 항목을 찾지 못했어요.');
-    return;
-  }
-  save('budget');
-  closeModal();
+  const saved=saveCollectionItem({
+    collection:'budgets',
+    id,
+    data,
+    view:'budget',
+    notFoundMessage:'수정할 예산 항목을 찾지 못했어요.'
+  });
+  if(saved)closeModal();
 }
 function deleteBudget(id){
-  if(!confirmDelete())return;
-  state.budgets=removeById(state.budgets,id);
-  save('budget');
-  closeModal();
+  deleteCollectionItem({
+    collection:'budgets',
+    id,
+    view:'budget',
+    close:true
+  });
 }
 function editGoal(i){const v=prompt('목표 내용을 수정하세요',state.goals[i][1]);if(v!==null){state.goals[i][1]=v;save('home')}}
 
@@ -2952,7 +3120,7 @@ function editGoal(i){const v=prompt('목표 내용을 수정하세요',state.goa
    ============================================================================ */
 /* ===== PAGE MODULE: MEMOS / DATA ===== */
 function renderMemos(){
- const memos=Array.isArray(state.memos)?state.memos:[];
+ const memos=getCollection('memos');
  const q=selectedValue('memoSearch').trim().toLowerCase();
  const filtered=q
    ? memos.filter(m=>String(m.text||'').toLowerCase().includes(q))
@@ -2975,15 +3143,29 @@ function saveMemo(){
     alert('메모 내용을 입력해주세요.');
     return;
   }
-  state.memos=Array.isArray(state.memos)?state.memos:[];
+  ensureCollection('memos');
   state.memos.unshift({id:newId(),text});
   save('memos');
   document.getElementById('quickMemo').value='';
   alert('메모를 저장했어요.');
 }
-function saveMemoEdit(id){const text=document.getElementById('mText').value.trim();if(!text){alert('메모 내용을 입력해주세요.');return}const m=state.memos.find(x=>String(x.id)===String(id));if(!m){alert('수정할 메모를 찾지 못했어요.');return}m.text=text;save('memos');closeModal()}
+function saveMemoEdit(id){
+  const text=$('#mText')?.value.trim()||'';
+  if(!text){
+    alert('메모 내용을 입력해주세요.');
+    return;
+  }
+  const updated=updateCollectionItem({
+    collection:'memos',
+    id,
+    patch:{text},
+    view:'memos',
+    notFoundMessage:'수정할 메모를 찾지 못했어요.'
+  });
+  if(updated)closeModal();
+}
 function deleteMemo(id){
-  if(!confirm('삭제하시겠습니까?'))return;
+  if(!confirmDelete())return;
   state.memos=removeById(state.memos,id);
   save('memos');
 }
@@ -3179,40 +3361,6 @@ async function sharedRefreshProjects(){if(!sharedSync.client||!sharedSync.user)r
 async function sharedSwitchProject(pid){try{if(!sharedSync.client||!sharedSync.user)return;if(String(pid)===String(sharedSync.projectId))return;const projects=sharedConfig().projects||[];const p=projects.find(x=>String(x.id)===String(pid));if(!p){await sharedRefreshProjects();}const pp=(sharedConfig().projects||[]).find(x=>String(x.id)===String(pid));if(!pp)throw new Error('프로젝트를 찾지 못했어요.');if(!confirm(`'${pp.name||'우리 결혼 플래너'}' 프로젝트의 데이터를 불러올까요?\n\n현재 기기의 플래너 데이터가 해당 프로젝트 데이터로 바뀝니다.`))return;if(sharedSync.channel)await sharedSync.client.removeChannel(sharedSync.channel);sharedSync.projectId=pid;setSharedConfig({...sharedConfig(),projectId:pid,inviteCode:pp.invite_code||'',email:sharedSync.user.email});document.getElementById('syncCode').value=pp.invite_code||'';const ok=await sharedPull(false);if(!ok)throw new Error('프로젝트 데이터를 불러오지 못했어요.');await sharedSubscribe();sharedSetStatus('실시간 공유 중','shared-online');alert('프로젝트를 불러왔어요.')}catch(e){console.error(e);alert(e.message||'프로젝트를 불러오지 못했어요.')}}
 function syncSharedAuthUI(){const logged=!!sharedSync.user;const loginBox=document.getElementById('syncLoginBox'),loggedBox=document.getElementById('syncLoggedInBox'),projectActions=document.getElementById('syncProjectActions'),dataActions=document.getElementById('syncDataActions'),emailEl=document.getElementById('syncEmail'),passwordEl=document.getElementById('syncPassword'),codeEl=document.getElementById('syncCode');if(loginBox)loginBox.style.display=logged?'none':'block';if(loggedBox)loggedBox.style.display=logged?'block':'none';if(projectActions)projectActions.style.display=logged?'block':'none';if(dataActions)dataActions.style.display=logged?'flex':'none';if(emailEl&&logged)emailEl.value=sharedSync.user.email||sharedConfig().email||'';if(passwordEl&&logged)passwordEl.value='';const confirmWrap=document.getElementById('syncPasswordConfirmWrap');if(confirmWrap)confirmWrap.style.display=logged?'none':'block';if(codeEl&&logged&&!codeEl.value)codeEl.value=sharedConfig().inviteCode||'';const joinEl=document.getElementById('syncJoinCode');if(joinEl)joinEl.value='';const saved=document.getElementById('syncSavedBox');if(saved){saved.style.display='none';saved.textContent=''}}
 function syncSharedInputs(){const c=sharedConfig();const emailEl=document.getElementById('syncEmail'),codeEl=document.getElementById('syncCode');if(emailEl&&!sharedSync.user&&c.email)emailEl.value=c.email;if(codeEl&&c.inviteCode)codeEl.value=c.inviteCode;const joinEl=document.getElementById('syncJoinCode');if(joinEl)joinEl.value='';syncSharedAuthUI()}
-function $(id){return document.getElementById(id)}
-function $$(selector,root=document){return [...root.querySelectorAll(selector)]}
-function val(id,fallback=''){return $(id)?.value??fallback}
-function setDisplay(id,show){const el=$(id);if(el)el.style.display=show?'':'none'}
-const moneyFmt=new Intl.NumberFormat('ko-KR',{maximumFractionDigits:0});
-const moneyWonFmt=new Intl.NumberFormat('ko-KR',{style:'currency',currency:'KRW',maximumFractionDigits:0});
-function num(v){return Number(String(v??'').replace(/,/g,''))||0}
-function newId(){return Date.now()+Math.floor(Math.random()*1000)}
-function isoDate(v){return v instanceof Date?localDateISO(v):String(v||'').slice(0,10)}
-function parseLocalDate(iso){return new Date(String(iso||'')+'T00:00:00')}
-function saveLocalOnly(){try{localStorage.setItem(KEY,JSON.stringify(state));return true}catch(e){console.error('로컬 저장 실패',e);return false}}
-function cloneSharedState(){return typeof structuredClone==='function'?structuredClone(state):JSON.parse(JSON.stringify(state))}
-function persistState({sync=false}={}){saveLocalOnly();if(sync)queueSharedSave()}
-function replaceState(next,{persist=true,render=true,sync=false,views='all',theme=false}={}){
- state=normalizeState(next);
- if(theme){applyTheme();syncThemeInputs()}
- if(persist)saveLocalOnly();
- if(sync)queueSharedSave();
- if(render)requestRender(...(Array.isArray(views)?views:[views]));
- return state;
-}
-function queueSharedSave(){
-  if(!sharedSync.client||!sharedSync.projectId)return;
-  clearTimeout(sharedSync.pushTimer);
-  const flush=()=>{
-    sharedSync.pushTimer=null;
-    if(sharedSync.busy){
-      sharedSync.pushTimer=setTimeout(flush,250);
-      return;
-    }
-    sharedPushNow(true);
-  };
-  sharedSync.pushTimer=setTimeout(flush,500);
-}
 /* ============================================================================
    SHARED · AUTH
    Supabase client 생성, session 확인, 회원가입/로그인/로그아웃
@@ -3296,10 +3444,16 @@ window.addEventListener('offline',()=>{if(sharedSync.projectId)sharedSetStatus('
    ============================================================================ */
 const Planner={
   Meta:{
-    version:'v32',
+    version:'v40',
     rule:'한 기능을 수정할 때 해당 Domain부터 찾습니다.'
   },
 
+  Core:{
+    Dom:{$,$$,val,setDisplay,getCollection,ensureCollection},
+    Format:{num,newId,isoDate,parseLocalDate},
+    Persistence:{saveLocalOnly,cloneSharedState,persistState,replaceState,queueSharedSave},
+    Crud:{findById,removeById,moveById,updateById,isNewId,upsertById,confirmDelete}
+  },
   Data:{
     normalize:normalizeState,
     replace:replaceState,
