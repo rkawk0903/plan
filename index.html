@@ -44,6 +44,9 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 #categoryCards .small{font-size:10px;white-space:nowrap}
 .home-limit,.plan-status-select{border-radius:var(--radius-xs)!important;box-sizing:border-box;appearance:auto} .home-limit{width:auto!important;min-width:0;height:30px;padding:5px 10px!important;border:1px solid var(--line)!important;background:var(--soft)!important;color:var(--muted)!important;font-size:12px;flex:0 0 auto}
 .home-top-grid{padding-top:8px}
+.home-secondary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.home-secondary-item{min-width:0}.home-secondary-item .section-title{margin-top:22px}.home-secondary-item .card{height:100%}
+.schedule-main-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.schedule-main-item{min-width:0}.schedule-main-item .card{height:100%}.schedule-selected-card{margin-top:0}
+@media(max-width:720px){.home-secondary-grid,.schedule-main-grid{grid-template-columns:1fr;gap:0}.home-secondary-item .section-title{margin-top:22px}.schedule-main-item .section-title{margin-top:0}.schedule-main-item + .schedule-main-item{margin-top:12px}}
 .home-card-head{gap:8px}
 @media(max-width:600px){
   #categoryCards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
@@ -73,7 +76,6 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 
 .settings-only-card{display:block}.settings-narrow-card{grid-column:span 6;width:100%;max-width:520px;justify-self:start}.settings-only-card .card{max-width:100%}#syncJoinCodeLabel{display:block;margin-top:10px;font-size:11px!important;line-height:1.4;color:var(--muted)}#syncJoinCodeLabel .small{font-size:11px!important}.settings-only-card{box-sizing:border-box}@media(max-width:600px){.settings-narrow-card{grid-column:span 1;width:92%;max-width:520px;justify-self:start}}
 /* Latest layout refinements */
-.schedule-selected-card{margin-top:14px}
 .backup-card{margin-top:14px}
 
 /* v31: compact budget summary */
@@ -150,27 +152,31 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 <section class="page active" id="home">
   <div class="grid home-top-grid">
     <div class="card col8"><div class="row between"><div><div class="small">전체 준비 진행률</div><div class="big" id="overallPct">0%</div></div></div><div class="progress" style="margin-top:12px"><i id="overallBar" style="width:0%"></i></div><div class="small" id="overallText" style="margin-top:7px">0개 완료 / 0개</div></div>
-    <div class="card col4 budget-home"><div class="small">예산 현황</div><div class="home-budget-grid"><div><span>총 예상</span><b id="homeTotalPlan">₩0</b></div><div><span>실제 지출</span><b id="homeTotalActual">₩0</b></div><div><span>초과 예산</span><b id="homeOverBudget">₩0</b></div><div><span>예산 사용률</span><b id="homeBudgetPct">0%</b></div></div></div>
+    <div class="card col4 budget-home"><div class="small">예산 현황</div><div class="home-budget-grid"><div><span>총 예상</span><b id="homeTotalPlan">₩0</b></div><div><span>실제 지출</span><b id="homeTotalActual">₩0</b></div><div><span>초과 지출</span><b id="homeOverBudget">₩0</b></div><div><span>예산 사용률</span><b id="homeBudgetPct">0%</b></div></div></div>
   </div>
-  <div class="section-title">먼저 해야 할 일</div>
-  <div class="card">
-    <div class="row between home-card-head">
-      <div class="small">우선순위와 마감일을 기준으로 보여줘요.</div>
-      <select id="homeTaskLimit" class="home-limit" onchange="setHomeLimit('tasks',this.value)">
-        <option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option>
-      </select>
+  <div class="home-secondary-grid">
+    <div class="home-secondary-item">
+      <div class="card">
+        <div class="row between home-card-title-row"><div class="section-title">먼저 해야 할 일</div><select id="homeTaskLimit" class="home-limit" onchange="setHomeLimit('tasks',this.value)">
+          <option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option>
+        </select></div>
+        <div class="row between home-card-head">
+          <div class="small">우선순위와 마감일을 기준으로 보여줘요.</div>
+        </div>
+        <div id="homeTasks" style="margin-top:6px"></div>
+      </div>
     </div>
-    <div id="homeTasks" style="margin-top:6px"></div>
-  </div>
-  <div class="section-title">다가오는 일정</div>
-  <div class="card">
-    <div class="row between home-card-head">
-      <div class="small">오늘 이후 일정만 보여줘요.</div>
-      <select id="homeEventLimit" class="home-limit" onchange="setHomeLimit('events',this.value)">
-        <option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option>
-      </select>
+    <div class="home-secondary-item">
+      <div class="card">
+        <div class="row between home-card-title-row"><div class="section-title">다가오는 일정</div><select id="homeEventLimit" class="home-limit" onchange="setHomeLimit('events',this.value)">
+          <option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option>
+        </select></div>
+        <div class="row between home-card-head">
+          <div class="small">오늘 이후 일정만 보여줘요.</div>
+        </div>
+        <div id="homeEvents" style="margin-top:6px"></div>
+      </div>
     </div>
-    <div id="homeEvents" style="margin-top:6px"></div>
   </div>
   <div class="section-title">분야별 진행률</div>
   <div class="grid" id="categoryCards"></div>
@@ -193,12 +199,18 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
 
 <section class="page" id="schedule">
  <div class="section-title">일정</div>
- <div class="card calendar-card">
-   <div class="calendar-head"><button class="iconbtn" onclick="changeCalendarMonth(-1)" aria-label="이전 달">‹</button><div><b id="calendarTitle"></b><div class="small" id="calendarHint"></div></div><button class="iconbtn" onclick="changeCalendarMonth(1)" aria-label="다음 달">›</button></div>
-   <div class="calendar-week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
-   <div class="calendar-grid" id="calendarGrid"></div>
+ <div class="schedule-main-grid">
+   <div class="schedule-main-item">
+     <div class="card calendar-card">
+       <div class="calendar-head"><button class="iconbtn" onclick="changeCalendarMonth(-1)" aria-label="이전 달">‹</button><div><b id="calendarTitle"></b><div class="small" id="calendarHint"></div></div><button class="iconbtn" onclick="changeCalendarMonth(1)" aria-label="다음 달">›</button></div>
+       <div class="calendar-week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+       <div class="calendar-grid" id="calendarGrid"></div>
+     </div>
+   </div>
+   <div class="schedule-main-item">
+     <div class="card schedule-selected-card"><div class="row between" style="margin-bottom:10px"><div><b id="selectedDateTitle">선택한 날짜의 일정</b><div class="small">날짜를 누르면 해당 날짜의 일정이 보여요.</div></div><button class="btn primary section-primary-btn" onclick="openModal('event')">일정 추가</button></div><div class="list" id="scheduleList"></div></div>
+   </div>
  </div>
- <div class="card schedule-selected-card"><div class="row between" style="margin-bottom:10px"><div><b id="selectedDateTitle">선택한 날짜의 일정</b><div class="small">날짜를 누르면 해당 날짜의 일정이 보여요.</div></div><button class="btn primary section-primary-btn" onclick="openModal('event')">일정 추가</button></div><div class="list" id="scheduleList"></div></div>
  <div class="section-title event-list-title">전체 일정 목록</div>
  <div class="card event-list-card"><div class="event-list-head"><div><b>전체 일정 목록</b><div class="small">등록된 일정을 날짜순으로 모아봤어요.</div></div><select id="scheduleFilter" class="schedule-filter" aria-label="일정 기간 필터"><option value="all">전체</option><option value="upcoming">다가오는</option><option value="past">지난</option></select></div><input id="scheduleAllSearch" class="toolbar-search" type="search" placeholder="일정 검색 (제목, 장소, 분류, 메모)" aria-label="전체 일정 검색"><div class="list" id="scheduleAllList"></div></div>
 </section>
@@ -208,7 +220,7 @@ main{padding:8px 14px}.page{display:none}.page.active{display:block}.grid{displa
  <div class="card budget-summary budget-page-summary">
    <div class="stat"><div class="small">총 예상</div><b id="totalPlan">₩0</b></div>
    <div class="stat"><div class="small">실제 지출</div><b id="totalActual">₩0</b></div>
-   <div class="stat"><div class="small">초과 예산</div><b id="overBudget">₩0</b></div>
+   <div class="stat"><div class="small">초과 지출</div><b id="overBudget">₩0</b></div>
    <div class="stat"><div class="small">예산 사용률</div><b id="budgetPctBig">0%</b></div>
    <div class="budget-summary-progress"><div class="row between"><span class="small">전체 예산 사용률</span><b class="small" id="budgetPctLabel">0%</b></div><div class="progress" style="margin-top:8px"><i id="budgetBar" style="width:0%"></i></div></div>
  </div>
@@ -577,6 +589,25 @@ startScheduleDateWatcher();
   opacity:.75;
   line-height:36px !important;
   transform:translateY(-2px);
+}
+
+/* v35 layout fix: keep home cards self-contained and align schedule heights */
+.home-secondary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch;margin-top:12px}
+.home-secondary-item{min-width:0;display:flex}
+.home-secondary-item>.card{width:100%;height:100%;display:flex;flex-direction:column}
+.home-card-title-row{margin:0 0 8px;gap:8px;align-items:center}
+.home-card-title-row .section-title{margin:0;font-size:18px;line-height:1.2;flex:1}
+.home-card-head{margin:0}
+.home-card-head .small{line-height:1.35}
+.home-secondary-item .home-card-head{min-height:30px}
+.schedule-main-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}
+.schedule-main-item{min-width:0;display:flex}
+.schedule-main-item>.card{width:100%;height:100%;margin-top:0}
+.schedule-selected-card{margin-top:0!important}
+@media(max-width:720px){
+  .home-secondary-grid,.schedule-main-grid{grid-template-columns:1fr;gap:12px;margin-top:12px}
+  .home-secondary-item+.home-secondary-item,.schedule-main-item+.schedule-main-item{margin-top:0}
+  .home-card-title-row .section-title{font-size:18px}
 }
 </style>
 </body></html>
