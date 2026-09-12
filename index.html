@@ -5308,11 +5308,24 @@ if(new URLSearchParams(location.search).get('test')==='1'){
    DOMAIN 12 · STARTUP / PWA
    초기화 / 서비스워커 / 날짜 감시 / 테스트 진입점
    ============================================================================ */
+const APP_VERSION='170';
 if('serviceWorker' in navigator && location.protocol !== 'file:'){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js?v=169',{updateViaCache:'none'})
-      .then(reg=>reg.update())
-      .catch(e=>console.warn('PWA service worker registration failed',e));
+  window.addEventListener('load',async()=>{
+    try{
+      const registrations=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(reg=>{
+        const url=reg.active?.scriptURL||reg.waiting?.scriptURL||reg.installing?.scriptURL||'';
+        return url && !url.includes(`sw.js?v=${APP_VERSION}`) ? reg.unregister() : Promise.resolve();
+      }));
+      const keys=await caches.keys();
+      await Promise.all(keys
+        .filter(key=>key.startsWith('wedding-planner-') && !key.startsWith(`wedding-planner-v${APP_VERSION}-`))
+        .map(key=>caches.delete(key)));
+      const reg=await navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`,{updateViaCache:'none'});
+      await reg.update();
+    }catch(e){
+      console.warn('PWA service worker migration failed',e);
+    }
   });
 }
 syncSharedInputs();
