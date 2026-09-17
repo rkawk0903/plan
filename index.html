@@ -1,50 +1,34 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 단일 파일 UI 정리 v321
+우리 결혼 플래너 — 유지보수 리팩터링 v324
 
-수정 안내 (검색어)
-  UI EDIT MAP       : 공통 크기·글꼴·간격·달력·모달 변수
-  COMPONENT / 버튼 : .btn의 외형. .btn--toolbar 등은 명시적 변형
-  COMPONENT / 배지 : .pill의 외형. high/low/done은 의미에 따른 색상
-  COMPONENT: Field : .field의 외형. field--compact는 작은 필터
-  COMPONENT / 카드 : .card의 외형. card--compact는 작은 카드
-  LAYOUT / 페이지 배치 : 홈·일정 등의 열 구성과 간격
-  UI COMPONENT FUNCTIONS : 반복되는 카드/할 일/일정 HTML
-  MODAL COMPONENT FUNCTIONS : 입력창 구성
+수정 위치 안내
+  UI EDIT MAP             크기·글꼴·여백·모달·달력 CSS 변수
+  COMPONENT /             각 컴포넌트의 외형 (CSS)
+  UI COMPONENT FUNCTIONS  Card/CardHeader/CardBody/TaskItem/EventItem 등 기존 구조
+  FORM_SCHEMAS            할 일·일정·예산·부부계획의 필드, 읽기 규칙, 검증, 저장 대상
+                          fields에 항목을 추가하면 입력창과 저장값 읽기에 함께 반영됩니다.
+                          새 저장 속성은 normalizeState·validateStateIntegrity에도 명시하세요.
+  FormField / FormModal   모든 모달 입력창과 레이아웃의 공통 구조
+  ACTION_REGISTRY         사용자 이벤트 → 실행 함수 (onClick/onInput/onChange)
+  THEME_DEFAULTS/PRESETS  테마 기본값과 프리셋
+  UI_OWNERSHIP            화면 영역별 DOM 소유권
+  AppDomains / Planner   기존 도메인 경계와 공개 API
 
-예: 버튼 기본 글자 → --button-font-size
-    추가 버튼 글자 → --button-small-font
-    카드 여백 → --card-content-padding / 카드 제목 → --card-title-size
-    할 일 제목 → --task-title-size / 체크 버튼 → --task-check-size
-    일정 좌측 폭 → --event-side-width / 달력 높이 → --calendar-cell-height
-    모달 폭 → --modal-max-width / 화면 좌우 여백 → --page-side-space
+유지 규칙
+  공통 외형은 기본 클래스 한 곳에서 수정합니다. 개별 차이는 컴포넌트 변수로 지정합니다.
+  상태 변경은 mutateState/컬렉션 도우미, 외부 데이터는 prepareIncomingState를 거칩니다.
+  기존 저장 키·스키마와 공개 컴포넌트/API는 유지합니다. 파일은 빌드가 필요 없는 HTML 하나입니다.
 
-규칙
-  1. 공통 외형은 기본 클래스 한 곳이 소유합니다.
-  2. 크기 변형은 컴포넌트 변수로 지정합니다. 부모 선택자로 외형을 재정의하지 마세요.
-  3. JS style 변경은 테마·진행률 등 데이터값에 한정합니다.
-  4. .u-hidden은 표시 상태 전용이며 유일한 !important 규칙입니다.
-  5. 저장된 테마는 색상과 전체 둥글기를 덮어씁니다. 색상 변경은 설정 UI 또는
-     THEME_DEFAULTS/THEME_PRESETS를 함께 확인하세요.
-  6. 파일은 HTML 하나입니다. 기존 외부 Supabase SDK 및 배포용 manifest/sw 참조는 유지합니다.
-
-검증 결과
-  - Chromium: 360/390/768/1280px × 7페이지, 문서 가로 넘침 및 JS 실행 오류 없음.
-  - 기존 자가검사 9개 / CAS 모의검사 4개 / 스모크 검사 2개 통과.
-  - 버튼 글자·높이, 입력창 높이, 카드 제목 변수가 실제 계산 스타일에 반영됨.
-  - 페이지 이동, 폼 저장, 실행 취소/다시 실행, 중복 DOM ID, 메모 HTML 이스케이프 확인.
-  - 외부 네트워크를 막은 새 테스트 브라우저에서 검증. 실제 사용자 데이터는 사용하지 않음.
-
-전체 코드 검토: UI 외 남은 주요 확인 항목
-  - 공유 저장 응답을 기다리는 동안 발생한 새 변경을 sharedMarkSynced가 지울 수 있음.
-  - sharedAfterLogin은 프로젝트 선택 전 snapshot을 선택 후에도 검사하여 초기 구독이 중단될 수 있음.
-  - mergeSharedCollectionDetailed는 원격에서만 바뀐 순서를 로컬 순서로 되돌릴 수 있음.
-  - 로그인/프로젝트 전환 시 undo/redo 기록의 프로젝트별 분리가 필요함.
-  - 공휴일은 2026~2027 정적 데이터이며 최신 정확성은 별도 검증 대상임.
-  - manifest.webmanifest / sw.js 파일은 첨부되지 않아 PWA 설치·캐시 동작은 미검증.
-  - 실제 Supabase 인증·RLS·실시간 동기화는 서버 설정 없이 검증할 수 없음.
-이 수정은 UI 소유권/레이아웃을 우선 정리하며 위 데이터·서버 문제를 해결했다고 주장하지 않습니다.
+검증 범위와 기존 제한
+  Chromium 오프라인 검증: 7페이지 × 4너비(360/390/768/1280px) 화면이 원본과 픽셀 단위로 동일.
+  모달 8종 화면 비교 및 폼 값 읽기 동등성 통과. 자가검사 10개·CAS 모의검사 4개·스모크 2개 통과.
+  예산·부부계획 추가/수정/새로고침 후 복원/삭제 통과. 런타임 오류 없음.
+  검증은 격리된 테스트 데이터와 차단된 외부 네트워크에서 수행했습니다.
+  실제 Supabase 인증·RLS·실시간 동기화와 미첨부 manifest/sw는 검증 대상에서 제외됩니다.
+  원본의 공유 저장 중 변경·로그인 시 프로젝트 문맥·병합 순서·프로젝트별 실행 취소 문제는
+  이 구조 리팩터링으로 해결되지 않습니다. 공휴일은 기존 2026~2027 정적 데이터입니다.
 -->
 
 <html lang="ko">
@@ -77,7 +61,18 @@
         --button-padding: 8px 12px;
         --button-height: 34px;
         --button-small-font: 11px;
-        --button-section-width: clamp(84px, 9vw, 92px);
+
+        /* UNIFIED ACTION BUTTON — 일정/예산/부부계획/메모/설정의 텍스트 버튼 공통 규격 */
+        --unified-button-height: var(--button-height);
+        --unified-button-padding-x: 12px;
+        --unified-button-font-size: 12px;
+        --unified-button-font-weight: 400;
+        --unified-button-radius: var(--ui-control-radius);
+        /* Modal/dialog buttons intentionally keep their own semantic variant. */
+        --modal-button-min-height: var(--button-height);
+        --modal-button-padding: var(--button-padding);
+        --modal-button-font-size: var(--button-font-size);
+        --modal-button-font-weight: 400;
         --field-height: 40px;
         --field-padding: 10px 12px;
         --field-font-size: var(--font-body);
@@ -119,6 +114,10 @@
         --page-side-space: 14px;
         --page-top-space: 24px;
         --page-section-gap: 12px;
+        /* Spacing scale — utility/layout spacing should reference these tokens. */
+        --space-xs: 6px;
+        --space-sm: 8px;
+        --space-md: 12px;
         --card-content-padding: 16px;
         --action-button-size: clamp(28px, 3vw, 30px);
         --ui-control-height-sm: var(--button-height);
@@ -163,6 +162,10 @@
         --card-header-gap: clamp(8px, 1.2vw, 12px);
         --card-header-margin-bottom: 10px;
         --card-section-gap: var(--page-section-gap);
+        --action-row-gap: 8px;
+        --action-row-margin-top: 8px;
+        --card-footer-gap: 10px;
+        --card-footer-margin-top: 10px;
         --ui-control-radius: var(--radius-xs);
         /* Component style APIs: geometry/typography are owned by the base component. */
         --btn-font-weight: inherit;
@@ -306,6 +309,7 @@
 
       /* ===== COMPONENT / 카드 ===== */
       .card {
+        min-width: 0;
         background: var(--card);
         border: 1px solid var(--line);
         border-radius: var(--card-radius);
@@ -438,6 +442,38 @@
         --btn-border: 1px solid var(--line);
         --btn-color: var(--ink);
       }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      /*
+       * TEXT ACTION BUTTON COMPONENT
+       * 크기/폰트는 위 --unified-button-* 변수만 수정하세요.
+       * 색상은 이 클래스가 건드리지 않습니다: .primary / .soft / .danger 또는 --btn-bg/--btn-color 사용.
+       * width:auto + nowrap으로 문구 길이에 따라 가로폭이 자동 결정됩니다.
+       */
+      .btn--app-action {
+        --btn-width: auto;
+        --btn-min-width: 0;
+        --btn-max-width: none;
+        --btn-height: var(--unified-button-height);
+        --btn-min-height: var(--unified-button-height);
+        --btn-padding: 0 var(--unified-button-padding-x);
+        --btn-radius: var(--unified-button-radius);
+        --btn-font-size: var(--unified-button-font-size);
+        --btn-font-weight: var(--unified-button-font-weight);
+        --btn-line-height: 1;
+        --btn-letter-spacing: inherit;
+        --btn-white-space: nowrap;
+        flex: 0 0 auto;
+      }
+      /* Modal/dialog text actions are intentionally a separate size API from page actions. */
+      .btn--modal-action {
+        --btn-min-height: var(--modal-button-min-height);
+        --btn-padding: var(--modal-button-padding);
+        --btn-font-size: var(--modal-button-font-size);
+        --btn-font-weight: var(--modal-button-font-weight);
+      }
       /* ===== COMPONENT / 더보기 메뉴 ===== */
       .more-menu {
         position: relative;
@@ -470,7 +506,7 @@
       .more-menu-pop {
         position: absolute;
         right: 0;
-        top: calc(var(--action-button-size)+8px);
+        top: calc(var(--action-button-size) + 8px);
         z-index: 20;
         min-width: 92px;
         padding: 5px;
@@ -710,17 +746,6 @@
       .plan-status-summary b {
         color: var(--ink);
         font-size: 13px;
-      }
-      .section-primary-btn {
-        --btn-width: var(--button-section-width);
-        --btn-min-width: var(--button-section-width);
-        --btn-height: var(--ui-control-height-sm);
-        --btn-min-height: var(--ui-control-height-sm);
-        --btn-padding: 0 10px;
-        --btn-font-size: var(--button-small-font);
-        --btn-line-height: 1;
-        --btn-white-space: nowrap;
-        --btn-radius: var(--ui-control-radius);
       }
       /* ===== COMPONENT / 일정 ===== */
       .planner-event-item {
@@ -1238,42 +1263,7 @@
         -webkit-appearance: auto;
         appearance: auto;
       }
-      .theme-actions {
-        display: flex;
-        gap: 7px;
-        justify-content: flex-end;
-        margin-top: 12px;
-      }
-      .theme-action-btn {
-        --btn-width: 92px;
-        --btn-min-width: 92px;
-        --btn-height: var(--ui-control-height-sm);
-        --btn-min-height: var(--ui-control-height-sm);
-        --btn-padding: 0 10px;
-        --btn-font-size: var(--button-small-font);
-        --btn-line-height: 1;
-        --btn-white-space: nowrap;
-      }
       /* ===== COMPONENT / 공유 설정 ===== */
-      .sync-status-actions {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: clamp(5px, 1vw, 7px);
-        flex: 0 0 auto;
-        white-space: nowrap;
-      }
-      .sync-status-actions .sync-status {
-        white-space: nowrap;
-        flex: 0 0 auto;
-      }
-      .btn--sync-pull {
-        --btn-height: 30px;
-        --btn-min-height: 30px;
-        --btn-padding: 0 9px;
-        --btn-font-size: 10.5px;
-        --btn-white-space: nowrap;
-      }
       .shared-account-panel {
         padding: 10px 12px;
         border: 1px solid var(--line);
@@ -1293,58 +1283,25 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .shared-logout-btn {
-        --btn-width: 64px;
-        --btn-min-width: 64px;
-        --btn-height: 30px;
-        --btn-padding: 0 8px;
-        --btn-font-size: 11px;
-        --btn-line-height: 1;
-      }
       .shared-code {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         letter-spacing: 0.08em;
         font-weight: 800;
       }
-      .shared-sync-card .sync-status-actions .sync-status {
-        --pill-font-size: 10px;
-        --pill-padding: 4px 7px;
-      }
-      .shared-sync-card .sync-last-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        margin-top: 8px;
-        width: 100%;
-      }
-      .shared-sync-card .sync-last-row .sync-last-text {
+      .sync-detail-text {
         margin-top: 0;
-        min-width: 0;
-        flex: 1 1 auto;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .shared-sync-card .sync-last-row .sync-data-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        flex: 0 0 auto;
-        margin-left: auto;
-      }
-      .shared-sync-card .sync-detail-text {
-        margin-top: 6px;
         line-height: 1.45;
         min-height: 1.4em;
+        min-width: 0;
+        flex: 1 1 260px;
       }
-      .shared-sync-card .sync-detail-text[data-tone="error"] {
+      .sync-detail-text[data-tone="error"] {
         color: var(--danger);
       }
-      .shared-sync-card .sync-detail-text[data-tone="success"] {
+      .sync-detail-text[data-tone="success"] {
         color: var(--good);
       }
-      .shared-sync-card .sync-detail-text[data-tone="sync"] {
+      .sync-detail-text[data-tone="sync"] {
         color: var(--accent);
       }
       .sync-field {
@@ -1352,28 +1309,6 @@
         --field-color: var(--sync-field-color, var(--ink));
         --field-radius: var(--sync-field-radius, var(--radius-xs));
         appearance: none;
-      }
-      .sync-project-actions .actions {
-        --actions-gap: 7px;
-      }
-      .btn-compact {
-        --btn-padding: 8px 11px;
-        --btn-font-size: 12px;
-        --btn-min-width: 54px;
-      }
-      .shared-sync-card {
-        min-width: 0;
-        overflow: hidden;
-      }
-      .shared-sync-card .form > * {
-        min-width: 0;
-      }
-      .shared-sync-card .actions {
-        flex-wrap: wrap;
-        min-width: 0;
-      }
-      .shared-sync-card .actions .btn {
-        flex: 1 1 120px;
       }
       .shared-conflict-box {
         margin-top: 10px;
@@ -1390,14 +1325,6 @@
         margin-top: 5px;
         line-height: 1.45;
       }
-      .shared-conflict-actions {
-        display: flex;
-        gap: 7px;
-        margin-top: 9px;
-      }
-      .shared-conflict-actions .btn {
-        flex: 1;
-      }
       .shared-schema-warning {
         margin-top: 8px;
         padding: 9px 10px;
@@ -1405,25 +1332,6 @@
         border-radius: var(--radius-xs);
         background: var(--soft);
         line-height: 1.5;
-      }
-      .shared-online {
-        --pill-bg: var(--soft);
-        --pill-color: var(--accent);
-        border-color: var(--accent2);
-        --pill-font-size: 11px;
-        --pill-padding: 4px 8px;
-        white-space: nowrap;
-        --pill-line-height: 1.2;
-      }
-      .shared-syncing {
-        --pill-bg: var(--soft);
-        --pill-color: var(--accent);
-        border-color: var(--line);
-      }
-      .shared-error {
-        --pill-bg: rgba(181, 91, 91, 0.1);
-        --pill-color: #b55b5b;
-        border-color: rgba(181, 91, 91, 0.25);
       }
       .sync-project-actions {
         margin-top: 12px;
@@ -1450,18 +1358,6 @@
         --field-fixed-height: var(--field-search-height);
         --field-inset: 0 8px;
         display: block;
-      }
-      .btn--project {
-        --btn-width: 92px;
-        --btn-min-width: 92px;
-        --btn-height: var(--ui-control-height-sm);
-        --btn-min-height: var(--ui-control-height-sm);
-        --btn-padding: 0 6px;
-        --btn-font-size: 10px;
-        --btn-letter-spacing: -0.04em;
-        --btn-line-height: 1;
-        --btn-white-space: nowrap;
-        overflow: hidden;
       }
       .budget-home {
         display: flex;
@@ -1660,13 +1556,6 @@
         white-space: nowrap;
         text-align: right;
       }
-      .history-card .actions {
-        flex-wrap: wrap;
-      }
-      .history-card .btn:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
       .recovery-list {
         display: grid;
         gap: 8px;
@@ -1695,16 +1584,6 @@
         font-size: 10px;
         color: var(--muted);
         line-height: 1.4;
-      }
-      .recovery-actions {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-      }
-      .btn--recovery {
-        --btn-min-height: 30px;
-        --btn-padding: 6px 9px;
-        --btn-font-size: 10px;
       }
       /* ===== COMPONENT / 알림 ===== */
       .toast-stack {
@@ -1769,9 +1648,6 @@
         line-height: 1.55;
         white-space: pre-line;
       }
-      .confirm-card .actions {
-        --actions-margin-top: 16px;
-      }
       .btn.danger {
         --btn-bg: var(--danger);
         --btn-border: 1px solid var(--danger);
@@ -1816,11 +1692,58 @@
         display: grid;
         gap: 10px;
       }
-      .actions {
+      .form > * {
+        min-width: 0;
+      }
+      /* ===== COMPONENT / 액션 행 ===== */
+      .action-row {
         display: flex;
-        gap: var(--actions-gap, 8px);
+        align-items: center;
         justify-content: flex-end;
-        margin-top: var(--actions-margin-top, 8px);
+        gap: var(--action-row-gap);
+        margin-top: var(--action-row-margin-top);
+        min-width: 0;
+        flex-wrap: nowrap;
+      }
+      .action-row--wrap {
+        flex-wrap: wrap;
+      }
+      .action-row--flush {
+        margin-top: 0;
+      }
+      .action-row--compact {
+        gap: 7px;
+      }
+      .action-row--spaced {
+        margin-top: 12px;
+      }
+      .action-row--dialog {
+        margin-top: 16px;
+      }
+      .action-row--item {
+        gap: 6px;
+        margin-top: 0;
+      }
+
+      /* ===== COMPONENT / 카드 하단 행 ===== */
+      .card-footer-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--card-footer-gap);
+        margin-top: var(--card-footer-margin-top);
+        width: 100%;
+        min-width: 0;
+        flex-wrap: wrap;
+      }
+      .card-footer-status {
+        min-width: 0;
+        flex: 1 1 260px;
+      }
+      .card-footer-row > .action-row {
+        flex: 0 0 auto;
+        margin-top: 0;
+        margin-left: auto;
       }
       .empty {
         padding: 35px 10px;
@@ -1920,9 +1843,6 @@
         line-height: 1.2;
         font-weight: 800;
       }
-      .page-header .section-primary-btn {
-        flex: 0 0 auto;
-      }
       .home-top-grid {
         grid-template-columns: var(--home-summary-columns);
         align-items: stretch;
@@ -1966,23 +1886,20 @@
       .page-header + .task-toolbar {
         margin-top: 0;
       }
-      .u-mt-6 {
-        margin-top: 6px;
+      .u-mt-xs {
+        margin-top: var(--space-xs);
       }
-      .u-mt-8 {
-        margin-top: 8px;
+      .u-mt-sm {
+        margin-top: var(--space-sm);
       }
-      .u-mt-9 {
-        margin-top: 9px;
+      .u-mt-md {
+        margin-top: var(--space-md);
       }
-      .u-mt-12 {
-        margin-top: 12px;
+      .u-gap-xs {
+        --row-gap: var(--space-xs);
       }
-      .u-gap-6 {
-        --row-gap: 6px;
-      }
-      .u-gap-8 {
-        --row-gap: 8px;
+      .u-gap-sm {
+        --row-gap: var(--space-sm);
       }
       .u-flex-end {
         display: flex;
@@ -2001,9 +1918,6 @@
       }
       .u-inline-box {
         --textarea-min-height: 130px;
-      }
-      .u-bold {
-        font-weight: 800;
       }
       .u-minw-0 {
         min-width: 0;
@@ -2105,7 +2019,7 @@
                 <div data-ui-component="CardBody" class="card-body">
                   <div class="budget-home-reference">
                     <div class="budget-home-reference-gauge">
-                      <div class="budget-gauge budget-gauge-arc" id="homeBudgetGauge">
+                      <div class="budget-gauge-arc">
                         <svg
                           aria-hidden="true"
                           class="budget-arc-svg"
@@ -2144,19 +2058,21 @@
                       <div class="card-title">먼저 해야 할 일</div>
                       <div class="card-description">우선순위와 마감일을 기준으로 보여줘요.</div>
                     </div>
-                    <select
-                      aria-label="홈에서 표시할 할 일 개수"
-                      class="home-limit field"
-                      data-action="home-limit"
-                      data-limit-type="tasks"
-                      id="homeTaskLimit"
-                    >
-                      <option value="3">3개</option>
-                      <option value="5">5개</option>
-                      <option value="8">8개</option>
-                      <option value="10">10개</option>
-                      <option value="15">15개</option>
-                    </select>
+                    <div class="card-header-action">
+                      <select
+                        aria-label="홈에서 표시할 할 일 개수"
+                        class="home-limit field"
+                        data-action="home-limit"
+                        data-limit-type="tasks"
+                        id="homeTaskLimit"
+                      >
+                        <option value="3">3개</option>
+                        <option value="5">5개</option>
+                        <option value="8">8개</option>
+                        <option value="10">10개</option>
+                        <option value="15">15개</option>
+                      </select>
+                    </div>
                   </div>
                   <div data-ui-component="CardBody" class="card-body">
                     <div id="homeTasks"></div>
@@ -2170,40 +2086,50 @@
                       <div class="card-title">다가오는 일정</div>
                       <div class="card-description">오늘 이후 일정만 보여줘요.</div>
                     </div>
-                    <select
-                      aria-label="홈에서 표시할 일정 개수"
-                      class="home-limit field"
-                      data-action="home-limit"
-                      data-limit-type="events"
-                      id="homeEventLimit"
-                    >
-                      <option value="3">3개</option>
-                      <option value="5">5개</option>
-                      <option value="8">8개</option>
-                      <option value="10">10개</option>
-                      <option value="15">15개</option>
-                    </select>
+                    <div class="card-header-action">
+                      <select
+                        aria-label="홈에서 표시할 일정 개수"
+                        class="home-limit field"
+                        data-action="home-limit"
+                        data-limit-type="events"
+                        id="homeEventLimit"
+                      >
+                        <option value="3">3개</option>
+                        <option value="5">5개</option>
+                        <option value="8">8개</option>
+                        <option value="10">10개</option>
+                        <option value="15">15개</option>
+                      </select>
+                    </div>
                   </div>
                   <div data-ui-component="CardBody" class="card-body">
-                    <div class="u-mt-6 event-list-host event-list-host--stacked" id="homeEvents"></div>
+                    <div class="u-mt-xs event-list-host event-list-host--stacked" id="homeEvents"></div>
                   </div>
                 </div>
               </div>
             </div>
             <!-- ===== HOME: CATEGORY PROGRESS ===== -->
-            <div
-              data-ui-component="Card"
-              data-ui-host="CategoryCard"
-              class="card"
-              id="categoryProgressCard"
-            ></div>
+            <div data-ui-component="Card" class="card">
+              <div data-ui-component="CardHeader" class="card-header">
+                <div class="card-header-copy">
+                  <div class="card-title">분야별 진행률</div>
+                </div>
+              </div>
+              <div data-ui-component="CardBody" class="card-body">
+                <div class="grid category-cards" id="categoryProgressList"></div>
+              </div>
+            </div>
             <!-- ===== HOME: COUPLE PLAN STATUS ===== -->
             <div data-ui-component="Card" class="card plan-status-home">
-              <div id="homePlanHeader" data-ui-host="CardHeader"></div>
+              <div data-ui-component="CardHeader" class="card-header">
+                <div class="card-header-copy">
+                  <div class="card-title">부부계획 현황</div>
+                </div>
+              </div>
               <div data-ui-component="CardBody" class="card-body">
                 <div class="plan-status-grid">
                   <div>
-                    <span class="status-dot todo-dot"></span>
+                    <span class="status-dot"></span>
                     <div><b id="homePlanTodo">0</b><span>논의 전</span></div>
                   </div>
                   <div>
@@ -2258,7 +2184,7 @@
                 <option value="done">완료</option></select
               ><select
                 aria-label="할 일 정렬"
-                class="sort field field--compact"
+                class="field field--compact"
                 id="taskSort"
                 data-action="tasks-filter"
               >
@@ -2277,7 +2203,9 @@
               </button>
             </div>
           </div>
-          <div data-ui-component="Card" data-ui-host="TaskList" class="card" id="taskList"></div>
+          <div data-ui-component="Card" data-ui-variant="body-only" class="card">
+            <div data-ui-component="CardBody" class="card-body" id="taskList"></div>
+          </div>
         </section>
         <!-- ===== PAGE: SCHEDULE · 일정 ===== -->
         <section class="page" id="schedule">
@@ -2291,7 +2219,8 @@
             <div class="card-grid schedule-main-grid">
               <div class="schedule-main-item">
                 <div data-ui-component="Card" data-ui-variant="body-only" class="card calendar-card">
-                  <div class="calendar-head">
+                  <div data-ui-component="CardBody" class="card-body">
+                    <div class="calendar-head">
                     <button
                       aria-label="이전 달"
                       class="calendar-nav-button"
@@ -2314,8 +2243,7 @@
                     >
                       ›
                     </button>
-                  </div>
-                  <div data-ui-component="CardBody" class="card-body">
+                    </div>
                     <div class="calendar-week">
                       <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span
                       ><span>금</span><span>토</span>
@@ -2325,7 +2253,7 @@
                 </div>
               </div>
               <div class="schedule-main-item">
-                <div data-ui-component="Card" class="card schedule-selected-card">
+                <div data-ui-component="Card" class="card">
                   <div data-ui-component="CardHeader" class="card-header">
                     <div class="card-header-copy">
                       <div class="card-title" id="selectedDateTitle">선택한 날짜의 일정</div>
@@ -2333,7 +2261,7 @@
                     </div>
                     <div class="card-header-action">
                       <button
-                        class="btn primary section-primary-btn"
+                        class="btn btn--app-action primary"
                         data-action="open-modal"
                         data-modal="event"
                         type="button"
@@ -2349,7 +2277,7 @@
               </div>
             </div>
             <!-- ===== SCHEDULE: ALL EVENTS ===== -->
-            <div data-ui-component="Card" class="card event-list-card">
+            <div data-ui-component="Card" class="card">
               <div data-ui-component="CardHeader" class="card-header">
                 <div class="card-header-copy">
                   <div class="card-title">전체 일정 목록</div>
@@ -2377,7 +2305,7 @@
                   placeholder="일정 검색 (제목, 장소, 분류, 메모)"
                   type="search"
                 />
-                <div class="list schedule-list event-list-host" id="scheduleAllList"></div>
+                <div class="list event-list-host" id="scheduleAllList"></div>
               </div>
             </div>
           </div>
@@ -2391,7 +2319,7 @@
           </div>
           <!-- ===== BUDGET: SUMMARY ===== -->
           <div class="card-stack">
-            <div data-ui-component="Card" data-ui-variant="body-only" class="card budget-page-reference-card">
+            <div data-ui-component="Card" data-ui-variant="body-only" class="card">
               <div data-ui-component="CardBody" class="card-body budget-page-reference">
                 <div class="budget-page-reference-stats">
                   <div class="budget-page-reference-stat">
@@ -2404,7 +2332,7 @@
                     <span>초과 지출</span><b id="overBudget">0 원</b>
                   </div>
                 </div>
-                <div class="budget-gauge budget-gauge-arc" id="budgetGauge">
+                <div class="budget-gauge-arc">
                   <svg aria-hidden="true" class="budget-arc-svg" focusable="false" viewbox="0 10 100 58">
                     <path class="budget-arc-track" d="M 12 58 A 38 38 0 0 1 88 58" pathlength="100"></path>
                     <path
@@ -2425,14 +2353,16 @@
                   <div class="card-title">예산 항목</div>
                   <div class="card-description">필요한 항목을 추가하고 순서를 정리해보세요.</div>
                 </div>
-                <button
-                  class="btn primary section-primary-btn"
-                  data-action="open-modal"
-                  data-modal="budget"
-                  type="button"
-                >
-                  + 항목 추가
-                </button>
+                <div class="card-header-action">
+                  <button
+                    class="btn btn--app-action primary"
+                    data-action="open-modal"
+                    data-modal="budget"
+                    type="button"
+                  >
+                    + 항목 추가
+                  </button>
+                </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
                 <div id="budgetLines"></div>
@@ -2455,7 +2385,7 @@
               </div>
               <div class="card-header-action">
                 <button
-                  class="btn primary section-primary-btn"
+                  class="btn btn--app-action primary"
                   data-action="open-modal"
                   data-modal="plan"
                   type="button"
@@ -2490,8 +2420,8 @@
                   id="quickMemo"
                   placeholder="업체 연락처, 궁금한 점, 계약 전 체크할 것 등"
                 ></textarea>
-                <div class="u-flex-end u-mt-8">
-                  <button class="btn primary section-primary-btn" data-action="save-memo" type="button">
+                <div class="u-flex-end u-mt-sm">
+                  <button class="btn btn--app-action primary" data-action="save-memo" type="button">
                     메모 저장
                   </button>
                 </div>
@@ -2530,17 +2460,15 @@
             </div>
           </div>
           <div class="card-grid">
-            <div data-ui-component="Card" class="card col12 shared-sync-card" id="sharedCard">
-              <div data-ui-component="CardHeader" class="card-header sync-header">
+            <div data-ui-component="Card" class="card col12">
+              <div data-ui-component="CardHeader" class="card-header">
                 <div class="card-header-copy">
                   <div class="card-title">공유 동기화</div>
-                </div>
-                <div class="sync-status-actions">
-                  <span class="pill sync-status" id="syncStatus">로컬 사용 중</span>
+                  <div class="card-description u-hidden" id="syncCardDescription"></div>
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="form u-mt-12">
+                <div class="form u-mt-md">
                   <div
                     class="small shared-schema-warning u-hidden"
                     id="futureSchemaBox"
@@ -2548,7 +2476,7 @@
                     aria-live="polite"
                   ></div>
                   <div id="syncLoginBox">
-                    <label>이메일</label
+                    <label for="syncEmail">이메일</label
                     ><input
                       class="field"
                       aria-label="공유 동기화 이메일"
@@ -2556,7 +2484,7 @@
                       id="syncEmail"
                       placeholder="본인 이메일"
                       type="email"
-                    /><label id="syncPasswordLabel">비밀번호</label
+                    /><label for="syncPassword">비밀번호</label
                     ><input
                       class="field"
                       aria-label="공유 동기화 비밀번호"
@@ -2566,7 +2494,7 @@
                       type="password"
                     />
                     <div id="syncPasswordConfirmWrap">
-                      <label>비밀번호 확인 <span class="small">(회원가입 시)</span></label
+                      <label for="syncPasswordConfirm">비밀번호 확인 <span class="small">(회원가입 시)</span></label
                       ><input
                         class="field"
                         aria-label="공유 동기화 비밀번호 확인"
@@ -2576,48 +2504,47 @@
                         type="password"
                       />
                     </div>
-                    <div class="actions">
-                      <button class="btn" data-action="shared-sign-up" type="button">회원가입</button
-                      ><button class="btn primary" data-action="shared-sign-in" type="button">로그인</button>
+                    <div data-ui-component="ActionRow" class="action-row action-row--wrap">
+                      <button class="btn btn--app-action" data-action="shared-sign-up" type="button">회원가입</button
+                      ><button class="btn btn--app-action primary" data-action="shared-sign-in" type="button">로그인</button>
                     </div>
                   </div>
                   <div class="shared-account-panel u-hidden" id="syncLoggedInBox">
                     <div class="shared-account-row">
                       <div class="small shared-account-text" id="syncUserText">로그인 계정</div>
-                      <button class="btn shared-logout-btn" data-action="shared-sign-out" type="button">
+                      <button class="btn btn--app-action" data-action="shared-sign-out" type="button">
                         로그아웃
                       </button>
                     </div>
                   </div>
-                  <div class="sync-last-row">
-                    <div class="small sync-last-text" id="syncLastText"></div>
-                    <div class="sync-pull-action sync-data-actions u-hidden" id="syncDataActions">
-                      <button class="btn primary btn--sync-pull" data-action="shared-pull" type="button">
-                        공유 데이터 불러오기
-                      </button>
-                    </div>
-                  </div>
-                  <div
-                    class="small sync-detail-text"
-                    id="syncDetailText"
-                    role="status"
-                    aria-live="polite"
-                  ></div>
                   <div class="shared-conflict-box u-hidden" id="syncConflictBox">
                     <div class="shared-conflict-title">동시 수정 충돌</div>
                     <div class="small shared-conflict-desc" id="syncConflictText"></div>
-                    <div class="shared-conflict-actions">
-                      <button class="btn" data-action="resolve-conflict-local" type="button">
+                    <div data-ui-component="ActionRow" class="action-row action-row--compact">
+                      <button class="btn btn--app-action" data-action="resolve-conflict-local" type="button">
                         내 변경 유지</button
-                      ><button class="btn primary" data-action="resolve-conflict-remote" type="button">
+                      ><button class="btn btn--app-action primary" data-action="resolve-conflict-remote" type="button">
                         상대방 변경 사용
+                      </button>
+                    </div>
+                  </div>
+                  <div data-ui-component="CardFooter" class="card-footer-row u-hidden" id="syncFooter">
+                    <div
+                      class="small sync-detail-text card-footer-status"
+                      id="syncDetailText"
+                      role="status"
+                      aria-live="polite"
+                    ></div>
+                    <div data-ui-component="ActionRow" class="action-row action-row--flush u-hidden" id="syncDataActions">
+                      <button class="btn btn--app-action primary" data-action="shared-pull" type="button">
+                        공유 데이터 불러오기
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div data-ui-component="Card" class="card col12 project-settings-card" id="syncProjectCard">
+            <div data-ui-component="Card" class="card col12">
               <div data-ui-component="CardHeader" class="card-header">
                 <div class="card-header-copy">
                   <div class="card-title">프로젝트</div>
@@ -2627,31 +2554,30 @@
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="u-soft-panel current-project-box u-hidden" id="currentProjectBox">
-                  <div class="row between u-gap-8">
+                <div class="u-soft-panel u-hidden" id="currentProjectBox">
+                  <div class="row between u-gap-sm">
                     <div class="u-minw-0">
                       <div class="current-project-title">현재 프로젝트</div>
                     </div>
                   </div>
-                  <div class="row u-mt-9 u-gap-6">
+                  <div class="row u-mt-sm u-gap-xs">
                     <input
                       aria-label="현재 프로젝트 코드"
                       class="sync-field sync-code field"
                       id="syncCode"
                       readonly=""
                     /><button
-                      class="btn btn-compact"
+                      class="btn btn--app-action"
                       data-action="shared-copy-code"
-                      id="copyCodeBtn"
                       type="button"
                     >
                       코드 복사
                     </button>
                   </div>
-                  <div class="small u-mt-6">상대방을 초대할 때 이 코드를 사용하면 됩니다.</div>
+                  <div class="small u-mt-xs">상대방을 초대할 때 이 코드를 사용하면 됩니다.</div>
                 </div>
                 <div id="syncProjectActions" class="sync-project-actions u-hidden">
-                  <label id="syncJoinCodeLabel" class="sync-join-code-label"
+                  <label for="syncJoinCode" class="sync-join-code-label"
                     >프로젝트 초대 코드
                     <span class="sync-join-code-note">(기존 프로젝트에 참여할 때만)</span></label
                   ><input
@@ -2663,10 +2589,10 @@
                     placeholder="8자리 코드"
                     value=""
                   />
-                  <div class="actions">
-                    <button class="btn btn--project" data-action="shared-create-project" type="button">
+                  <div data-ui-component="ActionRow" class="action-row action-row--compact">
+                    <button class="btn btn--app-action" data-action="shared-create-project" type="button">
                       새 프로젝트 만들기</button
-                    ><button class="btn btn--project" data-action="shared-join-project" type="button">
+                    ><button class="btn btn--app-action" data-action="shared-join-project" type="button">
                       코드로 참여
                     </button>
                   </div>
@@ -2726,7 +2652,7 @@
                     type="button"
                   ></button>
                 </div>
-                <div class="theme-grid u-mt-12">
+                <div class="theme-grid u-mt-md">
                   <div class="theme-item">
                     <label for="thBg">배경 색상</label
                     ><input id="thBg" type="color" data-action="preview-theme" />
@@ -2776,7 +2702,7 @@
                     ><input id="thDanger" type="color" data-action="preview-theme" />
                   </div>
                 </div>
-                <div class="theme-controls u-mt-12">
+                <div class="theme-controls u-mt-md">
                   <label for="thRadius">모서리 둥글기</label
                   ><input
                     class="theme-range"
@@ -2788,16 +2714,16 @@
                     value="20"
                   /><span class="pill" id="thRadiusVal">20px</span>
                 </div>
-                <div class="theme-actions">
-                  <button class="btn theme-action-btn" data-action="theme-reset" type="button">
+                <div data-ui-component="ActionRow" class="action-row action-row--spaced">
+                  <button class="btn btn--app-action" data-action="theme-reset" type="button">
                     기본 테마</button
-                  ><button class="btn primary theme-action-btn" data-action="theme-save" type="button">
+                  ><button class="btn btn--app-action primary" data-action="theme-save" type="button">
                     테마 적용
                   </button>
                 </div>
               </div>
             </div>
-            <div data-ui-component="Card" class="card col12 history-card">
+            <div data-ui-component="Card" class="card col12">
               <div data-ui-component="CardHeader" class="card-header">
                 <div class="card-header-copy">
                   <div class="card-title">변경 복구</div>
@@ -2805,14 +2731,16 @@
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="actions">
-                  <button class="btn" data-action="undo" id="undoButton" type="button">실행 취소</button
-                  ><button class="btn" data-action="redo" id="redoButton" type="button">다시 실행</button>
+                <div data-ui-component="CardFooter" class="card-footer-row">
+                  <div class="small card-footer-status" id="historyStatus">변경 복구 기록 없음</div>
+                  <div data-ui-component="ActionRow" class="action-row action-row--flush action-row--wrap">
+                    <button class="btn btn--app-action" data-action="undo" id="undoButton" type="button">실행 취소</button
+                    ><button class="btn btn--app-action" data-action="redo" id="redoButton" type="button">다시 실행</button>
+                  </div>
                 </div>
-                <div class="small u-mt-8" id="historyStatus">변경 복구 기록 없음</div>
               </div>
             </div>
-            <div data-ui-component="Card" class="card col12 recovery-card">
+            <div data-ui-component="Card" class="card col12">
               <div data-ui-component="CardHeader" class="card-header">
                 <div class="card-header-copy">
                   <div class="card-title">자동 복구 지점</div>
@@ -2820,18 +2748,18 @@
                     백업 복구나 공동 데이터 교체 전에 최근 상태를 최대 5개까지 자동으로 보관해요.
                   </div>
                 </div>
-                <div class="card-header-action">
-                  <button class="btn btn-compact" data-action="create-recovery" type="button">
+              </div>
+              <div data-ui-component="CardBody" class="card-body">
+                <div class="small" id="recoveryStatus">복구 지점 없음</div>
+                <div class="recovery-list u-mt-sm" id="recoveryList"></div>
+                <div data-ui-component="ActionRow" class="action-row action-row--spaced">
+                  <button class="btn btn--app-action" data-action="create-recovery" type="button">
                     지금 저장
                   </button>
                 </div>
               </div>
-              <div data-ui-component="CardBody" class="card-body">
-                <div class="small" id="recoveryStatus">복구 지점 없음</div>
-                <div class="recovery-list u-mt-8" id="recoveryList"></div>
-              </div>
             </div>
-            <div data-ui-component="Card" class="card col12 backup-card">
+            <div data-ui-component="Card" class="card col12">
               <div data-ui-component="CardHeader" class="card-header">
                 <div class="card-header-copy">
                   <div class="card-title">데이터 백업</div>
@@ -2841,10 +2769,10 @@
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="actions">
-                  <button class="btn section-primary-btn" data-action="export-data" type="button">
+                <div data-ui-component="ActionRow" class="action-row action-row--spaced">
+                  <button class="btn btn--app-action" data-action="export-data" type="button">
                     백업하기</button
-                  ><button class="btn section-primary-btn" data-action="import-file" type="button">
+                  ><button class="btn btn--app-action" data-action="import-file" type="button">
                     복구하기
                   </button>
                 </div>
@@ -2890,9 +2818,9 @@
       >
         <h2 id="confirmTitle">확인</h2>
         <div class="confirm-message" id="confirmMessage"></div>
-        <div class="actions">
-          <button class="btn" data-action="confirm-cancel" id="confirmCancel" type="button">취소</button
-          ><button class="btn primary" data-action="confirm-accept" id="confirmAccept" type="button">
+        <div data-ui-component="ActionRow" class="action-row action-row--dialog">
+          <button class="btn btn--modal-action" data-action="confirm-cancel" id="confirmCancel" type="button">취소</button
+          ><button class="btn btn--modal-action primary" data-action="confirm-accept" id="confirmAccept" type="button">
             확인
           </button>
         </div>
@@ -2909,7 +2837,7 @@
         "use strict";
 
         const APP_CONFIG = Object.freeze({
-          version: "321",
+          version: "324",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           sharedStateMetaKey: "__plannerSync",
@@ -2929,46 +2857,23 @@
         const UNDO_LIMIT = APP_CONFIG.undoLimit;
         const RECOVERY_KEY = "wedding_planner_recovery_v1";
         const RECOVERY_LIMIT = APP_CONFIG.recoveryLimit;
-        const DOM_IDS = Object.freeze({
-          appRoot: "appRoot",
-          nav: "nav",
-          modal: "modal",
-          modalBody: "modalBody",
-          importFile: "importFile",
-          undoButton: "undoButton",
-          redoButton: "redoButton",
-          historyStatus: "historyStatus",
-          syncEmail: "syncEmail",
-          syncPassword: "syncPassword",
-          syncPasswordConfirm: "syncPasswordConfirm",
-          syncCode: "syncCode",
-          syncLoginBox: "syncLoginBox",
-          syncLoggedInBox: "syncLoggedInBox",
-          syncProjectActions: "syncProjectActions",
-          syncPasswordConfirmWrap: "syncPasswordConfirmWrap",
-          syncJoinCode: "syncJoinCode",
-          syncDataActions: "syncDataActions",
-          syncConflictBox: "syncConflictBox",
-          syncStatus: "syncStatus",
-          syncUserText: "syncUserText",
-          syncLastText: "syncLastText",
-          syncDetailText: "syncDetailText",
-          syncConflictText: "syncConflictText",
-          syncProjectsBox: "syncProjectsBox",
-          currentProjectBox: "currentProjectBox",
-          futureSchemaBox: "futureSchemaBox",
-          footerText: "footerText",
-          thRadius: "thRadius",
-          thRadiusVal: "thRadiusVal",
-          recoveryList: "recoveryList",
-          recoveryStatus: "recoveryStatus",
-          toastStack: "toastStack",
-          confirmDialog: "confirmDialog",
-          confirmTitle: "confirmTitle",
-          confirmMessage: "confirmMessage",
-          confirmAccept: "confirmAccept",
-          confirmCancel: "confirmCancel",
-        });
+        const DOM_IDS = Object.freeze(Object.fromEntries(`
+          appRoot nav modal modalBody importFile undoButton redoButton
+          historyStatus syncEmail syncPassword syncPasswordConfirm syncCode syncLoginBox syncLoggedInBox
+          syncProjectActions syncPasswordConfirmWrap syncJoinCode syncDataActions syncFooter syncConflictBox syncUserText
+          syncCardDescription syncDetailText syncConflictText syncProjectsBox currentProjectBox futureSchemaBox footerText
+          thRadius thRadiusVal recoveryList recoveryStatus toastStack confirmDialog confirmTitle
+          confirmMessage confirmAccept confirmCancel home tasks schedule budget
+          plans memos settings overallPct overallBar overallText totalPlan
+          totalActual overBudget budgetPctBig homeTotalPlan homeTotalActual homeBudgetPct budgetGaugeProgress
+          homeBudgetGaugeProgress ddayValue homeTasks homeTaskLimit homeEvents homeEventLimit categoryProgressList
+          homePlanTodo homePlanProgress homePlanDone homePlanDonePct homePlanTotal taskCat taskList
+          taskSearch taskStatus taskSort calendarTitle calendarGrid calendarHint selectedDateTitle
+          scheduleList scheduleAllList budgetLines planList memoCount memoList quickMemo
+          thBg thCard thInk thMuted thLine thAccent thAccent2
+          thNav thSoft thButton thButtonText thDanger fCat fTitle
+          eDate eTitle weddingDate
+        `.trim().split(/\s+/).map((id) => [id, id])));
         const COLLECTION_KEYS = Object.freeze({
           TASKS: "tasks",
           EVENTS: "events",
@@ -2978,13 +2883,13 @@
         });
         const UI_CONFIG = Object.freeze({
           navigation: Object.freeze([
-            { id: "home", label: "홈" },
-            { id: "tasks", label: "할 일" },
-            { id: "schedule", label: "일정" },
-            { id: "budget", label: "예산" },
-            { id: "plans", label: "부부계획" },
-            { id: "memos", label: "메모" },
-            { id: "settings", label: "설정" },
+            { id: DOM_IDS.home, label: "홈" },
+            { id: DOM_IDS.tasks, label: "할 일" },
+            { id: DOM_IDS.schedule, label: "일정" },
+            { id: DOM_IDS.budget, label: "예산" },
+            { id: DOM_IDS.plans, label: "부부계획" },
+            { id: DOM_IDS.memos, label: "메모" },
+            { id: DOM_IDS.settings, label: "설정" },
           ]),
           limits: Object.freeze({
             homeDefault: 5,
@@ -2992,7 +2897,6 @@
             homeMin: 1,
             sharedConflictContext: 4,
             sharedConflictPaths: 12,
-            sharedConflictSummary: 3,
           }),
           timing: Object.freeze({
             scheduleRefreshMs: 30000,
@@ -3049,6 +2953,7 @@
         });
         const TASK_OWNERS = Object.freeze(["함께", "신랑", "신부", "각자", "양가"]);
         const TASK_PRIORITIES = Object.freeze(["높음", "보통", "낮음"]);
+        const PLAN_STATUSES = Object.freeze(["논의 전", "논의 중", "합의 완료"]);
         function normalizeTaskOwner(value) {
           const owner = String(value ?? "");
           return owner === "형주" ? "신랑" : TASK_OWNERS.includes(owner) ? owner : "함께";
@@ -3195,6 +3100,7 @@
           const src = { ...raw };
           let version = Number.isFinite(Number(src.schemaVersion)) ? Number(src.schemaVersion) : 1;
           if (version < 2) {
+            // INTENTIONAL COMPAT: migrate pre-memos schema data instead of treating it as dead code.
             const legacyMemo = String(src.memo ?? "").trim();
             if (!Array.isArray(src.memos) && legacyMemo) src.memos = [{ id: newId(), text: legacyMemo }];
             if (!Array.isArray(src.memos)) src.memos = [];
@@ -3330,7 +3236,7 @@
             (p) => ({
               id: fallbackId(p?.id),
               name: String(p?.name ?? ""),
-              status: ["논의 전", "논의 중", "합의 완료"].includes(p?.status) ? p.status : "논의 전",
+              status: PLAN_STATUSES.includes(p?.status) ? p.status : "논의 전",
               details: String(p?.details ?? ""),
               note: String(p?.note ?? ""),
             }),
@@ -3550,20 +3456,20 @@
           theme.radius = normalizeThemeRadius(src.radius);
           return theme;
         }
-        const THEME_INPUT_MAP = {
-          thBg: "bg",
-          thCard: "card",
-          thInk: "ink",
-          thMuted: "muted",
-          thLine: "line",
-          thAccent: "accent",
-          thAccent2: "accent2",
-          thNav: "nav",
-          thSoft: "soft",
-          thButton: "button",
-          thButtonText: "buttonText",
-          thDanger: "danger",
-        };
+        const THEME_INPUT_MAP = Object.freeze({
+          [DOM_IDS.thBg]: "bg",
+          [DOM_IDS.thCard]: "card",
+          [DOM_IDS.thInk]: "ink",
+          [DOM_IDS.thMuted]: "muted",
+          [DOM_IDS.thLine]: "line",
+          [DOM_IDS.thAccent]: "accent",
+          [DOM_IDS.thAccent2]: "accent2",
+          [DOM_IDS.thNav]: "nav",
+          [DOM_IDS.thSoft]: "soft",
+          [DOM_IDS.thButton]: "button",
+          [DOM_IDS.thButtonText]: "buttonText",
+          [DOM_IDS.thDanger]: "danger",
+        });
         const THEME_CSS_VARS = {
           bg: "--bg",
           card: "--card",
@@ -3624,7 +3530,7 @@
           );
           applyTheme();
           renderThemeControls();
-          if (committed && successMessage) notify(successMessage);
+          if (committed && successMessage) notifySuccess(successMessage);
           return committed;
         }
         function saveTheme() {
@@ -3702,50 +3608,48 @@
         // Fixed DOM ownership: a mutable UI region has one logical renderer/controller owner.
         const UI_OWNERSHIP = Object.freeze({
           navigation: Object.freeze([DOM_IDS.nav]),
-          taskSummary: Object.freeze(["overallPct", "overallBar", "overallText"]),
+          taskSummary: Object.freeze([DOM_IDS.overallPct, DOM_IDS.overallBar, DOM_IDS.overallText]),
           budgetSummary: Object.freeze([
-            "totalPlan",
-            "totalActual",
-            "overBudget",
-            "budgetPctBig",
-            "homeTotalPlan",
-            "homeTotalActual",
-            "homeBudgetPct",
-            "budgetGaugeProgress",
-            "homeBudgetGaugeProgress",
+            DOM_IDS.totalPlan,
+            DOM_IDS.totalActual,
+            DOM_IDS.overBudget,
+            DOM_IDS.budgetPctBig,
+            DOM_IDS.homeTotalPlan,
+            DOM_IDS.homeTotalActual,
+            DOM_IDS.homeBudgetPct,
+            DOM_IDS.budgetGaugeProgress,
+            DOM_IDS.homeBudgetGaugeProgress,
           ]),
-          dday: Object.freeze(["ddayValue"]),
+          dday: Object.freeze([DOM_IDS.ddayValue]),
           home: Object.freeze([
-            "homeTasks",
-            "homeTaskLimit",
-            "homeEvents",
-            "homeEventLimit",
-            "categoryProgressCard",
-            "homePlanHeader",
-            "homePlanTodo",
-            "homePlanProgress",
-            "homePlanDone",
-            "homePlanDonePct",
-            "homePlanTotal",
+            DOM_IDS.homeTasks,
+            DOM_IDS.homeTaskLimit,
+            DOM_IDS.homeEvents,
+            DOM_IDS.homeEventLimit,
+            DOM_IDS.categoryProgressList,
+            DOM_IDS.homePlanTodo,
+            DOM_IDS.homePlanProgress,
+            DOM_IDS.homePlanDone,
+            DOM_IDS.homePlanDonePct,
+            DOM_IDS.homePlanTotal,
           ]),
-          tasks: Object.freeze(["taskCat", "taskList"]),
+          tasks: Object.freeze([DOM_IDS.taskCat, DOM_IDS.taskList]),
           schedule: Object.freeze([
-            "calendarTitle",
-            "calendarGrid",
-            "calendarHint",
-            "selectedDateTitle",
-            "scheduleList",
-            "scheduleAllList",
+            DOM_IDS.calendarTitle,
+            DOM_IDS.calendarGrid,
+            DOM_IDS.calendarHint,
+            DOM_IDS.selectedDateTitle,
+            DOM_IDS.scheduleList,
+            DOM_IDS.scheduleAllList,
           ]),
-          budget: Object.freeze(["budgetLines"]),
-          plans: Object.freeze(["planList"]),
-          memos: Object.freeze(["memoCount", "memoList", "quickMemo"]),
+          budget: Object.freeze([DOM_IDS.budgetLines]),
+          plans: Object.freeze([DOM_IDS.planList]),
+          memos: Object.freeze([DOM_IDS.memoCount, DOM_IDS.memoList, DOM_IDS.quickMemo]),
           history: Object.freeze([DOM_IDS.undoButton, DOM_IDS.redoButton, DOM_IDS.historyStatus]),
           theme: Object.freeze([...Object.keys(THEME_INPUT_MAP), DOM_IDS.thRadius, DOM_IDS.thRadiusVal]),
           shared: Object.freeze([
-            DOM_IDS.syncStatus,
             DOM_IDS.syncUserText,
-            DOM_IDS.syncLastText,
+            DOM_IDS.syncCardDescription,
             DOM_IDS.syncDetailText,
             DOM_IDS.syncConflictBox,
             DOM_IDS.syncConflictText,
@@ -3790,6 +3694,36 @@
           }
           return { ok: duplicates.length === 0, duplicates };
         }
+        function directUiChildren(element) {
+          return [...element.children].filter((child) => child instanceof HTMLElement);
+        }
+        function assertUiComponentContracts() {
+          const issues = [];
+          document.querySelectorAll('[data-ui-component="Card"]').forEach((card, index) => {
+            const children = directUiChildren(card);
+            const components = children.map((child) => child.dataset.uiComponent || "");
+            const bodyOnly = card.dataset.uiVariant === "body-only";
+            const expected = bodyOnly ? ["CardBody"] : ["CardHeader", "CardBody"];
+            if (components.length !== expected.length || components.some((value, i) => value !== expected[i])) {
+              issues.push(`Card ${card.id ? `#${card.id}` : index}: ${components.join(" > ") || "empty"}`);
+            }
+          });
+          document.querySelectorAll('[data-ui-component="CardHeader"]').forEach((header, index) => {
+            const children = directUiChildren(header);
+            const firstIsCopy = children[0]?.classList.contains("card-header-copy");
+            const hasOnlyCanonicalAction = children.length < 2 || children[1]?.classList.contains("card-header-action");
+            if (!firstIsCopy || children.length > 2 || !hasOnlyCanonicalAction) {
+              issues.push(`CardHeader ${index}: canonical copy/action structure required`);
+            }
+          });
+          document.querySelectorAll('[data-ui-component="ActionRow"]').forEach((row, index) => {
+            if (!row.classList.contains("action-row")) issues.push(`ActionRow ${index}: .action-row missing`);
+          });
+          document.querySelectorAll('[data-ui-component="CardFooter"]').forEach((footer, index) => {
+            if (!footer.classList.contains("card-footer-row")) issues.push(`CardFooter ${index}: .card-footer-row missing`);
+          });
+          return { ok: issues.length === 0, issues };
+        }
         function ownedElement(owner, id) {
           const actual = UI_OWNER_BY_ID[id];
           if (actual && actual !== owner)
@@ -3817,20 +3751,10 @@
         let confirmTestOverride = null;
         let confirmPending = null;
         let confirmPreviousFocus = null;
-        function notify(message, { tone = "auto", duration } = {}) {
+        function notify(message, { tone = "info", duration } = {}) {
           const text = String(message ?? "").trim();
           if (!text) return null;
-          let resolvedTone = tone;
-          if (resolvedTone === "auto") {
-            resolvedTone =
-              /(실패|오류|올바르지|찾지 못|못했|중단|차단|충돌|일치하지|입력해주세요|확인해주세요)/.test(text)
-                ? "error"
-                : /(완료|저장했어요|복구했어요|로그인했어요|복사했어요|불러왔어요|참여했어요|만들었어요|적용했어요)/.test(
-                      text,
-                    )
-                  ? "success"
-                  : "info";
-          }
+          const resolvedTone = ["info", "success", "error"].includes(tone) ? tone : "info";
           if (notificationsMuted) {
             console.info(`[notification:${resolvedTone}]`, text);
             return null;
@@ -3838,7 +3762,7 @@
           const stack = ownedElement("notifications", DOM_IDS.toastStack);
           if (!stack) return null;
           const toast = document.createElement("div");
-          toast.className = `toast${resolvedTone && resolvedTone !== "info" ? ` ${resolvedTone}` : ""}`;
+          toast.className = `toast${resolvedTone !== "info" ? ` ${resolvedTone}` : ""}`;
           toast.setAttribute("role", resolvedTone === "error" ? "alert" : "status");
           toast.textContent = text;
           stack.appendChild(toast);
@@ -3849,6 +3773,15 @@
               : 3200;
           setTimeout(() => toast.remove(), Math.max(800, ttl));
           return toast;
+        }
+        function notifyInfo(message, options = {}) {
+          return notify(message, { ...options, tone: "info" });
+        }
+        function notifySuccess(message, options = {}) {
+          return notify(message, { ...options, tone: "success" });
+        }
+        function notifyError(message, options = {}) {
+          return notify(message, { ...options, tone: "error" });
         }
         function appConfirm(
           message,
@@ -3866,7 +3799,7 @@
           const cancel = ownedElement("notifications", DOM_IDS.confirmCancel);
           if (accept) {
             accept.textContent = confirmText;
-            accept.className = `btn ${danger ? "danger" : "primary"}`;
+            accept.className = `btn btn--modal-action ${danger ? "danger" : "primary"}`;
           }
           if (cancel) cancel.textContent = cancelText;
           dialog.classList.add("open");
@@ -3975,7 +3908,7 @@
           } else points.unshift(point);
           const saved = writeRecoveryPoints(points);
           renderRecoveryPoints();
-          if (saved && !silent) notify("현재 상태를 자동 복구 지점으로 저장했어요.", { tone: "success" });
+          if (saved && !silent) notifySuccess("현재 상태를 자동 복구 지점으로 저장했어요.");
           return saved;
         }
         function renderRecoveryPoints() {
@@ -3998,25 +3931,19 @@
                 : "시간 정보 없음";
               const sameScope = recoveryScopeMatches(point);
               const scopeText = point.projectId ? "공동 프로젝트" : "로컬";
-              return `<div class="recovery-item"><div class="recovery-copy"><div class="recovery-title">${esc(point.reason)}</div><div class="recovery-meta">${esc(time)} · ${scopeText}${sameScope ? "" : " · 다른 프로젝트"}</div></div><div class="recovery-actions"><button class="btn btn--recovery" data-action="restore-recovery" data-id="${attr(point.id)}" type="button" ${sameScope ? "" : 'disabled aria-disabled="true" title="해당 프로젝트로 전환한 뒤 복원할 수 있어요."'}>복원</button><button class="btn btn--recovery" data-action="delete-recovery" data-id="${attr(point.id)}" type="button">삭제</button></div></div>`;
+              return `<div class="recovery-item"><div class="recovery-copy"><div class="recovery-title">${esc(point.reason)}</div><div class="recovery-meta">${esc(time)} · ${scopeText}${sameScope ? "" : " · 다른 프로젝트"}</div></div><div data-ui-component="ActionRow" class="action-row action-row--item"><button class="btn btn--app-action" data-action="restore-recovery" data-id="${attr(point.id)}" type="button" ${sameScope ? "" : 'disabled aria-disabled="true" title="해당 프로젝트로 전환한 뒤 복원할 수 있어요."'}>복원</button><button class="btn btn--app-action" data-action="delete-recovery" data-id="${attr(point.id)}" type="button">삭제</button></div></div>`;
             })
             .join("");
-          setOwnedHTML(
-            "recovery",
-            DOM_IDS.recoveryList,
-            html || '<div class="empty">아직 자동 복구 지점이 없어요.</div>',
-          );
+          setOwnedHTML("recovery", DOM_IDS.recoveryList, html);
         }
         async function restoreRecoveryPoint(id) {
           const point = readRecoveryPoints().find((item) => String(item.id) === String(id));
           if (!point) {
-            notify("복구 지점을 찾지 못했어요.", { tone: "error" });
+            notifyError("복구 지점을 찾지 못했어요.");
             return false;
           }
           if (!recoveryScopeMatches(point)) {
-            notify("이 복구 지점은 다른 프로젝트의 데이터예요. 해당 프로젝트로 전환한 뒤 복원해주세요.", {
-              tone: "error",
-            });
+            notifyError("이 복구 지점은 다른 프로젝트의 데이터예요. 해당 프로젝트로 전환한 뒤 복원해주세요.");
             return false;
           }
           if (
@@ -4036,11 +3963,11 @@
             theme: true,
           });
           if (!replaced) {
-            notify("복구 지점을 적용하지 못했어요.", { tone: "error" });
+            notifyError("복구 지점을 적용하지 못했어요.");
             return false;
           }
           if (!historyRestoring) pushUndoCheckpoint(before);
-          notify("복구 지점을 적용했어요.", { tone: "success" });
+          notifySuccess("복구 지점을 적용했어요.");
           return true;
         }
         function deleteRecoveryPoint(id) {
@@ -4075,7 +4002,7 @@
               const list = StateDraft.collection(draft, collection);
               saved = upsertById(list, id, data, createItem);
               if (!saved) {
-                notify(notFoundMessage);
+                notifyError(notFoundMessage);
                 return false;
               }
             },
@@ -4090,7 +4017,7 @@
             (draft) => {
               updated = updateById(StateDraft.collection(draft, collection), id, patch);
               if (!updated) {
-                notify(notFoundMessage);
+                notifyError(notFoundMessage);
                 return false;
               }
             },
@@ -4228,7 +4155,7 @@
                 ["details", "planDetails"],
                 ["note", "planNote"],
               ],
-              status: ["status", ["논의 전", "논의 중", "합의 완료"]],
+              status: ["status", PLAN_STATUSES],
             },
             memos: { limit: STATE_SECURITY_LIMITS.memos, fields: [["text", "memoText"]] },
           };
@@ -4379,7 +4306,6 @@
 
         function queueSharedSave() {
           if (guardFutureSchemaWrite("공유 저장")) {
-            sharedSetLastSync(futureSchemaNotice());
             if (sharedSync.projectId) setSharedPhase("error");
             return false;
           }
@@ -4729,13 +4655,11 @@
         }
 
         function CardBody(content = "", className = "") {
-          const classes = ["card-body", className].filter(Boolean).join(" ");
-          return `<div data-ui-component="CardBody" class="${classes}">${content}</div>`;
+          return UIComponentRoot("CardBody", ["card-body", className].filter(Boolean).join(" "), content);
         }
 
         function Card(content = "", className = "") {
-          const classes = ["card", className].filter(Boolean).join(" ");
-          return `<div data-ui-component="Card" class="${classes}">${content}</div>`;
+          return UIComponentRoot("Card", ["card", className].filter(Boolean).join(" "), content);
         }
 
         function UIComponentRoot(component, className, content = "") {
@@ -4786,7 +4710,7 @@
             Array.isArray(items) && items.length
               ? items.map((t) => TaskItem(t, { showActions })).join("")
               : EmptyState(emptyMessage);
-          return `<div data-ui-host="TaskList" class="task-list-host">${content}</div>`;
+          return `<div class="task-list-host">${content}</div>`;
         }
 
         function EventItem(e, { today = null, showActions = true } = {}) {
@@ -4809,7 +4733,7 @@
 
           const dateTimePlace = [
             `<span class="planner-event-item-date">${dateLabel}</span>`,
-            e.time ? `<span class="planner-event-item-time">${esc(e.time)}</span>` : "",
+            e.time ? `<span>${esc(e.time)}</span>` : "",
             e.location ? `<span class="planner-event-item-location">${esc(e.location)}</span>` : "",
           ].join("");
 
@@ -4838,7 +4762,7 @@
             length,
             "plan",
             "부부계획",
-            `<select class="plan-status-select field" aria-label="부부계획 상태" data-action="update-plan" data-id="${attr(p.id)}"><option ${p.status === "논의 전" ? "selected" : ""}>논의 전</option><option ${p.status === "논의 중" ? "selected" : ""}>논의 중</option><option ${p.status === "합의 완료" ? "selected" : ""}>합의 완료</option></select>`,
+            `<select class="plan-status-select field" aria-label="부부계획 상태" data-action="update-plan" data-id="${attr(p.id)}">${SelectOptions(PLAN_STATUSES, p.status)}</select>`,
           );
           const heading = CardHeader(p.name, "", actions);
           return UIComponentRoot(
@@ -4859,30 +4783,30 @@
 
         function renderTaskProgressSummary(view) {
           const pct = view.taskTotal ? Math.round((view.taskDone / view.taskTotal) * 100) : 0;
-          setOwnedText("taskSummary", "overallPct", pct + "%");
-          const bar = ownedElement("taskSummary", "overallBar");
+          setOwnedText("taskSummary", DOM_IDS.overallPct, pct + "%");
+          const bar = ownedElement("taskSummary", DOM_IDS.overallBar);
           if (bar) bar.style.setProperty("--progress-value", pct + "%");
-          setOwnedText("taskSummary", "overallText", `${view.taskDone}/${view.taskTotal}`);
+          setOwnedText("taskSummary", DOM_IDS.overallText, `${view.taskDone}/${view.taskTotal}`);
         }
         function renderBudgetSummary(view) {
           const { budgetPlan: plan, budgetActual: actual, budgetOver: over, budgetPct: pct } = view;
-          setOwnedText("budgetSummary", "totalPlan", wonUnit(plan));
-          setOwnedText("budgetSummary", "totalActual", wonUnit(actual));
-          setOwnedText("budgetSummary", "overBudget", wonUnit(over));
-          setOwnedText("budgetSummary", "budgetPctBig", pct + "%");
-          setOwnedText("budgetSummary", "homeTotalPlan", "/" + wonUnit(plan));
-          setOwnedText("budgetSummary", "homeTotalActual", wonUnit(actual));
-          setOwnedText("budgetSummary", "homeBudgetPct", pct + "%");
+          setOwnedText("budgetSummary", DOM_IDS.totalPlan, wonUnit(plan));
+          setOwnedText("budgetSummary", DOM_IDS.totalActual, wonUnit(actual));
+          setOwnedText("budgetSummary", DOM_IDS.overBudget, wonUnit(over));
+          setOwnedText("budgetSummary", DOM_IDS.budgetPctBig, pct + "%");
+          setOwnedText("budgetSummary", DOM_IDS.homeTotalPlan, "/" + wonUnit(plan));
+          setOwnedText("budgetSummary", DOM_IDS.homeTotalActual, wonUnit(actual));
+          setOwnedText("budgetSummary", DOM_IDS.homeBudgetPct, pct + "%");
           [
-            ownedElement("budgetSummary", "budgetGaugeProgress"),
-            ownedElement("budgetSummary", "homeBudgetGaugeProgress"),
+            ownedElement("budgetSummary", DOM_IDS.budgetGaugeProgress),
+            ownedElement("budgetSummary", DOM_IDS.homeBudgetGaugeProgress),
           ].forEach((el) => {
             if (el) el.style.strokeDasharray = Math.max(0, Math.min(100, pct)) + " 100";
           });
         }
 
         function renderDday(view = getViewData()) {
-          setOwnedText("dday", "ddayValue", view.ddayLabel);
+          setOwnedText("dday", DOM_IDS.ddayValue, view.ddayLabel);
         }
 
         function selectedValue(id, fallback = "") {
@@ -4911,7 +4835,7 @@
               .slice(0, limit)
               .map((e) => EventItem(e, { showActions: false }))
               .join("") || EmptyState(UI_CONFIG.text.upcomingEventsEmpty);
-          setOwnedHTML("home", "homeEvents", content);
+          setOwnedHTML("home", DOM_IDS.homeEvents, content);
           renderLimitSelect("home", "homeEventLimit", limit);
         }
         function CategoryCard(category, index, view) {
@@ -4930,20 +4854,16 @@
           const html = view.cats.map((category, index) => CategoryCard(category, index, view)).join("");
           setOwnedHTML(
             "home",
-            "categoryProgressCard",
-            CardHeader("분야별 진행률") +
-              CardBody(
-                `<div class="grid category-cards" id="categoryCards">${html || EmptyState("등록된 분야가 없어요.")}</div>`,
-              ),
+            "categoryProgressList",
+            html || EmptyState("등록된 분야가 없어요."),
           );
         }
         function renderHomePlanSummary(view) {
-          setOwnedHTML("home", "homePlanHeader", CardHeader("부부계획 현황"));
-          setOwnedText("home", "homePlanTodo", view.planTodo);
-          setOwnedText("home", "homePlanProgress", view.planProgress);
-          setOwnedText("home", "homePlanDone", view.planDone);
-          setOwnedText("home", "homePlanDonePct", view.planDonePct + "%");
-          setOwnedText("home", "homePlanTotal", view.planTotal);
+          setOwnedText("home", DOM_IDS.homePlanTodo, view.planTodo);
+          setOwnedText("home", DOM_IDS.homePlanProgress, view.planProgress);
+          setOwnedText("home", DOM_IDS.homePlanDone, view.planDone);
+          setOwnedText("home", DOM_IDS.homePlanDonePct, view.planDonePct + "%");
+          setOwnedText("home", DOM_IDS.homePlanTotal, view.planTotal);
         }
         function renderHome(view = getViewData()) {
           renderHomeTaskPreview(view);
@@ -4966,19 +4886,19 @@
 
         function getTaskFilters() {
           return {
-            query: (document.getElementById("taskSearch")?.value || "").trim().toLowerCase(),
-            category: document.getElementById("taskCat")?.value || TASK_STATUS_FILTER.ALL,
-            status: document.getElementById("taskStatus")?.value || TASK_STATUS_FILTER.ALL,
-            sort: document.getElementById("taskSort")?.value || TASK_SORT.CUSTOM,
+            query: ($(DOM_IDS.taskSearch)?.value || "").trim().toLowerCase(),
+            category: $(DOM_IDS.taskCat)?.value || TASK_STATUS_FILTER.ALL,
+            status: $(DOM_IDS.taskStatus)?.value || TASK_STATUS_FILTER.ALL,
+            sort: $(DOM_IDS.taskSort)?.value || TASK_SORT.CUSTOM,
           };
         }
         function syncTaskCategoryOptions(categories) {
-          const select = ownedElement("tasks", "taskCat");
+          const select = ownedElement("tasks", DOM_IDS.taskCat);
           if (!select) return TASK_STATUS_FILTER.ALL;
           const current = select.value || TASK_STATUS_FILTER.ALL;
           setOwnedHTML(
             "tasks",
-            "taskCat",
+            DOM_IDS.taskCat,
             '<option value="all">전체 분야</option>' +
               categories.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join(""),
           );
@@ -5025,7 +4945,7 @@
           setOwnedHTML(
             "tasks",
             "taskList",
-            CardBody(TaskListHost(tasks, { showActions: true, emptyMessage: "조건에 맞는 할 일이 없어요." })),
+            TaskListHost(tasks, { showActions: true, emptyMessage: "조건에 맞는 할 일이 없어요." }),
           );
         }
 
@@ -5119,7 +5039,7 @@
           const y = calendarCursor.getFullYear(),
             m = calendarCursor.getMonth(),
             pad = (n) => String(n).padStart(2, "0");
-          setOwnedText("schedule", "calendarTitle", `${y}년 ${m + 1}월`);
+          setOwnedText("schedule", DOM_IDS.calendarTitle, `${y}년 ${m + 1}월`);
           const todayIso = localDateISO();
           const first = new Date(y, m, 1),
             start = first.getDay(),
@@ -5165,7 +5085,7 @@
               }</button>`,
             );
           }
-          setOwnedHTML("schedule", "calendarGrid", grid.join(""));
+          setOwnedHTML("schedule", DOM_IDS.calendarGrid, grid.join(""));
           const count = eventCountByDate.get(selectedScheduleDate) || 0;
           const holiday = getKoreaHoliday(selectedScheduleDate);
           setOwnedText(
@@ -5178,7 +5098,7 @@
         }
         function selectScheduleDate(iso) {
           if (!isValidISODate(iso)) {
-            notify("선택한 날짜가 올바르지 않아요.");
+            notifyError("선택한 날짜가 올바르지 않아요.");
             return false;
           }
           selectedScheduleDate = iso;
@@ -5254,12 +5174,7 @@
         }
 
         function readPlanForm() {
-          return {
-            name: modalValue("pName").trim(),
-            details: modalValue("pDetails").trim(),
-            note: modalValue("pNote").trim(),
-            status: modalValue("pStatus") || "논의 전",
-          };
+          return readFormFields("plan");
         }
 
         function savePlan(id) {
@@ -5270,7 +5185,7 @@
         function openCollectionEdit(collection, id, type, notFoundMessage) {
           const item = findById(getCollection(collection), id);
           if (item) openModal(type, item);
-          else notify(notFoundMessage);
+          else notifyError(notFoundMessage);
         }
         function openTaskEdit(id) {
           openCollectionEdit("tasks", id, "task", "수정할 할 일을 찾지 못했어요.");
@@ -5279,65 +5194,87 @@
         // ===== MODAL COMPONENT FUNCTIONS / 모달 구조 =====
         function ModalActions({ saveAction, saveId = null, deleteAction = null, deleteId = null } = {}) {
           const deleteButton = deleteAction
-            ? `<button type="button" class="btn" data-action="${attr(deleteAction)}"${deleteId !== null && deleteId !== undefined ? ` data-id="${attr(deleteId)}"` : ""}>삭제</button>`
+            ? `<button type="button" class="btn btn--modal-action" data-action="${attr(deleteAction)}"${deleteId !== null && deleteId !== undefined ? ` data-id="${attr(deleteId)}"` : ""}>삭제</button>`
             : "";
-          const saveButton = `<button type="button" class="btn primary" data-action="${attr(saveAction)}"${saveId !== null && saveId !== undefined ? ` data-id="${attr(saveId)}"` : ""}>저장</button>`;
-          return `<div class="actions">${deleteButton}<button type="button" class="btn" data-action="close-modal">취소</button>${saveButton}</div>`;
+          const saveButton = `<button type="button" class="btn btn--modal-action primary" data-action="${attr(saveAction)}"${saveId !== null && saveId !== undefined ? ` data-id="${attr(saveId)}"` : ""}>저장</button>`;
+          return `<div data-ui-component="ActionRow" class="action-row">${deleteButton}<button type="button" class="btn btn--modal-action" data-action="close-modal">취소</button>${saveButton}</div>`;
         }
 
+        // Field geometry remains owned by .field; schema owns label, value and parsing.
+        function FormField(field, value = "") {
+          const { id, label, type = "text", options, placeholder } = field;
+          const money = type === "money";
+          const attributes = `class="${money ? "money-input field" : "field"}" id="${attr(id)}"` +
+            (placeholder ? ` placeholder="${attr(placeholder)}"` : "");
+          const control = options
+            ? `<select ${attributes}>${SelectOptions(options, value)}</select>`
+            : type === "textarea"
+              ? `<textarea ${attributes}>${esc(value)}</textarea>`
+              : `<input ${attributes} type="${money ? "text" : attr(type)}" value="${attr(money ? formatMoneyInputValue(value) : value)}"${money ? ' inputmode="numeric" autocomplete="off" data-action="format-money"' : ""}>`;
+          return `<label for="${attr(id)}">${esc(label)}</label>${control}`;
+        }
+        function SelectOptions(options, selected) {
+          return options.map((value) => `<option ${value === selected ? "selected" : ""}>${esc(value)}</option>`).join("");
+        }
+        function FormModal(title, fields, item, actions) {
+          return `<h2>${esc(title)}</h2><div class="form">${fields.map((field) => {
+            const initial = typeof field.initial === "function" ? field.initial() : field.initial;
+            return FormField(field, item ? item[field.key] ?? "" : initial ?? "");
+          }).join("")}${ModalActions(actions)}</div>`;
+        }
+        function renderCollectionModal(name, item, { allowDelete = false } = {}) {
+          const schema = FORM_SCHEMAS[name];
+          return FormModal(`${schema.title} ${item ? "수정" : "추가"}`, schema.fields, item, {
+            saveAction: `save-${name}`, saveId: item ? item.id : "null",
+            deleteAction: item && allowDelete ? `delete-${name}` : null,
+            deleteId: item?.id,
+          });
+        }
+        function readFormFields(name) {
+          return Object.fromEntries(FORM_SCHEMAS[name].fields.map((field) => {
+            const value = modalValue(field.id);
+            const parsed = field.read ? field.read(value)
+              : ["date", "time"].includes(field.type) ? value : value.trim();
+            return [field.key, parsed];
+          }));
+        }
         function renderSettingsModal() {
-          return `<h2>본식 날짜</h2><div class="form"><label for="weddingDate">결혼식 날짜</label><input class="field" id="weddingDate" type="date" value="${attr(state.weddingDate || "")}">${ModalActions({ saveAction: "save-wedding-date" })}</div>`;
+          return FormModal("본식 날짜", [
+            { key: "weddingDate", id: "weddingDate", label: "결혼식 날짜", type: "date" },
+          ], state, { saveAction: "save-wedding-date" });
         }
-
         function renderTaskModal(data) {
-          const task = data || {
-            id: "",
-            cat: getCats()[0] || "기타",
-            title: "",
-            due: "",
-            owner: "함께",
-            priority: "보통",
-            status: "todo",
-          };
-          return `<h2>${data ? "할 일 수정" : "할 일 추가"}</h2><div class="form"><label for="fCat">분야</label><input class="field" id="fCat" value="${attr(task.cat)}"><label for="fTitle">할 일</label><input class="field" id="fTitle" value="${attr(task.title)}"><label for="fMemo">메모</label><textarea class="field" id="fMemo" placeholder="예약번호, 업체 연락처, 준비할 내용 등을 적어보세요.">${esc(task.memo || "")}</textarea><label for="fDue">마감일</label><input class="field" id="fDue" type="date" value="${attr(task.due || "")}"><label for="fOwner">담당</label><select class="field" id="fOwner">${TASK_OWNERS.map((owner) => `<option ${task.owner === owner ? "selected" : ""}>${owner}</option>`).join("")}</select><label for="fPriority">우선순위</label><select class="field" id="fPriority"><option ${task.priority === "높음" ? "selected" : ""}>높음</option><option ${task.priority === "보통" ? "selected" : ""}>보통</option><option ${task.priority === "낮음" ? "selected" : ""}>낮음</option></select>${ModalActions({ saveAction: "save-task", saveId: data ? task.id : "null" })}</div>`;
+          return renderCollectionModal("task", data || null);
         }
-
         function renderPlanModal(data) {
-          const plan = data ? findById(state.plans, data) : null;
-          const item = plan || { id: "", name: "", details: "", note: "", status: "논의 전" };
-          return `<h2>${plan ? "부부계획 수정" : "부부계획 추가"}</h2><div class="form"><label for="pName">제목</label><input class="field" id="pName" value="${esc(item.name)}" placeholder="예: 자녀 계획"><label for="pDetails">논의할 세부 사항</label><textarea class="field" id="pDetails" placeholder="서로 이야기해야 할 질문이나 기준을 적어주세요.">${esc(item.details || "")}</textarea><label for="pNote">논의된 사항</label><textarea class="field" id="pNote" placeholder="실제로 이야기하고 합의한 내용을 기록하세요.">${esc(item.note || "")}</textarea><label for="pStatus">상태</label><select class="field" id="pStatus"><option ${item.status === "논의 전" ? "selected" : ""}>논의 전</option><option ${item.status === "논의 중" ? "selected" : ""}>논의 중</option><option ${item.status === "합의 완료" ? "selected" : ""}>합의 완료</option></select>${ModalActions({ saveAction: "save-plan", saveId: plan ? plan.id : "null" })}</div>`;
+          return renderCollectionModal("plan", data ? findById(state.plans, data) : null);
         }
-
         function renderEventModal(data) {
-          const event = data && typeof data === "object" ? data : null;
-          const eventId = event ? String(event.id) : "null";
-          return `<h2>${event ? "일정 수정" : "일정 추가"}</h2><div class="form"><label for="eDate">날짜</label><input class="field" id="eDate" type="date" value="${attr(event ? event.date || "" : selectedScheduleDate)}"><label for="eTitle">일정</label><input class="field" id="eTitle" value="${attr(event ? event.title || "" : "")}" placeholder="예: 상견례 장소 예약"><label for="eTime">시간</label><input class="field" id="eTime" type="time" value="${attr(event ? event.time || "" : "")}"><label for="eLocation">장소</label><input class="field" id="eLocation" value="${attr(event ? event.location || "" : "")}" placeholder="예: 강남 ○○식당"><label for="eCategory">분류</label><input class="field" id="eCategory" value="${attr(event ? event.category || "" : "")}" placeholder="예: 상견례 / 웨딩촬영 / 본식"><label for="eNote">메모</label><textarea class="field" id="eNote" placeholder="준비물, 예약번호, 주차 등">${esc(event ? event.note || "" : "")}</textarea>${ModalActions({ saveAction: "save-event", saveId: eventId })}</div>`;
+          return renderCollectionModal("event", data && typeof data === "object" ? data : null);
         }
-
         function renderBudgetModal(data) {
           const editing = data != null && !isNewId(data);
-          const budget = editing ? findById(state.budgets, data) : null;
-          if (editing && !budget) {
-            notify("수정할 예산 항목을 찾지 못했어요.");
+          const item = editing ? findById(state.budgets, data) : null;
+          if (editing && !item) {
+            notifyError(FORM_SCHEMAS.budget.notFoundMessage);
             return null;
           }
-          const item = budget || { id: "", name: "", planned: 0, actual: 0, details: "" };
-          return `<h2>${editing ? "예산 항목 수정" : "예산 항목 추가"}</h2><div class="form"><label for="bName">항목</label><input class="field" id="bName" value="${attr(item.name || "")}" placeholder="예: 본식 식대"><label for="bPlan">예상금액</label><input class="money-input field" id="bPlan" type="text" inputmode="numeric" autocomplete="off" value="${attr(formatMoneyInputValue(item.planned))}" placeholder="0" data-action="format-money"><label for="bActual">실제금액</label><input class="money-input field" id="bActual" type="text" inputmode="numeric" autocomplete="off" value="${attr(formatMoneyInputValue(item.actual))}" placeholder="0" data-action="format-money"><label for="bDetails">세부 내용</label><textarea class="field" id="bDetails" placeholder="계약 내용, 포함 항목, 메모 등을 적어보세요.">${esc(item.details || "")}</textarea>${ModalActions({ saveAction: "save-budget", saveId: editing ? item.id : "null", deleteAction: editing ? "delete-budget" : null, deleteId: editing ? item.id : null })}</div>`;
+          return renderCollectionModal("budget", item, { allowDelete: true });
         }
-
         function renderMemoModal(data) {
-          const memo = findById(state.memos, data);
-          if (!memo) return null;
-          return `<h2>메모 수정</h2><div class="form"><label for="mText">메모</label><textarea class="field" id="mText" placeholder="메모 내용을 입력하세요.">${esc(memo.text || "")}</textarea>${ModalActions({ saveAction: "save-memo-edit", saveId: memo.id })}</div>`;
+          const item = findById(state.memos, data);
+          return item ? FormModal("메모 수정", [
+            { key: "text", id: "mText", label: "메모", type: "textarea", placeholder: "메모 내용을 입력하세요." },
+          ], item, { saveAction: "save-memo-edit", saveId: item.id }) : null;
         }
 
         const MODAL_RENDERERS = Object.freeze({
-          settings: () => renderSettingsModal(),
-          task: (data) => renderTaskModal(data),
-          plan: (data) => renderPlanModal(data),
-          event: (data) => renderEventModal(data),
-          budget: (data) => renderBudgetModal(data),
-          memo: (data) => renderMemoModal(data),
+          settings: renderSettingsModal,
+          task: renderTaskModal,
+          plan: renderPlanModal,
+          event: renderEventModal,
+          budget: renderBudgetModal,
+          memo: renderMemoModal,
         });
         function getModalBody(type, data) {
           return MODAL_RENDERERS[type]?.(data) ?? null;
@@ -5354,7 +5291,7 @@
         let modalActionBusy = false;
         let modalPreviousFocus = null;
         function getModalFocusable() {
-          const modal = document.getElementById("modal");
+          const modal = $(DOM_IDS.modal);
           if (!modal) return [];
           return [
             ...modal.querySelectorAll(
@@ -5406,7 +5343,7 @@
         }
         function handleModalKeydown(event) {
           if (event.defaultPrevented) return;
-          const modal = document.getElementById("modal");
+          const modal = $(DOM_IDS.modal);
           if (!modal?.classList.contains("open")) return;
           if (event.key === "Escape") {
             event.preventDefault();
@@ -5427,7 +5364,7 @@
           }
         }
         function saveWeddingDate() {
-          const nextDate = document.getElementById("weddingDate").value;
+          const nextDate = $(DOM_IDS.weddingDate).value;
           const committed = mutateState(
             (current) => {
               current.weddingDate = nextDate;
@@ -5446,6 +5383,15 @@
         }
         const FORM_SCHEMAS = Object.freeze({
           task: Object.freeze({
+            title: "할 일",
+            fields: [
+              { key: "cat", id: "fCat", label: "분야", initial: () => getCats()[0] || "기타", read: (v) => v.trim() || "기타" },
+              { key: "title", id: "fTitle", label: "할 일" },
+              { key: "memo", id: "fMemo", label: "메모", type: "textarea", placeholder: "예약번호, 업체 연락처, 준비할 내용 등을 적어보세요." },
+              { key: "due", id: "fDue", label: "마감일", type: "date" },
+              { key: "owner", id: "fOwner", label: "담당", options: TASK_OWNERS, initial: "함께", read: normalizeTaskOwner },
+              { key: "priority", id: "fPriority", label: "우선순위", options: TASK_PRIORITIES, initial: "보통", read: normalizeTaskPriority },
+            ],
             collection: COLLECTION_KEYS.TASKS,
             view: "tasks",
             read: readTaskForm,
@@ -5459,6 +5405,15 @@
             createItem: (item) => ({ id: newId(), ...item, status: "todo" }),
           }),
           event: Object.freeze({
+            title: "일정",
+            fields: [
+              { key: "date", id: "eDate", label: "날짜", type: "date", initial: () => selectedScheduleDate },
+              { key: "title", id: "eTitle", label: "일정", placeholder: "예: 상견례 장소 예약" },
+              { key: "time", id: "eTime", label: "시간", type: "time" },
+              { key: "location", id: "eLocation", label: "장소", placeholder: "예: 강남 ○○식당" },
+              { key: "category", id: "eCategory", label: "분류", placeholder: "예: 상견례 / 웨딩촬영 / 본식" },
+              { key: "note", id: "eNote", label: "메모", type: "textarea", placeholder: "준비물, 예약번호, 주차 등" },
+            ],
             collection: COLLECTION_KEYS.EVENTS,
             view: "schedule",
             read: readEventForm,
@@ -5471,6 +5426,13 @@
             notFoundMessage: "수정할 일정을 찾지 못했어요.",
           }),
           budget: Object.freeze({
+            title: "예산 항목",
+            fields: [
+              { key: "name", id: "bName", label: "항목", placeholder: "예: 본식 식대" },
+              { key: "planned", id: "bPlan", label: "예상금액", type: "money", placeholder: "0", read: num },
+              { key: "actual", id: "bActual", label: "실제금액", type: "money", placeholder: "0", read: num },
+              { key: "details", id: "bDetails", label: "세부 내용", type: "textarea", placeholder: "계약 내용, 포함 항목, 메모 등을 적어보세요." },
+            ],
             collection: COLLECTION_KEYS.BUDGETS,
             view: "budget",
             read: readBudgetForm,
@@ -5478,6 +5440,13 @@
             notFoundMessage: "수정할 예산 항목을 찾지 못했어요.",
           }),
           plan: Object.freeze({
+            title: "부부계획",
+            fields: [
+              { key: "name", id: "pName", label: "제목", placeholder: "예: 자녀 계획" },
+              { key: "details", id: "pDetails", label: "논의할 세부 사항", type: "textarea", placeholder: "서로 이야기해야 할 질문이나 기준을 적어주세요." },
+              { key: "note", id: "pNote", label: "논의된 사항", type: "textarea", placeholder: "실제로 이야기하고 합의한 내용을 기록하세요." },
+              { key: "status", id: "pStatus", label: "상태", options: PLAN_STATUSES, initial: "논의 전", read: (v) => v || "논의 전" },
+            ],
             collection: COLLECTION_KEYS.PLANS,
             view: "plans",
             read: readPlanForm,
@@ -5494,7 +5463,7 @@
           const data = schema.read();
           const validation = validateFormData(schema, data);
           if (validation) {
-            notify(validation);
+            notifyError(validation);
             return null;
           }
           const item = upsertCollectionItem({
@@ -5509,14 +5478,7 @@
         }
 
         function readTaskForm() {
-          return {
-            cat: modalValue("fCat").trim() || "기타",
-            title: modalValue("fTitle").trim(),
-            memo: modalValue("fMemo").trim(),
-            due: modalValue("fDue"),
-            owner: normalizeTaskOwner(modalValue("fOwner")),
-            priority: normalizeTaskPriority(modalValue("fPriority")),
-          };
+          return readFormFields("task");
         }
         function saveTask(id) {
           const result = saveFormBySchema("task", id);
@@ -5532,14 +5494,7 @@
         }
 
         function readEventForm() {
-          return {
-            title: modalValue("eTitle").trim(),
-            date: modalValue("eDate"),
-            time: modalValue("eTime"),
-            location: modalValue("eLocation").trim(),
-            category: modalValue("eCategory").trim(),
-            note: modalValue("eNote").trim(),
-          };
+          return readFormFields("event");
         }
         function saveEvent(id) {
           const result = saveFormBySchema("event", id);
@@ -5573,12 +5528,7 @@
           el.setSelectionRange(el.value.length, el.value.length);
         }
         function readBudgetForm() {
-          return {
-            name: modalValue("bName").trim(),
-            planned: num(modalValue("bPlan")),
-            actual: num(modalValue("bActual")),
-            details: modalValue("bDetails").trim(),
-          };
+          return readFormFields("budget");
         }
         function saveBudget(id) {
           const result = saveFormBySchema("budget", id);
@@ -5604,7 +5554,7 @@
               )
             : memos;
           const memoIndexById = new Map(memos.map((memo, index) => [String(memo.id), index]));
-          setOwnedText("memos", "memoCount", `${filtered.length}개`);
+          setOwnedText("memos", DOM_IDS.memoCount, `${filtered.length}개`);
           setOwnedHTML(
             "memos",
             "memoList",
@@ -5615,12 +5565,12 @@
         }
 
         function readQuickMemo() {
-          return document.getElementById("quickMemo")?.value.trim() || "";
+          return $(DOM_IDS.quickMemo)?.value.trim() || "";
         }
         function saveMemo() {
           const text = readQuickMemo();
           if (!text) {
-            notify("메모 내용을 입력해주세요.");
+            notifyError("메모 내용을 입력해주세요.");
             return false;
           }
           const committed = mutateState(
@@ -5632,14 +5582,14 @@
             "메모 저장",
           );
           if (!committed) return false;
-          setOwnedValue("memos", "quickMemo", "");
-          notify("메모를 저장했어요.");
+          setOwnedValue("memos", DOM_IDS.quickMemo, "");
+          notifySuccess("메모를 저장했어요.");
           return true;
         }
         function saveMemoEdit(id) {
           const text = modalValue("mText").trim();
           if (!text) {
-            notify("메모 내용을 입력해주세요.");
+            notifyError("메모 내용을 입력해주세요.");
             return;
           }
           const updated = updateCollectionItem({
@@ -5671,7 +5621,7 @@
         }
         function exportData() {
           if (guardFutureSchemaWrite("백업")) {
-            notify(futureSchemaNotice());
+            notifyError(futureSchemaNotice());
             return false;
           }
           const blob = new Blob([serializeBackupState()], { type: "application/json" }),
@@ -5724,7 +5674,7 @@
         }
         async function importData(input) {
           if (guardFutureSchemaWrite("가져오기")) {
-            notify(futureSchemaNotice());
+            notifyError(futureSchemaNotice());
             return false;
           }
           const file = input?.files?.[0];
@@ -5739,14 +5689,14 @@
             const prepared = prepareIncomingState(raw, { source: "백업 데이터" });
             if (!prepared.ok) {
               if (prepared.futureVersion) {
-                notify(
+                notifyError(
                   futureSchemaNoticeForVersion(prepared.futureVersion) ||
                     `최신 데이터 버전(v${prepared.futureVersion})은 현재 앱에서 복구할 수 없어요.`,
                 );
                 return false;
               }
               console.warn("백업 데이터 무결성 오류", prepared.issues);
-              notify("백업 파일의 데이터가 올바르지 않아 복구하지 않았어요.");
+              notifyError("백업 파일의 데이터가 올바르지 않아 복구하지 않았어요.");
               return false;
             }
             const normalized = prepared.state;
@@ -5774,11 +5724,11 @@
             });
             if (!replaced) throw new Error("백업 데이터를 저장하지 못했습니다.");
             if (!historyRestoring) pushUndoCheckpoint(beforeImport);
-            notify("백업을 복구했어요.");
+            notifySuccess("백업을 복구했어요.");
             return true;
           } catch (error) {
             console.error(error);
-            notify(
+            notifyError(
               error.message === "백업 파일이 너무 큽니다."
                 ? error.message
                 : "복구 파일을 읽거나 검증할 수 없어요.",
@@ -5789,133 +5739,99 @@
           }
         }
 
+        const onClick = (handler) => ({ event: "click", handler });
+        const onInput = (handler) => ({ event: "input", handler });
+        const onChange = (handler) => ({ event: "change", handler });
         const ACTION_REGISTRY = {
           Common: {
-            "show-page": { event: "click", handler: (el) => showPage(el.dataset.page) },
-            "open-modal": { event: "click", handler: (el) => openModal(el.dataset.modal) },
-            "close-modal": { event: "click", handler: () => closeModal() },
-            "confirm-accept": { event: "click", handler: () => settleAppConfirm(true) },
-            "confirm-cancel": { event: "click", handler: () => settleAppConfirm(false) },
+            "show-page": onClick((el) => showPage(el.dataset.page)),
+            "open-modal": onClick((el) => openModal(el.dataset.modal)),
+            "close-modal": onClick(() => closeModal()),
+            "confirm-accept": onClick(() => settleAppConfirm(true)),
+            "confirm-cancel": onClick(() => settleAppConfirm(false)),
           },
           Home: {
-            "move-category": {
-              event: "click",
-              handler: (el) =>
-                moveCategory(el.closest(".order-buttons")?.dataset.orderId, Number(el.dataset.delta || 0)),
-            },
-            "home-limit": { event: "change", handler: (el) => setHomeLimit(el.dataset.limitType, el.value) },
+            "move-category": onClick((el) =>
+                moveCategory(el.closest(".order-buttons")?.dataset.orderId, Number(el.dataset.delta || 0))),
+            "home-limit": onChange((el) => setHomeLimit(el.dataset.limitType, el.value)),
           },
           Tasks: {
-            "tasks-search": { event: "input", handler: () => requestRenderDebounced("tasks") },
-            "tasks-filter": { event: "change", handler: () => requestRender("tasks") },
-            "toggle-task": { event: "click", handler: (el) => toggleTask(el.dataset.id) },
-            "edit-task": { event: "click", handler: (el) => openTaskEdit(el.dataset.id) },
-            "delete-task": { event: "click", handler: (el) => deleteTask(el.dataset.id) },
-            "save-task": {
-              event: "click",
-              handler: (el) => saveTask(isNewId(el.dataset.id) ? null : el.dataset.id),
-            },
+            "tasks-search": onInput(() => requestRenderDebounced("tasks")),
+            "tasks-filter": onChange(() => requestRender("tasks")),
+            "toggle-task": onClick((el) => toggleTask(el.dataset.id)),
+            "edit-task": onClick((el) => openTaskEdit(el.dataset.id)),
+            "delete-task": onClick((el) => deleteTask(el.dataset.id)),
+            "save-task": onClick((el) => saveTask(isNewId(el.dataset.id) ? null : el.dataset.id)),
           },
           Schedule: {
-            "schedule-filter": { event: "change", handler: () => requestRender("schedule") },
-            "schedule-search": { event: "input", handler: () => requestRenderDebounced("schedule") },
-            "calendar-month": {
-              event: "click",
-              handler: (el) => changeCalendarMonth(Number(el.dataset.delta || 0)),
-            },
-            "select-date": { event: "click", handler: (el) => selectScheduleDate(el.dataset.date) },
-            "edit-event": { event: "click", handler: (el) => openEventEdit(el.dataset.id) },
-            "delete-event": { event: "click", handler: (el) => deleteEvent(el.dataset.id) },
-            "save-event": {
-              event: "click",
-              handler: (el) => saveEvent(isNewId(el.dataset.id) ? null : el.dataset.id),
-            },
+            "schedule-filter": onChange(() => requestRender("schedule")),
+            "schedule-search": onInput(() => requestRenderDebounced("schedule")),
+            "calendar-month": onClick((el) => changeCalendarMonth(Number(el.dataset.delta || 0))),
+            "select-date": onClick((el) => selectScheduleDate(el.dataset.date)),
+            "edit-event": onClick((el) => openEventEdit(el.dataset.id)),
+            "delete-event": onClick((el) => deleteEvent(el.dataset.id)),
+            "save-event": onClick((el) => saveEvent(isNewId(el.dataset.id) ? null : el.dataset.id)),
           },
           Budget: {
-            "move-budget": {
-              event: "click",
-              handler: (el) => moveBudget(el.dataset.id, Number(el.dataset.delta || 0)),
-            },
-            "edit-budget": { event: "click", handler: (el) => openModal("budget", el.dataset.id) },
-            "delete-budget": { event: "click", handler: (el) => deleteBudget(el.dataset.id) },
-            "save-budget": {
-              event: "click",
-              handler: (el) => saveBudget(isNewId(el.dataset.id) ? null : el.dataset.id),
-            },
-            "format-money": { event: "input", handler: (el) => formatMoneyInput(el) },
+            "move-budget": onClick((el) => moveBudget(el.dataset.id, Number(el.dataset.delta || 0))),
+            "edit-budget": onClick((el) => openModal("budget", el.dataset.id)),
+            "delete-budget": onClick((el) => deleteBudget(el.dataset.id)),
+            "save-budget": onClick((el) => saveBudget(isNewId(el.dataset.id) ? null : el.dataset.id)),
+            "format-money": onInput((el) => formatMoneyInput(el)),
           },
           Plans: {
-            "move-plan": {
-              event: "click",
-              handler: (el) => movePlan(el.dataset.id, Number(el.dataset.delta || 0)),
-            },
-            "edit-plan": { event: "click", handler: (el) => openModal("plan", el.dataset.id) },
-            "delete-plan": { event: "click", handler: (el) => deletePlan(el.dataset.id) },
-            "save-plan": {
-              event: "click",
-              handler: (el) => savePlan(isNewId(el.dataset.id) ? null : el.dataset.id),
-            },
-            "update-plan": { event: "change", handler: (el) => updatePlan(el.dataset.id, el.value) },
+            "move-plan": onClick((el) => movePlan(el.dataset.id, Number(el.dataset.delta || 0))),
+            "edit-plan": onClick((el) => openModal("plan", el.dataset.id)),
+            "delete-plan": onClick((el) => deletePlan(el.dataset.id)),
+            "save-plan": onClick((el) => savePlan(isNewId(el.dataset.id) ? null : el.dataset.id)),
+            "update-plan": onChange((el) => updatePlan(el.dataset.id, el.value)),
           },
           Memos: {
-            "memo-search": { event: "input", handler: () => requestRenderDebounced("memos") },
-            "save-memo": { event: "click", handler: () => saveMemo() },
-            "edit-memo": { event: "click", handler: (el) => openModal("memo", el.dataset.id) },
-            "delete-memo": { event: "click", handler: (el) => deleteMemo(el.dataset.id) },
-            "save-memo-edit": { event: "click", handler: (el) => saveMemoEdit(el.dataset.id) },
-            "export-data": { event: "click", handler: () => exportData() },
-            "import-file": { event: "click", handler: () => $(DOM_IDS.importFile)?.click() },
-            "import-data": { event: "change", handler: (el) => importData(el) },
+            "memo-search": onInput(() => requestRenderDebounced("memos")),
+            "save-memo": onClick(() => saveMemo()),
+            "edit-memo": onClick((el) => openModal("memo", el.dataset.id)),
+            "delete-memo": onClick((el) => deleteMemo(el.dataset.id)),
+            "save-memo-edit": onClick((el) => saveMemoEdit(el.dataset.id)),
+            "export-data": onClick(() => exportData()),
+            "import-file": onClick(() => $(DOM_IDS.importFile)?.click()),
+            "import-data": onChange((el) => importData(el)),
           },
           Recovery: {
-            "create-recovery": { event: "click", handler: () => createRecoveryPoint("수동 복구 지점") },
-            "restore-recovery": { event: "click", handler: (el) => restoreRecoveryPoint(el.dataset.id) },
-            "delete-recovery": { event: "click", handler: (el) => deleteRecoveryPoint(el.dataset.id) },
+            "create-recovery": onClick(() => createRecoveryPoint("수동 복구 지점")),
+            "restore-recovery": onClick((el) => restoreRecoveryPoint(el.dataset.id)),
+            "delete-recovery": onClick((el) => deleteRecoveryPoint(el.dataset.id)),
           },
           Theme: {
-            "theme-preset": { event: "click", handler: (el) => applyPreset(el.dataset.preset) },
-            "theme-reset": { event: "click", handler: () => resetTheme() },
-            "theme-save": { event: "click", handler: () => saveTheme() },
-            "preview-theme": { event: "input", handler: () => previewTheme() },
+            "theme-preset": onClick((el) => applyPreset(el.dataset.preset)),
+            "theme-reset": onClick(() => resetTheme()),
+            "theme-save": onClick(() => saveTheme()),
+            "preview-theme": onInput(() => previewTheme()),
           },
           Shared: {
-            "shared-sign-up": { event: "click", handler: () => SharedDomains.Auth.signUp() },
-            "shared-sign-in": { event: "click", handler: () => SharedDomains.Auth.signIn() },
-            "shared-sign-out": { event: "click", handler: () => SharedDomains.Auth.signOut() },
-            "shared-pull": { event: "click", handler: () => SharedDomains.Transport.pull() },
-            "resolve-conflict-local": { event: "click", handler: () => SharedDomains.Merge.resolve("local") },
-            "resolve-conflict-remote": {
-              event: "click",
-              handler: () => SharedDomains.Merge.resolve("remote"),
-            },
-            "shared-copy-code": { event: "click", handler: () => SharedDomains.Projects.copyCode() },
-            "shared-create-project": { event: "click", handler: () => SharedDomains.Projects.create() },
-            "shared-join-project": { event: "click", handler: () => SharedDomains.Projects.join() },
-            "switch-project": {
-              event: "click",
-              handler: (el) => SharedDomains.Projects.switchTo(el.dataset.project),
-            },
-            "save-wedding-date": { event: "click", handler: () => saveWeddingDate() },
-            undo: { event: "click", handler: () => undoLastChange() },
-            redo: { event: "click", handler: () => redoLastChange() },
+            "shared-sign-up": onClick(() => SharedDomains.Auth.signUp()),
+            "shared-sign-in": onClick(() => SharedDomains.Auth.signIn()),
+            "shared-sign-out": onClick(() => SharedDomains.Auth.signOut()),
+            "shared-pull": onClick(() => SharedDomains.Transport.pull()),
+            "resolve-conflict-local": onClick(() => SharedDomains.Merge.resolve("local")),
+            "resolve-conflict-remote": onClick(() => SharedDomains.Merge.resolve("remote")),
+            "shared-copy-code": onClick(() => SharedDomains.Projects.copyCode()),
+            "shared-create-project": onClick(() => SharedDomains.Projects.create()),
+            "shared-join-project": onClick(() => SharedDomains.Projects.join()),
+            "switch-project": onClick((el) => SharedDomains.Projects.switchTo(el.dataset.project)),
+            "save-wedding-date": onClick(() => saveWeddingDate()),
+            undo: onClick(() => undoLastChange()),
+            redo: onClick(() => redoLastChange()),
           },
         };
 
-        const ACTION_HANDLERS = {};
-        const ACTION_EVENTS = {};
-        Object.values(ACTION_REGISTRY).forEach((group) =>
-          Object.entries(group).forEach(([action, definition]) => {
-            ACTION_HANDLERS[action] = definition.handler;
-            ACTION_EVENTS[action] = definition.event;
-          }),
-        );
+        const ACTIONS = Object.freeze(Object.assign({}, ...Object.values(ACTION_REGISTRY)));
 
         function handleAction(el) {
           const action = el?.dataset?.action;
-          const handler = ACTION_HANDLERS[action];
+          const handler = ACTIONS[action]?.handler;
           if (!handler) return false;
           if (MODAL_SAVE_ACTIONS.has(action)) {
-            const modal = document.getElementById("modal");
+            const modal = $(DOM_IDS.modal);
             if (!modal?.classList.contains("open")) return false;
             if (modalActionBusy) return false;
             modalActionBusy = true;
@@ -5924,12 +5840,12 @@
               handler(el);
             } finally {
               queueMicrotask(() => {
-                if (!document.getElementById("modal")?.classList.contains("open")) {
+                if (!$(DOM_IDS.modal)?.classList.contains("open")) {
                   modalActionBusy = false;
                   return;
                 }
                 setTimeout(() => {
-                  if (document.getElementById("modal")?.classList.contains("open")) modalActionBusy = false;
+                  if ($(DOM_IDS.modal)?.classList.contains("open")) modalActionBusy = false;
                   el.disabled = false;
                 }, APP_CONFIG.modalActionUnlockMs);
               });
@@ -5944,7 +5860,7 @@
         function handleRegisteredActionEvent(eventType, e) {
           const action = e.target.closest?.("[data-action]") || null;
           if (!action) return false;
-          const actionType = ACTION_EVENTS[action.dataset.action];
+          const actionType = ACTIONS[action.dataset.action]?.event;
           if (actionType !== eventType) return false;
           if (eventType === "click") e.preventDefault();
           handleAction(action);
@@ -5952,9 +5868,9 @@
         }
 
         function bindAppEvents() {
-          document.addEventListener("click", (e) => handleRegisteredActionEvent("click", e));
-          document.addEventListener("input", (e) => handleRegisteredActionEvent("input", e));
-          document.addEventListener("change", (e) => handleRegisteredActionEvent("change", e));
+          new Set(Object.values(ACTIONS).map(({ event }) => event)).forEach((event) =>
+            document.addEventListener(event, (e) => handleRegisteredActionEvent(event, e)));
+
           document.addEventListener("keydown", handleConfirmKeydown);
           document.addEventListener("keydown", handleModalKeydown);
           $(DOM_IDS.modal)?.addEventListener("mousedown", (e) => {
@@ -6085,7 +6001,7 @@
           const saved = await flushPendingSharedSave(actionLabel);
           if (saved) return true;
           if (showAlert)
-            notify(
+            notifyError(
               "아직 공동 프로젝트에 저장되지 않은 변경이 있어 작업을 중단했어요. 동기화 상태를 확인한 뒤 다시 시도해주세요.",
             );
           return false;
@@ -6274,15 +6190,6 @@
           );
         }
 
-        function sharedStatusText(text, kind = "") {
-          if (!sharedSync.user) return "로컬 저장 중";
-          if (kind === "shared-error" || sharedSync.phase === "error") return "연결 실패";
-          if (sharedSync.phase === "offline" || text === "오프라인") return "오프라인";
-          if (sharedSync.phase === "conflict") return "충돌 확인 필요";
-          if (sharedSync.phase === "pulling") return "공유 데이터 불러오는 중";
-          if (sharedSync.phase === "pushing") return "공유 데이터 저장 중";
-          return sharedSync.projectId ? "실시간 동기화 중" : "로그인됨";
-        }
         function setSharedPhase(phase) {
           const next = SHARED_PHASES.has(phase) ? phase : "error";
           const current = sharedSync.phase || "idle";
@@ -6291,24 +6198,7 @@
             return false;
           }
           sharedSync.phase = next;
-          sharedSetStatus(
-            next === "error"
-              ? "동기화 오류"
-              : next === "offline"
-                ? "오프라인"
-                : next === "conflict"
-                  ? "충돌 확인 필요"
-                  : next === "pulling"
-                    ? "공유 데이터 불러오는 중"
-                    : next === "pushing"
-                      ? "공유 데이터 저장 중"
-                      : "",
-            next === "error" || next === "conflict"
-              ? "shared-error"
-              : next === "offline" || next === "pulling" || next === "pushing"
-                ? "shared-syncing"
-                : "shared-online",
-          );
+          renderSharedStatusUI();
           renderSharedConflictBox();
           return true;
         }
@@ -6348,20 +6238,6 @@
           sharedClearRetry();
         }
         // ===== Shared.UI: the only fixed shared-settings DOM writers =====
-        function renderSharedStatusBadge(status) {
-          const el = ownedElement("shared", DOM_IDS.syncStatus);
-          if (!el) return;
-          const tone =
-            status === "실시간 동기화 중"
-              ? " shared-online"
-              : status === "연결 실패" || status === "동기화 오류"
-                ? " shared-error"
-                : status === "오프라인"
-                  ? " shared-syncing"
-                  : "";
-          el.textContent = status;
-          el.className = "pill sync-status" + tone;
-        }
         function renderSharedAuthSummary() {
           const user = ownedElement("shared", DOM_IDS.syncUserText);
           if (user)
@@ -6384,14 +6260,29 @@
           box.textContent = message;
         }
         function renderSharedSyncDetail() {
+          const description = ownedElement("shared", DOM_IDS.syncCardDescription);
+          const footer = ownedElement("shared", DOM_IDS.syncFooter);
           const el = ownedElement("shared", DOM_IDS.syncDetailText);
           const sharedRetryGuidance = "충돌 발생 시 확인이 필요하며 연결 오류는 자동으로 다시 시도합니다.";
+          const loggedOutText = "로그인하면 두 사람이 같은 결혼 준비 데이터를 함께 사용할 수 있어요.";
+
+          if (description) {
+            const showDescription = !sharedSync.user;
+            description.textContent = showDescription ? loggedOutText : "";
+            description.classList.toggle("u-hidden", !showDescription);
+          }
+
+          if (footer) footer.classList.toggle("u-hidden", !sharedSync.user);
           if (!el) return;
+          if (!sharedSync.user) {
+            el.textContent = "";
+            el.dataset.tone = "";
+            return;
+          }
+
           let text = "";
           let tone = "";
-          if (!sharedSync.user) {
-            text = "로그인하면 두 사람이 같은 결혼 준비 데이터를 함께 사용할 수 있어요.";
-          } else if (!sharedSync.projectId) {
+          if (!sharedSync.projectId) {
             text = "공동 프로젝트를 만들거나 초대 코드로 참여하면 실시간 공유가 시작돼요.";
           } else if (isFutureSchemaStateActive()) {
             text = "현재 데이터 버전이 더 최신이라 공유 저장을 잠시 보호하고 있어요.";
@@ -6451,19 +6342,13 @@
           }
         }
 
-        function sharedSetStatus(text, kind = "") {
-          const status = sharedStatusText(text, kind);
-          renderSharedStatusBadge(status);
+        function renderSharedStatusUI() {
           renderSharedAuthSummary();
           renderSharedFooter();
           renderFutureSchemaWarning();
           renderSharedSyncDetail();
           renderSharedActionStates();
           renderSharedControls();
-        }
-        function sharedSetLastSync(msg) {
-          const el = ownedElement("shared", DOM_IDS.syncLastText);
-          if (el) el.textContent = msg || "";
         }
         function renderSharedConflictBox() {
           const box = ownedElement("shared", DOM_IDS.syncConflictBox);
@@ -6510,7 +6395,6 @@
           sharedSync.lastConflictPaths = [];
           setSharedPhase("idle");
           renderSharedConflictBox();
-          sharedSetLastSync("충돌을 해결했어요. 변경 사항을 공유하고 있습니다.");
           queueSharedSave();
           return true;
         }
@@ -6558,7 +6442,7 @@
               row.appendChild(badge);
             } else {
               const button = document.createElement("button");
-              button.className = "btn btn-compact";
+              button.className = "btn btn--app-action";
               button.type = "button";
               button.dataset.action = "switch-project";
               button.dataset.project = String(project.id);
@@ -6642,7 +6526,7 @@
           await sharedRemoveChannel();
           if (sharedSync.client && sharedSync.projectId) await sharedSubscribe();
           renderSharedConflictBox();
-          sharedSetStatus(previous.projectId ? "실시간 공유 중" : "로그인됨", "shared-online");
+          renderSharedStatusUI();
           renderSharedProjects();
         }
         function sharedApplyProject(project) {
@@ -6742,7 +6626,7 @@
             if (!ok) throw new Error("프로젝트 데이터를 불러오지 못했어요.");
 
             if (!(await sharedResumeRealtime(snapshot))) return;
-            notify("프로젝트를 불러왔어요.");
+            notifySuccess("프로젝트를 불러왔어요.");
           } catch (e) {
             if (previous && sharedContextIsCurrent(snapshot, { allowProjectChange: true })) {
               try {
@@ -6752,7 +6636,7 @@
               }
             }
             console.error(e);
-            notify(e.message || "프로젝트를 불러오지 못했어요.");
+            notifyError(e.message || "프로젝트를 불러오지 못했어요.");
           }
         }
         async function sharedSwitchProject(pid) {
@@ -6811,18 +6695,17 @@
             await sharedRemoveChannel();
             resetSharedProjectRuntime();
             sharedSync.projectId = null;
-            sharedSetLastSync("");
-            sharedSetStatus("로컬 사용 중", "");
+            renderSharedStatusUI();
             renderSharedControls({ clearSensitive: true });
             renderSharedProjects();
             return;
           }
           if (!nextUser) {
-            sharedSetStatus("로컬 사용 중", "");
+            renderSharedStatusUI();
             renderSharedProjects();
             return;
           }
-          sharedSetStatus(sharedSync.projectId ? "실시간 공유 중" : "로그인됨", "shared-online");
+          renderSharedStatusUI();
           renderSharedProjects();
           if (event === "SIGNED_IN" && !sharedSync.projectId) void sharedAfterLogin();
         }
@@ -6832,7 +6715,7 @@
           sharedSync.lifecycle = lifecycle;
           try {
             if (!window.supabase?.createClient) {
-              if (!silent) notify("공유 기능 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해주세요.");
+              if (!silent) notifyError("공유 기능 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해주세요.");
               return false;
             }
 
@@ -6864,14 +6747,14 @@
             if (sharedSync.user) {
               await sharedAfterLogin();
             } else {
-              sharedSetStatus("로컬 사용 중", "");
+              renderSharedStatusUI();
               renderSharedProjects();
             }
             return true;
           } catch (e) {
             console.error(e);
-            sharedSetStatus("연결 실패", "shared-error");
-            if (!silent) notify(e.message || "연결에 실패했어요. Supabase URL/키를 확인해주세요.");
+            renderSharedStatusUI();
+            if (!silent) notifyError(e.message || "연결에 실패했어요. Supabase URL/키를 확인해주세요.");
             else console.warn("initial shared connection failed", e);
             return false;
           }
@@ -6883,16 +6766,16 @@
         async function sharedSignUp() {
           try {
             if (!(await ensureSharedClient())) return;
-            const email = document.getElementById("syncEmail").value.trim(),
-              password = document.getElementById("syncPassword").value,
-              confirm = document.getElementById("syncPasswordConfirm").value;
+            const email = $(DOM_IDS.syncEmail).value.trim(),
+              password = $(DOM_IDS.syncPassword).value,
+              confirm = $(DOM_IDS.syncPasswordConfirm).value;
             if (!email || !password || !confirm) {
-              notify("이메일과 비밀번호, 비밀번호 확인을 모두 입력해주세요.");
+              notifyError("이메일과 비밀번호, 비밀번호 확인을 모두 입력해주세요.");
               return;
             }
             if (password !== confirm) {
-              notify("비밀번호가 일치하지 않습니다. 다시 확인해주세요.");
-              document.getElementById("syncPasswordConfirm").focus();
+              notifyError("비밀번호가 일치하지 않습니다. 다시 확인해주세요.");
+              $(DOM_IDS.syncPasswordConfirm).focus();
               return;
             }
             const { data, error } = await sharedSync.client.auth.signUp({
@@ -6904,30 +6787,30 @@
             if (data.session) {
               sharedSync.user = data.user;
               await sharedAfterLogin();
-              notify("회원가입과 로그인이 완료됐어요.");
-            } else notify("회원가입이 완료됐어요. 이메일 인증이 켜져 있다면 인증 후 로그인해주세요.");
+              notifySuccess("회원가입과 로그인이 완료됐어요.");
+            } else notifySuccess("회원가입이 완료됐어요. 이메일 인증이 켜져 있다면 인증 후 로그인해주세요.");
           } catch (e) {
             console.error(e);
-            notify(e.message || "회원가입에 실패했어요.");
+            notifyError(e.message || "회원가입에 실패했어요.");
           }
         }
         async function sharedSignIn() {
           try {
             if (!(await ensureSharedClient())) return;
-            const email = document.getElementById("syncEmail").value.trim(),
-              password = document.getElementById("syncPassword").value;
+            const email = $(DOM_IDS.syncEmail).value.trim(),
+              password = $(DOM_IDS.syncPassword).value;
             if (!email || !password) {
-              notify("이메일과 비밀번호를 입력해주세요.");
+              notifyError("이메일과 비밀번호를 입력해주세요.");
               return;
             }
             const { data, error } = await sharedSync.client.auth.signInWithPassword({ email, password });
             if (error) throw error;
             sharedSync.user = data.user;
             await sharedAfterLogin();
-            notify("로그인했어요.");
+            notifySuccess("로그인했어요.");
           } catch (e) {
             console.error(e);
-            notify(e.message || "로그인에 실패했어요.");
+            notifyError(e.message || "로그인에 실패했어요.");
           }
         }
         let sharedAfterLoginInFlight = null;
@@ -6936,7 +6819,7 @@
           if (sharedAfterLoginInFlight) return sharedAfterLoginInFlight;
 
           const snapshot = sharedContextSnapshot();
-          sharedSetStatus("로그인됨", "shared-online");
+          renderSharedStatusUI();
           const config = sharedConfig();
           const run = (async () => {
             try {
@@ -6948,7 +6831,7 @@
 
               if (!target) {
                 sharedSync.projectId = null;
-                sharedSetStatus("로그인됨", "shared-online");
+                renderSharedStatusUI();
                 renderSharedProjects();
                 return true;
               }
@@ -7002,7 +6885,7 @@
           try {
             if (!(await ensureSharedClient())) return;
             if (!sharedSync.user) {
-              notify("먼저 로그인해주세요.");
+              notifyError("먼저 로그인해주세요.");
               return;
             }
 
@@ -7057,9 +6940,8 @@
                 "새 프로젝트는 만들었지만 현재 데이터를 공동 프로젝트에 저장하지 못했어요. 동기화 상태를 확인해주세요.",
               );
             if (!(await sharedResumeRealtime(projectSnapshot))) return;
-            sharedSetLastSync("지금 이 기기의 데이터를 공동 프로젝트에 올렸어요.");
 
-            notify(
+            notifySuccess(
               `공동 프로젝트를 만들었어요.\n\n초대 코드: ${project.invite_code}\n\n상대방이 같은 Supabase 설정으로 로그인한 뒤 이 코드를 입력하면 참여할 수 있어요.`,
             );
           } catch (e) {
@@ -7076,7 +6958,7 @@
                 }
               }
               console.error(e);
-              notify(
+              notifyError(
                 createdProject
                   ? e.message || "새 프로젝트는 생성됐지만 초기화에 실패해 이전 프로젝트로 돌아왔어요."
                   : e.message || "프로젝트 생성에 실패했어요.",
@@ -7096,13 +6978,13 @@
           try {
             if (!(await ensureSharedClient())) return;
             if (!sharedSync.user) {
-              notify("먼저 로그인해주세요.");
+              notifyError("먼저 로그인해주세요.");
               return;
             }
 
             const code = ($(DOM_IDS.syncJoinCode)?.value || "").trim().toUpperCase();
             if (!code) {
-              notify("공유 프로젝트 코드를 입력해주세요.");
+              notifyError("공유 프로젝트 코드를 입력해주세요.");
               return;
             }
 
@@ -7148,7 +7030,7 @@
             if (!ok) throw new Error("공동 데이터를 불러오지 못했어요.");
 
             if (!(await sharedResumeRealtime(projectSnapshot))) return;
-            notify("공동 프로젝트에 참여했어요.");
+            notifySuccess("공동 프로젝트에 참여했어요.");
           } catch (e) {
             if (
               !operationSnapshot ||
@@ -7162,7 +7044,7 @@
                 }
               }
               console.error(e);
-              notify(e.message || "프로젝트 참여에 실패했어요.");
+              notifyError(e.message || "프로젝트 참여에 실패했어요.");
             } else {
               console.warn("stale project join result ignored", e);
             }
@@ -7172,14 +7054,14 @@
           return runSharedProjectAction(() => sharedJoinProjectCore());
         }
         async function sharedCopyCode() {
-          const code = document.getElementById("syncCode")?.value.trim();
+          const code = $(DOM_IDS.syncCode)?.value.trim();
           if (!code) {
-            notify("복사할 공유 코드가 없어요.");
+            notifyError("복사할 공유 코드가 없어요.");
             return;
           }
           try {
             await navigator.clipboard.writeText(code);
-            notify("공유 코드를 복사했어요.");
+            notifySuccess("공유 코드를 복사했어요.");
           } catch (e) {
             const t = document.createElement("textarea");
             t.value = code;
@@ -7187,7 +7069,7 @@
             t.select();
             document.execCommand("copy");
             t.remove();
-            notify("공유 코드를 복사했어요.");
+            notifySuccess("공유 코드를 복사했어요.");
           }
         }
 
@@ -7203,17 +7085,11 @@
           const parsed = parseSharedState(payload.new.state);
           if (guardFutureSchemaWrite("실시간 데이터 반영")) {
             setSharedPhase("error");
-            sharedSetLastSync("현재 앱보다 최신인 로컬 데이터가 있어 실시간 반영을 중단했습니다.");
             return;
           }
           const prepared = prepareIncomingState(parsed.state, { source: "공유 데이터" });
           if (!prepared.ok) {
             setSharedPhase("error");
-            sharedSetLastSync(
-              prepared.futureVersion
-                ? futureSchemaNoticeForVersion(prepared.futureVersion)
-                : "공유 데이터 무결성 검증에 실패했습니다. 다시 확인해주세요.",
-            );
             return;
           }
           const incomingRevision = Number(parsed.meta.revision) || 0;
@@ -7247,9 +7123,6 @@
             });
             if (!replaced) {
               setSharedPhase("error");
-              sharedSetLastSync(
-                "실시간 변경을 받았지만 이 브라우저에 저장하지 못했어요. 기존 데이터는 유지됩니다.",
-              );
               return;
             }
             sharedSync.remoteChangeCount = Math.min(999, Number(sharedSync.remoteChangeCount || 0) + 1);
@@ -7274,10 +7147,7 @@
             }
             sharedSync.lastSyncAt =
               payload.new.updated_at || parsed.meta.updatedAt || new Date().toISOString();
-            sharedSetLastSync(
-              `마지막 동기화 · ${new Date(sharedSync.lastSyncAt).toLocaleString("ko-KR", { hour: "2-digit", minute: "2-digit" })}`,
-            );
-            sharedSetStatus("실시간 동기화 중", "shared-online");
+            renderSharedStatusUI();
           } finally {
             sharedSync.busy = previousBusy;
             renderSharedActionStates();
@@ -7331,7 +7201,7 @@
         async function sharedResumeRealtime(snapshot) {
           await sharedSubscribe();
           if (!sharedContextIsCurrent(snapshot)) return false;
-          sharedSetStatus("실시간 공유 중", "shared-online");
+          renderSharedStatusUI();
           renderSharedProjects();
           return true;
         }
@@ -7342,16 +7212,16 @@
           const previousBusy = sharedSync.busy;
           try {
             if (!client || !projectId) {
-              if (showAlert) notify("먼저 공동 프로젝트에 연결해주세요.");
+              if (showAlert) notifyError("먼저 공동 프로젝트에 연결해주세요.");
               return false;
             }
             if (sharedSync.phase === "conflict") {
-              if (showAlert) notify("먼저 동시 수정 충돌을 해결해주세요.");
+              if (showAlert) notifyError("먼저 동시 수정 충돌을 해결해주세요.");
               return false;
             }
             if (!sharedIsOnline()) {
               setSharedPhase("offline");
-              if (showAlert) notify("현재 오프라인 상태예요. 인터넷이 다시 연결되면 자동으로 동기화합니다.");
+              if (showAlert) notifyInfo("현재 오프라인 상태예요. 인터넷이 다시 연결되면 자동으로 동기화합니다.");
               return false;
             }
             if (
@@ -7370,7 +7240,7 @@
             if (!sharedContextIsCurrent(snapshot)) return false;
             if (!data) {
               setSharedPhase("idle");
-              if (showAlert) notify("공동 데이터가 아직 없어요.");
+              if (showAlert) notifyInfo("공동 데이터가 아직 없어요.");
               return false;
             }
             const parsed = parseSharedState(data.state || {});
@@ -7404,18 +7274,15 @@
             setSharedPhase("idle");
             renderSharedConflictBox();
             sharedSync.lastSyncAt = data.updated_at || parsed.meta.updatedAt || new Date().toISOString();
-            sharedSetLastSync(
-              `마지막 동기화 · ${new Date(sharedSync.lastSyncAt).toLocaleString("ko-KR", { hour: "2-digit", minute: "2-digit" })}`,
-            );
-            sharedSetStatus("실시간 동기화 중", "shared-online");
-            if (showAlert) notify("공동 데이터를 불러왔어요.");
+            renderSharedStatusUI();
+            if (showAlert) notifySuccess("공동 데이터를 불러왔어요.");
             return true;
           } catch (e) {
             console.error(e);
             if (sharedContextIsCurrent(snapshot)) {
               setSharedPhase(sharedIsOnline() ? "error" : "offline");
             }
-            if (showAlert) notify(e.message || "공동 데이터를 불러오지 못했어요.");
+            if (showAlert) notifyError(e.message || "공동 데이터를 불러오지 못했어요.");
             return false;
           } finally {
             sharedSync.busy = previousBusy;
@@ -7481,7 +7348,6 @@
         }
         async function sharedPushNow(silent = false) {
           if (guardFutureSchemaWrite("공유 저장")) {
-            sharedSetLastSync(futureSchemaNotice());
             return false;
           }
           if (sharedSync.pushInFlight) return sharedSync.pushInFlight;
@@ -7521,9 +7387,8 @@
                     sharedSync.syncRevision = remoteRevision;
                     sharedSync.lastSyncedState = cloneValue(remote.state);
                     setSharedPhase("conflict");
-                    sharedSetLastSync(`동시 수정 충돌 ${mergedResult.conflicts.length}건을 확인해주세요.`);
                     if (!silent)
-                      notify("동시 수정 충돌이 있어 저장을 멈췄어요. 충돌을 확인한 뒤 선택해주세요.");
+                      notifyError("동시 수정 충돌이 있어 저장을 멈췄어요. 충돌을 확인한 뒤 선택해주세요.");
                     return false;
                   }
                   if (!valuesEqual(mergedResult.state, localState)) {
@@ -7557,13 +7422,7 @@
                   if (sharedSync.phase !== "conflict") setSharedPhase("idle");
                   sharedSync.lastSyncedState = cloneValue(state);
                   sharedSync.lastSyncAt = payload.updated_at;
-                  const conflictText = sharedSync.lastConflictPaths.length
-                    ? ` · 충돌 ${sharedSync.conflictCount}건 자동 병합 (${sharedSync.lastConflictPaths.slice(0, UI_CONFIG.limits.sharedConflictSummary).join(", ")}${sharedSync.lastConflictPaths.length > UI_CONFIG.limits.sharedConflictSummary ? " 외" : ""})`
-                    : "";
-                  sharedSetLastSync(
-                    `마지막 동기화 · ${new Date(payload.updated_at).toLocaleString("ko-KR", { hour: "2-digit", minute: "2-digit" })}${conflictText}`,
-                  );
-                  sharedSetStatus("실시간 동기화 중", "shared-online");
+                  renderSharedStatusUI();
                   return true;
                 }
                 if (cas.conflict) {
@@ -7577,8 +7436,8 @@
               setSharedPhase(sharedIsOnline() ? "error" : "offline");
               if (sharedIsOnline()) sharedScheduleRetry();
               renderSharedConflictBox();
-              sharedSetStatus("동기화 오류", "shared-error");
-              if (!silent) notify(e.message || "공유 데이터 저장에 실패했어요.");
+              renderSharedStatusUI();
+              if (!silent) notifyError(e.message || "공유 데이터 저장에 실패했어요.");
               return false;
             }
           };
@@ -7631,17 +7490,16 @@
             signedOut = true;
           } catch (e) {
             console.error(e);
-            notify(e.message || "로그아웃에 실패했어요.");
+            notifyError(e.message || "로그아웃에 실패했어요.");
           } finally {
             sharedSignOutInFlight = false;
             clearTimeout(sharedSync.pushTimer);
             sharedSync = createSharedSyncState({ lifecycle });
-            sharedSetLastSync("");
-            sharedSetStatus(signedOut ? "로그아웃됨" : "로그아웃 실패", signedOut ? "" : "shared-error");
+            renderSharedStatusUI();
             renderSharedControls({ clearSensitive: true });
             renderSharedProjects();
             if (signedOut)
-              notify(
+              notifySuccess(
                 "로그아웃했어요. 다음 로그인부터는 저장된 설정과 이메일을 그대로 사용하고 비밀번호만 입력하면 됩니다.",
               );
           }
@@ -7684,7 +7542,7 @@
             setContext: setSharedConflictContext,
           }),
           UI: Object.freeze({
-            renderStatus: sharedSetStatus,
+            renderStatus: renderSharedStatusUI,
             renderControls: renderSharedControls,
             renderProjects: renderSharedProjects,
             renderConflict: renderSharedConflictBox,
@@ -7829,16 +7687,16 @@
               showPage("tasks");
               await nextUiTurn();
               openModal("task");
-              const title = $("fTitle");
+              const title = $(DOM_IDS.fTitle);
               if (!title) return false;
               title.value = marker;
-              $("fCat").value = "테스트";
+              $(DOM_IDS.fCat).value = "테스트";
               saveTask(null);
               await nextUiTurn();
               const created = state.tasks.find((task) => task.title === marker);
               if (!created) return false;
               openTaskEdit(created.id);
-              $("fTitle").value = marker + "-수정";
+              $(DOM_IDS.fTitle).value = marker + "-수정";
               saveTask(created.id);
               await nextUiTurn();
               if (!state.tasks.some((task) => task.id === created.id && task.title === marker + "-수정"))
@@ -7851,8 +7709,8 @@
               showPage("schedule");
               await nextUiTurn();
               openModal("event");
-              $("eDate").value = localDateISO();
-              $("eTitle").value = marker + "-일정";
+              $(DOM_IDS.eDate).value = localDateISO();
+              $(DOM_IDS.eTitle).value = marker + "-일정";
               saveEvent(null);
               await nextUiTurn();
               const created = state.events.find((event) => event.title === marker + "-일정");
@@ -7997,6 +7855,7 @@
             );
           });
           test("UI ownership map has no duplicates", () => assertUiOwnershipMap().ok);
+          test("UI component contracts are consistent", () => assertUiComponentContracts().ok);
           const report = { ok: results.every((result) => result.ok), results };
           if (!report.ok) {
             console.error("Planner self-test failed", report);
@@ -8015,7 +7874,7 @@
           }),
           Forms: Object.freeze({ schemas: FORM_SCHEMAS, save: saveFormBySchema, validate: validateFormData }),
           Calendar: Object.freeze({ holidays: KOREA_HOLIDAYS_BY_YEAR, getHoliday: getKoreaHoliday }),
-          Rendering: Object.freeze({ ownership: UI_OWNERSHIP, assertOwnership: assertUiOwnershipMap }),
+          Rendering: Object.freeze({ ownership: UI_OWNERSHIP, assertOwnership: assertUiOwnershipMap, assertComponents: assertUiComponentContracts }),
           Shared: SharedDomains,
           Testing: Object.freeze({
             run: runPlannerSelfTests,
@@ -8120,7 +7979,7 @@
             Merge: SharedDomains.Merge,
             UI: SharedDomains.UI,
             Runtime: SharedDomains.Runtime,
-            // Backward-compatible top-level aliases.
+            // INTENTIONAL COMPAT: public aliases kept for older integrations/console workflows.
             config: sharedStorageSnapshot,
             saveConfig: saveSharedConfig,
             connect: sharedConnect,
@@ -8197,8 +8056,7 @@
         navInit();
         requestRender("all");
         startScheduleDateWatcher();
-        renderSharedControls();
-        renderFutureSchemaWarning();
+        renderSharedStatusUI();
         renderRecoveryPoints();
         void sharedConnect({ silent: true });
       })();
