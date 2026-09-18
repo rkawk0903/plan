@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 선언형 아키텍처 v344
+우리 결혼 플래너 — 선언형 아키텍처 v350
 
 EDIT MAP (검색할 이름 → 수정할 책임)
   CSS :root / UI EDIT MAP   버튼·카드·제목·입력창·페이지 간격의 디자인 토큰
@@ -34,9 +34,13 @@ EDIT MAP (검색할 이름 → 수정할 책임)
   INTENTIONAL COMPAT: 기존 저장 키·schema v5·legacy memo/owner migration·Planner API 유지.
   v325의 잘못 노출된 Memos action descriptor만 제거; 정상 공개 함수와 저장 데이터 계약 유지.
   공개 edit은 모두 Collection.edit 경유. registry 검사는 실제 폼 ID·anchor·action도 확인합니다.
-  일정 2열 기준은 홈 보조 카드와 동일하며, 헤더/상태 select 크기는 field--inline-select가 소유합니다.
+  일정 2열 기준은 홈 보조 카드와 동일하며, 헤더/상태 select 크기는 field--inline-select가 소유하고 IconControl과 같은 action-button-size를 공유합니다.
+  카드 헤더 액션과 OrderButtons 내부 간격은 card-action-gap 하나를 공유합니다.
   일정 항목 메타는 상단 inset-card 한 줄이 소유하며, 선택 날짜 목록만 EventItem showDate=false로 날짜를 생략합니다.
+  일정 항목의 더보기 메뉴는 같은 MoreMenu의 bare variant를 메타 inset-card 우측 끝에 배치하며 홈 미리보기는 showActions=false를 유지합니다.
+  MoreMenu 팝업은 부모 문맥과 무관하게 자체 grid 세로 목록 규격을 소유합니다.
   목록 항목 구분선은 list-divided-item이 굵기·색상·마지막 항목 처리를 공통 소유합니다.
+  모서리 둥글기는 단일 테마 값에서 surface/modal/inset/control/icon/badge 광학 스케일로 파생합니다.
   검색창과 공유 로그인 입력창은 field--compact-text가 높이·폰트를 함께 소유하며 검색창은 field--search가 가로폭을 소유합니다.
   빠른 메모는 같은 폰트 규격을 공유하고 autosize-textarea action으로 내용에 맞춰 세로 높이만 자동 확장됩니다.
   테마 색상 편집기는 native color swatch 외형을 숨기고 theme-color-control이 외곽선·미리보기를 소유합니다.
@@ -166,9 +170,13 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --confirm-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
         --modal-overlay-bg: rgba(0, 0, 0, 0.38);
         --radius: 20px;
-        --radius-sm: max(0px, calc(var(--radius) * 0.6));
-        --radius-xs: max(0px, calc(var(--radius) * 0.48));
-        --radius-lg: max(0px, calc(var(--radius) * 0.9));
+        /* Optical radius scale — one theme value, role-aware visual curvature. */
+        --radius-surface: max(0px, var(--radius));
+        --radius-modal: max(0px, calc(var(--radius) * 0.95));
+        --radius-inset: max(0px, calc(var(--radius) * 0.58));
+        --radius-control: max(0px, calc(var(--radius) * 0.46));
+        --radius-icon: max(0px, calc(var(--radius) * 0.4));
+        --radius-badge: max(0px, calc(var(--radius) * 0.34));
         --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--card));
         --accent-soft-2: color-mix(in srgb, var(--accent2) 18%, var(--card));
         --accent-ink: color-mix(in srgb, var(--accent) 70%, var(--ink));
@@ -182,7 +190,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --holiday-color: color-mix(in srgb, var(--danger) 86%, var(--accent));
         --card-padding: var(--card-content-padding);
         --card-padding-compact: 11px 10px;
-        --card-radius: var(--radius);
+        --card-radius: var(--radius-surface);
         --card-title-size: clamp(15px, 1.6vw, 16px);
         --card-title-line-height: clamp(19px, 2vw, 20px);
         --card-title-weight: 800;
@@ -191,13 +199,14 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --card-description-line-height: clamp(16px, 1.8vw, 17px);
         --card-header-gap: clamp(8px, 1.2vw, 12px);
         --card-header-margin-bottom: 10px;
+        --card-action-gap: var(--space-sm);
         --card-section-gap: var(--page-section-gap);
         --action-row-gap: 8px;
         --action-row-margin-top: 8px;
         --card-footer-gap: 10px;
         --card-footer-margin-top: 10px;
         --list-divider-border: 1px solid var(--line);
-        --ui-control-radius: var(--radius-xs);
+        --ui-control-radius: var(--radius-control);
         /* Component style APIs: geometry/typography are owned by the base component. */
         --btn-font-weight: inherit;
         --btn-max-width: none;
@@ -499,7 +508,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         min-height: var(--icon-size, var(--action-button-size));
         padding: 0;
         border: 1px solid var(--line);
-        border-radius: var(--radius-xs);
+        border-radius: var(--radius-icon);
         background: var(--soft);
         color: var(--muted);
         font-size: var(--icon-font-size, var(--font-small));
@@ -518,6 +527,15 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --icon-font-size: 20px;
         list-style: none;
       }
+      .more-menu--bare > summary {
+        width: auto;
+        min-width: 0;
+        height: auto;
+        min-height: 0;
+        padding: 0 2px;
+        border: 0;
+        background: transparent;
+      }
       .more-menu summary::-webkit-details-marker {
         display: none;
       }
@@ -527,14 +545,22 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .more-menu-pop {
         position: absolute;
         right: 0;
-        top: calc(var(--action-button-size) + 8px);
+        top: calc(100% + 8px);
         z-index: 20;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2px;
         min-width: 92px;
         padding: 5px;
         background: var(--button-bg);
         border: 1px solid var(--line);
-        border-radius: var(--radius-xs);
+        border-radius: var(--radius-inset);
         box-shadow: var(--menu-shadow);
+        color: var(--ink);
+        font-size: var(--font-body);
+        font-weight: 400;
+        line-height: normal;
+        white-space: normal;
       }
       .btn--menu {
         --btn-width: 100%;
@@ -543,7 +569,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --btn-color: var(--ink);
         --btn-padding: 9px 10px;
         --btn-min-height: 0;
-        --btn-radius: var(--radius-xs);
+        --btn-radius: var(--radius-control);
         --btn-line-height: normal;
         justify-content: flex-start;
         text-align: left;
@@ -587,7 +613,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --btn-width: 100%;
         --btn-height: var(--ui-control-height-sm);
         --btn-min-height: var(--ui-control-height-sm);
-        --btn-radius: var(--radius-xs);
+        --btn-radius: var(--radius-control);
         --btn-padding: 0 10px;
         --btn-font-size: var(--button-small-font);
         --btn-line-height: 1;
@@ -636,9 +662,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
 
       /* Inline select component — home counters, schedule filter and plan status share one size API. */
       .field--inline-select {
-        --field-min-height: var(--unified-button-height);
-        --field-fixed-height: var(--unified-button-height);
-        --field-inset: 4px 9px;
+        --field-min-height: var(--action-button-size);
+        --field-fixed-height: var(--action-button-size);
+        --field-inset: 0 8px;
         --field-bg: var(--soft);
         --field-color: var(--muted);
         --field-size: var(--font-small);
@@ -675,7 +701,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .inset-card {
         background: var(--soft);
         border: 1px solid var(--line);
-        border-radius: var(--radius-xs);
+        border-radius: var(--radius-inset);
       }
       .budget-box {
         padding: 9px 10px;
@@ -798,7 +824,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         font-weight: 500;
         line-height: 1.25;
         white-space: nowrap;
-        overflow: hidden;
       }
       .planner-event-item-meta > span {
         min-width: 0;
@@ -817,6 +842,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .planner-event-item-meta-location {
         flex: 1 1 auto;
       }
+      .planner-event-item-meta-menu {
+        flex: 0 0 auto;
+        margin-left: auto;
+        padding-left: var(--card-action-gap);
+      }
       .planner-event-item-main {
         width: 100%;
         min-width: 0;
@@ -824,15 +854,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .planner-event-item-header {
         width: 100%;
         min-width: 0;
-        display: grid;
-        align-items: center;
-      }
-      .planner-event-item-header.has-actions {
-        grid-template-columns: minmax(0, 1fr) var(--action-button-size);
-        column-gap: clamp(6px, 1vw, 8px);
-      }
-      .planner-event-item-header.no-actions {
-        grid-template-columns: minmax(0, 1fr);
       }
       .planner-event-item-title-row {
         grid-column: 1;
@@ -865,7 +886,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         max-width: 110px;
         margin: 0;
         padding: 4px 7px;
-        border-radius: var(--radius-xs);
+        border-radius: var(--radius-badge);
         background: var(--accent-soft);
         color: var(--accent-ink);
         font-size: 10px;
@@ -874,14 +895,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-      }
-      .planner-event-item-actions {
-        grid-column: 2;
-        grid-row: 1;
-        justify-self: end;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
       }
       .planner-event-item-main > small {
         display: block;
@@ -919,7 +932,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         width: var(--task-check-size);
         height: var(--task-check-size);
         margin-top: 3px;
-        border-radius: var(--radius-xs);
+        border-radius: var(--radius-icon);
         border: 1.5px solid color-mix(in srgb, var(--muted) 38%, var(--line));
         background: var(--card);
       }
@@ -969,7 +982,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .task-priority {
         --pill-min-height: 0;
         --pill-padding: var(--task-badge-padding);
-        --pill-radius: var(--radius-xs);
+        --pill-radius: var(--radius-badge);
         --pill-font-size: var(--task-badge-size);
         --pill-font-weight: 600;
         flex: 0 0 auto;
@@ -1048,7 +1061,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         color: var(--ink);
         border: 1px solid color-mix(in srgb, var(--line) 72%, var(--card));
         background: var(--card);
-        border-radius: var(--radius-xs);
+        border-radius: var(--radius-icon);
         text-align: center;
         display: flex;
         flex-direction: column;
@@ -1136,7 +1149,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .order-buttons {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: var(--card-action-gap);
         flex: 0 0 auto;
       }
       .order-button {
@@ -1186,7 +1199,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         flex: 0 0 auto;
         overflow: hidden;
         border: 1px solid var(--line);
-        border-radius: var(--radius-xs);
+        border-radius: var(--radius-icon);
         background: var(--theme-preview-color, transparent);
       }
       .theme-color-preview {
@@ -1297,14 +1310,14 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .sync-field {
         --field-bg: var(--soft);
         --field-color: var(--sync-field-color, var(--ink));
-        --field-radius: var(--sync-field-radius, var(--radius-xs));
+        --field-radius: var(--sync-field-radius, var(--radius-control));
         appearance: none;
       }
       .shared-conflict-box {
         margin-top: 10px;
         padding: 11px 12px;
         border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--line));
-        border-radius: var(--radius-xs);
+        border-radius: var(--radius-inset);
         background: color-mix(in srgb, var(--danger) 6%, var(--card));
       }
       .shared-conflict-title {
@@ -1319,7 +1332,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         margin-top: 8px;
         padding: 9px 10px;
         border: 1px solid var(--line);
-        border-radius: var(--radius-xs);
+        border-radius: var(--radius-inset);
         background: var(--soft);
         line-height: 1.5;
       }
@@ -1343,7 +1356,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         color: var(--muted);
       }
       .sync-join-code {
-        --sync-field-radius: var(--radius-sm);
+        --sync-field-radius: var(--radius-control);
         --field-min-height: var(--field-search-height);
         --field-fixed-height: var(--field-search-height);
         --field-inset: 0 8px;
@@ -1453,11 +1466,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         flex-wrap: wrap;
         justify-content: flex-end;
         max-width: 100%;
-        gap: var(--space-sm);
+        gap: var(--card-action-gap);
       }
       .card--compact {
         --card-padding: var(--card-padding-compact);
-        --card-radius: var(--radius-sm);
+        --card-radius: var(--radius-inset);
       }
       /* ===== COMPONENT / 예산 게이지 ===== */
       .budget-gauge-arc {
@@ -1589,7 +1602,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         pointer-events: auto;
         padding: 11px 13px;
         border: 1px solid var(--line);
-        border-radius: var(--radius-sm);
+        border-radius: var(--radius-inset);
         background: var(--card);
         color: var(--ink);
         box-shadow: var(--toast-shadow);
@@ -1621,7 +1634,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         width: min(420px, 100%);
         padding: 18px;
         border: 1px solid var(--line);
-        border-radius: var(--radius-lg);
+        border-radius: var(--radius-modal);
         background: var(--card);
         box-shadow: var(--confirm-shadow);
       }
@@ -1666,7 +1679,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       }
       .sheet {
         background: var(--card);
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        border-radius: var(--radius-modal) var(--radius-modal) 0 0;
         padding: var(--modal-padding);
         max-width: var(--modal-max-width);
         width: 100%;
@@ -2574,10 +2587,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                   <div class="card-description">최근 변경을 되돌리거나 다시 적용할 수 있어요.</div>
                 </div>
               </div>
-              <div data-ui-component="CardBody" class="card-body"></div>
-              <div data-ui-component="CardFooter" class="card-footer-row">
-                <div class="small card-footer-status" data-dom="historyStatus">변경 복구 기록 없음</div>
-                <div data-ui-component="ActionRow" class="action-row action-row--flush action-row--wrap">
+              <div data-ui-component="CardBody" class="card-body">
+                <div class="small" data-dom="historyStatus">변경 복구 기록 없음</div>
+                <div data-ui-component="ActionRow" class="action-row action-row--spaced action-row--wrap">
                   <button class="btn btn--app-action" data-action="undo" data-dom="undoButton" type="button">실행 취소</button
                   ><button class="btn btn--app-action" data-action="redo" data-dom="redoButton" type="button">다시 실행</button>
                 </div>
@@ -2683,7 +2695,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "344",
+          version: "350",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           sharedStateMetaKey: "__plannerSync",
@@ -3109,8 +3121,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           return items?.length ? items.map((item, index) => renderer(item, index, items.length)).join("")
             : emptyMessage ? EmptyState(emptyMessage) : "";
         }
-        function MoreMenu(label, id, type) {
-          return `<details class="more-menu">
+        function MoreMenu(label, id, type, { variant = "" } = {}) {
+          const variantClass = variant === "bare" ? " more-menu--bare" : "";
+          return `<details class="more-menu${variantClass}">
             <summary class="icon-control" aria-label="${attr(label)} 메뉴">⋯</summary>
             <div class="more-menu-pop">
               ${Button("수정", { action: `edit-${type}`, id, className: "btn--menu",
@@ -4217,12 +4230,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             ? `<span class="planner-event-item-category">${esc(e.category)}</span>`
             : "";
 
-          const heading = `<div class="planner-event-item-header${showActions ? " has-actions" : " no-actions"}">
+          const heading = `<div class="planner-event-item-header">
     <div class="planner-event-item-title-row">
       <span class="planner-event-item-title">${esc(e.title)}</span>
       ${category}
     </div>
-    ${showActions ? `<div class="planner-event-item-actions">${MoreMenu("일정", e.id, "event")}</div>` : ""}
   </div>`;
 
           const metaParts = [
@@ -4230,8 +4242,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             e.time ? `<span class="planner-event-item-meta-time">${esc(e.time)}</span>` : "",
             e.location ? `<span class="planner-event-item-meta-location">${esc(e.location)}</span>` : "",
           ].filter(Boolean);
-          const metaBar = metaParts.length
-            ? `<div class="inset-card planner-event-item-meta">${metaParts.join("")}</div>`
+          const metaMenu = showActions
+            ? `<div class="planner-event-item-meta-menu">${MoreMenu("일정", e.id, "event", { variant: "bare" })}</div>`
+            : "";
+          const metaBar = metaParts.length || metaMenu
+            ? `<div class="inset-card planner-event-item-meta">${metaParts.join("")}${metaMenu}</div>`
             : "";
 
           return `<div data-ui-component="EventItem" class="planner-event-item list-divided-item${isToday ? " planner-event-item-today" : ""}">
@@ -6994,6 +7009,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             if (!footer.classList.contains("card-footer-row")) issues.push(`CardFooter ${index}: .card-footer-row missing`);
             if (footer.parentElement?.dataset.uiComponent !== "Card")
               issues.push(`CardFooter ${index}: direct Card child required`);
+          });
+          const rootStyle = getComputedStyle(document.documentElement);
+          ["surface", "modal", "inset", "control", "icon", "badge"].forEach((role) => {
+            if (!rootStyle.getPropertyValue(`--radius-${role}`).trim())
+              issues.push(`Radius scale: --radius-${role} missing`);
           });
           const budgetGauges = [...document.querySelectorAll('[data-ui-component="BudgetGauge"]')];
           if (budgetGauges.length !== 2) issues.push(`BudgetGauge: expected 2 instances, found ${budgetGauges.length}`);
