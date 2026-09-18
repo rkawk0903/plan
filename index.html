@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 선언형 아키텍처 v342
+우리 결혼 플래너 — 선언형 아키텍처 v344
 
 EDIT MAP (검색할 이름 → 수정할 책임)
   CSS :root / UI EDIT MAP   버튼·카드·제목·입력창·페이지 간격의 디자인 토큰
@@ -35,6 +35,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
   v325의 잘못 노출된 Memos action descriptor만 제거; 정상 공개 함수와 저장 데이터 계약 유지.
   공개 edit은 모두 Collection.edit 경유. registry 검사는 실제 폼 ID·anchor·action도 확인합니다.
   일정 2열 기준은 홈 보조 카드와 동일하며, 헤더/상태 select 크기는 field--inline-select가 소유합니다.
+  일정 항목 메타는 상단 inset-card 한 줄이 소유하며, 선택 날짜 목록만 EventItem showDate=false로 날짜를 생략합니다.
+  목록 항목 구분선은 list-divided-item이 굵기·색상·마지막 항목 처리를 공통 소유합니다.
   검색창과 공유 로그인 입력창은 field--compact-text가 높이·폰트를 함께 소유하며 검색창은 field--search가 가로폭을 소유합니다.
   빠른 메모는 같은 폰트 규격을 공유하고 autosize-textarea action으로 내용에 맞춰 세로 높이만 자동 확장됩니다.
   테마 색상 편집기는 native color swatch 외형을 숨기고 theme-color-control이 외곽선·미리보기를 소유합니다.
@@ -112,7 +114,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --task-note-size: 12px;
         --task-badge-size: 10px;
         --task-badge-padding: 4px 7px;
-        --event-side-width: clamp(110px, 22vw, 160px);
         --event-title-size: 14px;
         --event-row-padding: 11px 0;
         --calendar-cell-height: clamp(64px, 9vw, 86px);
@@ -195,6 +196,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --action-row-margin-top: 8px;
         --card-footer-gap: 10px;
         --card-footer-margin-top: 10px;
+        --list-divider-border: 1px solid var(--line);
         --ui-control-radius: var(--radius-xs);
         /* Component style APIs: geometry/typography are owned by the base component. */
         --btn-font-weight: inherit;
@@ -362,10 +364,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .memo-item {
         display: block;
         padding: 13px 0;
-        border-bottom: 1px solid var(--line);
-      }
-      .memo-item:last-child {
-        border-bottom: 0;
       }
       .memo-text {
         margin-top: 5px;
@@ -657,16 +655,16 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         flex-direction: column;
         gap: 10px;
       }
+      /* ===== COMPONENT / 목록 항목 구분선 ===== */
+      .list-divided-item:not(:last-child) {
+        border-bottom: var(--list-divider-border);
+      }
       /* ===== COMPONENT / 예산 ===== */
       .budget-line {
         display: grid;
         grid-template-columns: 1fr;
         gap: var(--space-sm);
         padding: 14px 0;
-        border-bottom: 1px solid var(--line);
-      }
-      .budget-line:last-child {
-        border-bottom: 0;
       }
       .budget-amounts {
         display: grid;
@@ -708,10 +706,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         flex-direction: column;
         gap: 10px;
         padding: 18px 0;
-        border-bottom: 1px solid var(--line);
-      }
-      .plan:last-child {
-        border-bottom: 0;
       }
       .plan-block {
         margin-top: 10px;
@@ -787,54 +781,41 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .planner-event-item {
         width: 100%;
         min-width: 0;
-        display: grid;
-        grid-template-columns: var(--event-side-width) minmax(0, 1fr);
-        column-gap: clamp(8px, 1.2vw, 12px);
-        align-items: start;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
         padding: var(--event-row-padding);
       }
-      .planner-event-item:not(:last-child) {
-        border-bottom: 1px solid var(--line);
-      }
-      .planner-event-item-side {
+      .planner-event-item-meta {
         width: 100%;
         min-width: 0;
         display: flex;
-        flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
         gap: 0;
-        padding: clamp(4px, 0.8vw, 6px) clamp(6px, 1vw, 8px);
-        border-radius: var(--radius-xs);
-        background: var(--accent-soft);
-        color: var(--accent-ink);
-        overflow: hidden;
-      }
-      .planner-event-item-side > span {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        margin: 0;
-        padding: 4px 7px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-xs);
-        background: var(--card);
-        color: var(--accent-ink);
+        padding: 7px 10px;
+        color: var(--muted);
         font-size: 10px;
         font-weight: 500;
         line-height: 1.25;
-        text-align: center;
         white-space: nowrap;
+        overflow: hidden;
+      }
+      .planner-event-item-meta > span {
+        min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .planner-event-item-side > .planner-event-item-date {
-        padding-top: 3px;
+      .planner-event-item-meta > span + span::before {
+        content: "·";
+        margin: 0 7px;
+        color: var(--line);
       }
-      .planner-event-item-side > .planner-event-item-location {
-        padding-bottom: 3px;
-        font-size: 9px;
+      .planner-event-item-meta-date,
+      .planner-event-item-meta-time {
+        flex: 0 0 auto;
+      }
+      .planner-event-item-meta-location {
+        flex: 1 1 auto;
       }
       .planner-event-item-main {
         width: 100%;
@@ -930,13 +911,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         align-items: start;
         column-gap: clamp(9px, 1.2vw, 11px);
         padding: var(--task-row-padding);
-        border-bottom: 1px solid var(--line);
       }
       .task:not(.has-actions) {
         grid-template-columns: var(--task-check-column) minmax(0, 1fr);
-      }
-      .task:last-child {
-        border-bottom: 0;
       }
       .task-check {
         width: var(--task-check-size);
@@ -2706,7 +2683,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "342",
+          version: "344",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           sharedStateMetaKey: "__plannerSync",
@@ -4154,7 +4131,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         function TaskItem(item, { showActions = true } = {}) {
           const done = item.status === "done";
           const priorityClass = item.priority === "높음" ? "high" : item.priority === "낮음" ? "low" : "";
-          return UIComponentRoot("TaskItem", ["task", done ? "done" : "", showActions ? "has-actions" : ""].filter(Boolean).join(" "), `
+          return UIComponentRoot("TaskItem", ["task", "list-divided-item", done ? "done" : "", showActions ? "has-actions" : ""].filter(Boolean).join(" "), `
             <button type="button" class="task-check ${done ? "on" : ""}" aria-label="${done ? "할 일 완료 취소" : "할 일 완료"}"
               data-action="toggle-task" data-id="${attr(item.id)}">${done ? "✓" : ""}</button>
             <div class="task-body"><div class="task-main">
@@ -4230,7 +4207,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           );
           return { sortedEvents, upcomingEvents, eventCountByDate };
         }
-        function EventItem(e, { today = null, showActions = true } = {}) {
+        function EventItem(e, { today = null, showActions = true, showDate = true } = {}) {
           const ed = parseLocalDate(e.date);
           const isToday = today instanceof Date && ed.getTime() === today.getTime();
           const dayName = ["일", "월", "화", "수", "목", "금", "토"][ed.getDay()];
@@ -4248,14 +4225,17 @@ EDIT MAP (검색할 이름 → 수정할 책임)
     ${showActions ? `<div class="planner-event-item-actions">${MoreMenu("일정", e.id, "event")}</div>` : ""}
   </div>`;
 
-          const dateTimePlace = [
-            `<span class="planner-event-item-date">${dateLabel}</span>`,
-            e.time ? `<span>${esc(e.time)}</span>` : "",
-            e.location ? `<span class="planner-event-item-location">${esc(e.location)}</span>` : "",
-          ].join("");
+          const metaParts = [
+            showDate ? `<span class="planner-event-item-meta-date">${dateLabel}</span>` : "",
+            e.time ? `<span class="planner-event-item-meta-time">${esc(e.time)}</span>` : "",
+            e.location ? `<span class="planner-event-item-meta-location">${esc(e.location)}</span>` : "",
+          ].filter(Boolean);
+          const metaBar = metaParts.length
+            ? `<div class="inset-card planner-event-item-meta">${metaParts.join("")}</div>`
+            : "";
 
-          return `<div data-ui-component="EventItem" class="planner-event-item${isToday ? " planner-event-item-today" : ""}">
-    <div class="planner-event-item-side">${dateTimePlace}</div>
+          return `<div data-ui-component="EventItem" class="planner-event-item list-divided-item${isToday ? " planner-event-item-today" : ""}">
+    ${metaBar}
     <div class="planner-event-item-main">${heading}<small>${esc(e.note || "메모 없음")}</small></div>
   </div>`;
         }
@@ -4359,7 +4339,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           setOwnedHTML(
             "schedule",
             "scheduleList",
-            Collection.html("event", selectedEvents, { today: v.today, emptyMessage: "선택한 날짜에 일정이 없어요." }),
+            Collection.html("event", selectedEvents, { today: v.today, showDate: false, emptyMessage: "선택한 날짜에 일정이 없어요." }),
           );
 
           const filter = selectedValue("scheduleFilter", "all");
@@ -4397,7 +4377,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           const actions = SortableCardActions(item.id, index, total, "budget", COLLECTION_SCHEMAS.budget.label);
           const amounts = [["예상금액", item.planned], ["실제금액", item.actual]].map(([label, amount]) =>
             `<div class="inset-card budget-box"><div class="label">${label}</div><b>${won(amount)}</b></div>`).join("");
-          return UIComponentRoot("BudgetCard", "budget-line", `
+          return UIComponentRoot("BudgetCard", "budget-line list-divided-item", `
             ${CardHeader(item.name, "", actions)}
             <div class="budget-amounts">${amounts}</div>
             ${item.details ? `<div class="inset-card budget-box">
@@ -4442,7 +4422,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             <div class="inset-card plan-block"><div class="plan-label">${label}</div>
               <div class="plan-text">${esc(text || "미입력")}</div>
             </div>`).join("");
-          return UIComponentRoot("PlanCard", "plan", CardHeader(item.name, "", actions, "card-header--responsive") + blocks);
+          return UIComponentRoot("PlanCard", "plan list-divided-item", CardHeader(item.name, "", actions, "card-header--responsive") + blocks);
         }
 
         // ===== 05 DOMAIN / Memos =====
@@ -4450,7 +4430,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           const heading = CardHeader(`메모 ${total - index}`, "", MoreMenu("메모", "" + m.id, "memo"));
           return UIComponentRoot(
             "MemoCard",
-            "memo-item",
+            "memo-item list-divided-item",
             `<div class="memo-content">${heading}<div class="memo-text">${esc(m.text || "")}</div></div>`,
           );
         }
@@ -7025,6 +7005,12 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 !gauge.querySelector(".budget-arc-value"))
               issues.push(`BudgetGauge ${index}: canonical structure required`);
           });
+          ["TaskItem", "EventItem", "BudgetCard", "PlanCard", "MemoCard"].forEach((name) => {
+            document.querySelectorAll(`[data-ui-component="${name}"]`).forEach((item) => {
+              if (!item.classList.contains("list-divided-item"))
+                issues.push(`${name}: shared list divider contract required`);
+            });
+          });
           const searchFields = [...document.querySelectorAll(".field--search")];
           if (searchFields.length !== 3 || searchFields.some((field) => !field.classList.contains("field--compact-text")))
             issues.push("Search fields: compact text control contract required");
@@ -7105,6 +7091,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             + OrderButtons("example", 0, 2, "category")
             + RecoveryItem({ id: "example", createdAt: "2027-01-01", reason: "contract" })
             + Object.keys(PAGE_REGISTRY).map((id) => Button(id, { action: "show-page" })).join("");
+          ["TaskItem", "EventItem", "BudgetCard", "PlanCard", "MemoCard"].forEach((name) => {
+            const item = template.content.querySelector(`[data-ui-component="${name}"]`);
+            add(!!item?.classList.contains("list-divided-item"), `${name}: missing shared list divider`);
+          });
           const actionElements = [...$$('[data-action]'), ...template.content.querySelectorAll('[data-action]')];
           for (const element of actionElements) {
             const action = ACTIONS[element.dataset.action];
