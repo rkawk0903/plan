@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 선언형 아키텍처 v350
+우리 결혼 플래너 — 선언형 아키텍처 v351
 
 EDIT MAP (검색할 이름 → 수정할 책임)
   CSS :root / UI EDIT MAP   버튼·카드·제목·입력창·페이지 간격의 디자인 토큰
@@ -16,7 +16,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
   05 DOMAIN                Tasks / Schedule / Budget / Plans / Memos / Home / Theme
   06 STATE                 상태 정규화·검증·저장·History·Recovery·Backup
   SHARED SYNC              인증·프로젝트·CAS·병합·충돌·실시간 연결 (독립 lifecycle)
-  07 TESTING               self-test / registry contract / CRUD smoke / CAS mock
+  07 TESTING               self-test / registry contract / CRUD smoke / CAS mock / UI architecture guard
   08 PUBLIC API            Planner / AppDomains 및 의도적으로 남긴 호환 adapter
   09 BOOTSTRAP             정적 HTML anchor 연결·초기화·PWA lifecycle
 
@@ -25,6 +25,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
   목록에도 표시할 값은 해당 domain renderer에서 표현합니다. 데이터 로직은 옮기지 않습니다.
   새 CRUD 화면: collection 정의 + PAGE_REGISTRY + 정적 HTML page/collection host.
   save/edit/delete/move, modal, action, DOM 소유권을 복사하지 않습니다.
+  기존 컴포넌트와 유사한 UI 예외는 새 selector를 만들기 전에 등록된 variant로 표현할 수 있는지 먼저 확인합니다.
   저장 계약 변경은 다른 버전 클라이언트와의 공유 호환성을 별도로 검토합니다.
   상태 변경은 mutateState의 draft, 외부 데이터는 prepareIncomingState를 거칩니다.
   정적 HTML은 data-dom/data-page-root/data-collection anchor를 사용합니다.
@@ -38,14 +39,15 @@ EDIT MAP (검색할 이름 → 수정할 책임)
   카드 헤더 액션과 OrderButtons 내부 간격은 card-action-gap 하나를 공유합니다.
   일정 항목 메타는 상단 inset-card 한 줄이 소유하며, 선택 날짜 목록만 EventItem showDate=false로 날짜를 생략합니다.
   일정 항목의 더보기 메뉴는 같은 MoreMenu의 bare variant를 메타 inset-card 우측 끝에 배치하며 홈 미리보기는 showActions=false를 유지합니다.
-  MoreMenu 팝업은 부모 문맥과 무관하게 자체 grid 세로 목록 규격을 소유합니다.
+  MoreMenu 팝업은 부모 문맥과 무관하게 자체 grid 세로 목록 규격을 소유하며 default/bare 외 variant는 거부합니다.
+  MoreMenu·OrderButtons는 data-ui-component 계약을 가지며 UI guard가 열린 메뉴·긴 텍스트·action geometry를 실제 레이아웃으로 검사합니다.
   목록 항목 구분선은 list-divided-item이 굵기·색상·마지막 항목 처리를 공통 소유합니다.
   모서리 둥글기는 단일 테마 값에서 surface/modal/inset/control/icon/badge 광학 스케일로 파생합니다.
   검색창과 공유 로그인 입력창은 field--compact-text가 높이·폰트를 함께 소유하며 검색창은 field--search가 가로폭을 소유합니다.
   빠른 메모는 같은 폰트 규격을 공유하고 autosize-textarea action으로 내용에 맞춰 세로 높이만 자동 확장됩니다.
   테마 색상 편집기는 native color swatch 외형을 숨기고 theme-color-control이 외곽선·미리보기를 소유합니다.
   테마 색상 목록은 홈 분야별 진행률과 같은 2열→3열→4열 반응형 규칙을 사용합니다.
-  Chromium: self-test 16/16 · smoke 10/10 · CAS 4/4; 변경부를 360·390·768·1280px에서 회귀 검사했습니다.
+  Chromium: self-test · smoke · CAS와 별도로 UI architecture guard를 360·390·768·1280px 실제 browser viewport에서 반복 실행합니다.
   공통 select 및 검색창 높이/내용폭·가로 채움·horizontal overflow 검사 통과. 메뉴는 가로 스크롤입니다.
   APP_CONFIG.version이 백업 appVersion·sw.js 요청·PWA cache 접두사 버전을 함께 소유합니다.
   실제 Supabase 인증·RLS·실시간 네트워크와 배포 origin의 Service Worker 동작은 검증하지 않았습니다.
@@ -2695,7 +2697,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "350",
+          version: "351",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           sharedStateMetaKey: "__plannerSync",
@@ -3121,9 +3123,12 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           return items?.length ? items.map((item, index) => renderer(item, index, items.length)).join("")
             : emptyMessage ? EmptyState(emptyMessage) : "";
         }
-        function MoreMenu(label, id, type, { variant = "" } = {}) {
+        const MORE_MENU_VARIANTS = Object.freeze(["default", "bare"]);
+        function MoreMenu(label, id, type, { variant = "default" } = {}) {
+          if (!MORE_MENU_VARIANTS.includes(variant))
+            throw new Error(`MoreMenu: unsupported variant "${variant}"`);
           const variantClass = variant === "bare" ? " more-menu--bare" : "";
-          return `<details class="more-menu${variantClass}">
+          return `<details data-ui-component="MoreMenu" data-ui-variant="${attr(variant)}" class="more-menu${variantClass}">
             <summary class="icon-control" aria-label="${attr(label)} 메뉴">⋯</summary>
             <div class="more-menu-pop">
               ${Button("수정", { action: `edit-${type}`, id, className: "btn--menu",
@@ -3134,7 +3139,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           </details>`;
         }
         function OrderButtons(id, index, length, type) {
-          return `<div class="order-buttons" data-order-type="${attr(type)}" data-order-id="${attr(id)}">
+          return `<div data-ui-component="OrderButtons" class="order-buttons" data-order-type="${attr(type)}" data-order-id="${attr(id)}">
             ${[[-1, "위로", "↑", index <= 0], [1, "아래로", "↓", index >= length - 1]].map(
               ([delta, label, arrow, disabled]) => `<button${htmlAttributes({
                 type: "button", class: "icon-control order-button", "aria-label": `${label} 이동`,
@@ -6980,6 +6985,51 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           }
           return { ok: duplicates.length === 0, duplicates };
         }
+        function addMoreMenuContractIssues(root, issues, prefix = "MoreMenu") {
+          root.querySelectorAll('[data-ui-component="MoreMenu"]').forEach((menu, index) => {
+            const label = `${prefix} ${index}`;
+            const variant = menu.dataset.uiVariant || "";
+            const directChildren = directUiChildren(menu);
+            const summary = directChildren[0];
+            const popup = directChildren[1];
+            if (!MORE_MENU_VARIANTS.includes(variant))
+              issues.push(`${label}: unsupported variant ${variant || "missing"}`);
+            if (!summary?.matches("summary.icon-control") || !popup?.classList.contains("more-menu-pop") || directChildren.length !== 2)
+              issues.push(`${label}: canonical summary/popup structure required`);
+            const bare = variant === "bare";
+            if (menu.classList.contains("more-menu--bare") !== bare)
+              issues.push(`${label}: variant class mismatch`);
+            if (bare && !menu.closest(".planner-event-item-meta-menu"))
+              issues.push(`${label}: bare variant is reserved for EventItem meta`);
+            const buttons = popup ? [...popup.children].filter((child) => child.matches("button.btn--menu")) : [];
+            if (buttons.length !== 2)
+              issues.push(`${label}: exactly two menu actions required`);
+            const actions = buttons.map((button) => button.dataset.action || "");
+            if (actions.length === 2 && (!actions[0].startsWith("edit-") || !actions[1].startsWith("delete-")))
+              issues.push(`${label}: edit/delete action order required`);
+          });
+        }
+        function addOrderButtonsContractIssues(root, issues, prefix = "OrderButtons") {
+          root.querySelectorAll('[data-ui-component="OrderButtons"]').forEach((group, index) => {
+            const buttons = [...group.children].filter((child) => child.matches("button.order-button.icon-control"));
+            if (!group.classList.contains("order-buttons") || buttons.length !== 2)
+              issues.push(`${prefix} ${index}: canonical two-button structure required`);
+            if (buttons.some((button) => !String(button.dataset.action || "").startsWith("move-")))
+              issues.push(`${prefix} ${index}: move action required`);
+          });
+        }
+        function addEventItemContractIssues(root, issues, prefix = "EventItem") {
+          root.querySelectorAll('[data-ui-component="EventItem"]').forEach((item, index) => {
+            const menus = [...item.querySelectorAll('[data-ui-component="MoreMenu"]')];
+            if (item.querySelector(".planner-event-item-main .more-menu"))
+              issues.push(`${prefix} ${index}: MoreMenu must not live in main content`);
+            if (menus.some((menu) => menu.dataset.uiVariant !== "bare" || !menu.closest(".planner-event-item-meta-menu")))
+              issues.push(`${prefix} ${index}: actions must use bare MoreMenu inside meta`);
+            const menuHost = item.querySelector(".planner-event-item-meta-menu");
+            if (menuHost && !menuHost.querySelector(':scope > [data-ui-component="MoreMenu"][data-ui-variant="bare"]'))
+              issues.push(`${prefix} ${index}: meta menu host requires bare MoreMenu`);
+          });
+        }
         function assertUiComponentContracts() {
           const issues = [];
           document.querySelectorAll('[data-ui-component="Card"]').forEach((card, index) => {
@@ -7010,6 +7060,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             if (footer.parentElement?.dataset.uiComponent !== "Card")
               issues.push(`CardFooter ${index}: direct Card child required`);
           });
+          addMoreMenuContractIssues(document, issues);
+          addOrderButtonsContractIssues(document, issues);
+          addEventItemContractIssues(document, issues);
           const rootStyle = getComputedStyle(document.documentElement);
           ["surface", "modal", "inset", "control", "icon", "badge"].forEach((role) => {
             if (!rootStyle.getPropertyValue(`--radius-${role}`).trim())
@@ -7115,6 +7168,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             const item = template.content.querySelector(`[data-ui-component="${name}"]`);
             add(!!item?.classList.contains("list-divided-item"), `${name}: missing shared list divider`);
           });
+          const generatedComponentIssues = [];
+          addMoreMenuContractIssues(template.content, generatedComponentIssues, "Generated MoreMenu");
+          addOrderButtonsContractIssues(template.content, generatedComponentIssues, "Generated OrderButtons");
+          addEventItemContractIssues(template.content, generatedComponentIssues, "Generated EventItem");
+          generatedComponentIssues.forEach((issue) => add(false, issue));
           const actionElements = [...$$('[data-action]'), ...template.content.querySelectorAll('[data-action]')];
           for (const element of actionElements) {
             const action = ACTIONS[element.dataset.action];
@@ -7377,6 +7435,169 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           }
           return { ok: results.every((item) => item.ok), results };
         }
+        const UI_GUARD_WIDTHS = Object.freeze([360, 390, 768, 1280]);
+        function uiGuardFixtureHtml() {
+          const longLocation =
+            "매우 긴 테스트 장소 이름 · 주차 안내 · 건물명 · 상세 주소 · 엘리베이터 위치 · ".repeat(7);
+          const event = {
+            id: "ui-guard-event",
+            date: "2027-01-01",
+            time: "12:30",
+            title: "긴 일정 제목이 들어와도 컴포넌트 구조가 유지되는지 확인하는 테스트 일정",
+            location: longLocation,
+            category: "테스트 분류",
+            note: "긴 메모가 들어가더라도 메타바와 메뉴가 서로 침범하지 않아야 합니다.",
+          };
+          const plan = {
+            id: "ui-guard-plan",
+            name: "UI Guard 부부계획",
+            status: PLAN_STATUSES[0],
+            details: "상태 선택창과 위아래/더보기 버튼의 높이와 간격을 확인합니다.",
+            note: "대표 상태 fixture",
+          };
+          return `<main data-ui-guard-root>
+            <section data-ui-guard="plan">${PlanCard(plan, 0, 2)}</section>
+            <section data-ui-guard="event-actions">${EventItem(event, { showActions: true, showDate: true })}</section>
+            <section data-ui-guard="event-no-actions">${EventItem({ ...event, id: "ui-guard-home" }, { showActions: false, showDate: true })}</section>
+            <section data-ui-guard="event-no-date">${EventItem({ ...event, id: "ui-guard-selected" }, { showActions: true, showDate: false })}</section>
+          </main>`;
+        }
+        function uiGuardRectInside(inner, outer, tolerance = 1) {
+          return inner.left >= outer.left - tolerance
+            && inner.right <= outer.right + tolerance
+            && inner.top >= outer.top - tolerance
+            && inner.bottom <= outer.bottom + tolerance;
+        }
+        async function createUiGuardSandbox() {
+          const sandbox = document.createElement("div");
+          sandbox.dataset.uiGuardSandbox = "";
+          sandbox.setAttribute("aria-hidden", "true");
+          sandbox.style.cssText =
+            "position:fixed;left:-20000px;top:0;width:100vw;max-width:none;padding:16px;opacity:0;pointer-events:none;z-index:-1;";
+          sandbox.innerHTML = uiGuardFixtureHtml();
+          document.body.appendChild(sandbox);
+          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          sandbox.querySelectorAll('[data-ui-component="MoreMenu"]').forEach((menu) => { menu.open = true; });
+          await new Promise((resolve) => requestAnimationFrame(resolve));
+          return sandbox;
+        }
+        async function runUiVisualContractTests({ expectedWidth = null } = {}) {
+          const results = [];
+          const width = window.innerWidth;
+          const add = (name, ok, detail = "") =>
+            results.push({ width, name, ok: !!ok, detail });
+          let sandbox = null;
+          try {
+            sandbox = await createUiGuardSandbox();
+            const rect = (element) => element.getBoundingClientRect();
+            const root = sandbox.querySelector("[data-ui-guard-root]");
+            const rootRect = rect(root);
+            if (expectedWidth != null)
+              add("viewport width matches expected", Math.abs(width - Number(expectedWidth)) <= 1, `${width}/${expectedWidth}`);
+            add("fixture has no horizontal overflow",
+              root.scrollWidth <= root.clientWidth + 1,
+              `${root.scrollWidth}/${root.clientWidth}`);
+
+            const planHost = sandbox.querySelector('[data-ui-guard="plan"]');
+            const action = planHost.querySelector(".card-header-action");
+            const order = action.querySelector('[data-ui-component="OrderButtons"]');
+            const orderButtons = [...order.querySelectorAll(":scope > .order-button")];
+            const normalMenu = action.querySelector('[data-ui-component="MoreMenu"][data-ui-variant="default"]');
+            const normalSummary = normalMenu.querySelector(":scope > summary");
+            const select = action.querySelector(".field--inline-select");
+            const heights = [...orderButtons, normalSummary, select].map((element) => rect(element).height);
+            add("action control heights match",
+              Math.max(...heights) - Math.min(...heights) <= 1,
+              heights.map((value) => value.toFixed(2)).join(", "));
+
+            const innerGap = rect(orderButtons[1]).left - rect(orderButtons[0]).right;
+            const firstOuterGap = rect(normalMenu).left - rect(order).right;
+            const secondOuterGap = rect(select).left - rect(normalMenu).right;
+            add("order/menu/select gaps match",
+              Math.max(innerGap, firstOuterGap, secondOuterGap) - Math.min(innerGap, firstOuterGap, secondOuterGap) <= 1.5,
+              [innerGap, firstOuterGap, secondOuterGap].map((value) => value.toFixed(2)).join(", "));
+
+            const actionEvent = sandbox.querySelector('[data-ui-guard="event-actions"] [data-ui-component="EventItem"]');
+            const noActionEvent = sandbox.querySelector('[data-ui-guard="event-no-actions"] [data-ui-component="EventItem"]');
+            const noDateEvent = sandbox.querySelector('[data-ui-guard="event-no-date"] [data-ui-component="EventItem"]');
+            const meta = actionEvent.querySelector(".planner-event-item-meta");
+            const bareMenu = meta.querySelector('[data-ui-component="MoreMenu"][data-ui-variant="bare"]');
+            const bareSummary = bareMenu.querySelector(":scope > summary");
+            const location = meta.querySelector(".planner-event-item-meta-location");
+            const metaMenu = meta.querySelector(".planner-event-item-meta-menu");
+            add("EventItem action placement",
+              !!bareMenu && !actionEvent.querySelector(".planner-event-item-main .more-menu"),
+              "bare menu must live in meta only");
+            add("home EventItem keeps actions hidden",
+              !noActionEvent.querySelector('[data-ui-component="MoreMenu"]'));
+            add("selected-date EventItem hides only date",
+              !noDateEvent.querySelector(".planner-event-item-meta-date")
+                && !!noDateEvent.querySelector('[data-ui-component="MoreMenu"][data-ui-variant="bare"]'));
+
+            const bareStyle = getComputedStyle(bareSummary);
+            add("bare MoreMenu is visually bare",
+              parseFloat(bareStyle.borderTopWidth) === 0
+                && bareStyle.backgroundColor === "rgba(0, 0, 0, 0)",
+              `${bareStyle.borderTopWidth}/${bareStyle.backgroundColor}`);
+
+            const metaRect = rect(meta);
+            const menuRect = rect(metaMenu);
+            const locationRect = rect(location);
+            add("long event metadata preserves menu lane",
+              locationRect.right <= menuRect.left + 1 && menuRect.right <= metaRect.right + 1,
+              `locationRight=${locationRect.right.toFixed(1)}, menu=${menuRect.left.toFixed(1)}..${menuRect.right.toFixed(1)}`);
+
+            const normalPopup = normalMenu.querySelector(":scope > .more-menu-pop");
+            for (const [kind, menu] of [["normal", normalMenu], ["bare", bareMenu]]) {
+              const popup = menu.querySelector(":scope > .more-menu-pop");
+              const buttons = [...popup.querySelectorAll(":scope > .btn--menu")];
+              const popupRect = rect(popup);
+              const buttonRects = buttons.map(rect);
+              add(`${kind} MoreMenu popup layout`,
+                getComputedStyle(popup).display === "grid"
+                  && buttons.length === 2
+                  && buttonRects[1].top >= buttonRects[0].bottom - 0.5
+                  && buttonRects.every((buttonRect) => uiGuardRectInside(buttonRect, popupRect, 1))
+                  && popup.scrollWidth <= popup.clientWidth + 1,
+                `display=${getComputedStyle(popup).display}, buttons=${buttons.length}, scroll=${popup.scrollWidth}/${popup.clientWidth}`);
+              add(`${kind} MoreMenu popup typography isolated`,
+                getComputedStyle(popup).fontSize === getComputedStyle(normalPopup).fontSize
+                  && getComputedStyle(popup).whiteSpace === "normal",
+                `${getComputedStyle(popup).fontSize}/${getComputedStyle(popup).whiteSpace}`);
+            }
+
+            const barePopup = bareMenu.querySelector(":scope > .more-menu-pop");
+            const barePopupRect = rect(barePopup);
+            add("bare popup is not clipped by meta",
+              getComputedStyle(meta).overflowX === "visible"
+                && barePopupRect.bottom > metaRect.bottom
+                && barePopupRect.left >= rootRect.left - 1
+                && barePopupRect.right <= rootRect.right + 1,
+              `overflow=${getComputedStyle(meta).overflowX}, popup=${barePopupRect.left.toFixed(1)}..${barePopupRect.right.toFixed(1)}`);
+          } catch (error) {
+            add("guard execution", false, String(error?.message || error));
+          } finally {
+            sandbox?.remove();
+          }
+          return {
+            ok: results.every((item) => item.ok),
+            width,
+            recommendedWidths: [...UI_GUARD_WIDTHS],
+            results,
+          };
+        }
+        async function runUiArchitectureGuards(options = {}) {
+          const components = assertUiComponentContracts();
+          const registries = assertRegistryContracts();
+          const visual = await runUiVisualContractTests(options);
+          return {
+            ok: components.ok && registries.ok && visual.ok,
+            components,
+            registries,
+            visual,
+          };
+        }
+
         async function runPwaDiagnostics() {
           const results = [];
           const add = (name, ok, detail = "") => results.push({ name, ok: !!ok, detail });
@@ -7517,6 +7738,14 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           });
           test("UI ownership map has no duplicates", () => assertUiOwnershipMap().ok);
           test("UI component contracts are consistent", () => assertUiComponentContracts().ok);
+          test("MoreMenu rejects unregistered variants", () => {
+            try {
+              MoreMenu("test", "id", "memo", { variant: "unknown" });
+              return false;
+            } catch {
+              return true;
+            }
+          });
           const report = { ok: results.every((result) => result.ok), results };
           if (!report.ok) {
             console.error("Planner self-test failed", report);
@@ -7545,6 +7774,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             run: runPlannerSelfTests,
             runSmoke: runPlannerSmokeTests,
             runSharedMocks: runSharedMockTests,
+            runUiGuards: runUiArchitectureGuards,
             runPwaDiagnostics,
             assertRegistries: assertRegistryContracts,
             pure: PureFunctions,
