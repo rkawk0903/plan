@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 선언형 아키텍처 v357
+우리 결혼 플래너 — 선언형 아키텍처 v358
 
 EDIT MAP (검색할 이름 → 수정할 책임)
   CSS :root / UI EDIT MAP   버튼·카드·제목·입력창·페이지 간격의 디자인 토큰
@@ -40,7 +40,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
   PlanCard는 fixed-actions CardHeader variant로 모바일에서도 위/아래·더보기·상태 선택창을 우측 한 줄에 유지하며, 항목 내부 세로 간격은 plan gap 하나가 소유합니다.
   BudgetCard도 CardHeader의 기본 하단 margin을 제거하고 budget-line gap 하나가 이름 아래 간격을 소유합니다.
   일정 항목 메타는 상단 inset-card 한 줄이 소유하며, 선택 날짜 목록만 EventItem showDate=false로 날짜를 생략합니다.
-  일정 항목의 더보기 메뉴는 같은 MoreMenu의 bare variant를 메타 inset-card 우측 끝에 배치하며 홈 미리보기는 showActions=false를 유지합니다.
+  일정 항목의 더보기 메뉴는 같은 MoreMenu의 bare variant를 메타 inset-card 우측 끝에 절대배치하며, transform 없이 중앙 정렬하고 열린 EventItem을 stacking layer 위로 올려 팝업 가림을 방지합니다. 메타 높이는 action-button-size를 기준으로 유지하고 홈 미리보기는 showActions=false를 유지합니다.
   MoreMenu 팝업은 부모 문맥과 무관하게 자체 grid 세로 목록 규격을 소유하며 default/bare 외 variant는 거부합니다.
   MoreMenu·OrderButtons는 data-ui-component 계약을 가지며 UI guard가 열린 메뉴·긴 텍스트·action geometry를 실제 레이아웃으로 검사합니다.
   목록 항목 구분선은 list-divided-item이 굵기·색상·마지막 항목 처리를 공통 소유합니다.
@@ -383,7 +383,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         color: var(--muted);
       }
       .settings-status-note {
-        font-size: 11px;
+        font-size: 10px;
       }
       /* ===== COMPONENT / 메모 ===== */
       .memo-item {
@@ -544,11 +544,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         list-style: none;
       }
       .more-menu--bare > summary {
-        width: auto;
-        min-width: 0;
-        height: auto;
-        min-height: 0;
-        padding: 0 2px;
+        width: var(--action-button-size);
+        min-width: var(--action-button-size);
+        height: var(--action-button-size);
+        min-height: var(--action-button-size);
+        padding: 0;
         border: 0;
         background: transparent;
       }
@@ -834,13 +834,19 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         gap: var(--space-xs);
         padding: var(--event-row-padding);
       }
+      .planner-event-item:has(.more-menu[open]) {
+        position: relative;
+        z-index: 30;
+      }
       .planner-event-item-meta {
+        position: relative;
         width: 100%;
         min-width: 0;
+        min-height: var(--action-button-size);
         display: flex;
         align-items: center;
         gap: 0;
-        padding: 7px 10px;
+        padding: 4px calc(10px + var(--action-button-size) + var(--card-action-gap)) 4px 10px;
         color: var(--muted);
         font-size: 10px;
         font-weight: 500;
@@ -865,9 +871,14 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         flex: 1 1 auto;
       }
       .planner-event-item-meta-menu {
-        flex: 0 0 auto;
-        margin-left: auto;
-        padding-left: var(--card-action-gap);
+        position: absolute;
+        top: 0;
+        right: 10px;
+        bottom: 0;
+        z-index: 1;
+        width: var(--action-button-size);
+        height: var(--action-button-size);
+        margin: auto 0;
       }
       .planner-event-item-main {
         width: 100%;
@@ -2505,7 +2516,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 ></div>
                 <div data-ui-component="ActionRow" class="action-row action-row--flush u-hidden" data-dom="syncDataActions">
                   <button class="btn btn--app-action primary" data-action="shared-pull" type="button">
-                    데이터 동기화
+                    공유 데이터 불러오기
                   </button>
                 </div>
               </div>
@@ -2713,7 +2724,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "357",
+          version: "358",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           sharedStateMetaKey: "__plannerSync",
@@ -7654,7 +7665,19 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           });
           select(".planner-event-item-meta").forEach(meta => {
             const menu = meta.querySelector(".planner-event-item-meta-menu"), location = meta.querySelector(".planner-event-item-meta-location");
-            if(menu) add("EventItem action lane", rect(menu).width > 0 && rect(menu).right <= rect(meta).right+1 && (!location || rect(location).right <= rect(menu).left+1));
+            if(menu) {
+              const metaRect = rect(meta), menuRect = rect(menu), expected = measure(meta, "var(--action-button-size)");
+              const details = menu.querySelector(".more-menu"), item = meta.closest(".planner-event-item");
+              add("EventItem action lane", menuRect.width > 0 && menuRect.right <= metaRect.right+1 && (!location || rect(location).right <= menuRect.left+1));
+              add("EventItem compact meta height", near(metaRect.height, expected), `${metaRect.height}/${expected}`);
+              add("EventItem bare action size", near(menuRect.width, expected) && near(menuRect.height, expected), `${menuRect.width}x${menuRect.height}`);
+              add("EventItem menu host no transform stacking trap", style(menu).transform === "none", style(menu).transform);
+              if (details && item) {
+                details.open = true;
+                add("EventItem open stacking layer", Number(style(item).zIndex) >= 30, style(item).zIndex);
+                details.open = false;
+              }
+            }
           });
           select(".more-menu").forEach(menu => {
             const popup = menu.querySelector(".more-menu-pop"), buttons = [...popup.children];
