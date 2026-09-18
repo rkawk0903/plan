@@ -1,5 +1,6 @@
-const CACHE_VERSION = 'wedding-planner-v174';
+const CACHE_VERSION = 'wedding-planner-v326';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
+
 const APP_SHELL = [
   './',
   './index.html',
@@ -27,43 +28,65 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('message', event => {
-  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', event => {
   const req = event.request;
-  if (req.method !== 'GET') return;
+
+  if (req.method !== 'GET') {
+    return;
+  }
 
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
 
-  const isAppShell = url.pathname.endsWith('/index.html') ||
-                     url.pathname.endsWith('/manifest.webmanifest') ||
-                     url.pathname.endsWith('/sw.js');
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  const isAppShell =
+    url.pathname.endsWith('/index.html') ||
+    url.pathname.endsWith('/manifest.webmanifest') ||
+    url.pathname.endsWith('/sw.js');
 
   if (isAppShell || req.mode === 'navigate') {
     event.respondWith(
       fetch(req, { cache: 'no-store' })
-        .then(res => {
-          const copy = res.clone();
-          caches.open(STATIC_CACHE).then(cache => cache.put(req, copy));
+        .then(async res => {
+          if (res.ok) {
+            const cache = await caches.open(STATIC_CACHE);
+            await cache.put(req, res.clone());
+          }
+
           return res;
         })
-        .catch(() => caches.match(req).then(cached => cached || caches.match('./index.html')))
+        .catch(() =>
+          caches.match(req)
+            .then(cached => cached || caches.match('./index.html'))
+        )
     );
+
     return;
   }
 
   event.respondWith(
-    caches.match(req).then(cached => {
-      if (cached) return cached;
-      return fetch(req).then(res => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(STATIC_CACHE).then(cache => cache.put(req, copy));
+    caches.match(req)
+      .then(cached => {
+        if (cached) {
+          return cached;
         }
-        return res;
-      });
-    })
+
+        return fetch(req)
+          .then(async res => {
+            if (res.ok) {
+              const cache = await caches.open(STATIC_CACHE);
+              await cache.put(req, res.clone());
+            }
+
+            return res;
+          });
+      })
   );
 });
