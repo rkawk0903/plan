@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 선언형 아키텍처 v351
+우리 결혼 플래너 — 선언형 아키텍처 v355
 
 EDIT MAP (검색할 이름 → 수정할 책임)
   CSS :root / UI EDIT MAP   버튼·카드·제목·입력창·페이지 간격의 디자인 토큰
@@ -37,22 +37,32 @@ EDIT MAP (검색할 이름 → 수정할 책임)
   공개 edit은 모두 Collection.edit 경유. registry 검사는 실제 폼 ID·anchor·action도 확인합니다.
   일정 2열 기준은 홈 보조 카드와 동일하며, 헤더/상태 select 크기는 field--inline-select가 소유하고 IconControl과 같은 action-button-size를 공유합니다.
   카드 헤더 액션과 OrderButtons 내부 간격은 card-action-gap 하나를 공유합니다.
+  PlanCard는 fixed-actions CardHeader variant로 모바일에서도 위/아래·더보기·상태 선택창을 우측 한 줄에 유지하며, 항목 내부 세로 간격은 plan gap 하나가 소유합니다.
+  BudgetCard도 CardHeader의 기본 하단 margin을 제거하고 budget-line gap 하나가 이름 아래 간격을 소유합니다.
   일정 항목 메타는 상단 inset-card 한 줄이 소유하며, 선택 날짜 목록만 EventItem showDate=false로 날짜를 생략합니다.
   일정 항목의 더보기 메뉴는 같은 MoreMenu의 bare variant를 메타 inset-card 우측 끝에 배치하며 홈 미리보기는 showActions=false를 유지합니다.
   MoreMenu 팝업은 부모 문맥과 무관하게 자체 grid 세로 목록 규격을 소유하며 default/bare 외 variant는 거부합니다.
   MoreMenu·OrderButtons는 data-ui-component 계약을 가지며 UI guard가 열린 메뉴·긴 텍스트·action geometry를 실제 레이아웃으로 검사합니다.
   목록 항목 구분선은 list-divided-item이 굵기·색상·마지막 항목 처리를 공통 소유합니다.
-  모서리 둥글기는 단일 테마 값에서 surface/modal/inset/control/icon/badge 광학 스케일로 파생합니다.
+  모서리 둥글기는 단일 테마 값에서 surface/modal/inset/control/icon/badge = 1.00/0.90/0.60/0.45/0.35/0.25 광학 스케일로 파생합니다.
   검색창과 공유 로그인 입력창은 field--compact-text가 높이·폰트를 함께 소유하며 검색창은 field--search가 가로폭을 소유합니다.
   빠른 메모는 같은 폰트 규격을 공유하고 autosize-textarea action으로 내용에 맞춰 세로 높이만 자동 확장됩니다.
   테마 색상 편집기는 native color swatch 외형을 숨기고 theme-color-control이 외곽선·미리보기를 소유합니다.
   테마 색상 목록은 홈 분야별 진행률과 같은 2열→3열→4열 반응형 규칙을 사용합니다.
-  Chromium: self-test · smoke · CAS와 별도로 UI architecture guard를 360·390·768·1280px 실제 browser viewport에서 반복 실행합니다.
-  공통 select 및 검색창 높이/내용폭·가로 채움·horizontal overflow 검사 통과. 메뉴는 가로 스크롤입니다.
+  v352 UI_CONTRACTS: Component / Layout / Domain-specific view 분류와 구조·variant·style ownership 중앙 정의.
+  UI_GUARD_FIXTURES: 실제 렌더러와 정적 경계 복제본; 앱 상태·저장소·공유 네트워크를 변경하지 않습니다.
+  실행: await Planner.Testing.runUiGuards({expectedWidth:360}) — 현재 실제 viewport만 검사합니다.
+  브라우저 창을 360·390·768·1280px로 각각 바꿔 실행해야 하며 내부 div 폭을 viewport로 간주하지 않습니다.
+  검증 상태: JS 문법/CSS 구문 및 DOM 모사 self-test·CRUD·CAS 검증. Chromium 회귀는 실행 환경 제한으로 미검증.
+  DOM 모사 결과: self-test 18/18, CRUD smoke 10/10, CAS mock 4/4, fixture 구조 35/35, 구조 mutation 7/7.
+  JS/CSS 구문 오류 0, 7개 페이지 registry/DOM ownership 검사 통과. Browser console/page error는 미검증.
+  CSS 외형은 v351 그대로 유지합니다. 시각 기준선 동등성은 아직 확인되지 않았습니다.
   APP_CONFIG.version이 백업 appVersion·sw.js 요청·PWA cache 접두사 버전을 함께 소유합니다.
   실제 Supabase 인증·RLS·실시간 네트워크와 배포 origin의 Service Worker 동작은 검증하지 않았습니다.
 
 남긴 기술부채 (이번 구조 변경과 별개)
+  Visual guard는 현재 브라우저의 geometry contract 검사이며 screenshot pixel diff가 아닙니다.
+  popup의 조상 clipping과 수평 화면 경계를 검사하지만 스크롤 중 화면 아래쪽 자동 재배치는 기존 구현 범위 밖입니다.
   공유 push 대기 중 변경 추적, 로그인/프로젝트 연결 문맥, 병합 시 순서,
   프로젝트별 undo/redo 범위 문제는 기존 알고리즘 그대로입니다.
   공휴일은 기존 2026~2027 정적 데이터입니다. HTML 하나로 실행하며 build step은 없습니다.
@@ -172,13 +182,13 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --confirm-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
         --modal-overlay-bg: rgba(0, 0, 0, 0.38);
         --radius: 20px;
-        /* Optical radius scale — one theme value, role-aware visual curvature. */
+        /* Optical radius scale — base 20px => 20 / 18 / 12 / 9 / 7 / 5 by UI role. */
         --radius-surface: max(0px, var(--radius));
-        --radius-modal: max(0px, calc(var(--radius) * 0.95));
-        --radius-inset: max(0px, calc(var(--radius) * 0.58));
-        --radius-control: max(0px, calc(var(--radius) * 0.46));
-        --radius-icon: max(0px, calc(var(--radius) * 0.4));
-        --radius-badge: max(0px, calc(var(--radius) * 0.34));
+        --radius-modal: max(0px, calc(var(--radius) * 0.9));
+        --radius-inset: max(0px, calc(var(--radius) * 0.6));
+        --radius-control: max(0px, calc(var(--radius) * 0.45));
+        --radius-icon: max(0px, calc(var(--radius) * 0.35));
+        --radius-badge: max(0px, calc(var(--radius) * 0.25));
         --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--card));
         --accent-soft-2: color-mix(in srgb, var(--accent2) 18%, var(--card));
         --accent-ink: color-mix(in srgb, var(--accent) 70%, var(--ink));
@@ -694,6 +704,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         gap: var(--space-sm);
         padding: 14px 0;
       }
+      .budget-line > .card-header {
+        margin-bottom: 0;
+      }
       .budget-amounts {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -735,8 +748,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         gap: 10px;
         padding: 18px 0;
       }
+      .plan > .card-header {
+        margin-bottom: 0;
+      }
       .plan-block {
-        margin-top: 10px;
+        margin-top: 0;
         padding: 11px 12px;
       }
       .plan-label {
@@ -1470,6 +1486,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         max-width: 100%;
         gap: var(--card-action-gap);
       }
+      .card-header--fixed-actions > .card-header-action {
+        flex-wrap: nowrap;
+      }
       .card--compact {
         --card-padding: var(--card-padding-compact);
         --card-radius: var(--radius-inset);
@@ -1923,13 +1942,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
 
       /* ===== RESPONSIVE LAYOUT — 화면 배치만 변경 ===== */
       @media (max-width: 480px) {
-        .card-header--responsive {
-          flex-wrap: wrap;
-        }
-        .card-header--responsive > .card-header-action {
-          flex-basis: 100%;
-          justify-content: flex-start;
-        }
         .task-category-row {
           flex-wrap: wrap;
         }
@@ -2499,7 +2511,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 <div class="card-header-copy">
                   <div class="card-title">프로젝트</div>
                   <div class="card-description">
-                    계정당 하나의 프로젝트 코드만 연결할 수 있어요. 두 사람이 같은 코드를 사용하면 실시간으로 공유됩니다.
+                    두 사람이 같은 코드를 사용하면 데이터가 실시간으로 공유됩니다.
                   </div>
                 </div>
               </div>
@@ -2621,7 +2633,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 <div class="card-header-copy">
                   <div class="card-title">데이터 백업</div>
                   <div class="card-description">
-                    입력한 내용은 이 브라우저에 저장됩니다. 중요한 내용은 정기적으로 백업 파일을 만들어두세요.
+                    로그아웃 상태에선 이 브라우저에 저장됩니다. 중요한 내용은 정기적으로 백업 파일을 만들어두세요.
                   </div>
                 </div>
               </div>
@@ -2697,7 +2709,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "351",
+          version: "355",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           sharedStateMetaKey: "__plannerSync",
@@ -3050,6 +3062,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           return `<div data-ui-component="${attr(component)}" class="${attr(classes)}">${content}</div>`;
         }
         function Button(label, { action, id, variant = "", className = "btn--app-action", attributes = {} } = {}) {
+          assertUiVariant("Button", variant);
           return `<button${htmlAttributes({
             type: "button", class: ["btn", className, variant].filter(Boolean).join(" "),
             "data-action": action, "data-id": id, ...attributes,
@@ -3079,6 +3092,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           return UIComponentRoot("Card", ["card", className].filter(Boolean).join(" "), content);
         }
         function CardHeader(title, description = "", action = "", variant = "") {
+          assertUiVariant("CardHeader", variant);
           return UIComponentRoot("CardHeader", `card-header ${variant}`.trim(), `
             <div class="card-header-copy">
               <div class="card-title">${esc(title)}</div>
@@ -3114,6 +3128,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           });
         }
         function ActionRow(content, variant = "") {
+          assertUiVariant("ActionRow", variant);
           return UIComponentRoot("ActionRow", `action-row ${variant}`.trim(), content);
         }
         function EmptyState(message) {
@@ -3900,6 +3915,14 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         let confirmTestOverride = null;
         let confirmPending = null;
         let confirmPreviousFocus = null;
+        function Toast(text, tone = "info") {
+          assertUiVariant("Toast", tone);
+          const toast = document.createElement("div");
+          toast.className = `toast${tone !== "info" ? ` ${tone}` : ""}`;
+          toast.setAttribute("role", tone === "error" ? "alert" : "status");
+          toast.textContent = text;
+          return toast;
+        }
         function notify(message, { tone = "info", duration } = {}) {
           const text = String(message ?? "").trim();
           if (!text) return null;
@@ -3910,10 +3933,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           }
           const stack = ownedElement("notifications", DOM_IDS.toastStack);
           if (!stack) return null;
-          const toast = document.createElement("div");
-          toast.className = `toast${resolvedTone !== "info" ? ` ${resolvedTone}` : ""}`;
-          toast.setAttribute("role", resolvedTone === "error" ? "alert" : "status");
-          toast.textContent = text;
+          const toast = Toast(text, resolvedTone);
           stack.appendChild(toast);
           const ttl = Number.isFinite(Number(duration))
             ? Number(duration)
@@ -4254,7 +4274,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             ? `<div class="inset-card planner-event-item-meta">${metaParts.join("")}${metaMenu}</div>`
             : "";
 
-          return `<div data-ui-component="EventItem" class="planner-event-item list-divided-item${isToday ? " planner-event-item-today" : ""}">
+          return `<div data-ui-component="EventItem" data-ui-actions="${showActions}" data-ui-date="${showDate}" class="planner-event-item list-divided-item${isToday ? " planner-event-item-today" : ""}">
     ${metaBar}
     <div class="planner-event-item-main">${heading}<small>${esc(e.note || "메모 없음")}</small></div>
   </div>`;
@@ -4263,7 +4283,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           const classes = ["calendar-cell", dayClass, muted && "muted", holiday && "holiday", selected && "selected", today && "today"];
           const label = `${iso}${holiday ? ` ${holiday}` : ""}${count ? ` 일정 ${count}개` : ""}`;
           const dots = count ? `<div class="calendar-dots">${'<i class="calendar-dot"></i>'.repeat(Math.min(count, 4))}</div>` : "";
-          return `<button type="button" aria-label="${attr(label)}" class="${classes.filter(Boolean).join(" ")}"
+          return `<button data-ui-component="CalendarCell" type="button" aria-label="${attr(label)}" class="${classes.filter(Boolean).join(" ")}"
             data-action="select-date" data-date="${attr(iso)}">
             <div class="calendar-num">${day}</div>
             ${holiday ? `<div class="calendar-holiday" title="${attr(holiday)}">${esc(holiday)}</div>` : ""}
@@ -4442,7 +4462,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             <div class="inset-card plan-block"><div class="plan-label">${label}</div>
               <div class="plan-text">${esc(text || "미입력")}</div>
             </div>`).join("");
-          return UIComponentRoot("PlanCard", "plan list-divided-item", CardHeader(item.name, "", actions, "card-header--responsive") + blocks);
+          return UIComponentRoot("PlanCard", "plan list-divided-item", CardHeader(item.name, "", actions, "card-header--fixed-actions") + blocks);
         }
 
         // ===== 05 DOMAIN / Memos =====
@@ -5226,7 +5246,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               disabled: !sameScope, "aria-disabled": sameScope ? null : "true",
               title: sameScope ? null : "해당 프로젝트로 전환한 뒤 복원할 수 있어요.",
             } }) + Button("삭제", { action: "delete-recovery", id: point.id }), "action-row--item");
-          return `<div class="inset-card recovery-item">
+          return `<div data-ui-component="RecoveryItem" class="inset-card recovery-item">
             <div class="recovery-copy"><div class="recovery-title">${esc(point.reason)}</div>
               <div class="recovery-meta">${esc(time)} · ${point.projectId ? "공동 프로젝트" : "로컬"}${sameScope ? "" : " · 다른 프로젝트"}</div>
             </div>${actions}
@@ -7032,85 +7052,26 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         }
         function assertUiComponentContracts() {
           const issues = [];
-          document.querySelectorAll('[data-ui-component="Card"]').forEach((card, index) => {
-            const children = directUiChildren(card);
-            const components = children.map((child) => child.dataset.uiComponent || "");
-            const bodyOnly = card.dataset.uiVariant === "body-only";
-            const hasFooter = components.at(-1) === "CardFooter";
-            const expected = bodyOnly
-              ? ["CardBody"]
-              : hasFooter ? ["CardHeader", "CardBody", "CardFooter"] : ["CardHeader", "CardBody"];
-            if (components.length !== expected.length || components.some((value, i) => value !== expected[i])) {
-              issues.push(`Card ${card.id ? `#${card.id}` : index}: ${components.join(" > ") || "empty"}`);
-            }
-          });
-          document.querySelectorAll('[data-ui-component="CardHeader"]').forEach((header, index) => {
-            const children = directUiChildren(header);
-            const firstIsCopy = children[0]?.classList.contains("card-header-copy");
-            const hasOnlyCanonicalAction = children.length < 2 || children[1]?.classList.contains("card-header-action");
-            if (!firstIsCopy || children.length > 2 || !hasOnlyCanonicalAction) {
-              issues.push(`CardHeader ${index}: canonical copy/action structure required`);
-            }
-          });
-          document.querySelectorAll('[data-ui-component="ActionRow"]').forEach((row, index) => {
-            if (!row.classList.contains("action-row")) issues.push(`ActionRow ${index}: .action-row missing`);
-          });
-          document.querySelectorAll('[data-ui-component="CardFooter"]').forEach((footer, index) => {
-            if (!footer.classList.contains("card-footer-row")) issues.push(`CardFooter ${index}: .card-footer-row missing`);
-            if (footer.parentElement?.dataset.uiComponent !== "Card")
-              issues.push(`CardFooter ${index}: direct Card child required`);
-          });
-          addMoreMenuContractIssues(document, issues);
-          addOrderButtonsContractIssues(document, issues);
-          addEventItemContractIssues(document, issues);
+          addUiArchitectureIssues(document, issues);
+          const generated = document.createElement("template");
+          generated.innerHTML = uiContractSampleHtml();
+          addUiArchitectureIssues(generated.content, issues);
           const rootStyle = getComputedStyle(document.documentElement);
-          ["surface", "modal", "inset", "control", "icon", "badge"].forEach((role) => {
-            if (!rootStyle.getPropertyValue(`--radius-${role}`).trim())
-              issues.push(`Radius scale: --radius-${role} missing`);
-          });
-          const budgetGauges = [...document.querySelectorAll('[data-ui-component="BudgetGauge"]')];
-          if (budgetGauges.length !== 2) issues.push(`BudgetGauge: expected 2 instances, found ${budgetGauges.length}`);
-          budgetGauges.forEach((gauge, index) => {
-            if (!gauge.classList.contains("budget-gauge-arc") ||
-                !gauge.querySelector(".budget-arc-svg") ||
-                !gauge.querySelector(".budget-arc-track") ||
-                !gauge.querySelector(".budget-arc-progress") ||
-                !gauge.querySelector(".budget-arc-value"))
-              issues.push(`BudgetGauge ${index}: canonical structure required`);
-          });
-          ["TaskItem", "EventItem", "BudgetCard", "PlanCard", "MemoCard"].forEach((name) => {
-            document.querySelectorAll(`[data-ui-component="${name}"]`).forEach((item) => {
-              if (!item.classList.contains("list-divided-item"))
-                issues.push(`${name}: shared list divider contract required`);
-            });
-          });
-          const searchFields = [...document.querySelectorAll(".field--search")];
-          if (searchFields.length !== 3 || searchFields.some((field) => !field.classList.contains("field--compact-text")))
-            issues.push("Search fields: compact text control contract required");
-          [DOM_IDS.syncEmail, DOM_IDS.syncPassword, DOM_IDS.syncPasswordConfirm].forEach((id) => {
-            if (!$(id)?.classList.contains("field--compact-text"))
-              issues.push(`Shared auth field #${id}: compact text control required`);
-          });
-          const quickMemo = $(DOM_IDS.quickMemo);
-          if (!quickMemo?.classList.contains("field--memo-input") ||
-              quickMemo.dataset.action !== "autosize-textarea" || quickMemo.rows !== 1)
-            issues.push("Quick memo: autosize textarea contract required");
-          const insetSurfaces = document.querySelectorAll(
-            ".budget-box, .plan-block, .category-card, .recovery-item, .plan-status-grid > div, .shared-account-panel, [data-dom=\"currentProjectBox\"], .theme-item",
-          );
-          if ([...insetSurfaces].some((item) => !item.classList.contains("inset-card")))
-            issues.push("Inset cards: shared surface contract required");
-          const syncCode = $(DOM_IDS.syncCode);
-          if (!syncCode?.classList.contains("sync-code")) issues.push("Project code field: sync-code contract required");
-          const editableThemeFields = Object.values(THEME_FIELDS).filter((field) => field.type === "color" && field.label);
-          const themeItems = [...document.querySelectorAll(".theme-item")];
-          if (themeItems.length !== editableThemeFields.length)
-            issues.push(`Theme fields: expected ${editableThemeFields.length} color controls, found ${themeItems.length}`);
-          editableThemeFields.forEach((field) => {
-            if (!$(field.id)) issues.push(`Theme field ${field.id}: missing control`);
-            if (!getComputedStyle(document.documentElement).getPropertyValue(field.css).trim())
-              issues.push(`Theme field ${field.id}: CSS variable ${field.css} missing`);
-          });
+          for (const token of ["action-button-size", "card-action-gap", "list-divider-border", "ui-control-radius",
+            "card-padding", "field-height", "button-height", ...["surface", "modal", "inset", "control", "icon", "badge"].map(role => `radius-${role}`)])
+            if (!rootStyle.getPropertyValue(`--${token}`).trim()) issues.push(`Token missing: --${token}`);
+          if (document.querySelectorAll('[data-ui-component="BudgetGauge"]').length !== 2)
+            issues.push("BudgetGauge: two production instances required");
+          if (document.querySelectorAll(".field--search").length !== 3)
+            issues.push("Search fields: three production instances required");
+          for (const id of [DOM_IDS.syncEmail, DOM_IDS.syncPassword, DOM_IDS.syncPasswordConfirm])
+            if (!$(id)?.matches(".field.field--compact-text")) issues.push(`Shared auth #${id}: compact text API required`);
+          if (!$(DOM_IDS.syncCode)?.matches(".field.sync-code")) issues.push("Project code: shared field API required");
+          const colors = Object.values(THEME_FIELDS).filter(field => field.type === "color" && field.label);
+          if (document.querySelectorAll(".theme-item").length !== colors.length)
+            issues.push("Theme editor: missing/extra color controls");
+          for (const field of colors) if (!$(field.id) || !rootStyle.getPropertyValue(field.css).trim())
+            issues.push(`Theme field ${field.id}: missing control/token`);
           return { ok: issues.length === 0, issues };
         }
         function assertRegistryContracts() {
@@ -7435,167 +7396,335 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           }
           return { ok: results.every((item) => item.ok), results };
         }
-        const UI_GUARD_WIDTHS = Object.freeze([360, 390, 768, 1280]);
-        function uiGuardFixtureHtml() {
-          const longLocation =
-            "매우 긴 테스트 장소 이름 · 주차 안내 · 건물명 · 상세 주소 · 엘리베이터 위치 · ".repeat(7);
-          const event = {
-            id: "ui-guard-event",
-            date: "2027-01-01",
-            time: "12:30",
-            title: "긴 일정 제목이 들어와도 컴포넌트 구조가 유지되는지 확인하는 테스트 일정",
-            location: longLocation,
-            category: "테스트 분류",
-            note: "긴 메모가 들어가더라도 메타바와 메뉴가 서로 침범하지 않아야 합니다.",
-          };
-          const plan = {
-            id: "ui-guard-plan",
-            name: "UI Guard 부부계획",
-            status: PLAN_STATUSES[0],
-            details: "상태 선택창과 위아래/더보기 버튼의 높이와 간격을 확인합니다.",
-            note: "대표 상태 fixture",
-          };
-          return `<main data-ui-guard-root>
-            <section data-ui-guard="plan">${PlanCard(plan, 0, 2)}</section>
-            <section data-ui-guard="event-actions">${EventItem(event, { showActions: true, showDate: true })}</section>
-            <section data-ui-guard="event-no-actions">${EventItem({ ...event, id: "ui-guard-home" }, { showActions: false, showDate: true })}</section>
-            <section data-ui-guard="event-no-date">${EventItem({ ...event, id: "ui-guard-selected" }, { showActions: true, showDate: false })}</section>
-          </main>`;
+        // UI ARCHITECTURE GUARD — no network, storage, live-state writes or startup geometry loop.
+        // Components own appearance, Layout entries own only placement, Views compose both.
+        // Add semantic variants here before using them; state classes (open/disabled/selected) are separate.
+        const UI_VARIANTS = Object.freeze({
+          Button: ["", "primary", "soft", "danger"],
+          CardHeader: ["", "card-header--fixed-actions"],
+          ActionRow: ["action-row--wrap", "action-row--flush", "action-row--compact", "action-row--spaced", "action-row--dialog", "action-row--item"],
+          Toast: ["info", "success", "error"],
+        });
+        function assertUiVariant(component, value) {
+          const values = component === "ActionRow" ? String(value).trim().split(/\s+/).filter(Boolean) : [value];
+          if (values.some((entry) => !UI_VARIANTS[component]?.includes(entry)))
+            throw new Error(`${component}: unsupported variant "${value}"`);
         }
-        function uiGuardRectInside(inner, outer, tolerance = 1) {
-          return inner.left >= outer.left - tolerance
-            && inner.right <= outer.right + tolerance
-            && inner.top >= outer.top - tolerance
-            && inner.bottom <= outer.bottom + tolerance;
-        }
-        async function createUiGuardSandbox() {
-          const sandbox = document.createElement("div");
-          sandbox.dataset.uiGuardSandbox = "";
-          sandbox.setAttribute("aria-hidden", "true");
-          sandbox.style.cssText =
-            "position:fixed;left:-20000px;top:0;width:100vw;max-width:none;padding:16px;opacity:0;pointer-events:none;z-index:-1;";
-          sandbox.innerHTML = uiGuardFixtureHtml();
-          document.body.appendChild(sandbox);
-          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-          sandbox.querySelectorAll('[data-ui-component="MoreMenu"]').forEach((menu) => { menu.open = true; });
-          await new Promise((resolve) => requestAnimationFrame(resolve));
-          return sandbox;
-        }
-        async function runUiVisualContractTests({ expectedWidth = null } = {}) {
-          const results = [];
-          const width = window.innerWidth;
-          const add = (name, ok, detail = "") =>
-            results.push({ width, name, ok: !!ok, detail });
-          let sandbox = null;
-          try {
-            sandbox = await createUiGuardSandbox();
-            const rect = (element) => element.getBoundingClientRect();
-            const root = sandbox.querySelector("[data-ui-guard-root]");
-            const rootRect = rect(root);
-            if (expectedWidth != null)
-              add("viewport width matches expected", Math.abs(width - Number(expectedWidth)) <= 1, `${width}/${expectedWidth}`);
-            add("fixture has no horizontal overflow",
-              root.scrollWidth <= root.clientWidth + 1,
-              `${root.scrollWidth}/${root.clientWidth}`);
-
-            const planHost = sandbox.querySelector('[data-ui-guard="plan"]');
-            const action = planHost.querySelector(".card-header-action");
-            const order = action.querySelector('[data-ui-component="OrderButtons"]');
-            const orderButtons = [...order.querySelectorAll(":scope > .order-button")];
-            const normalMenu = action.querySelector('[data-ui-component="MoreMenu"][data-ui-variant="default"]');
-            const normalSummary = normalMenu.querySelector(":scope > summary");
-            const select = action.querySelector(".field--inline-select");
-            const heights = [...orderButtons, normalSummary, select].map((element) => rect(element).height);
-            add("action control heights match",
-              Math.max(...heights) - Math.min(...heights) <= 1,
-              heights.map((value) => value.toFixed(2)).join(", "));
-
-            const innerGap = rect(orderButtons[1]).left - rect(orderButtons[0]).right;
-            const firstOuterGap = rect(normalMenu).left - rect(order).right;
-            const secondOuterGap = rect(select).left - rect(normalMenu).right;
-            add("order/menu/select gaps match",
-              Math.max(innerGap, firstOuterGap, secondOuterGap) - Math.min(innerGap, firstOuterGap, secondOuterGap) <= 1.5,
-              [innerGap, firstOuterGap, secondOuterGap].map((value) => value.toFixed(2)).join(", "));
-
-            const actionEvent = sandbox.querySelector('[data-ui-guard="event-actions"] [data-ui-component="EventItem"]');
-            const noActionEvent = sandbox.querySelector('[data-ui-guard="event-no-actions"] [data-ui-component="EventItem"]');
-            const noDateEvent = sandbox.querySelector('[data-ui-guard="event-no-date"] [data-ui-component="EventItem"]');
-            const meta = actionEvent.querySelector(".planner-event-item-meta");
-            const bareMenu = meta.querySelector('[data-ui-component="MoreMenu"][data-ui-variant="bare"]');
-            const bareSummary = bareMenu.querySelector(":scope > summary");
-            const location = meta.querySelector(".planner-event-item-meta-location");
-            const metaMenu = meta.querySelector(".planner-event-item-meta-menu");
-            add("EventItem action placement",
-              !!bareMenu && !actionEvent.querySelector(".planner-event-item-main .more-menu"),
-              "bare menu must live in meta only");
-            add("home EventItem keeps actions hidden",
-              !noActionEvent.querySelector('[data-ui-component="MoreMenu"]'));
-            add("selected-date EventItem hides only date",
-              !noDateEvent.querySelector(".planner-event-item-meta-date")
-                && !!noDateEvent.querySelector('[data-ui-component="MoreMenu"][data-ui-variant="bare"]'));
-
-            const bareStyle = getComputedStyle(bareSummary);
-            add("bare MoreMenu is visually bare",
-              parseFloat(bareStyle.borderTopWidth) === 0
-                && bareStyle.backgroundColor === "rgba(0, 0, 0, 0)",
-              `${bareStyle.borderTopWidth}/${bareStyle.backgroundColor}`);
-
-            const metaRect = rect(meta);
-            const menuRect = rect(metaMenu);
-            const locationRect = rect(location);
-            add("long event metadata preserves menu lane",
-              locationRect.right <= menuRect.left + 1 && menuRect.right <= metaRect.right + 1,
-              `locationRight=${locationRect.right.toFixed(1)}, menu=${menuRect.left.toFixed(1)}..${menuRect.right.toFixed(1)}`);
-
-            const normalPopup = normalMenu.querySelector(":scope > .more-menu-pop");
-            for (const [kind, menu] of [["normal", normalMenu], ["bare", bareMenu]]) {
-              const popup = menu.querySelector(":scope > .more-menu-pop");
-              const buttons = [...popup.querySelectorAll(":scope > .btn--menu")];
-              const popupRect = rect(popup);
-              const buttonRects = buttons.map(rect);
-              add(`${kind} MoreMenu popup layout`,
-                getComputedStyle(popup).display === "grid"
-                  && buttons.length === 2
-                  && buttonRects[1].top >= buttonRects[0].bottom - 0.5
-                  && buttonRects.every((buttonRect) => uiGuardRectInside(buttonRect, popupRect, 1))
-                  && popup.scrollWidth <= popup.clientWidth + 1,
-                `display=${getComputedStyle(popup).display}, buttons=${buttons.length}, scroll=${popup.scrollWidth}/${popup.clientWidth}`);
-              add(`${kind} MoreMenu popup typography isolated`,
-                getComputedStyle(popup).fontSize === getComputedStyle(normalPopup).fontSize
-                  && getComputedStyle(popup).whiteSpace === "normal",
-                `${getComputedStyle(popup).fontSize}/${getComputedStyle(popup).whiteSpace}`);
+        const UI_CONTRACTS = Object.freeze([
+          { name: "Button", selector: ".btn, [class*='btn--']", base: "btn", owns: "geometry typography surface state", variants: { "btn--": ["app-action", "modal-action", "toolbar", "menu"] } },
+          { name: "IconControl", selector: ".icon-control, .order-button, .calendar-nav-button, .more-menu > summary", base: "icon-control", owns: "square geometry typography radius" },
+          { name: "Field", selector: ".field, [class*='field--'], .sync-field, .money-input", base: "field", owns: "height padding font border surface", variants: { "field--": ["compact", "compact-text", "inline-select", "search", "memo-input"] } },
+          { name: "Card", selector: ".card, [data-ui-component='Card']", base: "card", marker: true, owns: "padding surface radius", variants: { "card--": ["compact"] } },
+          { name: "CardHeader", selector: ".card-header, [data-ui-component='CardHeader']", base: "card-header", marker: true, owns: "copy action gap fixed action lane", variants: { "card-header--": ["fixed-actions"] } },
+          { name: "CardBody", selector: ".card-body, [data-ui-component='CardBody']", base: "card-body", marker: true, owns: "min-width" },
+          { name: "CardFooter", selector: ".card-footer-row, [data-ui-component='CardFooter']", base: "card-footer-row", marker: true, owns: "gap wrap status lane", variants: { "card-footer-row--": ["baseline"] } },
+          { name: "InsetCard", selector: ".inset-card, .budget-box, .plan-block, .category-card, .recovery-item, .planner-event-item-meta, .shared-account-panel, .project-panel, .theme-item, .plan-status-grid > div", base: "inset-card", owns: "background border inset radius" },
+          { name: "ActionRow", selector: ".action-row, [data-ui-component='ActionRow']", base: "action-row", marker: true, owns: "gap alignment wrap", variants: { "action-row--": ["wrap", "flush", "compact", "spaced", "dialog", "item"] } },
+          { name: "MoreMenu", selector: ".more-menu, [data-ui-component='MoreMenu']", base: "more-menu", marker: true, owns: "position popup stacking typography", variants: { "more-menu--": ["bare"] } },
+          { name: "OrderButtons", selector: ".order-buttons, [data-ui-component='OrderButtons']", base: "order-buttons", marker: true, owns: "order gap disabled state" },
+          { name: "Pill", selector: ".pill", base: "pill", owns: "typography padding surface state" },
+          { name: "Progress", selector: ".progress", base: "progress", owns: "height fill clipping", variants: { "progress--": ["summary"] } },
+          { name: "BudgetGauge", selector: ".budget-gauge-arc, [data-ui-component='BudgetGauge']", base: "budget-gauge-arc", marker: true, owns: "svg geometry value overlay" },
+          ...[["TaskItem", "task"], ["EventItem", "planner-event-item"], ["BudgetCard", "budget-line"], ["PlanCard", "plan"], ["MemoCard", "memo-item"]].map(([name, base]) => ({ name, selector: `.${base}, [data-ui-component='${name}']`, base, marker: true, kind: "Domain-specific view", divider: true, owns: "domain layout via shared components" })),
+          { name: "CategoryCard", selector: ".category-card", base: "card--compact", kind: "Domain-specific view", owns: "Card + inset + progress + order" },
+          { name: "RecoveryItem", selector: ".recovery-item, [data-ui-component='RecoveryItem']", base: "recovery-item", marker: true, kind: "Domain-specific view", owns: "copy action columns" },
+          { name: "CalendarCell", selector: ".calendar-cell, [data-ui-component='CalendarCell']", base: "calendar-cell", marker: true, owns: "cell geometry selected today holiday" },
+          { name: "Navigation", selector: ".nav", base: "nav", owns: "horizontal scrolling tabs" },
+          { name: "Modal", selector: ".modal", base: "modal", owns: "viewport overlay sheet scrolling" },
+          { name: "Confirm", selector: ".confirm-overlay", base: "confirm-overlay", owns: "viewport dialog actions" },
+          { name: "Toast", selector: ".toast", base: "toast", owns: "surface typography tone" },
+          { name: "ThemeControl", selector: ".theme-item", base: "theme-item", owns: "label preview native input boundary" },
+          { name: "SharedSync", selector: "[data-dom='syncLoginBox'], .shared-account-panel, .project-panel, .shared-conflict-box", kind: "Domain-specific view", owns: "auth account project conflict controls" },
+          { name: "HomeSummary", selector: ".home-top-grid", kind: "Domain-specific view", owns: "metric progress gauge" },
+          ...["grid", "row", "card-stack", "card-grid", "calendar-grid", "calendar-head", "theme-grid", "task-toolbar-controls", "home-secondary-grid", "schedule-main-grid"].map((name) => ({ name, selector: `.${name}`, kind: "Layout", owns: "child placement only" })),
+        ].map((entry) => Object.freeze({ kind: "Component", ...entry })));
+        function addUiArchitectureIssues(root, issues) {
+          const fail = (name, ok, detail) => { if (!ok) issues.push(`${name}: ${detail}`); };
+          for (const contract of UI_CONTRACTS) {
+            for (const el of root.querySelectorAll(contract.selector)) {
+              const name = contract.name;
+              if (contract.base) fail(name, el.classList.contains(contract.base), `missing .${contract.base}`);
+              if (contract.marker) fail(name, el.dataset.uiComponent === name, "component boundary missing/mismatched");
+              if (contract.divider) fail(name, el.classList.contains("list-divided-item"), "shared divider missing");
+              if (contract.marker && el.hasAttribute("data-ui-variant")) {
+                const allowed = name === "Card" ? ["body-only"] : name === "MoreMenu" ? MORE_MENU_VARIANTS : [];
+                fail(name, allowed.includes(el.dataset.uiVariant), "unsupported data-ui-variant");
+              }
+              for (const [prefix, allowed] of Object.entries(contract.variants || {}))
+                for (const cls of el.classList) if (cls.startsWith(prefix)) fail(name, allowed.includes(cls.slice(prefix.length)), `unsupported variant ${cls}`);
             }
-
-            const barePopup = bareMenu.querySelector(":scope > .more-menu-pop");
-            const barePopupRect = rect(barePopup);
-            add("bare popup is not clipped by meta",
-              getComputedStyle(meta).overflowX === "visible"
-                && barePopupRect.bottom > metaRect.bottom
-                && barePopupRect.left >= rootRect.left - 1
-                && barePopupRect.right <= rootRect.right + 1,
-              `overflow=${getComputedStyle(meta).overflowX}, popup=${barePopupRect.left.toFixed(1)}..${barePopupRect.right.toFixed(1)}`);
-          } catch (error) {
-            add("guard execution", false, String(error?.message || error));
-          } finally {
-            sandbox?.remove();
           }
-          return {
-            ok: results.every((item) => item.ok),
-            width,
-            recommendedWidths: [...UI_GUARD_WIDTHS],
-            results,
-          };
+          const children = (el) => el ? [...el.children] : [];
+          const sequence = (el, selectors) => !!el && children(el).length === selectors.length && selectors.every((selector, i) => children(el)[i].matches(selector));
+          root.querySelectorAll("[data-ui-component]").forEach((el) => fail("Boundary", UI_CONTRACTS.some((c) => c.marker && c.name === el.dataset.uiComponent), `unknown component ${el.dataset.uiComponent}`));
+          root.querySelectorAll(".card").forEach((el) => {
+            const bodyOnly = el.dataset.uiVariant === "body-only";
+            fail("Card", [undefined, "body-only"].includes(el.dataset.uiVariant), "unsupported DOM variant");
+            const parts = bodyOnly ? [".card-body"] : [".card-header", ".card-body"];
+            if (!bodyOnly && el.lastElementChild?.matches(".card-footer-row")) parts.push(".card-footer-row");
+            fail("Card", sequence(el, parts), "canonical direct child order");
+          });
+          root.querySelectorAll(".card-header").forEach((el) => fail("CardHeader", sequence(el, el.children.length === 2 ? [".card-header-copy", ".card-header-action"] : [".card-header-copy"]) && !!el.querySelector(":scope > .card-header-copy > .card-title"), "copy/title/action structure"));
+          root.querySelectorAll(".card-footer-row").forEach((el) => fail("CardFooter", el.parentElement?.matches(".card"), "direct Card child required"));
+          addMoreMenuContractIssues(root, issues);
+          addOrderButtonsContractIssues(root, issues);
+          addEventItemContractIssues(root, issues);
+          root.querySelectorAll(".more-menu").forEach((el) => fail("MoreMenu", el.tagName === "DETAILS" && sequence(el.querySelector(".more-menu-pop"), ["button.btn.btn--menu", "button.btn.btn--menu.danger"]), "exact popup edit/delete children"));
+          root.querySelectorAll(".order-buttons").forEach((el) => fail("OrderButtons", sequence(el, ["button.order-button", "button.order-button"]) && el.children[0].dataset.delta === "-1" && el.children[1].dataset.delta === "1", "exact up/down sequence"));
+          root.querySelectorAll(".planner-event-item").forEach((el) => {
+            const meta = el.querySelector(":scope > .planner-event-item-meta");
+            fail("EventItem", sequence(el, meta ? [".inset-card.planner-event-item-meta", ".planner-event-item-main"] : [".planner-event-item-main"]), "meta/main order");
+            fail("EventItem", ["true", "false"].includes(el.dataset.uiActions) && ["true", "false"].includes(el.dataset.uiDate), "explicit showActions/showDate contract");
+            fail("EventItem", el.querySelectorAll(".more-menu").length === (el.dataset.uiActions === "true" ? 1 : 0), "showActions mismatch");
+            fail("EventItem", el.querySelectorAll(".planner-event-item-meta-date").length === (el.dataset.uiDate === "true" ? 1 : 0), "showDate mismatch");
+          });
+          root.querySelectorAll("[data-dom='homeEvents'] .more-menu").forEach(() => fail("Home EventItem", false, "actions forbidden"));
+          root.querySelectorAll(".field--search").forEach((el) => fail("Search", el.matches("input.field--compact-text"), "compact text API required"));
+          root.querySelectorAll(".field").forEach(el => {
+            const sizeVariants = ["field--compact", "field--compact-text", "field--inline-select", "field--memo-input"].filter(name => el.classList.contains(name));
+            fail("Field", sizeVariants.length <= 1, "conflicting size variants");
+          });
+          root.querySelectorAll(".field--inline-select").forEach((el) => fail("InlineSelect", el.tagName === "SELECT", "select element required"));
+          root.querySelectorAll(".field--memo-input").forEach((el) => fail("MemoTextarea", el.matches("textarea[rows='1'][data-action='autosize-textarea']"), "autosize API required"));
+          root.querySelectorAll(".progress").forEach((el) => fail("Progress", sequence(el, ["i"]), "single fill required"));
+          root.querySelectorAll(".budget-gauge-arc").forEach((el) => fail("BudgetGauge", el.querySelector("svg")?.getAttribute("viewBox") === BUDGET_GAUGE_GEOMETRY.viewBox && [...el.querySelectorAll("path")].length === 2 && [...el.querySelectorAll("path")].every(p => p.getAttribute("d") === BUDGET_GAUGE_GEOMETRY.path), "shared arc geometry required"));
+          root.querySelectorAll(".recovery-item").forEach((el) => fail("RecoveryItem", sequence(el, [".recovery-copy", ".action-row--item"]), "copy/actions required"));
+          root.querySelectorAll(".calendar-cell").forEach((el) => fail("CalendarCell", el.matches("button[data-action='select-date']") && !!el.querySelector(":scope > .calendar-num"), "date action/number required"));
+          root.querySelectorAll(".theme-item").forEach((el) => fail("ThemeControl", sequence(el, ["label", ".theme-color-control"]) && sequence(el.lastElementChild, [".theme-color-preview", "input[type=color]"]), "label/preview/input required"));
+          root.querySelectorAll(".modal").forEach((el) => fail("Modal", sequence(el, [".sheet"]) && !!el.querySelector("[data-dom=modalBody]"), "sheet/body required"));
+          root.querySelectorAll(".confirm-overlay").forEach((el) => fail("Confirm", sequence(el, [".confirm-card"]) && sequence(el.firstElementChild, ["h2", ".confirm-message", ".action-row"]), "title/message/actions required"));
+          root.querySelectorAll(".btn--app-action, .btn--modal-action, .btn--toolbar, .btn--menu, .nav-button, .theme-swatch").forEach((el) => {
+            const roles = ["btn--app-action", "btn--modal-action", "btn--toolbar", "btn--menu", "nav-button", "theme-swatch"].filter(c => el.classList.contains(c));
+            fail("Button", roles.length === 1, "exactly one size role required");
+          });
+          root.querySelectorAll("button[data-action]").forEach((el) => fail("Button", el.matches(".btn, .icon-control, .calendar-cell, .task-check, .dday"), "shared style API bypass"));
+          root.querySelectorAll("input:not([type=color]):not([type=range]):not([type=file]), select, textarea").forEach((el) => fail("Field", el.classList.contains("field"), "shared field API bypass"));
         }
-        async function runUiArchitectureGuards(options = {}) {
-          const components = assertUiComponentContracts();
-          const registries = assertRegistryContracts();
-          const visual = await runUiVisualContractTests(options);
-          return {
-            ok: components.ok && registries.ok && visual.ok,
-            components,
-            registries,
-            visual,
+        function assertUiGuardMutationContracts() {
+            const mutations = [
+              root => root.querySelector(".card-header").classList.remove("card-header"),
+              root => root.querySelector(".order-buttons").append(document.createElement("button")),
+              root => root.querySelector(".more-menu-pop").firstElementChild.remove(),
+              root => root.querySelector(".field--inline-select").classList.add("field--unknown"),
+              root => root.querySelector(".planner-event-item-meta").classList.remove("inset-card"),
+              root => root.querySelector(".plan").classList.remove("list-divided-item"),
+              root => root.querySelector(".planner-event-item").dataset.uiActions = "false",
+            ];
+            const results = mutations.map((mutate, index) => {
+              const template = document.createElement("template"); template.innerHTML = uiContractSampleHtml();
+              mutate(template.content); const issues = []; addUiArchitectureIssues(template.content, issues);
+              return { name: `structural mutation ${index + 1}`, ok: issues.length > 0, detail: issues.join("; ") };
+            });
+            return { ok: results.every(result => result.ok), results };
+        }
+        const UI_GUARD_WIDTHS = Object.freeze([360, 390, 768, 1280]);
+        const UI_GUARD_TEXT = "긴 문구 계약 검증 LongText0123456789 ".repeat(12);
+        function uiSample(name, long = false) {
+          const schema = COLLECTION_SCHEMAS[name];
+          return normalizeCollectionItem(schema, { id: `guard-${name}`, ...Object.fromEntries(schema.fields.map(field => [field.key,
+            field.options?.[0] ?? (field.type === "date" ? "2027-01-01" : field.type === "time" ? "12:30" : field.type === "money" ? 123456789 : long ? UI_GUARD_TEXT.slice(0, field.maxLength || 500) : "테스트")])) });
+        }
+        function uiContractSampleHtml() {
+          return Object.entries(COLLECTION_SCHEMAS).map(([name, schema]) => schema.renderer(uiSample(name), 0, 2, {}) + renderCollectionModal(name, uiSample(name))).join("")
+            + CategoryCard("분야", 0, { cats: ["분야"], categoryStats: new Map() })
+            + RecoveryItem({ id: "guard-recovery", reason: "복구", createdAt: "2027-01-01" })
+            + CalendarCell({ iso: "2027-01-01", day: 1, count: 9, holiday: "공휴일" })
+            + EventItem(uiSample("event"), { showActions: false })
+            + EventItem(uiSample("event"), { showDate: false });
+        }
+        // Clone production static boundaries, never a second copy of their markup. No live values leave the page.
+        function uiClone(selector) {
+          const source = document.querySelector(selector);
+          if (!source) throw new Error(`Fixture source missing: ${selector}`);
+          const clone = source.cloneNode(true);
+          [...(clone.matches("input, textarea") ? [clone] : []), ...clone.querySelectorAll("input, textarea")].forEach(el => { el.value = ""; el.removeAttribute("value"); if (el.tagName === "TEXTAREA") el.textContent = ""; });
+          return clone;
+        }
+        function uiCloneHtml(selector) { return uiClone(selector).outerHTML; }
+        // Central fixture catalog: representative states + production factory + optional test-data setup.
+        const UI_GUARD_FIXTURES = Object.freeze([
+          ...Object.entries(COLLECTION_SCHEMAS).flatMap(([name, schema]) => [false, true].map(long => ({
+            name: `${name}/${long ? "long" : "default"}`, component: name, html: () => schema.renderer(uiSample(name, long), 0, 2, {}) + schema.renderer({ ...uiSample(name), id: "guard-last" }, 1, 2, {}),
+          }))),
+          { name: "event/home", component: "EventItem", html: () => EventItem(uiSample("event", true), { showActions: false }) },
+          { name: "event/selected-date", component: "EventItem", html: () => EventItem(uiSample("event", true), { showDate: false }) },
+          { name: "event/min-content", component: "EventItem", html: () => EventItem({ ...uiSample("event"), time: "", location: "", category: "", note: "" }, { showActions: false, showDate: false }) },
+          { name: "task/done", component: "TaskItem", html: () => TaskItem({ ...uiSample("task", true), status: "done", priority: "높음" }, { showActions: false }) },
+          { name: "plan/selected", component: "PlanCard", html: () => PlanCard({ ...uiSample("plan"), status: PLAN_STATUSES[2] }, 1, 2) },
+          { name: "empty", component: "EmptyState", html: () => Object.keys(COLLECTION_SCHEMAS).map(name => Collection.html(name, [])).join("") },
+          { name: "category", component: "CategoryCard", html: () => CategoryCard(UI_GUARD_TEXT, 0, { cats: [UI_GUARD_TEXT], categoryStats: new Map([[UI_GUARD_TEXT, { total: 999, done: 500, progress: 50 }]]) }) },
+          { name: "recovery", component: "RecoveryItem", html: () => RecoveryItem({ id: "guard", createdAt: "2027-01-01", reason: UI_GUARD_TEXT }) + RecoveryItem({ id: "guard-other", projectId: "other", reason: "다른 프로젝트", createdAt: "2027-01-01" }) },
+          { name: "cards", component: "Card", html: () => Card(CardHeader("제목", "설명", Button("액션")) + CardBody("내용") + CardFooter(ActionRow(Button("하단")))) + Card(CardHeader("작은 카드") + CardBody("내용"), "card--compact") },
+          { name: "toolbar", component: "Field/Button", html: () => uiCloneHtml(".task-toolbar") },
+          { name: "memo-input", component: "MemoTextarea", html: () => uiCloneHtml("[data-dom=quickMemo]"), setup: root => { root.querySelector("textarea").value = UI_GUARD_TEXT.repeat(3); autosizeTextarea(root.querySelector("textarea")); } },
+          { name: "calendar", component: "Calendar", html: () => { const card = uiClone(".calendar-card"); card.querySelector(".calendar-grid").innerHTML = Array.from({ length: 42 }, (_, i) => CalendarCell({ iso: "2027-01-01", day: i % 31 + 1, count: i % 2 ? 999 : 0, holiday: i % 7 === 0 ? UI_GUARD_TEXT : "", selected: i === 2, today: i === 3, muted: i > 30 })).join(""); return card.outerHTML; } },
+          { name: "settings/all-states", component: "Theme/SharedSync/Recovery", html: () => uiCloneHtml("[data-page-root=settings]"), setup: root => {
+            root.querySelector(".page").classList.add("active");
+            root.querySelectorAll(".u-hidden").forEach(el => el.classList.remove("u-hidden"));
+            for (const key of ["syncUserText", "syncConflictText", "syncDetailText", "futureSchemaBox"]) root.querySelector(`[data-dom=${key}]`).textContent = UI_GUARD_TEXT;
+            root.querySelector("[data-dom=syncDetailText]").dataset.tone = "error";
+            root.querySelector("[data-dom=syncCode]").value = "ABCDEFGH";
+          } },
+          { name: "home/summary", component: "HomeSummary", html: () => uiCloneHtml(".home-top-grid") },
+          { name: "navigation", component: "Navigation", html: () => uiCloneHtml(".nav") },
+          ...Object.keys(MODAL_RENDERERS).map(name => ({ name: `modal/${name}`, component: "Modal", overlay: true, html: () => {
+            const modal = uiClone(".modal"); modal.classList.add("open");
+            modal.querySelector("[data-dom=modalBody]").innerHTML = name === "settings" ? renderSettingsModal() : renderCollectionModal(name, uiSample(name, true));
+            return modal.outerHTML;
+          } })),
+          { name: "confirm/long", component: "Confirm", overlay: true, html: () => { const el = uiClone(".confirm-overlay"); el.classList.add("open"); el.querySelector(".confirm-message").textContent = UI_GUARD_TEXT.repeat(3); return el.outerHTML; } },
+          ...["info", "success", "error"].map(tone => ({ name: `toast/${tone}`, component: "Toast", overlay: true, html: () => { const el = uiClone(".toast-stack"); el.replaceChildren(Toast(UI_GUARD_TEXT, tone)); return el.outerHTML; } })),
+        ]);
+        function uiGuardRectInside(inner, outer, tolerance = 1) {
+          return inner.left >= outer.left - tolerance && inner.right <= outer.right + tolerance
+            && inner.top >= outer.top - tolerance && inner.bottom <= outer.bottom + tolerance;
+        }
+        function uiGuardFrame() { return new Promise(resolve => requestAnimationFrame(resolve)); }
+        function uiGuardRemapIds(root) {
+          const ids = new Map();
+          root.querySelectorAll("[id]").forEach((el, i) => { const previous = el.id; el.id = `ui-guard-${i}-${previous}`; ids.set(previous, el.id); });
+          root.querySelectorAll("[for], [aria-labelledby], [aria-describedby]").forEach(el => {
+            for (const attr of ["for", "aria-labelledby", "aria-describedby"]) if (el.hasAttribute(attr)) el.setAttribute(attr, el.getAttribute(attr).split(/\s+/).map(id => ids.get(id) || id).join(" "));
+          });
+        }
+        function uiGuardVisualChecks(root, add) {
+          const rect = el => el.getBoundingClientRect(), style = el => getComputedStyle(el);
+          const visible = el => el.getClientRects().length && style(el).display !== "none";
+          const select = selector => [...root.querySelectorAll(selector)].filter(visible);
+          const near = (a, b) => Math.abs(a - b) <= 1;
+          const token = (el, property, expression) => {
+            const probe = document.createElement("span"); probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none;"; probe.style.setProperty(property, expression); el.appendChild(probe);
+            const value = style(probe).getPropertyValue(property); probe.remove(); return value;
           };
+          const measure = (el, expression) => parseFloat(token(el, "width", expression));
+          const noX = el => el.scrollWidth <= el.clientWidth + 1;
+          const overlap = (a,b) => Math.min(a.right,b.right) - Math.max(a.left,b.left) > 1 && Math.min(a.bottom,b.bottom) - Math.max(a.top,b.top) > 1;
+          const peers = (els, name) => { const rs = els.filter(visible).map(rect); add(name, rs.every((r,i) => rs.slice(i+1).every(s => !overlap(r,s))), `${rs.length} peers`); };
+          const containers = select(".card,.card-body,.card-header,.card-footer-row,.action-row,.task,.planner-event-item,.budget-line,.plan,.memo-item,.inset-card,.shared-conflict-box,.theme-grid,.calendar-grid,.sheet,.confirm-card,.toast,.task-toolbar,.home-top-grid");
+          containers.forEach(el => add(`overflow:${el.classList[0]}`, noX(el), `${el.scrollWidth}/${el.clientWidth}`));
+          select(".card-header,.card-header-action,.action-row,.order-buttons,.budget-amounts,.recovery-item,.shared-account-row,.theme-item,.calendar-head,.home-top-grid").forEach(el => {
+            peers([...el.children], `no overlap:${el.classList[0]}`);
+            const r = rect(el); add(`child bounds:${el.classList[0]}`, [...el.children].filter(visible).every(child => uiGuardRectInside(rect(child),r)), "direct children contained");
+          });
+          for (const el of select(".btn--app-action,.btn--toolbar,.field--compact,.field--compact-text,.field--inline-select,.icon-control:not(.more-menu--bare > summary),.sync-code")) {
+            const expression = el.matches(".calendar-nav-button") ? "var(--calendar-nav-size)" : el.matches(".icon-control,.field--inline-select") ? "var(--action-button-size)" : el.matches(".field--compact-text") ? "var(--field-search-height)" : "var(--button-height)";
+            add(`height:${el.classList[0]}`, near(rect(el).height, measure(el,expression)), `${rect(el).height}/${measure(el,expression)}`);
+            add(`minimum width:${el.classList[0]}`, rect(el).width > 0);
+          }
+          for (const el of select(".btn,.field,.icon-control")) {
+            const expected = el.matches(".btn") ? "var(--btn-font-size, var(--button-font-size))"
+              : el.matches(".field") ? "var(--field-size, var(--field-font-size))" : "var(--icon-font-size, var(--font-small))";
+            add(`typography:${el.classList[0]}`, style(el).fontSize === token(el,"font-size",expected), style(el).fontSize);
+            if (el.matches(".field")) add("Field padding API", style(el).padding === token(el,"padding","var(--field-inset, var(--field-padding))"),style(el).padding);
+            if (el.matches(".btn--modal-action")) add("Modal button minimum height", rect(el).height >= measure(el,"var(--modal-button-min-height)")-1);
+          }
+          for (const el of select(".card,.inset-card,.sheet,.confirm-card,.toast,.icon-control,.field")) {
+            const role = el.matches(".sheet,.confirm-card") ? "modal" : el.matches(".inset-card,.card--compact,.toast") ? "inset" : el.matches(".card") ? "surface" : el.matches(".icon-control") ? "icon" : "control";
+            add(`radius:${el.classList[0]}`, near(parseFloat(style(el).borderTopLeftRadius), measure(el,`var(--radius-${role})`)), `${style(el).borderTopLeftRadius}/${role}`);
+            if (el.matches(".card")) add("Card padding ownership", style(el).padding === token(el,"padding","var(--card-padding)"), style(el).padding);
+            if (el.matches(".card,.inset-card")) add("surface ownership", style(el).backgroundColor === token(el,"background-color",el.matches(".inset-card") ? "var(--soft)" : "var(--card)"), style(el).backgroundColor);
+          }
+          select(".list-divided-item").forEach(el => add("list divider", near(parseFloat(style(el).borderBottomWidth), el.nextElementSibling ? 1 : 0), style(el).borderBottomWidth));
+          select(".budget-line").forEach(budget => {
+            const header = budget.querySelector(":scope > .card-header");
+            if (header) add("BudgetCard spacing single owner",
+              near(parseFloat(style(header).marginBottom), 0),
+              style(header).marginBottom);
+          });
+          select(".plan .card-header-action").forEach(action => {
+            const order = action.querySelector(".order-buttons"), menu = action.querySelector(".more-menu"), field = action.querySelector("select");
+            const controls = [...order.children, menu.querySelector("summary"), field], heights = controls.map(el => rect(el).height);
+            add("order/menu/select shared height", Math.max(...heights) - Math.min(...heights) <= 1, heights.join(","));
+            add("action DOM order", action.children[0] === order && action.children[1] === menu && action.children[2] === field);
+            const gap = measure(action,"var(--card-action-gap)");
+            const rs = controls.map(rect);
+            add("action flow and shared gap", rs.slice(1).every((r,i) => near(r.top,rs[i].top) ? near(r.left-rs[i].right,gap) : r.top >= rs[i].bottom && near(r.top-rs[i].bottom,gap)), `${gap}px gap`);
+            const header = action.parentElement, copy = header.firstElementChild;
+            add("PlanCard fixed action lane", near(rect(action).top, rect(copy).top), `${innerWidth}px`);
+            add("PlanCard fixed action nowrap", style(action).flexWrap === "nowrap", style(action).flexWrap);
+            const plan = action.closest(".plan"), firstBlock = plan?.querySelector(":scope > .plan-block");
+            add("PlanCard spacing single owner",
+              near(parseFloat(style(header).marginBottom), 0)
+                && (!firstBlock || near(parseFloat(style(firstBlock).marginTop), 0)),
+              `${style(header).marginBottom}/${firstBlock ? style(firstBlock).marginTop : "no block"}`);
+          });
+          select(".planner-event-item-meta").forEach(meta => {
+            const menu = meta.querySelector(".planner-event-item-meta-menu"), location = meta.querySelector(".planner-event-item-meta-location");
+            if(menu) add("EventItem action lane", rect(menu).width > 0 && rect(menu).right <= rect(meta).right+1 && (!location || rect(location).right <= rect(menu).left+1));
+          });
+          select(".more-menu").forEach(menu => {
+            const popup = menu.querySelector(".more-menu-pop"), buttons = [...popup.children];
+            menu.open = false; add("popup closed", !popup.checkVisibility());
+            menu.open = true;
+            const r = rect(popup), rs = buttons.map(rect), cs = style(popup);
+            add("popup open grid/edit-delete", cs.display === "grid" && rs.length === 2 && rs[1].top >= rs[0].bottom && rs.every(b => uiGuardRectInside(b,r)) && noX(popup), `${menu.dataset.uiVariant}: ${cs.display}`);
+            add("popup horizontal viewport", r.left >= -1 && r.right <= innerWidth+1, `${r.left}..${r.right}`);
+            add("popup owns typography", cs.fontSize === token(popup,"font-size","var(--font-body)") && cs.fontWeight === "400" && cs.whiteSpace === "normal");
+            let unclipped = true;
+            for(let parent=popup.parentElement; parent && parent !== document.body; parent=parent.parentElement) {
+              const ps=style(parent), pr=rect(parent);
+              if (/(hidden|clip|auto|scroll)/.test(ps.overflowX) && (r.left<pr.left-1 || r.right>pr.right+1)) unclipped=false;
+              if (/(hidden|clip|auto|scroll)/.test(ps.overflowY) && (r.top<pr.top-1 || r.bottom>pr.bottom+1)) unclipped=false;
+            }
+            add("popup ancestor clipping",unclipped);
+            const before = [cs.fontSize,cs.whiteSpace,cs.lineHeight, r.width, r.height];
+            const saved = menu.getAttribute("style"); menu.style.fontSize="7px"; menu.style.whiteSpace="nowrap"; menu.style.fontWeight="900"; menu.style.lineHeight="3";
+            const after=style(popup), ar=rect(popup);
+            add("popup hostile parent typography", after.fontSize===before[0] && after.whiteSpace==="normal" && after.lineHeight===before[2] && near(ar.width,before[3]) && near(ar.height,before[4]), `${after.fontSize}/${after.whiteSpace}`);
+            if(saved===null) menu.removeAttribute("style"); else menu.setAttribute("style",saved);
+            menu.open=false;
+          });
+          select(".calendar-grid").forEach(grid => {
+            const cells=[...grid.children], rs=cells.map(rect);
+            add("Calendar 7 columns / 42 cells", cells.length===42 && rs.slice(0,7).every(r=>near(r.top,rs[0].top)) && rs[7].top>=rs[0].bottom && style(grid).gridTemplateColumns.split(" ").length===7);
+            add("Calendar cell content", cells.every(cell=>noX(cell) && [...cell.children].every(child=>uiGuardRectInside(rect(child),rect(cell)))));
+            peers(cells,"Calendar nonoverlap");
+          });
+          select(".theme-grid").forEach(grid => add("Theme responsive columns", style(grid).gridTemplateColumns.split(" ").length === (innerWidth>=980?4:innerWidth>=700?3:2),style(grid).gridTemplateColumns));
+          select(".theme-color-control").forEach(el => add("Theme preview/input bounds", near(rect(el).width,42) && near(rect(el).height,32) && [...el.children].every(child=>uiGuardRectInside(rect(child),rect(el)))));
+          select(".theme-range").forEach(el => add("Theme slider bounds", uiGuardRectInside(rect(el),rect(el.parentElement))));
+          select("textarea.field--memo-input").forEach(el => add("Memo autosize", el.scrollHeight<=el.clientHeight+1 && rect(el).height>=measure(el,"var(--field-search-height)")));
+          select(".sheet,.confirm-card,.toast-stack").forEach(el=>add("overlay viewport bounds",uiGuardRectInside(rect(el),{left:0,top:0,right:innerWidth,bottom:innerHeight}),JSON.stringify(rect(el).toJSON())));
+          select(".sheet").forEach(el=>add("Modal intentional vertical scroll", style(el).overflowY==="auto" && el.scrollHeight>=el.clientHeight));
+          select(".nav").forEach(el=>{ add("Navigation scroll ownership",style(el).overflowX==="auto" && rect(el).right<=innerWidth+1); peers([...el.children],"Navigation tabs nonoverlap"); });
+          select(".progress").forEach(el=>add("Progress fill bounds",uiGuardRectInside(rect(el.firstElementChild),rect(el))));
+        }
+        let uiGuardInFlight = null;
+        async function runUiVisualContractTests({ expectedWidth = null } = {}) {
+          const width=innerWidth, results=[];
+          const sandbox=document.createElement("div"); sandbox.dataset.uiGuardSandbox=""; sandbox.inert=true; sandbox.setAttribute("aria-hidden","true");
+          sandbox.style.cssText="position:fixed;left:0;top:0;width:100%;opacity:0;pointer-events:none;z-index:-1;";
+          // Event isolation is independent of inert (programmatic events must not reach application delegates).
+          ["click","input","change"].forEach(type=>sandbox.addEventListener(type,event=>event.stopPropagation()));
+          const add=(component,fixture,name,ok,detail="")=>results.push({viewport:width,width,component,fixture,name,ok:!!ok,detail});
+          if(expectedWidth!==null) add("Viewport","viewport","actual browser width", width===Number(expectedWidth),`${width}/${expectedWidth}`);
+          add("Viewport","viewport","document horizontal overflow",document.documentElement.scrollWidth<=document.documentElement.clientWidth+1);
+          document.body.appendChild(sandbox);
+          try {
+            for(const fixture of UI_GUARD_FIXTURES) {
+              try {
+                sandbox.innerHTML=fixture.overlay ? fixture.html() : `<div class="app"><main>${fixture.html()}</main></div>`;
+                uiGuardRemapIds(sandbox); fixture.setup?.(sandbox);
+                await uiGuardFrame();
+                const issues=[]; addUiArchitectureIssues(sandbox,issues);
+                add(fixture.component,fixture.name,"generated structural contracts",!issues.length,issues.join("; "));
+                uiGuardVisualChecks(sandbox,(name,ok,detail)=>add(fixture.component,fixture.name,name,ok,detail));
+              } catch(error) { add(fixture.component,fixture.name,"fixture execution",false,String(error?.stack||error)); }
+            }
+          } finally { sandbox.remove(); }
+          return {ok:results.every(r=>r.ok),width,viewport:{width,height:innerHeight},recommendedWidths:[...UI_GUARD_WIDTHS],results};
+        }
+        function runUiArchitectureGuards(options = {}) {
+          if(uiGuardInFlight) return uiGuardInFlight;
+          const run=async()=>{
+            const components=assertUiComponentContracts(), registries=assertRegistryContracts(), mutations=assertUiGuardMutationContracts();
+            const visual=await runUiVisualContractTests(options);
+            return {ok:components.ok&&registries.ok&&mutations.ok&&visual.ok,viewport:visual.viewport,components,registries,mutations,visual,
+              coverage:UI_CONTRACTS.map(({name,kind,owns})=>({component:name,kind,owns})),
+              scope:"Current real browser viewport only. Resize browser/Playwright to 360, 390, 768, 1280 and rerun; no simulated media queries."};
+          };
+          uiGuardInFlight=run().finally(()=>{uiGuardInFlight=null;});
+          return uiGuardInFlight;
         }
 
         async function runPwaDiagnostics() {
@@ -7745,6 +7874,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             } catch {
               return true;
             }
+          });
+          test("component APIs reject unsupported variants", () => {
+            return [() => Button("x", { variant: "unknown" }), () => CardHeader("x", "", "", "unknown"),
+              () => ActionRow("", "action-row--unknown")].every(call => { try { call(); return false; } catch { return true; } });
           });
           const report = { ok: results.every((result) => result.ok), results };
           if (!report.ok) {
