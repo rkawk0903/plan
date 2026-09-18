@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 선언형 아키텍처 v355
+우리 결혼 플래너 — 선언형 아키텍처 v357
 
 EDIT MAP (검색할 이름 → 수정할 책임)
   CSS :root / UI EDIT MAP   버튼·카드·제목·입력창·페이지 간격의 디자인 토큰
@@ -46,6 +46,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
   목록 항목 구분선은 list-divided-item이 굵기·색상·마지막 항목 처리를 공통 소유합니다.
   모서리 둥글기는 단일 테마 값에서 surface/modal/inset/control/icon/badge = 1.00/0.90/0.60/0.45/0.35/0.25 광학 스케일로 파생합니다.
   검색창과 공유 로그인 입력창은 field--compact-text가 높이·폰트를 함께 소유하며 검색창은 field--search가 가로폭을 소유합니다.
+  설정 화면의 프로젝트 안내·변경 복구 상태·복구 지점 상태는 settings-status-note 하나가 보조 텍스트 크기를 공유합니다.
   빠른 메모는 같은 폰트 규격을 공유하고 autosize-textarea action으로 내용에 맞춰 세로 높이만 자동 확장됩니다.
   테마 색상 편집기는 native color swatch 외형을 숨기고 theme-color-control이 외곽선·미리보기를 소유합니다.
   테마 색상 목록은 홈 분야별 진행률과 같은 2열→3열→4열 반응형 규칙을 사용합니다.
@@ -380,6 +381,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .form label {
         font-size: var(--font-small);
         color: var(--muted);
+      }
+      .settings-status-note {
+        font-size: 11px;
       }
       /* ===== COMPONENT / 메모 ===== */
       .memo-item {
@@ -2536,7 +2540,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                       코드 복사
                     </button>
                   </div>
-                  <div class="small u-mt-xs">상대방을 초대할 때 이 코드를 사용하면 됩니다.</div>
+                  <div class="small settings-status-note u-mt-xs">상대방을 초대할 때 이 코드를 사용하면 됩니다.</div>
                 </div>
                 <div data-dom="syncProjectActions" class="sync-project-actions u-hidden">
                   <label for="syncJoinCode" class="sync-join-code-label"
@@ -2602,7 +2606,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="small" data-dom="historyStatus">변경 복구 기록 없음</div>
+                <div class="small settings-status-note" data-dom="historyStatus">변경 복구 기록 없음</div>
                 <div data-ui-component="ActionRow" class="action-row action-row--spaced action-row--wrap">
                   <button class="btn btn--app-action" data-action="undo" data-dom="undoButton" type="button">실행 취소</button
                   ><button class="btn btn--app-action" data-action="redo" data-dom="redoButton" type="button">다시 실행</button>
@@ -2619,7 +2623,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="small" data-dom="recoveryStatus">복구 지점 없음</div>
+                <div class="small settings-status-note" data-dom="recoveryStatus">복구 지점 없음</div>
                 <div class="recovery-list u-mt-sm" data-dom="recoveryList"></div>
                 <div data-ui-component="ActionRow" class="action-row action-row--spaced">
                   <button class="btn btn--app-action" data-action="create-recovery" type="button">
@@ -2709,7 +2713,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "355",
+          version: "357",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           sharedStateMetaKey: "__plannerSync",
