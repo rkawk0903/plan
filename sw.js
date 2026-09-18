@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'wedding-planner-v326';
+const CACHE_VERSION = 'wedding-planner-v342';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 const APP_SHELL = [
@@ -28,28 +28,19 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('message', event => {
-  if (event.data === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', event => {
   const req = event.request;
-
-  if (req.method !== 'GET') {
-    return;
-  }
+  if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
 
-  if (url.origin !== self.location.origin) {
-    return;
-  }
-
-  const isAppShell =
-    url.pathname.endsWith('/index.html') ||
-    url.pathname.endsWith('/manifest.webmanifest') ||
-    url.pathname.endsWith('/sw.js');
+  const isAppShell = url.pathname.endsWith('/index.html') ||
+                     url.pathname.endsWith('/manifest.webmanifest') ||
+                     url.pathname.endsWith('/sw.js');
 
   if (isAppShell || req.mode === 'navigate') {
     event.respondWith(
@@ -59,7 +50,6 @@ self.addEventListener('fetch', event => {
             const cache = await caches.open(STATIC_CACHE);
             await cache.put(req, res.clone());
           }
-
           return res;
         })
         .catch(() =>
@@ -67,16 +57,13 @@ self.addEventListener('fetch', event => {
             .then(cached => cached || caches.match('./index.html'))
         )
     );
-
     return;
   }
 
   event.respondWith(
     caches.match(req)
       .then(cached => {
-        if (cached) {
-          return cached;
-        }
+        if (cached) return cached;
 
         return fetch(req)
           .then(async res => {
@@ -84,7 +71,6 @@ self.addEventListener('fetch', event => {
               const cache = await caches.open(STATIC_CACHE);
               await cache.put(req, res.clone());
             }
-
             return res;
           });
       })

@@ -1,12 +1,12 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 선언형 아키텍처 v326
+우리 결혼 플래너 — 선언형 아키텍처 v342
 
 EDIT MAP (검색할 이름 → 수정할 책임)
   CSS :root / UI EDIT MAP   버튼·카드·제목·입력창·페이지 간격의 디자인 토큰
   COMPONENT /              기본 컴포넌트 외형; 화면별 덮어쓰기보다 명시적 변형 사용
-  02 UI COMPONENTS         Button / Card / ActionRow / List / FormField / FormModal
+  02 UI COMPONENTS         Button / Card / ActionRow / BudgetGauge / List / FormField / FormModal
   COLLECTION_SCHEMAS       컬렉션 이름·저장 위치·필드·기본값·검증·목록·CRUD 정책
   PAGE_REGISTRY            페이지 이름·렌더러·갱신 의존성·navigation
   ACTION_REGISTRY          특수 이벤트; 반복 CRUD action은 컬렉션에서 자동 생성
@@ -34,13 +34,18 @@ EDIT MAP (검색할 이름 → 수정할 책임)
   INTENTIONAL COMPAT: 기존 저장 키·schema v5·legacy memo/owner migration·Planner API 유지.
   v325의 잘못 노출된 Memos action descriptor만 제거; 정상 공개 함수와 저장 데이터 계약 유지.
   공개 edit은 모두 Collection.edit 경유. registry 검사는 실제 폼 ID·anchor·action도 확인합니다.
-  Chromium: self-test 15/15 · smoke 10/10 · CAS 4/4; 기능 회귀 및 데이터 호환 검사 통과.
-  7페이지/폼/공유 UI를 360·390·768·1280px에서 검사했습니다. 메뉴는 가로 스크롤입니다.
+  일정 2열 기준은 홈 보조 카드와 동일하며, 헤더/상태 select 크기는 field--inline-select가 소유합니다.
+  검색창과 공유 로그인 입력창은 field--compact-text가 높이·폰트를 함께 소유하며 검색창은 field--search가 가로폭을 소유합니다.
+  빠른 메모는 같은 폰트 규격을 공유하고 autosize-textarea action으로 내용에 맞춰 세로 높이만 자동 확장됩니다.
+  테마 색상 편집기는 native color swatch 외형을 숨기고 theme-color-control이 외곽선·미리보기를 소유합니다.
+  테마 색상 목록은 홈 분야별 진행률과 같은 2열→3열→4열 반응형 규칙을 사용합니다.
+  Chromium: self-test 16/16 · smoke 10/10 · CAS 4/4; 변경부를 360·390·768·1280px에서 회귀 검사했습니다.
+  공통 select 및 검색창 높이/내용폭·가로 채움·horizontal overflow 검사 통과. 메뉴는 가로 스크롤입니다.
   APP_CONFIG.version이 백업 appVersion·sw.js 요청·PWA cache 접두사 버전을 함께 소유합니다.
-  실제 Supabase 인증·RLS·실시간 네트워크와 미첨부 manifest/sw는 검증하지 않았습니다.
+  실제 Supabase 인증·RLS·실시간 네트워크와 배포 origin의 Service Worker 동작은 검증하지 않았습니다.
 
 남긴 기술부채 (이번 구조 변경과 별개)
-  공유 push 대기 중 변경 추적, 로그인/프로젝트 선택 문맥, 병합 시 순서,
+  공유 push 대기 중 변경 추적, 로그인/프로젝트 연결 문맥, 병합 시 순서,
   프로젝트별 undo/redo 범위 문제는 기존 알고리즘 그대로입니다.
   공휴일은 기존 2026~2027 정적 데이터입니다. HTML 하나로 실행하며 build step은 없습니다.
 -->
@@ -49,7 +54,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
   <head>
     <meta charset="utf-8" />
     <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport" />
-    <meta content="#fbf7f2" name="theme-color" />
+    <meta content="#f7f5f2" name="theme-color" />
     <meta content="yes" name="mobile-web-app-capable" />
     <meta content="yes" name="apple-mobile-web-app-capable" />
     <meta content="default" name="apple-mobile-web-app-status-bar-style" />
@@ -91,6 +96,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --field-padding: 10px 12px;
         --field-font-size: var(--font-body);
         --field-search-height: 38px;
+        --field-search-font-size: clamp(13px, 1.2vw, 14px);
         --field-small-font: 11px;
         --textarea-height: 100px;
         --nav-padding: 9px 14px;
@@ -118,10 +124,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --modal-max-width: 680px;
         --modal-padding: 20px;
         --modal-max-height: 88dvh;
-        --priority-high-bg: #fde7e7;
-        --priority-high-color: #d64545;
-        --priority-low-bg: #f6f7f8;
-        --priority-low-color: #a3a7ad;
+        --priority-high-bg: color-mix(in srgb, var(--danger) 12%, var(--card));
+        --priority-high-color: color-mix(in srgb, var(--danger) 88%, var(--ink));
+        --priority-low-bg: var(--soft);
+        --priority-low-color: var(--muted);
 
         --layout-max-width: 1040px;
         --layout-bottom-space: 88px;
@@ -144,11 +150,20 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --accent2: #d9b8a7;
         --good: #5c8a69;
         --danger: #b55b5b;
-        --nav-bg: rgba(247, 245, 242, 0.9);
+        --nav-bg: rgba(247, 245, 242, 0.92);
         --soft: #faf8f5;
         --button-bg: #fff;
         --button-text: #222;
         --shadow: 0 8px 28px rgba(30, 20, 10, 0.07);
+        --weekend-sat-base: #4a80c1;
+        --weekend-sun-base: #d15454;
+        /* Semantic/effect colors intentionally outside the user-editable theme palette. */
+        --contrast-on-strong: #fff;
+        --menu-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+        --toast-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+        --confirm-overlay-bg: rgba(0, 0, 0, 0.42);
+        --confirm-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
+        --modal-overlay-bg: rgba(0, 0, 0, 0.38);
         --radius: 20px;
         --radius-sm: max(0px, calc(var(--radius) * 0.6));
         --radius-xs: max(0px, calc(var(--radius) * 0.48));
@@ -161,8 +176,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --calendar-muted-bg: color-mix(in srgb, var(--soft) 75%, var(--bg));
         --calendar-selected-bg: color-mix(in srgb, var(--accent) 7%, var(--card));
         --calendar-today-bg: color-mix(in srgb, var(--accent) 10%, var(--card));
-        --weekend-sat: color-mix(in srgb, #4a80c1 78%, var(--accent));
-        --weekend-sun: color-mix(in srgb, #d15454 78%, var(--danger));
+        --weekend-sat: color-mix(in srgb, var(--weekend-sat-base) 78%, var(--accent));
+        --weekend-sun: color-mix(in srgb, var(--weekend-sun-base) 78%, var(--danger));
         --holiday-color: color-mix(in srgb, var(--danger) 86%, var(--accent));
         --card-padding: var(--card-content-padding);
         --card-padding-compact: 11px 10px;
@@ -362,19 +377,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .memo-content {
         min-width: 0;
       }
-      .memo-toolbar {
-        display: flex;
-        align-items: center;
-        gap: var(--space-sm);
-        margin-bottom: 10px;
-      }
-      .memo-toolbar .toolbar-search {
-        flex: 1;
-        min-width: 0;
-      }
-      .memo-toolbar .pill {
-        flex: 0 0 auto;
-      }
       /* ===== COMPONENT / 진행률 ===== */
       .progress {
         height: var(--progress-height, 10px);
@@ -534,7 +536,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         background: var(--button-bg);
         border: 1px solid var(--line);
         border-radius: var(--radius-xs);
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--menu-shadow);
       }
       .btn--menu {
         --btn-width: 100%;
@@ -556,10 +558,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --btn-border: 0;
         --btn-color: var(--danger);
       }
-      .schedule-filter {
-        width: auto;
-        flex: 0 0 auto;
-      }
       /* ===== LAYOUT / 할 일 도구 모음 ===== */
       .task-toolbar {
         display: grid;
@@ -567,11 +565,19 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         gap: var(--space-sm);
         margin: 10px 0;
       }
-      .task-search {
+      /* Compact text control — search fields and shared auth inputs share one size/typography API. */
+      .field--compact-text {
         --field-min-height: var(--field-search-height);
         --field-fixed-height: var(--field-search-height);
         --field-inset: 0 12px;
-        --field-size: clamp(11px, 1.2vw, 12px);
+        --field-size: var(--field-search-font-size);
+      }
+      /* Search field component — tasks, schedule and memos share width/placement behavior. */
+      .field--search {
+        width: 100%;
+      }
+      .card-body > .field--search {
+        margin: 4px 0 10px;
       }
       .task-toolbar-controls {
         display: grid;
@@ -613,6 +619,14 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         min-height: var(--textarea-min-height, var(--textarea-height));
         resize: vertical;
       }
+      textarea.field--memo-input {
+        --textarea-min-height: var(--field-search-height);
+        --field-size: var(--field-search-font-size);
+        --field-inset: 8px 12px;
+        height: auto;
+        overflow-y: hidden;
+        resize: none;
+      }
       .field--compact {
         --field-min-height: var(--ui-control-height-sm);
         --field-fixed-height: var(--ui-control-height-sm);
@@ -622,9 +636,22 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --field-size: var(--field-small-font);
       }
 
-      .toolbar-search {
-        margin: 4px 0 10px;
+      /* Inline select component — home counters, schedule filter and plan status share one size API. */
+      .field--inline-select {
+        --field-min-height: var(--unified-button-height);
+        --field-fixed-height: var(--unified-button-height);
+        --field-inset: 4px 9px;
+        --field-bg: var(--soft);
+        --field-color: var(--muted);
+        --field-size: var(--font-small);
+        width: auto;
+        min-width: 0;
+        max-width: 100%;
+        margin: 0;
+        flex: 0 0 auto;
+        align-self: flex-start;
       }
+
       .list {
         display: flex;
         flex-direction: column;
@@ -646,10 +673,13 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: var(--space-sm);
       }
-      .budget-box {
+      /* Inset card surface — nested information blocks share one visual surface API. */
+      .inset-card {
         background: var(--soft);
         border: 1px solid var(--line);
         border-radius: var(--radius-xs);
+      }
+      .budget-box {
         padding: 9px 10px;
       }
       .budget-box .label {
@@ -685,9 +715,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       }
       .plan-block {
         margin-top: 10px;
-        background: var(--soft);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-xs);
         padding: 11px 12px;
       }
       .plan-label {
@@ -708,17 +735,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         outline: 2px solid var(--accent);
         outline-offset: 2px;
       }
-      .plan-status-select {
-        --field-min-height: 32px;
-        --field-fixed-height: 32px;
-        --field-inset: 0 8px;
-        --field-bg: var(--soft);
-        --field-color: var(--muted);
-        --field-size: var(--font-caption);
-        width: auto;
-        min-width: 84px;
-        flex: 0 0 auto;
-      }
       .plan-status-home {
         margin-top: 0;
       }
@@ -731,9 +747,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         display: flex;
         align-items: center;
         gap: var(--space-sm);
-        background: var(--soft);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-sm);
         padding: 10px;
       }
       .plan-status-grid b {
@@ -936,7 +949,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .task-check.on {
         background: var(--accent);
         border-color: var(--accent);
-        color: #fff;
+        color: var(--contrast-on-strong);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1172,41 +1185,67 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       /* ===== COMPONENT / 테마 설정 ===== */
       .theme-grid {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
       }
       .theme-item {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
         gap: 10px;
-        background: var(--soft);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-sm);
+        min-width: 0;
         padding: 10px;
       }
-      .theme-item input[type="color"] {
+      .theme-item label {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      /* Theme color preview: the wrapper owns the one visible border.
+         The native color input is transparent so browser-specific inner black swatch borders cannot leak through. */
+      .theme-color-control {
+        position: relative;
         width: 42px;
         height: 32px;
-        padding: 0;
+        flex: 0 0 auto;
+        overflow: hidden;
         border: 1px solid var(--line);
         border-radius: var(--radius-xs);
-        background: transparent;
-        overflow: hidden;
+        background: var(--theme-preview-color, transparent);
+      }
+      .theme-color-preview {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        border-radius: inherit;
+        background: var(--theme-preview-color, transparent);
+        pointer-events: none;
+      }
+      .theme-color-control input[type="color"] {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        opacity: 0;
         cursor: pointer;
         -webkit-appearance: none;
         appearance: none;
       }
-      .theme-item input[type="color"]::-webkit-color-swatch-wrapper {
-        padding: 0;
-        border: 0;
-        border-radius: inherit;
-        overflow: hidden;
+      .theme-color-control:focus-within {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
-      .theme-item input[type="color"]::-webkit-color-swatch,
-      .theme-item input[type="color"]::-moz-color-swatch {
-        border: 0;
-        border-radius: inherit;
+      @media (min-width: 700px) {
+        .theme-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+      @media (min-width: 980px) {
+        .theme-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
       }
       .theme-presets {
         display: flex;
@@ -1236,12 +1275,15 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         -webkit-appearance: auto;
         appearance: auto;
       }
+      .theme-radius-value {
+        color: var(--muted);
+        font-size: var(--font-small);
+        line-height: 1;
+        white-space: nowrap;
+      }
       /* ===== COMPONENT / 공유 설정 ===== */
       .shared-account-panel {
         padding: 10px 12px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-sm);
-        background: var(--soft);
       }
       .shared-account-row {
         display: flex;
@@ -1264,9 +1306,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .sync-detail-text {
         margin-top: 0;
         line-height: 1.45;
-        min-height: 1.4em;
         min-width: 0;
-        flex: 1 1 260px;
       }
       .sync-detail-text[data-tone="error"] {
         color: var(--danger);
@@ -1385,9 +1425,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       }
       .sync-code {
         --sync-field-color: var(--muted);
+        --field-min-height: var(--unified-button-height);
+        --field-fixed-height: var(--unified-button-height);
+        --field-inset: 0 8px;
         flex: 1;
         min-width: 0;
-        --field-inset: 10px 12px 10px 8px;
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         --field-size: var(--font-small);
         font-weight: 800;
@@ -1538,11 +1580,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
         align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid var(--line);
-      }
-      .recovery-item:last-child {
-        border-bottom: 0;
+        padding: 10px 12px;
       }
       .recovery-copy {
         min-width: 0;
@@ -1577,7 +1615,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         border-radius: var(--radius-sm);
         background: var(--card);
         color: var(--ink);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+        box-shadow: var(--toast-shadow);
         font-size: var(--font-small);
         line-height: 1.45;
         white-space: pre-line;
@@ -1597,7 +1635,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         align-items: center;
         justify-content: center;
         padding: 20px;
-        background: rgba(0, 0, 0, 0.42);
+        background: var(--confirm-overlay-bg);
       }
       .confirm-overlay.open {
         display: flex;
@@ -1608,7 +1646,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         border: 1px solid var(--line);
         border-radius: var(--radius-lg);
         background: var(--card);
-        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
+        box-shadow: var(--confirm-shadow);
       }
       .confirm-card h2 {
         margin: 0;
@@ -1624,7 +1662,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .btn.danger {
         --btn-bg: var(--danger);
         --btn-border: 1px solid var(--danger);
-        --btn-color: #fff;
+        --btn-color: var(--contrast-on-strong);
       }
 
       :where(button, input, select, textarea, summary, a, [tabindex]:not([tabindex="-1"])):focus-visible {
@@ -1640,7 +1678,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .modal {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.38);
+        background: var(--modal-overlay-bg);
         display: none;
         align-items: flex-end;
         justify-content: center;
@@ -1711,7 +1749,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       }
       .card-footer-status {
         min-width: 0;
-        flex: 1 1 260px;
+        flex: 1 1 0;
+        overflow-wrap: anywhere;
+      }
+      .card-footer-row--baseline {
+        align-items: baseline;
       }
       .card-footer-row > .action-row {
         flex: 0 0 auto;
@@ -1727,19 +1769,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         padding: 20px;
         text-align: center;
         font-size: var(--font-caption);
-        color: #aaa;
-      }
-      .home-limit {
-        --field-min-height: var(--action-button-size);
-        --field-fixed-height: var(--action-button-size);
-        --field-inset: 4px 9px;
-        --field-bg: var(--soft);
-        --field-color: var(--muted);
-        --field-size: var(--font-small);
-        width: auto;
-        margin: 0;
-        flex: 0 0 auto;
-        align-self: flex-start;
+        color: var(--muted);
       }
       /* ===== COMPONENT / 홈 요약 ===== */
       .home-summary-card {
@@ -1836,7 +1866,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         height: 100%;
       }
       .schedule-main-grid {
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
         align-items: stretch;
         width: 100%;
       }
@@ -1851,7 +1881,17 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         height: 100%;
       }
       .category-cards {
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      @media (min-width: 700px) {
+        .category-cards {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+      @media (min-width: 980px) {
+        .category-cards {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
       }
       .page-header + .card,
       .page-header + .grid,
@@ -1874,19 +1914,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .u-gap-sm {
         --row-gap: var(--space-sm);
       }
-      .u-soft-panel {
+      .project-panel {
         display: block;
         margin-top: 10px;
-        padding: var(--soft-panel-padding, 12px);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-sm);
-        background: var(--soft);
-      }
-      .u-soft-panel--compact {
-        --soft-panel-padding: 10px 12px;
-      }
-      .u-inline-box {
-        --textarea-min-height: 130px;
+        padding: 12px;
       }
       .u-minw-0 {
         min-width: 0;
@@ -1896,26 +1927,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .u-hidden {
         /* Visibility must override component display rules, including later rules. */
         display: none !important;
-      }
-
-      /* ===== COMPONENT: Shared project list ===== */
-      .shared-project-list-title {
-        font-weight: 800;
-        margin-bottom: 8px;
-      }
-      .shared-project-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        padding: 8px 0;
-      }
-      .shared-project-code {
-        min-width: 0;
-        overflow-wrap: anywhere;
-      }
-      .shared-project-current {
-        flex: 0 0 auto;
       }
 
       /* ===== RESPONSIVE LAYOUT — 화면 배치만 변경 ===== */
@@ -1989,27 +2000,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 <div data-ui-component="CardBody" class="card-body">
                   <div class="budget-home-reference">
                     <div class="budget-home-reference-gauge">
-                      <div class="budget-gauge-arc">
-                        <svg
-                          aria-hidden="true"
-                          class="budget-arc-svg"
-                          focusable="false"
-                          viewbox="0 10 100 58"
-                        >
-                          <path
-                            class="budget-arc-track"
-                            d="M 12 58 A 38 38 0 0 1 88 58"
-                            pathlength="100"
-                          ></path>
-                          <path
-                            class="budget-arc-progress"
-                            d="M 12 58 A 38 38 0 0 1 88 58"
-                            data-dom="homeBudgetGaugeProgress"
-                            pathlength="100"
-                          ></path>
-                        </svg>
-                        <div class="budget-arc-value"><strong data-dom="homeBudgetPct">0%</strong></div>
-                      </div>
+                      <div
+                        data-ui-static="BudgetGauge"
+                        data-progress-dom="homeBudgetGaugeProgress"
+                        data-value-dom="homeBudgetPct"
+                      ></div>
                     </div>
                     <div class="budget-home-reference-total">
                       <b data-dom="homeTotalActual">0 원</b>
@@ -2031,7 +2026,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                     <div class="card-header-action">
                       <select
                         aria-label="홈에서 표시할 할 일 개수"
-                        class="home-limit field"
+                        class="field field--inline-select"
                         data-action="home-limit"
                         data-limit-type="tasks"
                         data-dom="homeTaskLimit"
@@ -2059,7 +2054,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                     <div class="card-header-action">
                       <select
                         aria-label="홈에서 표시할 일정 개수"
-                        class="home-limit field"
+                        class="field field--inline-select"
                         data-action="home-limit"
                         data-limit-type="events"
                         data-dom="homeEventLimit"
@@ -2098,15 +2093,15 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               </div>
               <div data-ui-component="CardBody" class="card-body">
                 <div class="plan-status-grid">
-                  <div>
+                  <div class="inset-card">
                     <span class="status-dot"></span>
                     <div><b data-dom="homePlanTodo">0</b><span>논의 전</span></div>
                   </div>
-                  <div>
+                  <div class="inset-card">
                     <span class="status-dot progress-dot"></span>
                     <div><b data-dom="homePlanProgress">0</b><span>논의 중</span></div>
                   </div>
-                  <div>
+                  <div class="inset-card">
                     <span class="status-dot done-dot"></span>
                     <div><b data-dom="homePlanDone">0</b><span>합의 완료</span></div>
                   </div>
@@ -2129,7 +2124,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           <div class="task-toolbar">
             <input
               aria-label="할 일 검색"
-              class="task-search field"
+              class="field field--compact-text field--search"
               data-dom="taskSearch"
               data-action="tasks-search"
               placeholder="할 일 검색"
@@ -2256,7 +2251,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 <div class="card-header-action">
                   <select
                     aria-label="일정 기간 필터"
-                    class="schedule-filter field field--compact"
+                    class="field field--inline-select"
                     data-dom="scheduleFilter"
                     data-action="schedule-filter"
                   >
@@ -2269,7 +2264,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               <div data-ui-component="CardBody" class="card-body">
                 <input
                   aria-label="전체 일정 검색"
-                  class="toolbar-search field"
+                  class="field field--compact-text field--search"
                   data-dom="scheduleAllSearch"
                   data-action="schedule-search"
                   placeholder="일정 검색 (제목, 장소, 분류, 메모)"
@@ -2302,18 +2297,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                     <span>초과 지출</span><b data-dom="overBudget">0 원</b>
                   </div>
                 </div>
-                <div class="budget-gauge-arc">
-                  <svg aria-hidden="true" class="budget-arc-svg" focusable="false" viewbox="0 10 100 58">
-                    <path class="budget-arc-track" d="M 12 58 A 38 38 0 0 1 88 58" pathlength="100"></path>
-                    <path
-                      class="budget-arc-progress"
-                      d="M 12 58 A 38 38 0 0 1 88 58"
-                      data-dom="budgetGaugeProgress"
-                      pathlength="100"
-                    ></path>
-                  </svg>
-                  <div class="budget-arc-value"><strong data-dom="budgetPctBig">0%</strong></div>
-                </div>
+                <div
+                  data-ui-static="BudgetGauge"
+                  data-progress-dom="budgetGaugeProgress"
+                  data-value-dom="budgetPctBig"
+                ></div>
               </div>
             </div>
             <!-- ===== BUDGET: ITEMS ===== -->
@@ -2386,8 +2374,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               <div data-ui-component="CardBody" class="card-body">
                 <textarea
                   aria-label="빠른 메모"
-                  class="u-inline-box field"
+                  class="field field--memo-input"
                   data-dom="quickMemo"
+                  data-action="autosize-textarea"
+                  rows="1"
                   placeholder="업체 연락처, 궁금한 점, 계약 전 체크할 것 등"
                 ></textarea>
                 <div data-ui-component="ActionRow" class="action-row">
@@ -2407,16 +2397,14 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="memo-toolbar">
-                  <input
-                    aria-label="메모 검색"
-                    class="toolbar-search field"
-                    data-dom="memoSearch"
-                    data-action="memo-search"
-                    placeholder="메모 검색"
-                    type="search"
-                  /><span class="pill" data-dom="memoCount">0개</span>
-                </div>
+                <input
+                  aria-label="메모 검색"
+                  class="field field--compact-text field--search"
+                  data-dom="memoSearch"
+                  data-action="memo-search"
+                  placeholder="메모 검색"
+                  type="search"
+                />
                 <div data-collection="memo"></div>
               </div>
             </div>
@@ -2448,7 +2436,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                   <div data-dom="syncLoginBox">
                     <label for="syncEmail">이메일</label
                     ><input
-                      class="field"
+                      class="field field--compact-text"
                       aria-label="공유 동기화 이메일"
                       autocomplete="username"
                       data-dom="syncEmail"
@@ -2456,7 +2444,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                       type="email"
                     /><label for="syncPassword">비밀번호</label
                     ><input
-                      class="field"
+                      class="field field--compact-text"
                       aria-label="공유 동기화 비밀번호"
                       autocomplete="current-password"
                       data-dom="syncPassword"
@@ -2466,7 +2454,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                     <div data-dom="syncPasswordConfirmWrap">
                       <label for="syncPasswordConfirm">비밀번호 확인 <span class="small">(회원가입 시)</span></label
                       ><input
-                        class="field"
+                        class="field field--compact-text"
                         aria-label="공유 동기화 비밀번호 확인"
                         autocomplete="new-password"
                         data-dom="syncPasswordConfirm"
@@ -2479,7 +2467,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                       ><button class="btn btn--app-action primary" data-action="shared-sign-in" type="button">로그인</button>
                     </div>
                   </div>
-                  <div class="shared-account-panel u-hidden" data-dom="syncLoggedInBox">
+                  <div class="inset-card shared-account-panel u-hidden" data-dom="syncLoggedInBox">
                     <div class="shared-account-row">
                       <div class="small shared-account-text" data-dom="syncUserText">로그인 계정</div>
                       <button class="btn btn--app-action" data-action="shared-sign-out" type="button">
@@ -2498,19 +2486,19 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                       </button>
                     </div>
                   </div>
-                  <div data-ui-component="CardFooter" class="card-footer-row u-hidden" data-dom="syncFooter">
-                    <div
-                      class="small sync-detail-text card-footer-status"
-                      data-dom="syncDetailText"
-                      role="status"
-                      aria-live="polite"
-                    ></div>
-                    <div data-ui-component="ActionRow" class="action-row action-row--flush u-hidden" data-dom="syncDataActions">
-                      <button class="btn btn--app-action primary" data-action="shared-pull" type="button">
-                        공유 데이터 불러오기
-                      </button>
-                    </div>
-                  </div>
+                </div>
+              </div>
+              <div data-ui-component="CardFooter" class="card-footer-row card-footer-row--baseline u-hidden" data-dom="syncFooter">
+                <div
+                  class="small sync-detail-text card-footer-status"
+                  data-dom="syncDetailText"
+                  role="status"
+                  aria-live="polite"
+                ></div>
+                <div data-ui-component="ActionRow" class="action-row action-row--flush u-hidden" data-dom="syncDataActions">
+                  <button class="btn btn--app-action primary" data-action="shared-pull" type="button">
+                    공유 데이터 불러오기
+                  </button>
                 </div>
               </div>
             </div>
@@ -2519,12 +2507,12 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 <div class="card-header-copy">
                   <div class="card-title">프로젝트</div>
                   <div class="card-description">
-                    두 사람이 같은 프로젝트에 연결하면 변경 사항을 실시간으로 공유할 수 있어요.
+                    계정당 하나의 프로젝트 코드만 연결할 수 있어요. 두 사람이 같은 코드를 사용하면 실시간으로 공유됩니다.
                   </div>
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="u-soft-panel u-hidden" data-dom="currentProjectBox">
+                <div class="inset-card project-panel u-hidden" data-dom="currentProjectBox">
                   <div class="row between u-gap-sm">
                     <div class="u-minw-0">
                       <div class="current-project-title">현재 프로젝트</div>
@@ -2567,7 +2555,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                     </button>
                   </div>
                 </div>
-                <div class="small u-soft-panel u-soft-panel--compact u-hidden" data-dom="syncProjectsBox"></div>
               </div>
             </div>
             <div data-ui-component="Card" class="card col12">
@@ -2592,7 +2579,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                     min="4"
                     type="range"
                     value="20"
-                  /><span class="pill" data-dom="thRadiusVal">20px</span>
+                  /><span class="theme-radius-value" data-dom="thRadiusVal">20px</span>
                 </div>
                 <div data-ui-component="ActionRow" class="action-row action-row--spaced">
                   <button class="btn btn--app-action" data-action="theme-reset" type="button">
@@ -2610,13 +2597,12 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                   <div class="card-description">최근 변경을 되돌리거나 다시 적용할 수 있어요.</div>
                 </div>
               </div>
-              <div data-ui-component="CardBody" class="card-body">
-                <div data-ui-component="CardFooter" class="card-footer-row">
-                  <div class="small card-footer-status" data-dom="historyStatus">변경 복구 기록 없음</div>
-                  <div data-ui-component="ActionRow" class="action-row action-row--flush action-row--wrap">
-                    <button class="btn btn--app-action" data-action="undo" data-dom="undoButton" type="button">실행 취소</button
-                    ><button class="btn btn--app-action" data-action="redo" data-dom="redoButton" type="button">다시 실행</button>
-                  </div>
+              <div data-ui-component="CardBody" class="card-body"></div>
+              <div data-ui-component="CardFooter" class="card-footer-row">
+                <div class="small card-footer-status" data-dom="historyStatus">변경 복구 기록 없음</div>
+                <div data-ui-component="ActionRow" class="action-row action-row--flush action-row--wrap">
+                  <button class="btn btn--app-action" data-action="undo" data-dom="undoButton" type="button">실행 취소</button
+                  ><button class="btn btn--app-action" data-action="redo" data-dom="redoButton" type="button">다시 실행</button>
                 </div>
               </div>
             </div>
@@ -2720,7 +2706,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "326",
+          version: "342",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           sharedStateMetaKey: "__plannerSync",
@@ -2774,20 +2760,22 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           maximumFractionDigits: 0,
         });
         const THEME_FIELDS = {
-          bg: { value: "#f7f5f2", css: "--bg", id: "thBg", label: "배경 색상" },
-          card: { value: "#ffffff", css: "--card", id: "thCard", label: "카드 색상" },
-          ink: { value: "#222222", css: "--ink", id: "thInk", label: "기본 글자 색상" },
-          muted: { value: "#777777", css: "--muted", id: "thMuted", label: "보조 글자 색상" },
-          line: { value: "#e8e3dd", css: "--line", id: "thLine", label: "테두리 색상" },
-          accent: { value: "#9b6b52", css: "--accent", id: "thAccent", label: "포인트 색상" },
-          accent2: { value: "#d9b8a7", css: "--accent2", id: "thAccent2", label: "보조 포인트" },
-          nav: { value: "#f7f5f2", css: "--nav-bg", id: "thNav", label: "상단 탭 배경", format: (value) => hexToRgba(value, 0.92) },
-          soft: { value: "#faf8f5", css: "--soft", id: "thSoft", label: "연한 영역 색상" },
-          button: { value: "#ffffff", css: "--button-bg", id: "thButton", label: "버튼 배경" },
-          buttonText: { value: "#222222", css: "--button-text", id: "thButtonText", label: "버튼 글자" },
-          danger: { value: "#b55b5b", css: "--danger", id: "thDanger", label: "삭제/경고 색상" },
-          good: { value: "#5c8a69", css: "--good" },
-          radius: { value: 20, css: "--radius", id: "thRadius", min: 4, max: 40, format: (value) => `${value}px` },
+          bg: { type: "color", value: "#f7f5f2", css: "--bg", id: "thBg", label: "페이지 배경" },
+          card: { type: "color", value: "#ffffff", css: "--card", id: "thCard", label: "기본 카드 배경" },
+          soft: { type: "color", value: "#faf8f5", css: "--soft", id: "thSoft", label: "내부 카드·보조 영역" },
+          ink: { type: "color", value: "#222222", css: "--ink", id: "thInk", label: "기본 글자" },
+          muted: { type: "color", value: "#777777", css: "--muted", id: "thMuted", label: "보조 글자" },
+          line: { type: "color", value: "#e8e3dd", css: "--line", id: "thLine", label: "공통 테두리" },
+          accent: { type: "color", value: "#9b6b52", css: "--accent", id: "thAccent", label: "주요 포인트" },
+          accent2: { type: "color", value: "#d9b8a7", css: "--accent2", id: "thAccent2", label: "보조 진행·상태" },
+          nav: { type: "color", value: "#f7f5f2", css: "--nav-bg", id: "thNav", label: "상단 탭 배경", format: (value) => hexToRgba(value, 0.92) },
+          button: { type: "color", value: "#ffffff", css: "--button-bg", id: "thButton", label: "기본 버튼 배경" },
+          buttonText: { type: "color", value: "#222222", css: "--button-text", id: "thButtonText", label: "버튼 글자" },
+          danger: { type: "color", value: "#b55b5b", css: "--danger", id: "thDanger", label: "삭제·경고" },
+          good: { type: "color", value: "#5c8a69", css: "--good", id: "thGood", label: "완료·성공" },
+          weekendSat: { type: "color", value: "#4a80c1", css: "--weekend-sat-base", id: "thWeekendSat", label: "토요일 날짜" },
+          weekendSun: { type: "color", value: "#d15454", css: "--weekend-sun-base", id: "thWeekendSun", label: "일요일 날짜" },
+          radius: { type: "range", value: 20, css: "--radius", id: "thRadius", min: 4, max: 40, format: (value) => `${value}px` },
         };
         const THEME_DEFAULTS = Object.freeze(Object.fromEntries(
           Object.entries(THEME_FIELDS).map(([key, field]) => [key, field.value])));
@@ -2807,6 +2795,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             buttonText: "#2a2623",
             danger: "#b55b5b",
             good: "#5c8a69",
+            weekendSat: "#4a80c1",
+            weekendSun: "#d15454",
             radius: 20,
           },
           sage: {
@@ -2824,6 +2814,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             buttonText: "#243027",
             danger: "#b45f63",
             good: "#6f8f78",
+            weekendSat: "#4a80c1",
+            weekendSun: "#d15454",
             radius: 20,
           },
           blue: {
@@ -2841,6 +2833,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             buttonText: "#243044",
             danger: "#b45f63",
             good: "#6f8f78",
+            weekendSat: "#4a80c1",
+            weekendSun: "#d15454",
             radius: 20,
           },
           rose: {
@@ -2858,6 +2852,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             buttonText: "#34272b",
             danger: "#b55b5b",
             good: "#5c8a69",
+            weekendSat: "#4a80c1",
+            weekendSun: "#d15454",
             radius: 20,
           },
           lavender: {
@@ -2875,6 +2871,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             buttonText: "#2e2940",
             danger: "#b55b67",
             good: "#788e7a",
+            weekendSat: "#4a80c1",
+            weekendSun: "#d15454",
             radius: 20,
           },
         };
@@ -3103,6 +3101,27 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         function CardFooter(content) {
           return UIComponentRoot("CardFooter", "card-footer-row", content);
         }
+        const BUDGET_GAUGE_GEOMETRY = Object.freeze({
+          viewBox: "0 10 100 58",
+          path: "M 12 58 A 38 38 0 0 1 88 58",
+        });
+        function BudgetGauge({ progressDom, valueDom }) {
+          const { viewBox, path } = BUDGET_GAUGE_GEOMETRY;
+          return UIComponentRoot("BudgetGauge", "budget-gauge-arc", `
+            <svg aria-hidden="true" class="budget-arc-svg" focusable="false" viewBox="${viewBox}">
+              <path class="budget-arc-track" d="${path}" pathLength="100"></path>
+              <path class="budget-arc-progress" d="${path}" data-dom="${attr(progressDom)}" pathLength="100"></path>
+            </svg>
+            <div class="budget-arc-value"><strong data-dom="${attr(valueDom)}">0%</strong></div>`);
+        }
+        function mountStaticUiComponents() {
+          document.querySelectorAll('[data-ui-static="BudgetGauge"]').forEach((host) => {
+            host.outerHTML = BudgetGauge({
+              progressDom: host.dataset.progressDom,
+              valueDom: host.dataset.valueDom,
+            });
+          });
+        }
         function ActionRow(content, variant = "") {
           return UIComponentRoot("ActionRow", `action-row ${variant}`.trim(), content);
         }
@@ -3299,6 +3318,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             "close-modal": onClick(() => closeModal()),
             "confirm-accept": onClick(() => settleAppConfirm(true)),
             "confirm-cancel": onClick(() => settleAppConfirm(false)),
+            "autosize-textarea": onInput((el) => autosizeTextarea(el)),
           },
           Home: {
             "move-category": onClick((el) =>
@@ -3352,7 +3372,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             "shared-copy-code": onClick(() => SharedDomains.Projects.copyCode()),
             "shared-create-project": onClick(() => SharedDomains.Projects.create()),
             "shared-join-project": onClick(() => SharedDomains.Projects.join()),
-            "switch-project": onClick((el) => SharedDomains.Projects.switchTo(el.dataset.project)),
           },
           Wedding: {
             "save-wedding-date": { ...onClick(saveWeddingDate), modalSave: true },
@@ -3384,12 +3403,12 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             selectedDateTitle: "selectedDateTitle", scheduleList: "scheduleList",
             scheduleFilter: "scheduleFilter", scheduleAllSearch: "scheduleAllSearch",
           },
-          memos: { memoCount: "memoCount", quickMemo: "quickMemo", memoSearch: "memoSearch" },
+          memos: { quickMemo: "quickMemo", memoSearch: "memoSearch" },
           history: { undoButton: "undoButton", redoButton: "redoButton", historyStatus: "historyStatus" },
           theme: { themeFields: "themeFields", themePresets: "themePresets", thRadiusVal: "thRadiusVal" },
           shared: {
             syncUserText: "syncUserText", syncCardDescription: "syncCardDescription", syncDetailText: "syncDetailText",
-            syncFooter: "syncFooter", syncConflictBox: "syncConflictBox", syncConflictText: "syncConflictText", syncProjectsBox: "syncProjectsBox",
+            syncFooter: "syncFooter", syncConflictBox: "syncConflictBox", syncConflictText: "syncConflictText",
             currentProjectBox: "currentProjectBox", futureSchemaBox: "futureSchemaBox", footerText: "footerText",
             syncEmail: "syncEmail", syncPassword: "syncPassword", syncPasswordConfirm: "syncPasswordConfirm",
             syncCode: "syncCode", syncPasswordConfirmWrap: "syncPasswordConfirmWrap", syncDataActions: "syncDataActions",
@@ -4377,11 +4396,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         function BudgetCard(item, index, total) {
           const actions = SortableCardActions(item.id, index, total, "budget", COLLECTION_SCHEMAS.budget.label);
           const amounts = [["예상금액", item.planned], ["실제금액", item.actual]].map(([label, amount]) =>
-            `<div class="budget-box"><div class="label">${label}</div><b>${won(amount)}</b></div>`).join("");
+            `<div class="inset-card budget-box"><div class="label">${label}</div><b>${won(amount)}</b></div>`).join("");
           return UIComponentRoot("BudgetCard", "budget-line", `
             ${CardHeader(item.name, "", actions)}
             <div class="budget-amounts">${amounts}</div>
-            ${item.details ? `<div class="budget-box">
+            ${item.details ? `<div class="inset-card budget-box">
               <div class="label">세부 내용</div><div class="budget-detail">${esc(item.details)}</div>
             </div>` : ""}`);
         }
@@ -4416,11 +4435,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           };
         }
         function PlanCard(item, index, total) {
-          const status = `<select class="plan-status-select field" aria-label="부부계획 상태"
+          const status = `<select class="field field--inline-select" aria-label="부부계획 상태"
             data-action="update-plan" data-id="${attr(item.id)}">${SelectOptions(PLAN_STATUSES, item.status)}</select>`;
           const actions = SortableCardActions(item.id, index, total, "plan", COLLECTION_SCHEMAS.plan.label, status);
           const blocks = [["논의할 세부 사항", item.details], ["논의된 사항", item.note]].map(([label, text]) => `
-            <div class="plan-block"><div class="plan-label">${label}</div>
+            <div class="inset-card plan-block"><div class="plan-label">${label}</div>
               <div class="plan-text">${esc(text || "미입력")}</div>
             </div>`).join("");
           return UIComponentRoot("PlanCard", "plan", CardHeader(item.name, "", actions, "card-header--responsive") + blocks);
@@ -4439,10 +4458,19 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           const query = selectedValue("memoSearch").trim().toLowerCase();
           const items = view.memos.filter((item) => !query || item.text.toLowerCase().includes(query));
           const positions = new Map(view.memos.map((item, index) => [String(item.id), index]));
-          setOwnedText("memos", "memoCount", `${items.length}개`);
           setOwnedHTML("memos", COLLECTION_SCHEMAS.memo.target,
             List(items, (item) => MemoCard(item, positions.get(String(item.id)), view.memos.length),
               COLLECTION_SCHEMAS.memo.empty));
+          autosizeTextarea($(DOM_IDS.quickMemo));
+        }
+        function autosizeTextarea(element) {
+          if (!(element instanceof HTMLTextAreaElement)) return;
+          const style = getComputedStyle(element);
+          const minHeight = parseFloat(style.minHeight) || 0;
+          const borderY = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+          element.style.height = `${minHeight}px`;
+          const contentHeight = Math.ceil(element.scrollHeight + borderY);
+          element.style.height = `${Math.max(minHeight, contentHeight)}px`;
         }
         function saveMemo() {
           const data = { text: $("quickMemo")?.value.trim() || "" };
@@ -4453,6 +4481,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           }
           if (!Collection.write("memo", null, data)) return false;
           setOwnedValue("memos", "quickMemo", "");
+          autosizeTextarea($(DOM_IDS.quickMemo));
           notifySuccess("메모를 저장했어요.");
           return true;
         }
@@ -4544,7 +4573,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               CardBody(
                 `<div class="category-progress-meta small">${done}/${total}</div><div class="progress category-progress"><i style="--progress-value:${progress}%"></i></div>`,
               ),
-            "card--compact category-card",
+            "card--compact category-card inset-card",
           );
         }
         function renderHomeCategories(view) {
@@ -4632,10 +4661,13 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         }
         function mountThemeEditor() {
           setOwnedHTML("theme", "themeFields", Object.entries(THEME_FIELDS)
-            .filter(([, field]) => field.label)
-            .map(([, field]) => `<div class="theme-item">
+            .filter(([, field]) => field.type === "color" && field.label)
+            .map(([, field]) => `<div class="inset-card theme-item">
               <label for="${attr(DOM_IDS[field.id])}">${esc(field.label)}</label>
-              <input id="${attr(DOM_IDS[field.id])}" type="color" data-action="preview-theme">
+              <span class="theme-color-control">
+                <span class="theme-color-preview" aria-hidden="true"></span>
+                <input id="${attr(DOM_IDS[field.id])}" type="color" data-action="preview-theme">
+              </span>
             </div>`).join(""));
           setOwnedHTML("theme", "themePresets", Object.entries(THEME_PRESETS).map(([key, preset]) =>
             Button("", { action: "theme-preset", className: "theme-swatch", attributes: {
@@ -4650,7 +4682,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         function renderThemeControls(theme = themeData()) {
           const normalized = normalizeThemeObject(theme);
           Object.entries(THEME_FIELDS).forEach(([key, field]) => {
-            if (field.id) setOwnedValue("theme", field.id, normalized[key]);
+            if (!field.id) return;
+            setOwnedValue("theme", field.id, normalized[key]);
+            if (field.type === "color")
+              $(field.id)?.closest(".theme-color-control")?.style.setProperty("--theme-preview-color", normalized[key]);
           });
           setOwnedText("theme", "thRadiusVal", normalized.radius + "px");
         }
@@ -4690,7 +4725,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         }
         function renderSettings() {
           renderSharedStatusUI();
-          renderSharedProjects();
+          renderSharedProject();
           updateHistoryUI();
         }
 
@@ -5191,7 +5226,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               disabled: !sameScope, "aria-disabled": sameScope ? null : "true",
               title: sameScope ? null : "해당 프로젝트로 전환한 뒤 복원할 수 있어요.",
             } }) + Button("삭제", { action: "delete-recovery", id: point.id }), "action-row--item");
-          return `<div class="recovery-item">
+          return `<div class="inset-card recovery-item">
             <div class="recovery-copy"><div class="recovery-title">${esc(point.reason)}</div>
               <div class="recovery-meta">${esc(time)} · ${point.projectId ? "공동 프로젝트" : "로컬"}${sameScope ? "" : " · 다른 프로젝트"}</div>
             </div>${actions}
@@ -5672,23 +5707,28 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           const saved = setSharedConfig(config);
           if (saved) {
             renderSharedControls();
-            renderSharedProjects();
+            renderSharedProject();
           }
           return saved;
         }
+        function normalizeSharedConfig(config = {}) {
+          const rest = { ...(config || {}) };
+          delete rest.projects;
+          return {
+            ...rest,
+            url: rest.url || DEFAULT_SUPABASE_URL,
+            key: rest.key || DEFAULT_SUPABASE_KEY,
+          };
+        }
         function sharedConfig() {
           try {
-            const c = JSON.parse(storageGet(APP_CONFIG.sharedKey, "{}") || "{}");
-            return { ...c, url: c.url || DEFAULT_SUPABASE_URL, key: c.key || DEFAULT_SUPABASE_KEY };
+            return normalizeSharedConfig(JSON.parse(storageGet(APP_CONFIG.sharedKey, "{}") || "{}"));
           } catch (e) {
-            return { url: DEFAULT_SUPABASE_URL, key: DEFAULT_SUPABASE_KEY };
+            return normalizeSharedConfig();
           }
         }
         function setSharedConfig(v) {
-          return storageSet(
-            APP_CONFIG.sharedKey,
-            JSON.stringify({ ...v, url: v.url || DEFAULT_SUPABASE_URL, key: v.key || DEFAULT_SUPABASE_KEY }),
-          );
+          return storageSet(APP_CONFIG.sharedKey, JSON.stringify(normalizeSharedConfig(v)));
         }
         function setSharedPhase(phase) {
           const next = SHARED_PHASES.has(phase) ? phase : "error";
@@ -5895,22 +5935,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           queueSharedSave();
           return true;
         }
-        function renderSharedProjects() {
+        function renderSharedProject() {
           renderRecoveryPoints();
-          const projects = sharedConfig().projects || [];
-          const current = projects.find((project) => String(project.id) === String(sharedSync.projectId));
-          setOwnedDisplay("shared", "currentProjectBox", !!(sharedSync.user && current));
-          setOwnedDisplay("shared", "syncProjectsBox", !!(sharedSync.user && projects.length));
-          setOwnedHTML("shared", "syncProjectsBox", sharedSync.user && projects.length
-            ? `<div class="shared-project-list-title">내 프로젝트 목록</div>${List(projects, SharedProjectRow)}` : "");
-        }
-        function SharedProjectRow(project) {
-          const current = String(project.id) === String(sharedSync.projectId);
-          return `<div class="shared-project-row">
-            <div class="shared-project-code"><div class="shared-code">${esc(project.invite_code || "코드 확인 필요")}</div></div>
-            ${current ? '<span class="pill shared-project-current">현재 사용 중</span>'
-              : Button("불러오기", { action: "switch-project", attributes: { "data-project": project.id } })}
-          </div>`;
+          setOwnedDisplay("shared", "currentProjectBox", !!(sharedSync.user && sharedSync.projectId));
         }
         async function sharedRemoveChannel() {
           const client = sharedSync.client;
@@ -5986,7 +6013,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           if (sharedSync.client && sharedSync.projectId) await sharedSubscribe();
           renderSharedConflictBox();
           renderSharedStatusUI();
-          renderSharedProjects();
+          renderSharedProject();
         }
         function sharedApplyProject(project) {
           if (String(sharedSync.projectId || "") !== String(project.id || "")) resetSharedProjectRuntime();
@@ -6015,22 +6042,28 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             return false;
           return true;
         }
-        async function sharedRefreshProjects() {
+        async function sharedRefreshProject() {
           const snapshot = sharedContextSnapshot();
           const client = snapshot.client;
           const user = sharedSync.user;
-          if (!client || !user) return [];
+          if (!client || !user) return null;
           const { data, error } = await client
             .from("project_members")
             .select("project_id,role,joined_at,projects(id,name,invite_code)")
             .eq("user_id", user.id)
-            .order("joined_at", { ascending: true });
+            .order("joined_at", { ascending: true })
+            .limit(1);
           if (error) throw error;
-          if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true })) return [];
-          const projects = (data || []).map((x) => x.projects).filter(Boolean);
+          if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true })) return null;
+          const project = (data || []).map((entry) => entry.projects).find(Boolean) || null;
           const c = sharedConfig();
-          setSharedConfig({ ...c, projects, email: user.email });
-          return projects;
+          setSharedConfig({
+            ...c,
+            projectId: project?.id || null,
+            inviteCode: project?.invite_code || "",
+            email: user.email,
+          });
+          return project;
         }
         let sharedProjectActionInFlight = null;
         function runSharedProjectAction(action) {
@@ -6042,64 +6075,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           });
           return current;
         }
-        async function sharedSwitchProjectCore(pid) {
-          if (!sharedSync.client || !sharedSync.user) return;
-          if (String(pid) === String(sharedSync.projectId)) return;
-
-          let previous = null;
-          let snapshot = sharedContextSnapshot();
-
-          try {
-            let projects = sharedConfig().projects || [];
-            let project = projects.find((item) => String(item.id) === String(pid));
-
-            if (!project) {
-              projects = await sharedRefreshProjects();
-              if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true })) return;
-              project = projects.find((item) => String(item.id) === String(pid));
-            }
-
-            if (!project) throw new Error("프로젝트를 찾지 못했어요.");
-            if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true })) return;
-            if (
-              !(await appConfirm(
-                `'${project.name || "우리 결혼 플래너"}' 프로젝트의 데이터를 불러올까요?\n\n현재 기기의 플래너 데이터가 해당 프로젝트 데이터로 바뀝니다.`,
-                { title: "프로젝트 전환", confirmText: "불러오기" },
-              ))
-            )
-              return;
-            if (!(await flushCurrentSharedChangesBefore("프로젝트 전환"))) return;
-            createRecoveryPoint("프로젝트 전환 전", { silent: true });
-            previous = sharedProjectContext();
-
-            sharedSync.lifecycle += 1;
-            snapshot = sharedContextSnapshot();
-            await sharedRemoveChannel();
-            if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true })) return;
-            sharedApplyProject(project);
-            snapshot = sharedContextSnapshot();
-
-            const ok = await sharedPull(false, { flushPending: false });
-            if (!sharedContextIsCurrent(snapshot)) return;
-            if (!ok) throw new Error("프로젝트 데이터를 불러오지 못했어요.");
-
-            if (!(await sharedResumeRealtime(snapshot))) return;
-            notifySuccess("프로젝트를 불러왔어요.");
-          } catch (e) {
-            if (previous && sharedContextIsCurrent(snapshot, { allowProjectChange: true })) {
-              try {
-                await restoreSharedProjectContext(previous);
-              } catch (restoreError) {
-                console.warn("project switch rollback failed", restoreError);
-              }
-            }
-            console.error(e);
-            notifyError(e.message || "프로젝트를 불러오지 못했어요.");
-          }
-        }
-        async function sharedSwitchProject(pid) {
-          return runSharedProjectAction(() => sharedSwitchProjectCore(pid));
-        }
         function renderSharedControls({ clearSensitive = false } = {}) {
           const c = sharedConfig();
           const logged = !!sharedSync.user;
@@ -6108,12 +6083,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           const confirmEl = ownedElement("shared", DOM_IDS.syncPasswordConfirm);
           const codeEl = ownedElement("shared", DOM_IDS.syncCode);
           const confirmWrap = ownedElement("shared", DOM_IDS.syncPasswordConfirmWrap);
-          const projects = c.projects || [];
-          const current = projects.find((project) => String(project.id) === String(sharedSync.projectId));
 
           setOwnedDisplay("shared", DOM_IDS.syncLoginBox, !logged);
           setOwnedDisplay("shared", DOM_IDS.syncLoggedInBox, logged);
-          setOwnedDisplay("shared", DOM_IDS.syncProjectActions, logged);
+          setOwnedDisplay("shared", DOM_IDS.syncProjectActions, logged && !sharedSync.projectId);
 
           const dataActions = ownedElement("shared", DOM_IDS.syncDataActions);
           if (dataActions) dataActions.classList.toggle("u-hidden", !logged);
@@ -6122,7 +6095,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           const savedEmail = sharedSync.user?.email || c.email || "";
           if (emailEl && (logged || savedEmail)) emailEl.value = savedEmail;
 
-          const inviteCode = current?.invite_code || c.inviteCode || "";
+          const inviteCode = c.inviteCode || "";
           if (codeEl && (logged || inviteCode)) codeEl.value = inviteCode;
 
           if (clearSensitive || logged) {
@@ -6152,16 +6125,16 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             sharedSync.projectId = null;
             renderSharedStatusUI();
             renderSharedControls({ clearSensitive: true });
-            renderSharedProjects();
+            renderSharedProject();
             return;
           }
           if (!nextUser) {
             renderSharedStatusUI();
-            renderSharedProjects();
+            renderSharedProject();
             return;
           }
           renderSharedStatusUI();
-          renderSharedProjects();
+          renderSharedProject();
           if (event === "SIGNED_IN" && !sharedSync.projectId) void sharedAfterLogin();
         }
         async function sharedConnect({ silent = false } = {}) {
@@ -6202,7 +6175,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               await sharedAfterLogin();
             } else {
               renderSharedStatusUI();
-              renderSharedProjects();
+              renderSharedProject();
             }
             return true;
           } catch (e) {
@@ -6274,19 +6247,15 @@ EDIT MAP (검색할 이름 → 수정할 책임)
 
           const snapshot = sharedContextSnapshot();
           renderSharedStatusUI();
-          const config = sharedConfig();
           const run = (async () => {
             try {
-              const projects = await sharedRefreshProjects();
+              const target = await sharedRefreshProject();
               if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true })) return false;
-
-              let target = projects.find((p) => String(p.id) === String(config.projectId));
-              if (!target) target = projects[0];
 
               if (!target) {
                 sharedSync.projectId = null;
                 renderSharedStatusUI();
-                renderSharedProjects();
+                renderSharedProject();
                 return true;
               }
 
@@ -6314,7 +6283,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             } catch (e) {
               if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true })) return false;
               console.warn("auto project discovery failed", e);
-              renderSharedProjects();
+              renderSharedProject();
               return false;
             }
           })();
@@ -6342,14 +6311,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               return;
             }
 
-            if (
-              sharedSync.projectId &&
-              !(await appConfirm(
-                "현재 프로젝트가 이미 있습니다.\n\n새 프로젝트를 만들면 현재 프로젝트와 별개의 프로젝트가 생성되고, 기존 프로젝트도 계정에 그대로 남습니다.\n\n새 프로젝트로 전환할까요?",
-                { title: "새 프로젝트 만들기", confirmText: "만들기" },
-              ))
-            )
+            if (sharedSync.projectId) {
+              notifyError("이 계정은 이미 하나의 프로젝트에 연결되어 있어요.");
               return;
+            }
             if (!(await flushCurrentSharedChangesBefore("새 프로젝트 생성"))) return;
             previous = sharedProjectContext();
 
@@ -6380,11 +6345,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             sharedApplyProject(project);
             const projectSnapshot = sharedContextSnapshot();
 
-            try {
-              await sharedRefreshProjects();
-            } catch (e) {
-              console.warn("project list refresh failed", e);
-            }
 
             const pushed = await sharedPushNow(false);
             if (!sharedContextIsCurrent(projectSnapshot)) return;
@@ -6405,7 +6365,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               if (previous) {
                 try {
                   await restoreSharedProjectContext(previous);
-                  if (createdProject) await sharedRefreshProjects();
                 } catch (restoreError) {
                   console.warn("project creation rollback failed", restoreError);
                 }
@@ -6432,6 +6391,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             if (!(await ensureSharedClient())) return;
             if (!sharedSync.user) {
               notifyError("먼저 로그인해주세요.");
+              return;
+            }
+            if (sharedSync.projectId) {
+              notifyError("이 계정은 이미 하나의 프로젝트에 연결되어 있어요.");
               return;
             }
 
@@ -6472,11 +6435,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             });
             const projectSnapshot = sharedContextSnapshot();
 
-            try {
-              await sharedRefreshProjects();
-            } catch (e) {
-              console.warn("project list refresh failed", e);
-            }
 
             const ok = await sharedPull(false, { flushPending: false });
             if (!sharedContextIsCurrent(projectSnapshot)) return;
@@ -6657,7 +6615,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           await sharedSubscribe();
           if (!sharedContextIsCurrent(snapshot)) return false;
           renderSharedStatusUI();
-          renderSharedProjects();
+          renderSharedProject();
           return true;
         }
         async function sharedPull(showAlert = true, { flushPending = true } = {}) {
@@ -6947,7 +6905,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             sharedSync = createSharedSyncState({ lifecycle });
             renderSharedStatusUI();
             renderSharedControls({ clearSensitive: true });
-            renderSharedProjects();
+            renderSharedProject();
             if (signedOut)
               notifySuccess(
                 "로그아웃했어요. 다음 로그인부터는 저장된 설정과 이메일을 그대로 사용하고 비밀번호만 입력하면 됩니다.",
@@ -6955,7 +6913,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           }
           return signedOut;
         }
-        // INTENTIONAL COMPAT: existing Shared subdomain methods remain public; no new helper exports.
+        // Shared subdomains remain public. Multi-project listing/switching is intentionally removed:
+        // one signed-in account uses at most one project code in this app.
         const SharedDomains = Object.freeze({
           Auth: Object.freeze({
             connect: sharedConnect,
@@ -6967,10 +6926,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             removeSubscription: sharedRemoveAuthSubscription,
           }),
           Projects: Object.freeze({
-            refresh: sharedRefreshProjects,
+            refresh: sharedRefreshProject,
             create: sharedCreateProject,
             join: sharedJoinProject,
-            switchTo: sharedSwitchProject,
             copyCode: sharedCopyCode,
             apply: sharedApplyProject,
             restore: restoreSharedProjectContext,
@@ -6995,7 +6953,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           UI: Object.freeze({
             renderStatus: renderSharedStatusUI,
             renderControls: renderSharedControls,
-            renderProjects: renderSharedProjects,
+            renderProject: renderSharedProject,
             renderConflict: renderSharedConflictBox,
             renderActions: renderSharedActionStates,
           }),
@@ -7033,7 +6991,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             const children = directUiChildren(card);
             const components = children.map((child) => child.dataset.uiComponent || "");
             const bodyOnly = card.dataset.uiVariant === "body-only";
-            const expected = bodyOnly ? ["CardBody"] : ["CardHeader", "CardBody"];
+            const hasFooter = components.at(-1) === "CardFooter";
+            const expected = bodyOnly
+              ? ["CardBody"]
+              : hasFooter ? ["CardHeader", "CardBody", "CardFooter"] : ["CardHeader", "CardBody"];
             if (components.length !== expected.length || components.some((value, i) => value !== expected[i])) {
               issues.push(`Card ${card.id ? `#${card.id}` : index}: ${components.join(" > ") || "empty"}`);
             }
@@ -7051,6 +7012,45 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           });
           document.querySelectorAll('[data-ui-component="CardFooter"]').forEach((footer, index) => {
             if (!footer.classList.contains("card-footer-row")) issues.push(`CardFooter ${index}: .card-footer-row missing`);
+            if (footer.parentElement?.dataset.uiComponent !== "Card")
+              issues.push(`CardFooter ${index}: direct Card child required`);
+          });
+          const budgetGauges = [...document.querySelectorAll('[data-ui-component="BudgetGauge"]')];
+          if (budgetGauges.length !== 2) issues.push(`BudgetGauge: expected 2 instances, found ${budgetGauges.length}`);
+          budgetGauges.forEach((gauge, index) => {
+            if (!gauge.classList.contains("budget-gauge-arc") ||
+                !gauge.querySelector(".budget-arc-svg") ||
+                !gauge.querySelector(".budget-arc-track") ||
+                !gauge.querySelector(".budget-arc-progress") ||
+                !gauge.querySelector(".budget-arc-value"))
+              issues.push(`BudgetGauge ${index}: canonical structure required`);
+          });
+          const searchFields = [...document.querySelectorAll(".field--search")];
+          if (searchFields.length !== 3 || searchFields.some((field) => !field.classList.contains("field--compact-text")))
+            issues.push("Search fields: compact text control contract required");
+          [DOM_IDS.syncEmail, DOM_IDS.syncPassword, DOM_IDS.syncPasswordConfirm].forEach((id) => {
+            if (!$(id)?.classList.contains("field--compact-text"))
+              issues.push(`Shared auth field #${id}: compact text control required`);
+          });
+          const quickMemo = $(DOM_IDS.quickMemo);
+          if (!quickMemo?.classList.contains("field--memo-input") ||
+              quickMemo.dataset.action !== "autosize-textarea" || quickMemo.rows !== 1)
+            issues.push("Quick memo: autosize textarea contract required");
+          const insetSurfaces = document.querySelectorAll(
+            ".budget-box, .plan-block, .category-card, .recovery-item, .plan-status-grid > div, .shared-account-panel, [data-dom=\"currentProjectBox\"], .theme-item",
+          );
+          if ([...insetSurfaces].some((item) => !item.classList.contains("inset-card")))
+            issues.push("Inset cards: shared surface contract required");
+          const syncCode = $(DOM_IDS.syncCode);
+          if (!syncCode?.classList.contains("sync-code")) issues.push("Project code field: sync-code contract required");
+          const editableThemeFields = Object.values(THEME_FIELDS).filter((field) => field.type === "color" && field.label);
+          const themeItems = [...document.querySelectorAll(".theme-item")];
+          if (themeItems.length !== editableThemeFields.length)
+            issues.push(`Theme fields: expected ${editableThemeFields.length} color controls, found ${themeItems.length}`);
+          editableThemeFields.forEach((field) => {
+            if (!$(field.id)) issues.push(`Theme field ${field.id}: missing control`);
+            if (!getComputedStyle(document.documentElement).getPropertyValue(field.css).trim())
+              issues.push(`Theme field ${field.id}: CSS variable ${field.css} missing`);
           });
           return { ok: issues.length === 0, issues };
         }
@@ -7104,7 +7104,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             + CalendarCell({ iso: "2027-01-01", day: 1, count: 0 })
             + OrderButtons("example", 0, 2, "category")
             + RecoveryItem({ id: "example", createdAt: "2027-01-01", reason: "contract" })
-            + SharedProjectRow({ id: "contract-other-project" })
             + Object.keys(PAGE_REGISTRY).map((id) => Button(id, { action: "show-page" })).join("");
           const actionElements = [...$$('[data-action]'), ...template.content.querySelectorAll('[data-action]')];
           for (const element of actionElements) {
@@ -7280,7 +7279,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                   plan: Planner.Plans, memo: Planner.Memos };
                 for (const [name, api] of Object.entries(apis)) {
                   const data = Object.fromEntries(FORM_SCHEMAS[name].fields.map((field) => [field.key,
-                    field.type === "date" ? localDateISO() : field.options?.[0] ?? (field.type === "money" ? 0 : marker)]));
+                    field.type === "date" ? localDateISO() : field.type === "time" ? "12:30"
+                      : field.options?.[0] ?? (field.type === "money" ? 0 : marker)]));
                   const item = Collection.write(name, null, data);
                   if (!item) return false;
                   called = null;
@@ -7496,6 +7496,15 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             [Planner.Tasks, Planner.Schedule, Planner.Budget, Planner.Plans, Planner.Memos].every((api) =>
               Object.values(api).every((value) => typeof value === "function"))
             && !Object.hasOwn(Planner.Memos, "save-memo") && ACTIONS["save-memo"].handler === saveMemo);
+          test("shared project UI stays single-project", () => {
+            const normalized = normalizeSharedConfig({ projectId: "one", inviteCode: "ABCDEFGH", projects: [{ id: "legacy" }] });
+            return !Object.hasOwn(normalized, "projects")
+              && normalized.projectId === "one"
+              && !Object.hasOwn(ACTIONS, "switch-project")
+              && !document.querySelector('[data-action="switch-project"]')
+              && !document.querySelector('[data-dom="syncProjectsBox"]')
+              && !Object.hasOwn(SharedDomains.Projects, "switchTo");
+          });
           test("UI ownership map has no duplicates", () => assertUiOwnershipMap().ok);
           test("UI component contracts are consistent", () => assertUiComponentContracts().ok);
           const report = { ok: results.every((result) => result.ok), results };
@@ -7601,6 +7610,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             Button,
             ActionRow,
             CardFooter,
+            BudgetGauge,
             CardBody,
             CardHeader,
             Empty: EmptyState,
@@ -7642,7 +7652,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             signOut: sharedSignOut,
             createProject: sharedCreateProject,
             joinProject: sharedJoinProject,
-            switchProject: sharedSwitchProject,
           },
         };
 
@@ -7757,6 +7766,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         }
         [COLLECTION_SCHEMAS, PAGE_REGISTRY, ACTION_REGISTRY, DOM_REGISTRY, THEME_FIELDS, THEME_PRESETS].forEach((registry) => deepFreeze(registry));
         SHARED_DEVICE_ID = getSharedDeviceId();
+        mountStaticUiComponents();
         bindDomAnchors();
         state = deepFreeze(normalizeState(loadStoredState()));
         lastPersistedState = cloneValue(state);
