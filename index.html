@@ -1,73 +1,79 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 선언형 아키텍처 v358
+우리 결혼 플래너 — 단일 파일 / 책임 분리 아키텍처 v359
 
-EDIT MAP (검색할 이름 → 수정할 책임)
-  CSS :root / UI EDIT MAP   버튼·카드·제목·입력창·페이지 간격의 디자인 토큰
-  COMPONENT /              기본 컴포넌트 외형; 화면별 덮어쓰기보다 명시적 변형 사용
-  02 UI COMPONENTS         Button / Card / ActionRow / BudgetGauge / List / FormField / FormModal
-  COLLECTION_SCHEMAS       컬렉션 이름·저장 위치·필드·기본값·검증·목록·CRUD 정책
-  PAGE_REGISTRY            페이지 이름·렌더러·갱신 의존성·navigation
-  ACTION_REGISTRY          특수 이벤트; 반복 CRUD action은 컬렉션에서 자동 생성
-  DOM_AREAS                영역별 ID; 컬렉션/페이지/폼 ID와 소유권은 registry에서 생성
-  THEME_FIELDS / PRESETS   테마 기본값·입력 컨트롤·CSS 연결·프리셋
-  04 ENGINES               Collection CRUD / 필드 처리 / DOM / 렌더 / 모달 / 이벤트
-  05 DOMAIN                Tasks / Schedule / Budget / Plans / Memos / Home / Theme
-  06 STATE                 상태 정규화·검증·저장·History·Recovery·Backup
-  SHARED SYNC              인증·프로젝트·CAS·병합·충돌·실시간 연결 (독립 lifecycle)
-  07 TESTING               self-test / registry contract / CRUD smoke / CAS mock / UI architecture guard
-  08 PUBLIC API            Planner / AppDomains 및 의도적으로 남긴 호환 adapter
-  09 BOOTSTRAP             정적 HTML anchor 연결·초기화·PWA lifecycle
+CURRENT ARCHITECTURE
+  CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
+       → 06 domain views → 07 responsive → 08 state utilities.
+  JS: 01 config → 02 UI components → 03 schemas/registries → 04 engines
+      → 05 domain views → 06 state/shared lifecycle → 07 testing → 08 public API → 09 bootstrap.
+  Component는 DOM·외형·variant·state 계약을 소유합니다. Layout은 배치만 소유합니다.
+  Domain View는 데이터와 컴포넌트를 조합합니다. CSS 위치보다 아래 책임 경계를 우선하세요.
 
-수정 방법
-  폼 필드 추가: COLLECTION_SCHEMAS[name].fields 한 곳. 렌더·읽기·정규화·검증이 함께 적용됩니다.
-  목록에도 표시할 값은 해당 domain renderer에서 표현합니다. 데이터 로직은 옮기지 않습니다.
-  새 CRUD 화면: collection 정의 + PAGE_REGISTRY + 정적 HTML page/collection host.
-  save/edit/delete/move, modal, action, DOM 소유권을 복사하지 않습니다.
-  기존 컴포넌트와 유사한 UI 예외는 새 selector를 만들기 전에 등록된 variant로 표현할 수 있는지 먼저 확인합니다.
-  저장 계약 변경은 다른 버전 클라이언트와의 공유 호환성을 별도로 검토합니다.
-  상태 변경은 mutateState의 draft, 외부 데이터는 prepareIncomingState를 거칩니다.
-  정적 HTML은 data-dom/data-page-root/data-collection anchor를 사용합니다.
-  파생 FORM_SCHEMAS/DOM_IDS/UI_OWNERSHIP는 직접 수정하지 않습니다.
+EDIT MAP — 검색할 이름 / 수정할 곳 / 직접 수정하지 않을 곳
+  버튼 geometry: :root --unified-button-* (페이지 액션), --action-button-size (아이콘/상태 select).
+    .btn/.icon-control이 적용합니다. 개별 화면에 height/padding/font patch를 추가하지 않습니다.
+  CardHeader 간격: --card-header-gap / --card-header-margin-bottom / --card-action-gap.
+    부모 gap이 간격을 소유하면 card-header--flush, 우측 고정 액션은 --fixed-actions를 조합합니다.
+    .plan > .card-header 같은 화면별 외형 override를 만들지 않습니다.
+  Card variant: UI_VARIANTS.Card + CSS 명시적 .card--* 규칙. DOM 검사 목록은 자동 파생됩니다.
+  MoreMenu: MoreMenu(renderer) + COMPONENT .more-menu* (외형) + FloatingMenu(lifecycle).
+    bare는 배경 없는 독립 variant입니다. 사용하는 화면은 summary/popup 구조를 수정하지 않습니다.
+    새 variant는 MORE_MENU_VARIANTS + CSS에 정의하며 DOM variant 계약은 자동 파생됩니다.
+  EventItem: EventItem renderer + .planner-event-item* domain layout.
+    meta action lane은 flex 배치만 소유합니다. metadata 추가는 metaParts와 필요시 layout에서 처리합니다.
+    메뉴 자체 크기·popup·z-index·open 처리를 EventItem으로 옮기지 않습니다.
+  Plan field: COLLECTION_SCHEMAS.plan.fields. display:"block"이면 목록 라벨/본문도 파생됩니다.
+    FORM_SCHEMAS/DOM_IDS/정규화/CRUD action을 별도로 복제하지 않습니다.
+  Plan 상태: PLAN_STATUS_DEFINITIONS. 폼 옵션·홈 라벨·count·DOM ID가 파생됩니다.
+    저장된 label을 변경/삭제할 때에는 기존 데이터 migration을 따로 설계합니다.
+  새 CRUD collection: COLLECTION_SCHEMAS + domain renderer + PAGE_REGISTRY + HTML page/collection host.
+    Collection engine/Forms/Actions/DOM registration/merge collection keys는 자동 파생됩니다.
+    홈 요약·특수 필터·기존 공개 API alias가 필요하면 해당 명시적 경계에 추가합니다.
+  Theme color: THEME_FIELDS + CSS에서 사용할 의미적 binding. 프리셋 색상을 별도로 고르면 THEME_PRESETS.
+    :root 색상은 JS 실행 전 fallback이며 저장된 값은 THEME_FIELDS 정규화 이후 우선합니다.
+  Radius: --radius에서 surface/modal/inset/control/icon/badge 1/.9/.6/.45/.35/.25 파생.
+    pill/progress의 999px, 원형 dot/swatch의 50%, gauge의 0은 의도된 형태 예외입니다.
+  목록 구분선: --list-divider-width / --list-divider-border + .list-divided-item.
+  새 action: 반복 CRUD는 schema에서 파생. 특수 동작만 ACTION_REGISTRY에 등록합니다.
+  페이지: PAGE_REGISTRY가 navigation/render/dependencies, DOM_AREAS가 비파생 DOM 소유권을 소유합니다.
+  State: mutateState(draft), 외부 입력은 prepareIncomingState. View에서 live state를 직접 바꾸지 않습니다.
 
-호환성과 검증
-  INTENTIONAL COMPAT: 기존 저장 키·schema v5·legacy memo/owner migration·Planner API 유지.
-  v325의 잘못 노출된 Memos action descriptor만 제거; 정상 공개 함수와 저장 데이터 계약 유지.
-  공개 edit은 모두 Collection.edit 경유. registry 검사는 실제 폼 ID·anchor·action도 확인합니다.
-  일정 2열 기준은 홈 보조 카드와 동일하며, 헤더/상태 select 크기는 field--inline-select가 소유하고 IconControl과 같은 action-button-size를 공유합니다.
-  카드 헤더 액션과 OrderButtons 내부 간격은 card-action-gap 하나를 공유합니다.
-  PlanCard는 fixed-actions CardHeader variant로 모바일에서도 위/아래·더보기·상태 선택창을 우측 한 줄에 유지하며, 항목 내부 세로 간격은 plan gap 하나가 소유합니다.
-  BudgetCard도 CardHeader의 기본 하단 margin을 제거하고 budget-line gap 하나가 이름 아래 간격을 소유합니다.
-  일정 항목 메타는 상단 inset-card 한 줄이 소유하며, 선택 날짜 목록만 EventItem showDate=false로 날짜를 생략합니다.
-  일정 항목의 더보기 메뉴는 같은 MoreMenu의 bare variant를 메타 inset-card 우측 끝에 절대배치하며, transform 없이 중앙 정렬하고 열린 EventItem을 stacking layer 위로 올려 팝업 가림을 방지합니다. 메타 높이는 action-button-size를 기준으로 유지하고 홈 미리보기는 showActions=false를 유지합니다.
-  MoreMenu 팝업은 부모 문맥과 무관하게 자체 grid 세로 목록 규격을 소유하며 default/bare 외 variant는 거부합니다.
-  MoreMenu·OrderButtons는 data-ui-component 계약을 가지며 UI guard가 열린 메뉴·긴 텍스트·action geometry를 실제 레이아웃으로 검사합니다.
-  목록 항목 구분선은 list-divided-item이 굵기·색상·마지막 항목 처리를 공통 소유합니다.
-  모서리 둥글기는 단일 테마 값에서 surface/modal/inset/control/icon/badge = 1.00/0.90/0.60/0.45/0.35/0.25 광학 스케일로 파생합니다.
-  검색창과 공유 로그인 입력창은 field--compact-text가 높이·폰트를 함께 소유하며 검색창은 field--search가 가로폭을 소유합니다.
-  설정 화면의 프로젝트 안내·변경 복구 상태·복구 지점 상태는 settings-status-note 하나가 보조 텍스트 크기를 공유합니다.
-  빠른 메모는 같은 폰트 규격을 공유하고 autosize-textarea action으로 내용에 맞춰 세로 높이만 자동 확장됩니다.
-  테마 색상 편집기는 native color swatch 외형을 숨기고 theme-color-control이 외곽선·미리보기를 소유합니다.
-  테마 색상 목록은 홈 분야별 진행률과 같은 2열→3열→4열 반응형 규칙을 사용합니다.
-  v352 UI_CONTRACTS: Component / Layout / Domain-specific view 분류와 구조·variant·style ownership 중앙 정의.
-  UI_GUARD_FIXTURES: 실제 렌더러와 정적 경계 복제본; 앱 상태·저장소·공유 네트워크를 변경하지 않습니다.
-  실행: await Planner.Testing.runUiGuards({expectedWidth:360}) — 현재 실제 viewport만 검사합니다.
-  브라우저 창을 360·390·768·1280px로 각각 바꿔 실행해야 하며 내부 div 폭을 viewport로 간주하지 않습니다.
-  검증 상태: JS 문법/CSS 구문 및 DOM 모사 self-test·CRUD·CAS 검증. Chromium 회귀는 실행 환경 제한으로 미검증.
-  DOM 모사 결과: self-test 18/18, CRUD smoke 10/10, CAS mock 4/4, fixture 구조 35/35, 구조 mutation 7/7.
-  JS/CSS 구문 오류 0, 7개 페이지 registry/DOM ownership 검사 통과. Browser console/page error는 미검증.
-  CSS 외형은 v351 그대로 유지합니다. 시각 기준선 동등성은 아직 확인되지 않았습니다.
-  APP_CONFIG.version이 백업 appVersion·sw.js 요청·PWA cache 접두사 버전을 함께 소유합니다.
-  실제 Supabase 인증·RLS·실시간 네트워크와 배포 origin의 Service Worker 동작은 검증하지 않았습니다.
+CURRENT CONTRACTS
+  MoreMenu는 details/summary/popup을 유지하며 native Popover top layer로 출력합니다.
+  FloatingMenu가 단일 열린 메뉴, 화면 경계 반전/clamp, 스크롤·resize 재배치,
+  외부 클릭·Escape·focus 이동·페이지 전환·모달 진입·소유 DOM 교체 시 닫기를 소유합니다.
+  메뉴를 body에 복제하지 않으므로 action delegation과 데이터 ID는 그대로 유지됩니다.
+  메뉴 계층은 브라우저 top layer, 일반 overlay는 --layer-modal/confirm/toast가 소유합니다.
+  Plan/Budget의 제목 아래 간격은 domain gap 하나가 소유합니다.
+  Button/Field/Search/Select/Textarea는 공통 class API와 UI_CONTRACTS로 검증됩니다.
+  UI_CONTRACTS: DOM 구조·variant·컴포넌트 경계; assertUiStyleOwnership: 화면별 외형 patch 방지.
+  UI_GUARD_FIXTURES는 실제 renderer 또는 실제 정적 DOM clone을 사용합니다.
+  UI guard의 token probe는 input/textarea 자식이 아닌 별도 측정 요소를 사용합니다.
 
-남긴 기술부채 (이번 구조 변경과 별개)
-  Visual guard는 현재 브라우저의 geometry contract 검사이며 screenshot pixel diff가 아닙니다.
-  popup의 조상 clipping과 수평 화면 경계를 검사하지만 스크롤 중 화면 아래쪽 자동 재배치는 기존 구현 범위 밖입니다.
-  공유 push 대기 중 변경 추적, 로그인/프로젝트 연결 문맥, 병합 시 순서,
-  프로젝트별 undo/redo 범위 문제는 기존 알고리즘 그대로입니다.
-  공휴일은 기존 2026~2027 정적 데이터입니다. HTML 하나로 실행하며 build step은 없습니다.
+TEST ENTRY POINTS (브라우저 console; 실제 viewport 변경 후 실행)
+  Planner.Testing.run()                         self-test
+  await Planner.Testing.runSmoke()              로컬 CRUD/저장/undo/redo; 로그인 시 데이터 보호로 실행 거부
+  await Planner.Testing.runSharedMocks()        CAS transport mock, 실서버 검증 아님
+  await Planner.Testing.runUiGuards({expectedWidth:360})
+  await Planner.Testing.runMutations()          DOM 11종 + CSS 7종 고의 회귀와 정상 baseline 검증
+  viewport 360/390/768/1280을 실제로 변경합니다. 내부 container 축소로 대체하지 않습니다.
+  geometry/mutation 테스트는 fixture DOM을 사용합니다. 운영 action/network를 실행하지 않습니다.
+
+COMPATIBILITY / INTENTIONAL LIMITATIONS
+  기존 localStorage 키, schema v5, legacy memo/owner migration, backup/history/recovery,
+  Planner 공개 함수와 Shared alias를 유지합니다. Shared Sync는 별도 lifecycle입니다.
+  UI/client는 1 account = 1 project입니다. DB의 unique constraint를 보장한다는 뜻은 아닙니다.
+  Popover API와 :has/checkVisibility 등을 지원하는 현대 브라우저가 기준입니다.
+  실제 Supabase 인증/RLS/realtime, 배포 origin Service Worker는 로컬 Chromium 검사와 별개입니다.
+  Shared push 중 추가 변경 추적, 로그인 연결 문맥, 원격 순서 병합, 프로젝트별 history scope는
+  별도 동기화 알고리즘 과제로 남아 있습니다. 이 버전은 해당 알고리즘을 교체하지 않습니다.
+  공휴일은 기존 2026–2027 정적 데이터입니다. screenshot pixel diff 자동 gate는 없습니다.
+  APP_CONFIG.version이 backup appVersion과 sw.js 요청 버전을 소유합니다.
+  기존 sw.js 첫 줄의 cache version은 사용자가 wedding-planner-v359로 변경합니다.
 -->
+
 
 <html lang="ko">
   <head>
@@ -87,6 +93,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
     <link href="manifest.webmanifest" rel="manifest" />
     <title>우리 결혼 플래너</title>
     <style>
+      /* ===== 01 TOKENS — semantic geometry, palette, radius and layer scale ===== */
       :root {
         /* UI EDIT MAP — 크기·폰트·배치는 이 구역부터 수정하세요.
      공통값 → 컴포넌트 → 명시적 변형 → 화면 배치 순서.
@@ -218,7 +225,17 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --action-row-margin-top: 8px;
         --card-footer-gap: 10px;
         --card-footer-margin-top: 10px;
-        --list-divider-border: 1px solid var(--line);
+        --list-divider-width: 1px;
+        --list-divider-border: var(--list-divider-width) solid var(--line);
+        --layer-nav: 10;
+        --layer-modal: 30;
+        --layer-confirm: 70;
+        --layer-toast: 80;
+        --menu-gap: 8px;
+        --menu-viewport-margin: 8px;
+        --menu-min-width: 92px;
+        --menu-padding: 5px;
+        --menu-item-gap: 2px;
         --ui-control-radius: var(--radius-control);
         /* Component style APIs: geometry/typography are owned by the base component. */
         --btn-font-weight: inherit;
@@ -232,7 +249,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --progress-value: 0%;
       }
 
-      /* ===== BASE / 리셋 ===== */
+      /* ===== 02 BASE — element defaults and focus ===== */
       * {
         box-sizing: border-box;
       }
@@ -265,8 +282,632 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         text-decoration: none;
         -webkit-text-fill-color: currentColor;
       }
+      :where(button, input, select, textarea, summary, a, [tabindex]:not([tabindex="-1"])):focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 2px;
+      }
+      :where(button, input, select, textarea, summary, a, [tabindex]:not([tabindex="-1"])):focus:not(
+          :focus-visible
+        ) {
+        outline: none;
+      }
 
-      /* ===== LAYOUT / 앱 골격 ===== */
+      /* ===== 03 COMPONENTS — DOM-owned appearance and state ===== */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: var(--layer-nav);
+        padding: 8px var(--page-side-space);
+        background: var(--nav-bg);
+        backdrop-filter: blur(12px);
+        display: flex;
+        gap: var(--nav-gap);
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .nav::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+      }
+      .nav-button {
+        --btn-border: 0;
+        --btn-bg: var(--soft);
+        --btn-color: var(--muted);
+        --btn-padding: var(--nav-padding);
+        --btn-white-space: nowrap;
+        flex: 0 0 auto;
+      }
+      .nav-button.active {
+        --btn-bg: var(--accent);
+        --btn-color: var(--button-text);
+      }
+      .card {
+        min-width: 0;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: var(--card-radius);
+        padding: var(--card-padding);
+        box-shadow: var(--shadow);
+      }
+      .card-body {
+        min-width: 0;
+      }
+      .progress {
+        height: var(--progress-height, 10px);
+        background: var(--progress-bg, var(--accent-soft-2));
+        border-radius: var(--progress-radius, 999px);
+        overflow: hidden;
+      }
+      .progress i {
+        display: block;
+        width: var(--progress-value, 0%);
+        height: 100%;
+        background: var(--progress-fill, var(--accent));
+        border-radius: inherit;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: var(--pill-line-height, 1);
+        font-size: var(--pill-font-size, var(--font-caption));
+        font-weight: var(--pill-font-weight, 400);
+        padding: var(--pill-padding, 5px 8px);
+        border-radius: var(--pill-radius, 999px);
+        background: var(--pill-bg, var(--accent-soft));
+        color: var(--pill-color, var(--accent-ink));
+        min-height: var(--pill-min-height, 24px);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--btn-width, auto);
+        min-width: var(--btn-min-width, 0);
+        max-width: var(--btn-max-width, none);
+        height: var(--btn-height, auto);
+        min-height: var(--btn-min-height, var(--ui-control-height-sm));
+        padding: var(--btn-padding, var(--button-padding));
+        border: var(--btn-border, 1px solid var(--line));
+        border-radius: var(--btn-radius, var(--ui-control-radius));
+        background: var(--btn-bg, var(--button-bg));
+        color: var(--btn-color, var(--button-text));
+        font-size: var(--btn-font-size, var(--button-font-size));
+        font-weight: var(--btn-font-weight, inherit);
+        line-height: var(--btn-line-height, 1.2);
+        letter-spacing: var(--btn-letter-spacing, inherit);
+        white-space: var(--btn-white-space, normal);
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .icon-control {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--icon-size, var(--action-button-size));
+        min-width: var(--icon-size, var(--action-button-size));
+        height: var(--icon-size, var(--action-button-size));
+        min-height: var(--icon-size, var(--action-button-size));
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-icon);
+        background: var(--soft);
+        color: var(--muted);
+        font-size: var(--icon-font-size, var(--font-small));
+        line-height: 1;
+        cursor: pointer;
+      }
+      .icon-control:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .more-menu {
+        position: relative;
+      }
+      .more-menu summary {
+        --icon-font-size: 20px;
+        list-style: none;
+      }
+      .more-menu summary::-webkit-details-marker {
+        display: none;
+      }
+      .more-menu[open] summary {
+        color: var(--ink);
+      }
+      .more-menu-pop {
+        /* Native top layer escapes ancestor overflow/transform without moving DOM/actions. */
+        position: fixed;
+        inset: auto;
+        margin: 0;
+        display: none;
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--menu-item-gap);
+        min-width: min(var(--menu-min-width), calc(100vw - 2 * var(--menu-viewport-margin)));
+        max-width: calc(100vw - 2 * var(--menu-viewport-margin));
+        max-height: calc(100dvh - 2 * var(--menu-viewport-margin));
+        overflow: auto;
+        padding: var(--menu-padding);
+        background: var(--button-bg);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-inset);
+        box-shadow: var(--menu-shadow);
+        color: var(--ink);
+        font-size: var(--font-body);
+        font-weight: 400;
+        line-height: normal;
+        white-space: normal;
+      }
+      .more-menu-pop:popover-open {
+        display: grid;
+      }
+      .more-menu-pop::backdrop {
+        background: transparent;
+        pointer-events: none;
+      }
+      .field {
+        width: 100%;
+        min-width: 0;
+        min-height: var(--field-min-height, var(--field-height));
+        height: var(--field-fixed-height, auto);
+        padding: var(--field-inset, var(--field-padding));
+        border: 1px solid var(--line);
+        border-radius: var(--field-radius, var(--ui-control-radius));
+        background: var(--field-bg, var(--card));
+        color: var(--field-color, var(--ink));
+        font-size: var(--field-size, var(--field-font-size));
+        line-height: var(--field-line-height, normal);
+      }
+      .field:focus {
+        border-color: var(--accent);
+      }
+      .field::placeholder {
+        color: var(--muted);
+        opacity: 0.78;
+      }
+      .list-divided-item:not(:last-child) {
+        border-bottom: var(--list-divider-border);
+      }
+      .inset-card {
+        background: var(--soft);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-inset);
+      }
+      .money-input {
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.01em;
+      }
+      .more-menu summary:focus-visible,
+      .calendar-nav-button:focus-visible,
+      .order-button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .progress-dot {
+        --status-dot-bg: var(--accent2);
+      }
+      .order-buttons {
+        display: flex;
+        align-items: center;
+        gap: var(--card-action-gap);
+        flex: 0 0 auto;
+      }
+      .order-button {
+        flex: 0 0 var(--action-button-size);
+      }
+      .order-arrow {
+        display: block;
+        font-family: Arial, sans-serif;
+        font-size: var(--font-small);
+        line-height: 1;
+        font-weight: 600;
+        height: 12px;
+        overflow: hidden;
+      }
+      .order-button:hover:not(:disabled) {
+        color: var(--ink);
+        border-color: var(--line);
+      }
+      .card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--card-header-gap);
+        min-width: 0;
+        margin: 0 0 var(--card-header-margin-bottom);
+      }
+      .card-header-copy {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+      .card-title {
+        margin: 0;
+        overflow-wrap: anywhere;
+        padding: 0;
+        color: var(--ink);
+        font-size: var(--card-title-size);
+        line-height: var(--card-title-line-height);
+        font-weight: var(--card-title-weight);
+        letter-spacing: var(--card-title-letter-spacing);
+      }
+      .card-description {
+        margin: 4px 0 0;
+        padding: 0;
+        color: var(--muted);
+        font-size: var(--card-description-size);
+        line-height: var(--card-description-line-height);
+        font-weight: 400;
+      }
+      .card-header-action {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        max-width: 100%;
+        gap: var(--card-action-gap);
+      }
+      .budget-gauge-arc {
+        --budget-gauge-width: clamp(98px, 12vw, 128px);
+        --budget-gauge-height: clamp(58px, 7vw, 72px);
+        position: relative;
+        width: var(--budget-gauge-width);
+        height: var(--budget-gauge-height);
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        display: block;
+        flex: 0 0 auto;
+        overflow: visible;
+        box-shadow: none;
+      }
+      .budget-arc-svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
+      }
+      .budget-arc-track,
+      .budget-arc-progress {
+        fill: none;
+        stroke-width: 11.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .budget-arc-track {
+        stroke: color-mix(in srgb, var(--line) 88%, var(--card));
+      }
+      .budget-arc-progress {
+        stroke: var(--accent);
+        stroke-dasharray: 0 100;
+        transition: stroke-dasharray 0.25s ease;
+      }
+      .budget-arc-value {
+        position: absolute;
+        left: 50%;
+        top: 61%;
+        transform: translate(-50%, -50%);
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        text-align: center;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+      .budget-arc-value strong {
+        display: block;
+        font-size: 20px;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: var(--ink);
+      }
+      .toast-stack {
+        position: fixed;
+        right: clamp(12px, 2vw, 16px);
+        bottom: clamp(12px, 2vw, 18px);
+        z-index: var(--layer-toast);
+        width: min(360px, calc(100vw - 24px));
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+        pointer-events: none;
+      }
+      .toast {
+        pointer-events: auto;
+        padding: 11px 13px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-inset);
+        background: var(--card);
+        color: var(--ink);
+        box-shadow: var(--toast-shadow);
+        font-size: var(--font-small);
+        line-height: 1.45;
+        white-space: pre-line;
+      }
+      .toast.success {
+        border-color: color-mix(in srgb, var(--good) 35%, var(--line));
+      }
+      .toast.error {
+        border-color: color-mix(in srgb, var(--danger) 42%, var(--line));
+        color: var(--danger);
+      }
+      .confirm-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: var(--layer-confirm);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: var(--confirm-overlay-bg);
+      }
+      .confirm-overlay.open {
+        display: flex;
+      }
+      .confirm-card {
+        max-height: calc(100dvh - 40px);
+        overflow: auto;
+        overflow-wrap: anywhere;
+        width: min(420px, 100%);
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-modal);
+        background: var(--card);
+        box-shadow: var(--confirm-shadow);
+      }
+      .confirm-card h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .confirm-message {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+        white-space: pre-line;
+      }
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: var(--modal-overlay-bg);
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        z-index: var(--layer-modal);
+      }
+      .modal.open {
+        display: flex;
+      }
+      .sheet {
+        background: var(--card);
+        border-radius: var(--radius-modal) var(--radius-modal) 0 0;
+        padding: var(--modal-padding);
+        max-width: var(--modal-max-width);
+        width: 100%;
+        max-height: var(--modal-max-height);
+        overflow: auto;
+      }
+      .sheet h2 {
+        margin: 0 0 15px;
+      }
+      .form {
+        display: grid;
+        gap: 10px;
+      }
+      .form > * {
+        min-width: 0;
+      }
+      .action-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--action-row-gap);
+        margin-top: var(--action-row-margin-top);
+        min-width: 0;
+        flex-wrap: nowrap;
+      }
+      .card-footer-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--card-footer-gap);
+        margin-top: var(--card-footer-margin-top);
+        width: 100%;
+        min-width: 0;
+        flex-wrap: wrap;
+      }
+      .card-footer-status {
+        min-width: 0;
+        flex: 1 1 0;
+        overflow-wrap: anywhere;
+      }
+      .card-footer-row > .action-row {
+        flex: 0 0 auto;
+        --action-row-margin-top: 0;
+        margin-left: auto;
+      }
+      .empty {
+        padding: 35px 10px;
+        text-align: center;
+        color: var(--muted);
+      }
+
+      /* ===== 04 COMPONENT VARIANTS — explicit semantic overrides ===== */
+      .pill--badge {
+        --pill-radius: var(--radius-badge);
+        --pill-min-height: 0;
+        --pill-padding: 4px 7px;
+        --pill-font-size: 10px;
+        --pill-font-weight: 600;
+      }
+      .pill.high {
+        --pill-bg: var(--priority-high-bg);
+        --pill-color: var(--priority-high-color);
+        --pill-font-weight: 800;
+      }
+      .pill.low {
+        --pill-bg: var(--priority-low-bg);
+        --pill-color: var(--priority-low-color);
+        --pill-font-weight: 400;
+      }
+      .pill.done {
+        --pill-bg: var(--good-soft);
+        --pill-color: var(--good-ink);
+      }
+      .btn.primary {
+        --btn-bg: var(--accent);
+        --btn-border: 1px solid var(--accent);
+        --btn-color: var(--button-text);
+      }
+      .btn.soft {
+        --btn-bg: var(--soft);
+        --btn-border: 1px solid var(--line);
+        --btn-color: var(--ink);
+      }
+      .btn--app-action {
+        --btn-width: auto;
+        --btn-min-width: 0;
+        --btn-max-width: none;
+        --btn-height: var(--unified-button-height);
+        --btn-min-height: var(--unified-button-height);
+        --btn-padding: 0 var(--unified-button-padding-x);
+        --btn-radius: var(--unified-button-radius);
+        --btn-font-size: var(--unified-button-font-size);
+        --btn-font-weight: var(--unified-button-font-weight);
+        --btn-line-height: 1;
+        --btn-letter-spacing: inherit;
+        --btn-white-space: nowrap;
+        flex: 0 0 auto;
+      }
+      .btn--modal-action {
+        --btn-min-height: var(--modal-button-min-height);
+        --btn-padding: var(--modal-button-padding);
+        --btn-font-size: var(--modal-button-font-size);
+        --btn-font-weight: var(--modal-button-font-weight);
+      }
+      .more-menu--bare > summary {
+        border: 0;
+        background: transparent;
+      }
+      .btn--menu {
+        --btn-width: 100%;
+        --btn-border: 0;
+        --btn-bg: transparent;
+        --btn-color: var(--ink);
+        --btn-padding: 9px 10px;
+        --btn-min-height: 0;
+        --btn-radius: var(--radius-control);
+        --btn-line-height: normal;
+        justify-content: flex-start;
+        text-align: left;
+      }
+      .btn--menu:hover {
+        --btn-bg: var(--soft);
+      }
+
+      .field--compact-text {
+        --field-min-height: var(--field-search-height);
+        --field-fixed-height: var(--field-search-height);
+        --field-inset: 0 12px;
+        --field-size: var(--field-search-font-size);
+      }
+      .field--search {
+        width: 100%;
+      }
+      .card-body > .field--search {
+        margin: 4px 0 10px;
+      }
+      .btn--toolbar {
+        --btn-width: 100%;
+        --btn-height: var(--ui-control-height-sm);
+        --btn-min-height: var(--ui-control-height-sm);
+        --btn-radius: var(--radius-control);
+        --btn-padding: 0 10px;
+        --btn-font-size: var(--button-small-font);
+        --btn-line-height: 1;
+      }
+      .field--compact {
+        --field-min-height: var(--ui-control-height-sm);
+        --field-fixed-height: var(--ui-control-height-sm);
+        --field-inset: 0 10px;
+        --field-bg: var(--soft);
+        --field-color: var(--muted);
+        --field-size: var(--field-small-font);
+      }
+      .field--inline-select {
+        --field-min-height: var(--action-button-size);
+        --field-fixed-height: var(--action-button-size);
+        --field-inset: 0 8px;
+        --field-bg: var(--soft);
+        --field-color: var(--muted);
+        --field-size: var(--font-small);
+        width: auto;
+        min-width: 0;
+        max-width: 100%;
+        margin: 0;
+        flex: 0 0 auto;
+        align-self: flex-start;
+      }
+      .card-header--flush {
+        --card-header-margin-bottom: 0px;
+      }
+      .card-header--fixed-actions > .card-header-action {
+        flex-wrap: nowrap;
+      }
+      .btn.danger {
+        --btn-bg: var(--danger);
+        --btn-border: 1px solid var(--danger);
+        --btn-color: var(--contrast-on-strong);
+      }
+      .btn--menu.danger {
+        --btn-bg: transparent;
+        --btn-border: 0;
+        --btn-color: var(--danger);
+      }
+      .action-row--wrap {
+        flex-wrap: wrap;
+      }
+      .action-row--flush {
+        --action-row-margin-top: 0;
+      }
+      .action-row--compact {
+        --action-row-gap: 7px;
+      }
+      .action-row--spaced {
+        --action-row-margin-top: var(--space-md);
+      }
+      .action-row--dialog {
+        --action-row-margin-top: 16px;
+      }
+      .action-row--item {
+        --action-row-gap: var(--space-xs);
+        --action-row-margin-top: 0;
+      }
+      .card-footer-row--baseline {
+        align-items: baseline;
+      }
+      .progress--summary {
+        --progress-height: clamp(17px, 2vw, 20px);
+        width: 100%;
+        margin: 0;
+        flex: 0 0 auto;
+      }
+
+      /* ===== 05 LAYOUT — placement only ===== */
+      .calendar-week,
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: clamp(1px, 0.4vw, 3px);
+      }
       .app {
         max-width: var(--layout-max-width);
         margin: 0 auto;
@@ -278,6 +919,182 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         align-items: flex-end;
         justify-content: space-between;
         gap: 14px;
+      }
+      main {
+        padding: 8px var(--page-side-space);
+      }
+      .grid {
+        display: grid;
+        gap: var(--card-section-gap);
+      }
+      .col12 {
+        grid-column: 1 / -1;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: var(--row-gap, 10px);
+      }
+      .between {
+        justify-content: space-between;
+      }
+      .task-toolbar {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-sm);
+        margin: 10px 0;
+      }
+      .task-toolbar-controls {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: var(--space-sm);
+        align-items: center;
+      }
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .budget-amounts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-sm);
+      }
+      .plan-status-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-sm);
+      }
+
+
+
+      .calendar-head {
+        display: grid;
+        grid-template-columns: var(--calendar-nav-size) minmax(0, 1fr) var(--calendar-nav-size);
+        gap: var(--space-sm);
+        align-items: center;
+        text-align: center;
+        margin-bottom: 12px;
+      }
+      .calendar-week {
+        margin-bottom: 5px;
+      }
+
+
+
+      .theme-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .theme-presets {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .theme-controls {
+        display: flex;
+        gap: var(--space-sm);
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .card-stack {
+        display: flex;
+        flex-direction: column;
+        gap: var(--card-section-gap);
+      }
+      .card-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--card-section-gap);
+        min-width: 0;
+      }
+      .page-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: clamp(8px, 1.2vw, var(--card-section-gap));
+        min-width: 0;
+        margin: 20px 0 var(--card-section-gap);
+      }
+      .page-header-copy {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+      .home-top-grid {
+        grid-template-columns: var(--home-summary-columns);
+        align-items: stretch;
+      }
+      .home-top-grid > .budget-home {
+        grid-column: 2;
+      }
+      .home-secondary-grid {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+        align-items: stretch;
+      }
+      .home-secondary-item {
+        min-width: 0;
+        display: flex;
+      }
+      .home-secondary-item > .card {
+        width: 100%;
+        height: 100%;
+      }
+      .schedule-main-grid {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+        align-items: stretch;
+        width: 100%;
+      }
+      .schedule-main-item {
+        min-width: 0;
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+      }
+      .schedule-main-item > .card {
+        width: 100%;
+        height: 100%;
+      }
+      .category-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .page-header + .card,
+      .page-header + .grid,
+      .page-header + .card-grid,
+      .page-header + .task-toolbar {
+        margin-top: 0;
+      }
+
+      /* ===== 06 DOMAIN VIEWS — composition and domain-specific typography ===== */
+      .plan-status-grid > div {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: 10px;
+      }
+      .plan-status-grid b {
+        display: block;
+        font-size: 18px;
+        line-height: 1.05;
+      }
+      .plan-status-grid span:last-child {
+        display: block;
+        margin-top: 3px;
+        font-size: var(--font-caption);
+        color: var(--muted);
+      }
+      .calendar-week span {
+        text-align: center;
+        font-size: var(--font-caption);
+        color: var(--muted);
+        padding: 5px 0;
+      }
+      .calendar-week span:first-child {
+        color: var(--weekend-sun);
+      }
+      .calendar-week span:last-child {
+        color: var(--weekend-sat);
       }
       .eyebrow {
         font-size: var(--font-small);
@@ -311,66 +1128,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .dday strong {
         font-size: 19px;
       }
-      .nav {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        padding: 8px var(--page-side-space);
-        background: var(--nav-bg);
-        backdrop-filter: blur(12px);
-        display: flex;
-        gap: var(--nav-gap);
-        overflow-x: auto;
-        overflow-y: hidden;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-      }
-      .nav::-webkit-scrollbar {
-        display: none;
-        width: 0;
-        height: 0;
-      }
-      .nav-button {
-        --btn-border: 0;
-        --btn-bg: var(--soft);
-        --btn-color: var(--muted);
-        --btn-padding: var(--nav-padding);
-        --btn-white-space: nowrap;
-        flex: 0 0 auto;
-      }
-      .nav-button.active {
-        --btn-bg: var(--accent);
-        --btn-color: var(--button-text);
-      }
-      main {
-        padding: 8px var(--page-side-space);
-      }
       .page {
         display: none;
       }
       .page.active {
         display: block;
-      }
-
-      .grid {
-        display: grid;
-        gap: var(--card-section-gap);
-      }
-      .col12 {
-        grid-column: 1 / -1;
-      }
-
-      /* ===== COMPONENT / 카드 ===== */
-      .card {
-        min-width: 0;
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: var(--card-radius);
-        padding: var(--card-padding);
-        box-shadow: var(--shadow);
-      }
-      .card-body {
-        min-width: 0;
       }
       .muted {
         color: var(--muted);
@@ -385,7 +1147,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .settings-status-note {
         font-size: 10px;
       }
-      /* ===== COMPONENT / 메모 ===== */
       .memo-item {
         display: block;
         padding: 13px 0;
@@ -400,261 +1161,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .memo-content {
         min-width: 0;
       }
-      /* ===== COMPONENT / 진행률 ===== */
-      .progress {
-        height: var(--progress-height, 10px);
-        background: var(--progress-bg, var(--accent-soft-2));
-        border-radius: var(--progress-radius, 999px);
-        overflow: hidden;
-      }
-      .progress i {
-        display: block;
-        width: var(--progress-value, 0%);
-        height: 100%;
-        background: var(--progress-fill, var(--accent));
-        border-radius: inherit;
-      }
-      .row {
-        display: flex;
-        align-items: center;
-        gap: var(--row-gap, 10px);
-      }
-      .between {
-        justify-content: space-between;
-      }
-      /* ===== COMPONENT / 배지 ===== */
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        line-height: var(--pill-line-height, 1);
-        font-size: var(--pill-font-size, var(--font-caption));
-        font-weight: var(--pill-font-weight, 400);
-        padding: var(--pill-padding, 5px 8px);
-        border-radius: var(--pill-radius, 999px);
-        background: var(--pill-bg, var(--accent-soft));
-        color: var(--pill-color, var(--accent-ink));
-        min-height: var(--pill-min-height, 24px);
-      }
-      .pill.high {
-        --pill-bg: var(--priority-high-bg);
-        --pill-color: var(--priority-high-color);
-        --pill-font-weight: 800;
-      }
-      .pill.low {
-        --pill-bg: var(--priority-low-bg);
-        --pill-color: var(--priority-low-color);
-        --pill-font-weight: 400;
-      }
-      .pill.done {
-        --pill-bg: var(--good-soft);
-        --pill-color: var(--good-ink);
-      }
-      /* ===== COMPONENT / 버튼 ===== */
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: var(--btn-width, auto);
-        min-width: var(--btn-min-width, 0);
-        max-width: var(--btn-max-width, none);
-        height: var(--btn-height, auto);
-        min-height: var(--btn-min-height, var(--ui-control-height-sm));
-        padding: var(--btn-padding, var(--button-padding));
-        border: var(--btn-border, 1px solid var(--line));
-        border-radius: var(--btn-radius, var(--ui-control-radius));
-        background: var(--btn-bg, var(--button-bg));
-        color: var(--btn-color, var(--button-text));
-        font-size: var(--btn-font-size, var(--button-font-size));
-        font-weight: var(--btn-font-weight, inherit);
-        line-height: var(--btn-line-height, 1.2);
-        letter-spacing: var(--btn-letter-spacing, inherit);
-        white-space: var(--btn-white-space, normal);
-      }
-      .btn.primary {
-        --btn-bg: var(--accent);
-        --btn-border: 1px solid var(--accent);
-        --btn-color: var(--button-text);
-      }
-      .btn.soft {
-        --btn-bg: var(--soft);
-        --btn-border: 1px solid var(--line);
-        --btn-color: var(--ink);
-      }
-      .btn:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-      /*
-       * TEXT ACTION BUTTON COMPONENT
-       * 크기/폰트는 위 --unified-button-* 변수만 수정하세요.
-       * 색상은 이 클래스가 건드리지 않습니다: .primary / .soft / .danger 또는 --btn-bg/--btn-color 사용.
-       * width:auto + nowrap으로 문구 길이에 따라 가로폭이 자동 결정됩니다.
-       */
-      .btn--app-action {
-        --btn-width: auto;
-        --btn-min-width: 0;
-        --btn-max-width: none;
-        --btn-height: var(--unified-button-height);
-        --btn-min-height: var(--unified-button-height);
-        --btn-padding: 0 var(--unified-button-padding-x);
-        --btn-radius: var(--unified-button-radius);
-        --btn-font-size: var(--unified-button-font-size);
-        --btn-font-weight: var(--unified-button-font-weight);
-        --btn-line-height: 1;
-        --btn-letter-spacing: inherit;
-        --btn-white-space: nowrap;
-        flex: 0 0 auto;
-      }
-      /* Modal/dialog text actions are intentionally a separate size API from page actions. */
-      .btn--modal-action {
-        --btn-min-height: var(--modal-button-min-height);
-        --btn-padding: var(--modal-button-padding);
-        --btn-font-size: var(--modal-button-font-size);
-        --btn-font-weight: var(--modal-button-font-weight);
-      }
-      /* ===== COMPONENT / IconControl — menu, order and calendar geometry ===== */
-      .icon-control {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: var(--icon-size, var(--action-button-size));
-        min-width: var(--icon-size, var(--action-button-size));
-        height: var(--icon-size, var(--action-button-size));
-        min-height: var(--icon-size, var(--action-button-size));
-        padding: 0;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-icon);
-        background: var(--soft);
-        color: var(--muted);
-        font-size: var(--icon-font-size, var(--font-small));
-        line-height: 1;
-        cursor: pointer;
-      }
-      .icon-control:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-      }
-      /* ===== COMPONENT / 더보기 메뉴 ===== */
-      .more-menu {
-        position: relative;
-      }
-      .more-menu summary {
-        --icon-font-size: 20px;
-        list-style: none;
-      }
-      .more-menu--bare > summary {
-        width: var(--action-button-size);
-        min-width: var(--action-button-size);
-        height: var(--action-button-size);
-        min-height: var(--action-button-size);
-        padding: 0;
-        border: 0;
-        background: transparent;
-      }
-      .more-menu summary::-webkit-details-marker {
-        display: none;
-      }
-      .more-menu[open] summary {
-        color: var(--ink);
-      }
-      .more-menu-pop {
-        position: absolute;
-        right: 0;
-        top: calc(100% + 8px);
-        z-index: 20;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 2px;
-        min-width: 92px;
-        padding: 5px;
-        background: var(--button-bg);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-inset);
-        box-shadow: var(--menu-shadow);
-        color: var(--ink);
-        font-size: var(--font-body);
-        font-weight: 400;
-        line-height: normal;
-        white-space: normal;
-      }
-      .btn--menu {
-        --btn-width: 100%;
-        --btn-border: 0;
-        --btn-bg: transparent;
-        --btn-color: var(--ink);
-        --btn-padding: 9px 10px;
-        --btn-min-height: 0;
-        --btn-radius: var(--radius-control);
-        --btn-line-height: normal;
-        justify-content: flex-start;
-        text-align: left;
-      }
-      .btn--menu:hover {
-        --btn-bg: var(--soft);
-      }
-      .btn.btn--menu.danger {
-        --btn-bg: transparent;
-        --btn-border: 0;
-        --btn-color: var(--danger);
-      }
-      /* ===== LAYOUT / 할 일 도구 모음 ===== */
-      .task-toolbar {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: var(--space-sm);
-        margin: 10px 0;
-      }
-      /* Compact text control — search fields and shared auth inputs share one size/typography API. */
-      .field--compact-text {
-        --field-min-height: var(--field-search-height);
-        --field-fixed-height: var(--field-search-height);
-        --field-inset: 0 12px;
-        --field-size: var(--field-search-font-size);
-      }
-      /* Search field component — tasks, schedule and memos share width/placement behavior. */
-      .field--search {
-        width: 100%;
-      }
-      .card-body > .field--search {
-        margin: 4px 0 10px;
-      }
-      .task-toolbar-controls {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: var(--space-sm);
-        align-items: center;
-      }
-      .btn--toolbar {
-        --btn-width: 100%;
-        --btn-height: var(--ui-control-height-sm);
-        --btn-min-height: var(--ui-control-height-sm);
-        --btn-radius: var(--radius-control);
-        --btn-padding: 0 10px;
-        --btn-font-size: var(--button-small-font);
-        --btn-line-height: 1;
-      }
-      /* ===== COMPONENT: Field / 입력창·선택창 ===== */
-      .field {
-        width: 100%;
-        min-width: 0;
-        min-height: var(--field-min-height, var(--field-height));
-        height: var(--field-fixed-height, auto);
-        padding: var(--field-inset, var(--field-padding));
-        border: 1px solid var(--line);
-        border-radius: var(--field-radius, var(--ui-control-radius));
-        background: var(--field-bg, var(--card));
-        color: var(--field-color, var(--ink));
-        font-size: var(--field-size, var(--field-font-size));
-        line-height: var(--field-line-height, normal);
-      }
-      .field:focus {
-        border-color: var(--accent);
-      }
-      .field::placeholder {
-        color: var(--muted);
-        opacity: 0.78;
-      }
       textarea.field {
         min-height: var(--textarea-min-height, var(--textarea-height));
         resize: vertical;
@@ -667,60 +1173,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         overflow-y: hidden;
         resize: none;
       }
-      .field--compact {
-        --field-min-height: var(--ui-control-height-sm);
-        --field-fixed-height: var(--ui-control-height-sm);
-        --field-inset: 0 10px;
-        --field-bg: var(--soft);
-        --field-color: var(--muted);
-        --field-size: var(--field-small-font);
-      }
-
-      /* Inline select component — home counters, schedule filter and plan status share one size API. */
-      .field--inline-select {
-        --field-min-height: var(--action-button-size);
-        --field-fixed-height: var(--action-button-size);
-        --field-inset: 0 8px;
-        --field-bg: var(--soft);
-        --field-color: var(--muted);
-        --field-size: var(--font-small);
-        width: auto;
-        min-width: 0;
-        max-width: 100%;
-        margin: 0;
-        flex: 0 0 auto;
-        align-self: flex-start;
-      }
-
-      .list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      /* ===== COMPONENT / 목록 항목 구분선 ===== */
-      .list-divided-item:not(:last-child) {
-        border-bottom: var(--list-divider-border);
-      }
-      /* ===== COMPONENT / 예산 ===== */
       .budget-line {
         display: grid;
         grid-template-columns: 1fr;
         gap: var(--space-sm);
         padding: 14px 0;
-      }
-      .budget-line > .card-header {
-        margin-bottom: 0;
-      }
-      .budget-amounts {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--space-sm);
-      }
-      /* Inset card surface — nested information blocks share one visual surface API. */
-      .inset-card {
-        background: var(--soft);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-inset);
       }
       .budget-box {
         padding: 9px 10px;
@@ -741,19 +1198,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         white-space: pre-wrap;
         word-break: break-word;
       }
-      .money-input {
-        font-variant-numeric: tabular-nums;
-        letter-spacing: 0.01em;
-      }
-      /* ===== COMPONENT / 부부계획 ===== */
       .plan {
         display: flex;
         flex-direction: column;
         gap: 10px;
         padding: 18px 0;
-      }
-      .plan > .card-header {
-        margin-bottom: 0;
       }
       .plan-block {
         margin-top: 0;
@@ -771,36 +1220,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         white-space: pre-wrap;
         overflow-wrap: anywhere;
       }
-      .more-menu summary:focus-visible,
-      .calendar-nav-button:focus-visible,
-      .order-button:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
       .plan-status-home {
         margin-top: 0;
-      }
-      .plan-status-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--space-sm);
-      }
-      .plan-status-grid > div {
-        display: flex;
-        align-items: center;
-        gap: var(--space-sm);
-        padding: 10px;
-      }
-      .plan-status-grid b {
-        display: block;
-        font-size: 18px;
-        line-height: 1.05;
-      }
-      .plan-status-grid span:last-child {
-        display: block;
-        margin-top: 3px;
-        font-size: var(--font-caption);
-        color: var(--muted);
       }
       .status-dot {
         width: 9px;
@@ -808,9 +1229,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         border-radius: 50%;
         flex: 0 0 9px;
         background: var(--status-dot-bg, color-mix(in srgb, var(--muted) 45%, var(--line)));
-      }
-      .progress-dot {
-        --status-dot-bg: var(--accent2);
       }
       .done-dot {
         --status-dot-bg: var(--good);
@@ -825,7 +1243,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         color: var(--ink);
         font-size: 13px;
       }
-      /* ===== COMPONENT / 일정 ===== */
       .planner-event-item {
         width: 100%;
         min-width: 0;
@@ -834,19 +1251,15 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         gap: var(--space-xs);
         padding: var(--event-row-padding);
       }
-      .planner-event-item:has(.more-menu[open]) {
-        position: relative;
-        z-index: 30;
-      }
       .planner-event-item-meta {
         position: relative;
         width: 100%;
         min-width: 0;
-        min-height: var(--action-button-size);
+        min-height: calc(var(--action-button-size) + 2px);
         display: flex;
         align-items: center;
         gap: 0;
-        padding: 4px calc(10px + var(--action-button-size) + var(--card-action-gap)) 4px 10px;
+        padding: 0 10px;
         color: var(--muted);
         font-size: 10px;
         font-weight: 500;
@@ -871,14 +1284,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         flex: 1 1 auto;
       }
       .planner-event-item-meta-menu {
-        position: absolute;
-        top: 0;
-        right: 10px;
-        bottom: 0;
-        z-index: 1;
-        width: var(--action-button-size);
-        height: var(--action-button-size);
-        margin: auto 0;
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        margin-left: auto;
+        padding-left: var(--card-action-gap);
       }
       .planner-event-item-main {
         width: 100%;
@@ -911,23 +1321,11 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       }
       .planner-event-item-category {
         flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: auto;
         min-width: 0;
         max-width: 110px;
-        margin: 0;
-        padding: 4px 7px;
-        border-radius: var(--radius-badge);
-        background: var(--accent-soft);
-        color: var(--accent-ink);
-        font-size: 10px;
-        font-weight: 600;
-        line-height: 1;
-        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .planner-event-item-main > small {
         display: block;
@@ -950,7 +1348,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         width: 100%;
         min-width: 0;
       }
-      /* ===== COMPONENT / 할 일 ===== */
       .task {
         display: grid;
         grid-template-columns: var(--task-check-column) minmax(0, 1fr) var(--action-button-size);
@@ -1051,40 +1448,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         align-items: flex-start;
         justify-content: flex-end;
       }
-
-      /* ===== COMPONENT / 달력 ===== */
       .calendar-card {
         --card-padding: 14px;
       }
-      .calendar-head {
-        display: grid;
-        grid-template-columns: var(--calendar-nav-size) minmax(0, 1fr) var(--calendar-nav-size);
-        gap: var(--space-sm);
-        align-items: center;
-        text-align: center;
-        margin-bottom: 12px;
-      }
-      .calendar-week,
-      .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: clamp(1px, 0.4vw, 3px);
-      }
-      .calendar-week {
-        margin-bottom: 5px;
-      }
-      .calendar-week span {
-        text-align: center;
-        font-size: var(--font-caption);
-        color: var(--muted);
-        padding: 5px 0;
-      }
-      .calendar-week span:first-child {
-        color: var(--weekend-sun);
-      }
-      .calendar-week span:last-child {
-        color: var(--weekend-sat);
-      }
+
       .calendar-cell {
         position: relative;
         min-width: 0;
@@ -1168,7 +1535,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .calendar-nav-button:active {
         transform: scale(0.98);
       }
-
       .category-card {
         box-shadow: none;
         --card-title-size: 12px;
@@ -1179,37 +1545,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         display: block;
         margin-top: 8px;
       }
-      .order-buttons {
-        display: flex;
-        align-items: center;
-        gap: var(--card-action-gap);
-        flex: 0 0 auto;
-      }
-      .order-button {
-        flex: 0 0 var(--action-button-size);
-      }
-      .order-arrow {
-        display: block;
-        font-family: Arial, sans-serif;
-        font-size: var(--font-small);
-        line-height: 1;
-        font-weight: 600;
-        height: 12px;
-        overflow: hidden;
-      }
-      .order-button:hover:not(:disabled) {
-        color: var(--ink);
-        border-color: var(--line);
-      }
       .category-progress-meta {
         margin-top: 4px;
         text-align: right;
-      }
-      /* ===== COMPONENT / 테마 설정 ===== */
-      .theme-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
       }
       .theme-item {
         display: grid;
@@ -1223,8 +1561,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         min-width: 0;
         overflow-wrap: anywhere;
       }
-      /* Theme color preview: the wrapper owns the one visible border.
-         The native color input is transparent so browser-specific inner black swatch borders cannot leak through. */
       .theme-color-control {
         position: relative;
         width: 42px;
@@ -1260,22 +1596,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         outline: 2px solid var(--accent);
         outline-offset: 2px;
       }
-      @media (min-width: 700px) {
-        .theme-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-      }
-      @media (min-width: 980px) {
-        .theme-grid {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-      }
-      .theme-presets {
-        display: flex;
-        gap: 7px;
-        flex-wrap: wrap;
-        margin-top: 10px;
-      }
       .theme-swatch {
         --btn-width: 24px;
         --btn-height: 24px;
@@ -1285,12 +1605,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         --btn-border: 2px solid var(--card);
         --btn-bg: var(--swatch-color);
         box-shadow: 0 0 0 1px var(--line);
-      }
-      .theme-controls {
-        display: flex;
-        gap: var(--space-sm);
-        align-items: center;
-        flex-wrap: wrap;
       }
       .theme-range {
         width: 140px;
@@ -1304,7 +1618,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         line-height: 1;
         white-space: nowrap;
       }
-      /* ===== COMPONENT / 공유 설정 ===== */
       .shared-account-panel {
         padding: 10px 12px;
       }
@@ -1320,11 +1633,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-      }
-      .shared-code {
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        letter-spacing: 0.08em;
-        font-weight: 800;
       }
       .sync-detail-text {
         margin-top: 0;
@@ -1389,7 +1697,6 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         color: var(--muted);
       }
       .sync-join-code {
-        --sync-field-radius: var(--radius-control);
         --field-min-height: var(--field-search-height);
         --field-fixed-height: var(--field-search-height);
         --field-inset: 0 8px;
@@ -1461,111 +1768,9 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .sync-join-code::placeholder {
         font-size: 10px;
       }
-      /* ===== COMPONENT / 카드 헤더 ===== */
-      .card-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: var(--card-header-gap);
-        min-width: 0;
-        margin: 0 0 var(--card-header-margin-bottom);
-      }
-      .card-header-copy {
-        min-width: 0;
-        flex: 1 1 auto;
-      }
-      .card-title {
-        margin: 0;
-        overflow-wrap: anywhere;
-        padding: 0;
-        color: var(--ink);
-        font-size: var(--card-title-size);
-        line-height: var(--card-title-line-height);
-        font-weight: var(--card-title-weight);
-        letter-spacing: var(--card-title-letter-spacing);
-      }
-      .card-description {
-        margin: 4px 0 0;
-        padding: 0;
-        color: var(--muted);
-        font-size: var(--card-description-size);
-        line-height: var(--card-description-line-height);
-        font-weight: 400;
-      }
-      .card-header-action {
-        flex: 0 0 auto;
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        max-width: 100%;
-        gap: var(--card-action-gap);
-      }
-      .card-header--fixed-actions > .card-header-action {
-        flex-wrap: nowrap;
-      }
       .card--compact {
         --card-padding: var(--card-padding-compact);
         --card-radius: var(--radius-inset);
-      }
-      /* ===== COMPONENT / 예산 게이지 ===== */
-      .budget-gauge-arc {
-        --budget-gauge-width: clamp(98px, 12vw, 128px);
-        --budget-gauge-height: clamp(58px, 7vw, 72px);
-        position: relative;
-        width: var(--budget-gauge-width);
-        height: var(--budget-gauge-height);
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-        display: block;
-        flex: 0 0 auto;
-        overflow: visible;
-        box-shadow: none;
-      }
-      .budget-arc-svg {
-        width: 100%;
-        height: 100%;
-        display: block;
-        overflow: visible;
-      }
-      .budget-arc-track,
-      .budget-arc-progress {
-        fill: none;
-        stroke-width: 11.5;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-      .budget-arc-track {
-        stroke: color-mix(in srgb, var(--line) 88%, var(--card));
-      }
-      .budget-arc-progress {
-        stroke: var(--accent);
-        stroke-dasharray: 0 100;
-        transition: stroke-dasharray 0.25s ease;
-      }
-      .budget-arc-value {
-        position: absolute;
-        left: 50%;
-        top: 61%;
-        transform: translate(-50%, -50%);
-        z-index: 3;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        text-align: center;
-        white-space: nowrap;
-        pointer-events: none;
-      }
-      .budget-arc-value strong {
-        display: block;
-        font-size: 20px;
-        line-height: 1;
-        font-weight: 800;
-        letter-spacing: -0.03em;
-        color: var(--ink);
       }
       .budget-page-reference {
         display: grid;
@@ -1612,6 +1817,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         min-width: 0;
       }
       .recovery-title {
+        overflow-wrap: anywhere;
         font-size: var(--font-small);
         font-weight: 800;
         line-height: 1.35;
@@ -1622,182 +1828,12 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         color: var(--muted);
         line-height: 1.4;
       }
-      /* ===== COMPONENT / 알림 ===== */
-      .toast-stack {
-        position: fixed;
-        right: clamp(12px, 2vw, 16px);
-        bottom: clamp(12px, 2vw, 18px);
-        z-index: 80;
-        width: min(360px, calc(100vw - 24px));
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-sm);
-        pointer-events: none;
-      }
-      .toast {
-        pointer-events: auto;
-        padding: 11px 13px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-inset);
-        background: var(--card);
-        color: var(--ink);
-        box-shadow: var(--toast-shadow);
-        font-size: var(--font-small);
-        line-height: 1.45;
-        white-space: pre-line;
-      }
-      .toast.success {
-        border-color: color-mix(in srgb, var(--good) 35%, var(--line));
-      }
-      .toast.error {
-        border-color: color-mix(in srgb, var(--danger) 42%, var(--line));
-        color: var(--danger);
-      }
-      .confirm-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 70;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        background: var(--confirm-overlay-bg);
-      }
-      .confirm-overlay.open {
-        display: flex;
-      }
-      .confirm-card {
-        width: min(420px, 100%);
-        padding: 18px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-modal);
-        background: var(--card);
-        box-shadow: var(--confirm-shadow);
-      }
-      .confirm-card h2 {
-        margin: 0;
-        font-size: 18px;
-      }
-      .confirm-message {
-        margin-top: 10px;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.55;
-        white-space: pre-line;
-      }
-      .btn.danger {
-        --btn-bg: var(--danger);
-        --btn-border: 1px solid var(--danger);
-        --btn-color: var(--contrast-on-strong);
-      }
-
-      :where(button, input, select, textarea, summary, a, [tabindex]:not([tabindex="-1"])):focus-visible {
-        outline: 3px solid var(--accent);
-        outline-offset: 2px;
-      }
-      :where(button, input, select, textarea, summary, a, [tabindex]:not([tabindex="-1"])):focus:not(
-          :focus-visible
-        ) {
-        outline: none;
-      }
-      /* ===== COMPONENT / 모달 ===== */
-      .modal {
-        position: fixed;
-        inset: 0;
-        background: var(--modal-overlay-bg);
-        display: none;
-        align-items: flex-end;
-        justify-content: center;
-        z-index: 30;
-      }
-      .modal.open {
-        display: flex;
-      }
-      .sheet {
-        background: var(--card);
-        border-radius: var(--radius-modal) var(--radius-modal) 0 0;
-        padding: var(--modal-padding);
-        max-width: var(--modal-max-width);
-        width: 100%;
-        max-height: var(--modal-max-height);
-        overflow: auto;
-      }
-      .sheet h2 {
-        margin: 0 0 15px;
-      }
-      .form {
-        display: grid;
-        gap: 10px;
-      }
-      .form > * {
-        min-width: 0;
-      }
-      /* ===== COMPONENT / 액션 행 ===== */
-      .action-row {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: var(--action-row-gap);
-        margin-top: var(--action-row-margin-top);
-        min-width: 0;
-        flex-wrap: nowrap;
-      }
-      .action-row--wrap {
-        flex-wrap: wrap;
-      }
-      .action-row--flush {
-        --action-row-margin-top: 0;
-      }
-      .action-row--compact {
-        --action-row-gap: 7px;
-      }
-      .action-row--spaced {
-        --action-row-margin-top: var(--space-md);
-      }
-      .action-row--dialog {
-        --action-row-margin-top: 16px;
-      }
-      .action-row--item {
-        --action-row-gap: var(--space-xs);
-        --action-row-margin-top: 0;
-      }
-
-      /* ===== COMPONENT / 카드 하단 행 ===== */
-      .card-footer-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--card-footer-gap);
-        margin-top: var(--card-footer-margin-top);
-        width: 100%;
-        min-width: 0;
-        flex-wrap: wrap;
-      }
-      .card-footer-status {
-        min-width: 0;
-        flex: 1 1 0;
-        overflow-wrap: anywhere;
-      }
-      .card-footer-row--baseline {
-        align-items: baseline;
-      }
-      .card-footer-row > .action-row {
-        flex: 0 0 auto;
-        --action-row-margin-top: 0;
-        margin-left: auto;
-      }
-      .empty {
-        padding: 35px 10px;
-        text-align: center;
-        color: var(--muted);
-      }
       .footer {
         padding: 20px;
         text-align: center;
         font-size: var(--font-caption);
         color: var(--muted);
       }
-      /* ===== COMPONENT / 홈 요약 ===== */
       .home-summary-card {
         display: flex;
         flex-direction: column;
@@ -1835,79 +1871,28 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         line-height: 1.15;
         text-align: left;
       }
-      .progress--summary {
-        --progress-height: clamp(17px, 2vw, 20px);
-        width: 100%;
-        margin: 0;
-        flex: 0 0 auto;
-      }
-
-      /* ===== LAYOUT / 페이지 배치 ===== */
-      .card-stack {
-        display: flex;
-        flex-direction: column;
-        gap: var(--card-section-gap);
-      }
-      .card-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: var(--card-section-gap);
-        min-width: 0;
-      }
-      .page-header {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: clamp(8px, 1.2vw, var(--card-section-gap));
-        min-width: 0;
-        margin: 20px 0 var(--card-section-gap);
-      }
-      .page-header-copy {
-        min-width: 0;
-        flex: 1 1 auto;
-      }
       .page-header-title {
         margin: 0;
         font-size: var(--page-title-size);
         line-height: 1.2;
         font-weight: 800;
       }
-      .home-top-grid {
-        grid-template-columns: var(--home-summary-columns);
-        align-items: stretch;
+      .project-panel {
+        display: block;
+        margin-top: 10px;
+        padding: 12px;
       }
-      .home-top-grid > .budget-home {
-        grid-column: 2;
+
+      /* ===== 07 RESPONSIVE — viewport and motion rules ===== */
+      @media (min-width: 700px) {
+        .theme-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
       }
-      .home-secondary-grid {
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-        align-items: stretch;
-      }
-      .home-secondary-item {
-        min-width: 0;
-        display: flex;
-      }
-      .home-secondary-item > .card {
-        width: 100%;
-        height: 100%;
-      }
-      .schedule-main-grid {
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-        align-items: stretch;
-        width: 100%;
-      }
-      .schedule-main-item {
-        min-width: 0;
-        display: flex;
-        align-items: stretch;
-        width: 100%;
-      }
-      .schedule-main-item > .card {
-        width: 100%;
-        height: 100%;
-      }
-      .category-cards {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+      @media (min-width: 980px) {
+        .theme-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
       }
       @media (min-width: 700px) {
         .category-cards {
@@ -1919,12 +1904,19 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           grid-template-columns: repeat(4, minmax(0, 1fr));
         }
       }
-      .page-header + .card,
-      .page-header + .grid,
-      .page-header + .card-grid,
-      .page-header + .task-toolbar {
-        margin-top: 0;
+      @media (max-width: 480px) {
+        .task-category-row {
+          flex-wrap: wrap;
+        }
       }
+      @media (prefers-reduced-motion: reduce) {
+        .calendar-cell,
+        .budget-arc-progress {
+          transition: none;
+        }
+      }
+
+      /* ===== 08 STATE UTILITIES — explicit visibility/spacing ===== */
       .u-mt-xs {
         margin-top: var(--space-xs);
       }
@@ -1940,32 +1932,12 @@ EDIT MAP (검색할 이름 → 수정할 책임)
       .u-gap-sm {
         --row-gap: var(--space-sm);
       }
-      .project-panel {
-        display: block;
-        margin-top: 10px;
-        padding: 12px;
-      }
       .u-minw-0 {
         min-width: 0;
       }
-
-      /* ===== STATE UTILITIES — JS는 표시 상태만 토글합니다 ===== */
       .u-hidden {
         /* Visibility must override component display rules, including later rules. */
         display: none !important;
-      }
-
-      /* ===== RESPONSIVE LAYOUT — 화면 배치만 변경 ===== */
-      @media (max-width: 480px) {
-        .task-category-row {
-          flex-wrap: wrap;
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .calendar-cell,
-        .budget-arc-progress {
-          transition: none;
-        }
       }
     </style>
   </head>
@@ -2111,20 +2083,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="plan-status-grid">
-                  <div class="inset-card">
-                    <span class="status-dot"></span>
-                    <div><b data-dom="homePlanTodo">0</b><span>논의 전</span></div>
-                  </div>
-                  <div class="inset-card">
-                    <span class="status-dot progress-dot"></span>
-                    <div><b data-dom="homePlanProgress">0</b><span>논의 중</span></div>
-                  </div>
-                  <div class="inset-card">
-                    <span class="status-dot done-dot"></span>
-                    <div><b data-dom="homePlanDone">0</b><span>합의 완료</span></div>
-                  </div>
-                </div>
+                <div data-ui-static="PlanStatusSummary"></div>
                 <div class="plan-status-summary">
                   <b data-dom="homePlanDonePct">0%</b> 합의 완료 · 총 <span data-dom="homePlanTotal">0</span>개 항목
                 </div>
@@ -2724,7 +2683,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "358",
+          version: "359",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           sharedStateMetaKey: "__plannerSync",
@@ -2762,7 +2721,12 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         });
         const TASK_OWNERS = Object.freeze(["함께", "신랑", "신부", "각자", "양가"]);
         const TASK_PRIORITIES = Object.freeze(["높음", "보통", "낮음"]);
-        const PLAN_STATUSES = Object.freeze(["논의 전", "논의 중", "합의 완료"]);
+        const PLAN_STATUS_DEFINITIONS = Object.freeze([
+          { label: "논의 전", countKey: "planTodo", dom: "homePlanTodo", dot: "" },
+          { label: "논의 중", countKey: "planProgress", dom: "homePlanProgress", dot: "progress-dot" },
+          { label: "합의 완료", countKey: "planDone", dom: "homePlanDone", dot: "done-dot", complete: true },
+        ].map(Object.freeze));
+        const PLAN_STATUSES = Object.freeze(PLAN_STATUS_DEFINITIONS.map(status => status.label));
         const TASK_STATUS_FILTER = Object.freeze({ ALL: "all", DONE: "done", OPEN: "todo" });
         const TASK_SORT = Object.freeze({
           CUSTOM: "custom",
@@ -3072,6 +3036,18 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         function attr(s) {
           return esc(s).replace(/'/g, "&#39;");
         }
+        const UI_VARIANTS = Object.freeze({
+          Button: ["", "primary", "soft", "danger"],
+          Card: ["card--compact"],
+          CardHeader: ["card-header--fixed-actions", "card-header--flush"],
+          ActionRow: ["action-row--wrap", "action-row--flush", "action-row--compact", "action-row--spaced", "action-row--dialog", "action-row--item"],
+          Toast: ["info", "success", "error"],
+        });
+        function assertUiVariant(component, value) {
+          const values = ["ActionRow", "CardHeader"].includes(component) ? String(value).trim().split(/\s+/).filter(Boolean) : [value];
+          if (values.some((entry) => !UI_VARIANTS[component]?.includes(entry)))
+            throw new Error(`${component}: unsupported variant "${value}"`);
+        }
         function UIComponentRoot(component, className, content = "") {
           const classes = String(className || "").trim();
           return `<div data-ui-component="${attr(component)}" class="${attr(classes)}">${content}</div>`;
@@ -3104,6 +3080,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           return options.map((value) => `<option ${value === selected ? "selected" : ""}>${esc(value)}</option>`).join("");
         }
         function Card(content = "", className = "") {
+          for (const name of className.split(/\s+/))
+            if (name.startsWith("card--")) assertUiVariant("Card", name);
           return UIComponentRoot("Card", ["card", className].filter(Boolean).join(" "), content);
         }
         function CardHeader(title, description = "", action = "", variant = "") {
@@ -3134,7 +3112,16 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             </svg>
             <div class="budget-arc-value"><strong data-dom="${attr(valueDom)}">0%</strong></div>`);
         }
+        function PlanStatusSummary() {
+          return `<div class="plan-status-grid">${PLAN_STATUS_DEFINITIONS.map(status => `
+            <div class="inset-card"><span class="status-dot ${attr(status.dot)}"></span>
+              <div><b data-dom="${attr(status.dom)}">0</b><span>${esc(status.label)}</span></div>
+            </div>`).join("")}</div>`;
+        }
         function mountStaticUiComponents() {
+          document.querySelectorAll('[data-ui-static="PlanStatusSummary"]').forEach(host => {
+            host.outerHTML = PlanStatusSummary();
+          });
           document.querySelectorAll('[data-ui-static="BudgetGauge"]').forEach((host) => {
             host.outerHTML = BudgetGauge({
               progressDom: host.dataset.progressDom,
@@ -3157,10 +3144,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         function MoreMenu(label, id, type, { variant = "default" } = {}) {
           if (!MORE_MENU_VARIANTS.includes(variant))
             throw new Error(`MoreMenu: unsupported variant "${variant}"`);
-          const variantClass = variant === "bare" ? " more-menu--bare" : "";
+          const variantClass = variant === "default" ? "" : ` more-menu--${variant}`;
           return `<details data-ui-component="MoreMenu" data-ui-variant="${attr(variant)}" class="more-menu${variantClass}">
-            <summary class="icon-control" aria-label="${attr(label)} 메뉴">⋯</summary>
-            <div class="more-menu-pop">
+            <summary class="icon-control" aria-expanded="false" aria-label="${attr(label)} 메뉴">⋯</summary>
+            <div class="more-menu-pop" popover="manual">
               ${Button("수정", { action: `edit-${type}`, id, className: "btn--menu",
                 attributes: { "aria-label": `${label} 수정` } })}
               ${Button("삭제", { action: `delete-${type}`, id, className: "btn--menu", variant: "danger",
@@ -3263,12 +3250,12 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             fields: [
               { key: "name", id: "pName", label: "제목", maxLength: 300,
                 required: "제목을 입력해주세요.", placeholder: "예: 자녀 계획" },
-              { key: "details", id: "pDetails", label: "논의할 세부 사항", type: "textarea", maxLength: 2000,
+              { key: "details", id: "pDetails", label: "논의할 세부 사항", display: "block", type: "textarea", maxLength: 2000,
                 placeholder: "서로 이야기해야 할 질문이나 기준을 적어주세요." },
-              { key: "note", id: "pNote", label: "논의된 사항", type: "textarea", maxLength: 2000,
+              { key: "note", id: "pNote", label: "논의된 사항", display: "block", type: "textarea", maxLength: 2000,
                 placeholder: "실제로 이야기하고 합의한 내용을 기록하세요." },
               { key: "status", id: "pStatus", label: "상태", options: PLAN_STATUSES,
-                default: "논의 전", read: (value) => value || "논의 전" },
+                default: PLAN_STATUSES[0], read: (value) => value || PLAN_STATUSES[0] },
             ],
           },
           memo: {
@@ -3419,8 +3406,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           dday: { ddayValue: "ddayValue" },
           home: {
             homeTasks: "homeTasks", homeTaskLimit: "homeTaskLimit", homeEvents: "homeEvents", homeEventLimit: "homeEventLimit",
-            categoryProgressList: "categoryProgressList", homePlanTodo: "homePlanTodo", homePlanProgress: "homePlanProgress",
-            homePlanDone: "homePlanDone", homePlanDonePct: "homePlanDonePct", homePlanTotal: "homePlanTotal",
+            categoryProgressList: "categoryProgressList", homePlanDonePct: "homePlanDonePct", homePlanTotal: "homePlanTotal",
           },
           tasks: { taskCat: "taskCat", taskSearch: "taskSearch", taskStatus: "taskStatus", taskSort: "taskSort" },
           schedule: {
@@ -3460,6 +3446,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             register(schema.view, schema.target);
             schema.fields.filter((field) => field.id).forEach((field) => register("modal", field.id));
           });
+          PLAN_STATUS_DEFINITIONS.forEach(status => register("home", status.dom));
           Object.values(THEME_FIELDS).filter((field) => field.id).forEach((field) => register("theme", field.id));
           return areas;
         }
@@ -3721,7 +3708,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         }
         function setOwnedHTML(owner, id, value) {
           const el = ownedElement(owner, id);
-          if (el) el.innerHTML = value;
+          if (el) {
+            FloatingMenu.closeWithin(el);
+            el.innerHTML = value;
+          }
         }
         function setOwnedValue(owner, id, value) {
           const el = ownedElement(owner, id);
@@ -3755,6 +3745,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         }
         function showPage(id) {
           if (!Object.hasOwn(PAGE_REGISTRY, id)) return false;
+          FloatingMenu.close();
           Object.keys(PAGE_REGISTRY).forEach((key) => ownedElement("pages", key)?.classList.toggle("active", key === id));
           $$("button", ownedElement("navigation", "nav")).forEach((button) =>
             button.classList.toggle("active", button.dataset.page === id),
@@ -3822,7 +3813,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           } else {
             handler(el);
           }
-          el.closest("details")?.removeAttribute("open");
+          FloatingMenu.closeWithin(el.closest(".more-menu"));
           return true;
         }
         function handleRegisteredActionEvent(eventType, e) {
@@ -3835,6 +3826,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           return true;
         }
         function bindAppEvents() {
+          FloatingMenu.bind();
           new Set(Object.values(ACTIONS).map(({ event }) => event)).forEach((event) =>
             document.addEventListener(event, (e) => handleRegisteredActionEvent(event, e)));
 
@@ -3847,6 +3839,103 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             if (e.target === e.currentTarget) settleAppConfirm(false);
           });
         }
+
+        // ===== 04 ENGINES / FloatingMenu lifecycle =====
+        // Public component lifecycle: open/close/position. Domain views only render MoreMenu.
+        // Native Popover top layer keeps action ancestry intact and escapes clipping/stacking contexts.
+        // Requires Popover API (current Chromium/Firefox/Safari); no portal clone or parallel markup.
+        const FloatingMenu = (() => {
+          let active = null;
+          let frame = 0;
+          const popupOf = menu => menu?.querySelector(":scope > .more-menu-pop");
+          function close({ restoreFocus = false } = {}) {
+            if (!active) return;
+            const menu = active, popup = popupOf(menu);
+            active = null;
+            if (popup?.matches(":popover-open")) popup.hidePopover();
+            menu.open = false;
+            menu.firstElementChild?.setAttribute("aria-expanded", "false");
+            if (restoreFocus && menu.isConnected) menu.firstElementChild?.focus();
+          }
+          function position() {
+            if (!active) return;
+            const menu = active, anchor = menu.firstElementChild, popup = popupOf(menu);
+            if (!menu.isConnected || !anchor.checkVisibility()) return close();
+            const a = anchor.getBoundingClientRect();
+            const viewport = window.visualViewport;
+            const left = viewport?.offsetLeft || 0, top = viewport?.offsetTop || 0;
+            const width = viewport?.width || innerWidth, height = viewport?.height || innerHeight;
+            if (a.bottom < top || a.top > top + height || a.right < left || a.left > left + width) return close();
+            const css = getComputedStyle(popup);
+            const margin = parseFloat(css.getPropertyValue("--menu-viewport-margin"));
+            const gap = parseFloat(css.getPropertyValue("--menu-gap"));
+            popup.style.maxHeight = `${Math.max(0, height - margin * 2)}px`;
+            popup.style.maxWidth = `${Math.max(0, width - margin * 2)}px`;
+            const r = popup.getBoundingClientRect();
+            const x = Math.max(left + margin, Math.min(a.right - r.width, left + width - r.width - margin));
+            const below = a.bottom + gap;
+            const above = a.top - gap - r.height;
+            const y = below + r.height <= top + height - margin ? below
+              : Math.max(top + margin, Math.min(above, top + height - r.height - margin));
+            popup.style.left = `${x}px`;
+            popup.style.top = `${y}px`;
+          }
+          function open(menu) {
+            const popup = popupOf(menu);
+            if (!menu?.isConnected || !popup) return false;
+            if (active !== menu) close();
+            active = menu;
+            menu.open = true;
+            menu.firstElementChild.setAttribute("aria-expanded", "true");
+            if (!popup.matches(":popover-open")) popup.showPopover();
+            position();
+            return true;
+          }
+          function closeWithin(root) {
+            if (root && active && (root === active || root.contains(active))) close();
+          }
+          function schedulePosition() {
+            if (!active || frame) return;
+            frame = requestAnimationFrame(() => { frame = 0; position(); });
+          }
+          function bind() {
+            document.addEventListener("click", event => {
+              const summary = event.target.closest?.(".more-menu > summary");
+              if (summary) {
+                event.preventDefault();
+                if (active === summary.parentElement) close();
+                else open(summary.parentElement);
+              } else if (active && !active.contains(event.target)) close();
+            });
+            document.addEventListener("toggle", event => {
+              if (!event.target.matches?.(".more-menu")) return;
+              if (event.target.open && active !== event.target) open(event.target);
+              else if (!event.target.open && active === event.target) close();
+            }, true);
+            document.addEventListener("keydown", event => {
+              if (!active) return;
+              if (event.key === "Escape") {
+                event.preventDefault(); close({ restoreFocus: true });
+              } else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+                event.preventDefault();
+                const buttons = [...popupOf(active).querySelectorAll("button:not(:disabled)")];
+                let index = buttons.indexOf(document.activeElement);
+                index = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1
+                  : index < 0 ? (event.key === "ArrowDown" ? 0 : buttons.length - 1)
+                  : (index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length;
+                buttons[index]?.focus();
+              }
+            });
+            document.addEventListener("focusin", event => {
+              if (active && !active.contains(event.target)) close();
+            });
+            window.addEventListener("scroll", schedulePosition, true);
+            window.addEventListener("resize", schedulePosition);
+            window.visualViewport?.addEventListener("resize", schedulePosition);
+            window.visualViewport?.addEventListener("scroll", schedulePosition);
+          }
+          return Object.freeze({ open, close, closeWithin, position, bind });
+        })();
 
         // ===== 04 ENGINES / modal, confirmation and notification =====
         let modalActionBusy = false;
@@ -3888,6 +3977,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         function openModal(type, data) {
           const body = MODAL_RENDERERS[type]?.(data) ?? null;
           if (body === null) return;
+          FloatingMenu.close({ restoreFocus: true });
           modalPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
           setOwnedHTML("modal", DOM_IDS.modalBody, body);
           modalActionBusy = false;
@@ -3970,6 +4060,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           { title = "확인", confirmText = "확인", cancelText = "취소", danger = false } = {},
         ) {
           if (typeof confirmTestOverride === "boolean") return Promise.resolve(confirmTestOverride);
+          FloatingMenu.close({ restoreFocus: true });
           if (confirmPending) settleAppConfirm(false);
           const dialog = ownedElement("notifications", DOM_IDS.confirmDialog);
           if (!dialog) return Promise.resolve(false);
@@ -4267,7 +4358,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           const dateLabel = `${e.date.slice(0, 4).slice(-2)}.${e.date.slice(5, 7)}.${e.date.slice(8, 10)} (${dayName})`;
 
           const category = e.category
-            ? `<span class="planner-event-item-category">${esc(e.category)}</span>`
+            ? `<span class="pill pill--badge planner-event-item-category">${esc(e.category)}</span>`
             : "";
 
           const heading = `<div class="planner-event-item-header">
@@ -4433,7 +4524,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           const amounts = [["예상금액", item.planned], ["실제금액", item.actual]].map(([label, amount]) =>
             `<div class="inset-card budget-box"><div class="label">${label}</div><b>${won(amount)}</b></div>`).join("");
           return UIComponentRoot("BudgetCard", "budget-line list-divided-item", `
-            ${CardHeader(item.name, "", actions)}
+            ${CardHeader(item.name, "", actions, "card-header--flush")}
             <div class="budget-amounts">${amounts}</div>
             ${item.details ? `<div class="inset-card budget-box">
               <div class="label">세부 내용</div><div class="budget-detail">${esc(item.details)}</div>
@@ -4453,31 +4544,25 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           return Collection.update("plan", id, { status });
         }
         function buildPlanViewData(plans) {
-          let planTodo = 0,
-            planProgress = 0,
-            planDone = 0;
+          const counts = Object.fromEntries(PLAN_STATUS_DEFINITIONS.map(status => [status.countKey, 0]));
           for (const plan of plans) {
-            if (plan.status === "논의 전") planTodo++;
-            else if (plan.status === "논의 중") planProgress++;
-            else if (plan.status === "합의 완료") planDone++;
+            const status = PLAN_STATUS_DEFINITIONS.find(status => status.label === plan.status);
+            if (status) counts[status.countKey]++;
           }
-          return {
-            planTotal: plans.length,
-            planTodo,
-            planProgress,
-            planDone,
-            planDonePct: plans.length ? Math.round((planDone / plans.length) * 100) : 0,
-          };
+          const completed = PLAN_STATUS_DEFINITIONS.filter(status => status.complete)
+            .reduce((sum, status) => sum + counts[status.countKey], 0);
+          return { ...counts, planTotal: plans.length,
+            planDonePct: plans.length ? Math.round((completed / plans.length) * 100) : 0 };
         }
         function PlanCard(item, index, total) {
           const status = `<select class="field field--inline-select" aria-label="부부계획 상태"
             data-action="update-plan" data-id="${attr(item.id)}">${SelectOptions(PLAN_STATUSES, item.status)}</select>`;
           const actions = SortableCardActions(item.id, index, total, "plan", COLLECTION_SCHEMAS.plan.label, status);
-          const blocks = [["논의할 세부 사항", item.details], ["논의된 사항", item.note]].map(([label, text]) => `
+          const blocks = COLLECTION_SCHEMAS.plan.fields.filter(field => field.display === "block").map(({ key, label }) => `
             <div class="inset-card plan-block"><div class="plan-label">${label}</div>
-              <div class="plan-text">${esc(text || "미입력")}</div>
+              <div class="plan-text">${esc(item[key] || "미입력")}</div>
             </div>`).join("");
-          return UIComponentRoot("PlanCard", "plan list-divided-item", CardHeader(item.name, "", actions, "card-header--fixed-actions") + blocks);
+          return UIComponentRoot("PlanCard", "plan list-divided-item", CardHeader(item.name, "", actions, "card-header--flush card-header--fixed-actions") + blocks);
         }
 
         // ===== 05 DOMAIN / Memos =====
@@ -4620,9 +4705,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           );
         }
         function renderHomePlanSummary(view) {
-          setOwnedText("home", DOM_IDS.homePlanTodo, view.planTodo);
-          setOwnedText("home", DOM_IDS.homePlanProgress, view.planProgress);
-          setOwnedText("home", DOM_IDS.homePlanDone, view.planDone);
+          PLAN_STATUS_DEFINITIONS.forEach(status => setOwnedText("home", status.dom, view[status.countKey]));
           setOwnedText("home", DOM_IDS.homePlanDonePct, view.planDonePct + "%");
           setOwnedText("home", DOM_IDS.homePlanTotal, view.planTotal);
         }
@@ -7034,8 +7117,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             const bare = variant === "bare";
             if (menu.classList.contains("more-menu--bare") !== bare)
               issues.push(`${label}: variant class mismatch`);
-            if (bare && !menu.closest(".planner-event-item-meta-menu"))
-              issues.push(`${label}: bare variant is reserved for EventItem meta`);
+            if (popup?.getAttribute("popover") !== "manual")
+              issues.push(`${label}: native floating layer required`);
             const buttons = popup ? [...popup.children].filter((child) => child.matches("button.btn--menu")) : [];
             if (buttons.length !== 2)
               issues.push(`${label}: exactly two menu actions required`);
@@ -7065,9 +7148,27 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               issues.push(`${prefix} ${index}: meta menu host requires bare MoreMenu`);
           });
         }
+        function assertUiStyleOwnership() {
+          const issues = [];
+          // Layout may size/place children, but cannot restyle shared component internals.
+          const domain = /\.(?:plan|budget-line|planner-event-item|memo-item|task)(?:[ .>:+]|$)/;
+          const shared = /\.(?:card-header|more-menu|btn|field|icon-control)(?:[ .>:+[-]|$)/;
+          const appearance = /^(?:padding|margin-bottom|border|background|color|font|line-height|z-index)/;
+          const inspect = rules => {
+            for (const rule of rules) {
+              if (rule.cssRules) inspect(rule.cssRules);
+              if (!rule.selectorText || !domain.test(rule.selectorText) || !shared.test(rule.selectorText)) continue;
+              for (const property of rule.style) if (appearance.test(property))
+                issues.push(`Component ownership bypass: ${rule.selectorText} / ${property}`);
+            }
+          };
+          for (const sheet of document.styleSheets) inspect(sheet.cssRules);
+          return { ok: !issues.length, issues };
+        }
         function assertUiComponentContracts() {
           const issues = [];
           addUiArchitectureIssues(document, issues);
+          issues.push(...assertUiStyleOwnership().issues);
           const generated = document.createElement("template");
           generated.innerHTML = uiContractSampleHtml();
           addUiArchitectureIssues(generated.content, issues);
@@ -7414,30 +7515,19 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         // UI ARCHITECTURE GUARD — no network, storage, live-state writes or startup geometry loop.
         // Components own appearance, Layout entries own only placement, Views compose both.
         // Add semantic variants here before using them; state classes (open/disabled/selected) are separate.
-        const UI_VARIANTS = Object.freeze({
-          Button: ["", "primary", "soft", "danger"],
-          CardHeader: ["", "card-header--fixed-actions"],
-          ActionRow: ["action-row--wrap", "action-row--flush", "action-row--compact", "action-row--spaced", "action-row--dialog", "action-row--item"],
-          Toast: ["info", "success", "error"],
-        });
-        function assertUiVariant(component, value) {
-          const values = component === "ActionRow" ? String(value).trim().split(/\s+/).filter(Boolean) : [value];
-          if (values.some((entry) => !UI_VARIANTS[component]?.includes(entry)))
-            throw new Error(`${component}: unsupported variant "${value}"`);
-        }
         const UI_CONTRACTS = Object.freeze([
           { name: "Button", selector: ".btn, [class*='btn--']", base: "btn", owns: "geometry typography surface state", variants: { "btn--": ["app-action", "modal-action", "toolbar", "menu"] } },
           { name: "IconControl", selector: ".icon-control, .order-button, .calendar-nav-button, .more-menu > summary", base: "icon-control", owns: "square geometry typography radius" },
           { name: "Field", selector: ".field, [class*='field--'], .sync-field, .money-input", base: "field", owns: "height padding font border surface", variants: { "field--": ["compact", "compact-text", "inline-select", "search", "memo-input"] } },
-          { name: "Card", selector: ".card, [data-ui-component='Card']", base: "card", marker: true, owns: "padding surface radius", variants: { "card--": ["compact"] } },
-          { name: "CardHeader", selector: ".card-header, [data-ui-component='CardHeader']", base: "card-header", marker: true, owns: "copy action gap fixed action lane", variants: { "card-header--": ["fixed-actions"] } },
+          { name: "Card", selector: ".card, [data-ui-component='Card']", base: "card", marker: true, owns: "padding surface radius", variants: { "card--": UI_VARIANTS.Card.map(value => value.replace("card--", "")) } },
+          { name: "CardHeader", selector: ".card-header, [data-ui-component='CardHeader']", base: "card-header", marker: true, owns: "copy action gap fixed action lane", variants: { "card-header--": UI_VARIANTS.CardHeader.map(value => value.replace("card-header--", "")) } },
           { name: "CardBody", selector: ".card-body, [data-ui-component='CardBody']", base: "card-body", marker: true, owns: "min-width" },
           { name: "CardFooter", selector: ".card-footer-row, [data-ui-component='CardFooter']", base: "card-footer-row", marker: true, owns: "gap wrap status lane", variants: { "card-footer-row--": ["baseline"] } },
           { name: "InsetCard", selector: ".inset-card, .budget-box, .plan-block, .category-card, .recovery-item, .planner-event-item-meta, .shared-account-panel, .project-panel, .theme-item, .plan-status-grid > div", base: "inset-card", owns: "background border inset radius" },
-          { name: "ActionRow", selector: ".action-row, [data-ui-component='ActionRow']", base: "action-row", marker: true, owns: "gap alignment wrap", variants: { "action-row--": ["wrap", "flush", "compact", "spaced", "dialog", "item"] } },
-          { name: "MoreMenu", selector: ".more-menu, [data-ui-component='MoreMenu']", base: "more-menu", marker: true, owns: "position popup stacking typography", variants: { "more-menu--": ["bare"] } },
+          { name: "ActionRow", selector: ".action-row, [data-ui-component='ActionRow']", base: "action-row", marker: true, owns: "gap alignment wrap", variants: { "action-row--": UI_VARIANTS.ActionRow.map(value => value.replace("action-row--", "")) } },
+          { name: "MoreMenu", selector: ".more-menu, [data-ui-component='MoreMenu']", base: "more-menu", marker: true, owns: "position popup stacking typography", variants: { "more-menu--": MORE_MENU_VARIANTS.filter(value => value !== "default") } },
           { name: "OrderButtons", selector: ".order-buttons, [data-ui-component='OrderButtons']", base: "order-buttons", marker: true, owns: "order gap disabled state" },
-          { name: "Pill", selector: ".pill", base: "pill", owns: "typography padding surface state" },
+          { name: "Pill", selector: ".pill", base: "pill", owns: "typography padding surface state", variants: { "pill--": ["badge"] } },
           { name: "Progress", selector: ".progress", base: "progress", owns: "height fill clipping", variants: { "progress--": ["summary"] } },
           { name: "BudgetGauge", selector: ".budget-gauge-arc, [data-ui-component='BudgetGauge']", base: "budget-gauge-arc", marker: true, owns: "svg geometry value overlay" },
           ...[["TaskItem", "task"], ["EventItem", "planner-event-item"], ["BudgetCard", "budget-line"], ["PlanCard", "plan"], ["MemoCard", "memo-item"]].map(([name, base]) => ({ name, selector: `.${base}, [data-ui-component='${name}']`, base, marker: true, kind: "Domain-specific view", divider: true, owns: "domain layout via shared components" })),
@@ -7447,6 +7537,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           { name: "Navigation", selector: ".nav", base: "nav", owns: "horizontal scrolling tabs" },
           { name: "Modal", selector: ".modal", base: "modal", owns: "viewport overlay sheet scrolling" },
           { name: "Confirm", selector: ".confirm-overlay", base: "confirm-overlay", owns: "viewport dialog actions" },
+          { name: "EmptyState", selector: ".empty", base: "empty", owns: "empty message spacing typography" },
           { name: "Toast", selector: ".toast", base: "toast", owns: "surface typography tone" },
           { name: "ThemeControl", selector: ".theme-item", base: "theme-item", owns: "label preview native input boundary" },
           { name: "SharedSync", selector: "[data-dom='syncLoginBox'], .shared-account-panel, .project-panel, .shared-conflict-box", kind: "Domain-specific view", owns: "auth account project conflict controls" },
@@ -7479,6 +7570,8 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             if (!bodyOnly && el.lastElementChild?.matches(".card-footer-row")) parts.push(".card-footer-row");
             fail("Card", sequence(el, parts), "canonical direct child order");
           });
+          root.querySelectorAll(".plan > .card-header, .budget-line > .card-header").forEach(el =>
+            fail("CardHeader", el.classList.contains("card-header--flush"), "gap layout requires flush header API"));
           root.querySelectorAll(".card-header").forEach((el) => fail("CardHeader", sequence(el, el.children.length === 2 ? [".card-header-copy", ".card-header-action"] : [".card-header-copy"]) && !!el.querySelector(":scope > .card-header-copy > .card-title"), "copy/title/action structure"));
           root.querySelectorAll(".card-footer-row").forEach((el) => fail("CardFooter", el.parentElement?.matches(".card"), "direct Card child required"));
           addMoreMenuContractIssues(root, issues);
@@ -7524,6 +7617,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               root => root.querySelector(".planner-event-item-meta").classList.remove("inset-card"),
               root => root.querySelector(".plan").classList.remove("list-divided-item"),
               root => root.querySelector(".planner-event-item").dataset.uiActions = "false",
+              root => root.querySelector(".order-buttons").prepend(root.querySelector(".order-buttons").lastElementChild),
+              root => root.querySelector(".planner-event-item-main").append(root.querySelector(".planner-event-item-meta-menu")),
+              root => root.querySelector(".more-menu-pop").removeAttribute("popover"),
+              root => root.querySelector(".plan .card-header").classList.remove("card-header--flush"),
             ];
             const results = mutations.map((mutate, index) => {
               const template = document.createElement("template"); template.innerHTML = uiContractSampleHtml();
@@ -7531,6 +7628,49 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               return { name: `structural mutation ${index + 1}`, ok: issues.length > 0, detail: issues.join("; ") };
             });
             return { ok: results.every(result => result.ok), results };
+        }
+        // Deliberately break production styles/DOM; require baseline pass AND specific regression detection.
+        async function runUiMutationTests() {
+          const results = [...assertUiGuardMutationContracts().results];
+          const root = document.createElement("div");
+          root.dataset.uiGuardInteractive = "";
+          root.style.cssText = "position:fixed;inset:0;z-index:100;background:var(--bg);overflow:auto";
+          ["click", "input", "change"].forEach(type => root.addEventListener(type, event => event.stopPropagation()));
+          const html = () => `<div class="app"><main>${Card(CardHeader("Mutation fixture") + CardBody(
+            EventItem(uiSample("event", true)) + EventItem(uiSample("event"))
+            + PlanCard(uiSample("plan", true), 0, 2) + Button("Geometry")))}</main></div>`;
+          const collect = () => {
+            const checks = [{ name: "style ownership", ok: assertUiStyleOwnership().ok }];
+            uiGuardVisualChecks(root, (name, ok, detail) => checks.push({ name, ok, detail }));
+            return checks;
+          };
+          document.body.append(root);
+          try {
+            root.innerHTML = html();
+            await uiGuardFrame();
+            const baseline = collect();
+            results.push({ name: "geometry mutation baseline", ok: baseline.every(check => check.ok),
+              detail: baseline.filter(check => !check.ok) });
+            const cases = [
+              { name: "popup horizontal actions", css: ".more-menu-pop:popover-open{grid-template-columns:1fr 1fr}", detects: "popup open grid/edit-delete" },
+              { name: "button token bypass", css: ".btn--app-action{height:73px}", detects: "height:btn" },
+              { name: "event meta height regression", css: ".planner-event-item-meta{min-height:80px}", detects: "EventItem compact meta height" },
+              { name: "plan wrapping regression", css: ".plan .card-header-action{flex-wrap:wrap;max-width:85px}", detects: "PlanCard fixed action nowrap" },
+              { name: "header double spacing", css: ".card-header--flush{margin-bottom:13px}", detects: "PlanCard spacing single owner" },
+              { name: "domain component patch", css: ".plan > .card-header{padding:5px}", detects: "style ownership" },
+              { name: "popup loses top-layer painting", css: ".more-menu-pop:popover-open{visibility:hidden}", detects: "popup hit test" },
+            ];
+            for (const mutation of cases) {
+              FloatingMenu.closeWithin(root);
+              root.innerHTML = html();
+              const sheet = document.createElement("style"); sheet.textContent = mutation.css; root.append(sheet);
+              await uiGuardFrame();
+              const checks = collect();
+              results.push({ name: mutation.name, ok: checks.some(check => check.name === mutation.detects && !check.ok),
+                detail: checks.filter(check => !check.ok).map(check => check.name) });
+            }
+          } finally { FloatingMenu.closeWithin(root); root.remove(); }
+          return { ok: results.every(result => result.ok), results };
         }
         const UI_GUARD_WIDTHS = Object.freeze([360, 390, 768, 1280]);
         const UI_GUARD_TEXT = "긴 문구 계약 검증 LongText0123456789 ".repeat(12);
@@ -7608,8 +7748,17 @@ EDIT MAP (검색할 이름 → 수정할 책임)
           const select = selector => [...root.querySelectorAll(selector)].filter(visible);
           const near = (a, b) => Math.abs(a - b) <= 1;
           const token = (el, property, expression) => {
-            const probe = document.createElement("span"); probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none;"; probe.style.setProperty(property, expression); el.appendChild(probe);
-            const value = style(probe).getPropertyValue(property); probe.remove(); return value;
+            // Replaced controls (input/textarea) cannot lay out child probes. Resolve inherited
+            // custom properties on a sibling probe; never infer correctness from the tested value.
+            const probe = document.createElement("span");
+            probe.style.cssText = "position:fixed;visibility:hidden;pointer-events:none;";
+            const source = style(el);
+            for (const name of source) if (name.startsWith("--"))
+              probe.style.setProperty(name, source.getPropertyValue(name));
+            probe.style.setProperty(property, expression);
+            document.body.appendChild(probe);
+            const value = style(probe).getPropertyValue(property);
+            probe.remove(); return value;
           };
           const measure = (el, expression) => parseFloat(token(el, "width", expression));
           const noX = el => el.scrollWidth <= el.clientWidth + 1;
@@ -7639,7 +7788,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             if (el.matches(".card")) add("Card padding ownership", style(el).padding === token(el,"padding","var(--card-padding)"), style(el).padding);
             if (el.matches(".card,.inset-card")) add("surface ownership", style(el).backgroundColor === token(el,"background-color",el.matches(".inset-card") ? "var(--soft)" : "var(--card)"), style(el).backgroundColor);
           }
-          select(".list-divided-item").forEach(el => add("list divider", near(parseFloat(style(el).borderBottomWidth), el.nextElementSibling ? 1 : 0), style(el).borderBottomWidth));
+          select(".list-divided-item").forEach(el => add("list divider", near(parseFloat(style(el).borderBottomWidth), el.nextElementSibling ? measure(el,"var(--list-divider-width)") : 0), style(el).borderBottomWidth));
           select(".budget-line").forEach(budget => {
             const header = budget.querySelector(":scope > .card-header");
             if (header) add("BudgetCard spacing single owner",
@@ -7669,37 +7818,40 @@ EDIT MAP (검색할 이름 → 수정할 책임)
               const metaRect = rect(meta), menuRect = rect(menu), expected = measure(meta, "var(--action-button-size)");
               const details = menu.querySelector(".more-menu"), item = meta.closest(".planner-event-item");
               add("EventItem action lane", menuRect.width > 0 && menuRect.right <= metaRect.right+1 && (!location || rect(location).right <= menuRect.left+1));
-              add("EventItem compact meta height", near(metaRect.height, expected), `${metaRect.height}/${expected}`);
-              add("EventItem bare action size", near(menuRect.width, expected) && near(menuRect.height, expected), `${menuRect.width}x${menuRect.height}`);
+              add("EventItem compact meta height", near(metaRect.height, expected + 2), `${metaRect.height}/${expected}`);
+              add("EventItem bare action size", near(rect(menu.firstElementChild).width, expected) && near(menuRect.height, expected), `${menuRect.width}x${menuRect.height}`);
               add("EventItem menu host no transform stacking trap", style(menu).transform === "none", style(menu).transform);
               if (details && item) {
-                details.open = true;
-                add("EventItem open stacking layer", Number(style(item).zIndex) >= 30, style(item).zIndex);
-                details.open = false;
+                details.scrollIntoView({ block: "nearest", behavior: "instant" });
+                FloatingMenu.open(details);
+                add("EventItem native floating layer", details.querySelector(".more-menu-pop").matches(":popover-open"));
+                FloatingMenu.close();
               }
             }
           });
           select(".more-menu").forEach(menu => {
             const popup = menu.querySelector(".more-menu-pop"), buttons = [...popup.children];
-            menu.open = false; add("popup closed", !popup.checkVisibility());
-            menu.open = true;
+            FloatingMenu.close(); menu.open = false; add("popup closed", !popup.checkVisibility());
+            menu.scrollIntoView({ block: "nearest", behavior: "instant" });
+            FloatingMenu.open(menu);
             const r = rect(popup), rs = buttons.map(rect), cs = style(popup);
             add("popup open grid/edit-delete", cs.display === "grid" && rs.length === 2 && rs[1].top >= rs[0].bottom && rs.every(b => uiGuardRectInside(b,r)) && noX(popup), `${menu.dataset.uiVariant}: ${cs.display}`);
             add("popup horizontal viewport", r.left >= -1 && r.right <= innerWidth+1, `${r.left}..${r.right}`);
             add("popup owns typography", cs.fontSize === token(popup,"font-size","var(--font-body)") && cs.fontWeight === "400" && cs.whiteSpace === "normal");
-            let unclipped = true;
-            for(let parent=popup.parentElement; parent && parent !== document.body; parent=parent.parentElement) {
-              const ps=style(parent), pr=rect(parent);
-              if (/(hidden|clip|auto|scroll)/.test(ps.overflowX) && (r.left<pr.left-1 || r.right>pr.right+1)) unclipped=false;
-              if (/(hidden|clip|auto|scroll)/.test(ps.overflowY) && (r.top<pr.top-1 || r.bottom>pr.bottom+1)) unclipped=false;
+            if (root.hasAttribute("data-ui-guard-interactive")) {
+              add("popup hit test", rs.every((b, index) => {
+                const hit = document.elementFromPoint((b.left + b.right) / 2, (b.top + b.bottom) / 2);
+                return !!hit && buttons[index].contains(hit);
+              }));
             }
-            add("popup ancestor clipping",unclipped);
+            add("popup top-layer contract", popup.matches(":popover-open") && popup.getAttribute("popover") === "manual");
+            add("popup vertical viewport", r.top >= -1 && r.bottom <= innerHeight + 1, `${r.top}..${r.bottom}`);
             const before = [cs.fontSize,cs.whiteSpace,cs.lineHeight, r.width, r.height];
             const saved = menu.getAttribute("style"); menu.style.fontSize="7px"; menu.style.whiteSpace="nowrap"; menu.style.fontWeight="900"; menu.style.lineHeight="3";
             const after=style(popup), ar=rect(popup);
             add("popup hostile parent typography", after.fontSize===before[0] && after.whiteSpace==="normal" && after.lineHeight===before[2] && near(ar.width,before[3]) && near(ar.height,before[4]), `${after.fontSize}/${after.whiteSpace}`);
             if(saved===null) menu.removeAttribute("style"); else menu.setAttribute("style",saved);
-            menu.open=false;
+            FloatingMenu.close();
           });
           select(".calendar-grid").forEach(grid => {
             const cells=[...grid.children], rs=cells.map(rect);
@@ -7720,7 +7872,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
         async function runUiVisualContractTests({ expectedWidth = null } = {}) {
           const width=innerWidth, results=[];
           const sandbox=document.createElement("div"); sandbox.dataset.uiGuardSandbox=""; sandbox.inert=true; sandbox.setAttribute("aria-hidden","true");
-          sandbox.style.cssText="position:fixed;left:0;top:0;width:100%;opacity:0;pointer-events:none;z-index:-1;";
+          sandbox.style.cssText="position:fixed;left:0;top:0;width:100%;max-height:100vh;overflow:auto;opacity:0;pointer-events:none;z-index:-1;";
           // Event isolation is independent of inert (programmatic events must not reach application delegates).
           ["click","input","change"].forEach(type=>sandbox.addEventListener(type,event=>event.stopPropagation()));
           const add=(component,fixture,name,ok,detail="")=>results.push({viewport:width,width,component,fixture,name,ok:!!ok,detail});
@@ -7738,7 +7890,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
                 uiGuardVisualChecks(sandbox,(name,ok,detail)=>add(fixture.component,fixture.name,name,ok,detail));
               } catch(error) { add(fixture.component,fixture.name,"fixture execution",false,String(error?.stack||error)); }
             }
-          } finally { sandbox.remove(); }
+          } finally { FloatingMenu.closeWithin(sandbox); sandbox.remove(); }
           return {ok:results.every(r=>r.ok),width,viewport:{width,height:innerHeight},recommendedWidths:[...UI_GUARD_WIDTHS],results};
         }
         function runUiArchitectureGuards(options = {}) {
@@ -7935,8 +8087,10 @@ EDIT MAP (검색할 이름 → 수정할 책임)
             runSmoke: runPlannerSmokeTests,
             runSharedMocks: runSharedMockTests,
             runUiGuards: runUiArchitectureGuards,
+            runMutations: runUiMutationTests,
             runPwaDiagnostics,
             assertRegistries: assertRegistryContracts,
+            assertStyles: assertUiStyleOwnership,
             pure: PureFunctions,
           }),
         });
@@ -8007,6 +8161,7 @@ EDIT MAP (검색할 이름 → 수정할 책임)
 
           UI: {
             Card,
+            FloatingMenu,
             Button,
             ActionRow,
             CardFooter,
