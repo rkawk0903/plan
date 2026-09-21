@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v392
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v393
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -111,7 +111,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-V8E0tVITS5zY812Hc8eCVgQKa6TUBJ0UrsIXTG6UsEQ=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-DrbINoHdUlxcctpx31S7jGxMj/myGnCyH4tof/Q/Gv0='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-GgWOHhgdyD2oFcaE6+3PGWsdfrJxOAJ1vCDzgjQH1sI=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-DrbINoHdUlxcctpx31S7jGxMj/myGnCyH4tof/Q/Gv0='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -3400,7 +3400,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "392",
+          version: "393",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -7217,16 +7217,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (error) throw error;
             if (data && data.ok === false) throw new Error(data.error || "계정 삭제에 실패했어요.");
             closeModal();
-            clearLocalPlannerUserData();
-            storageRemove(APP_CONFIG.sharedLastUserKey);
-            storageRemove(APP_CONFIG.sharedKey);
+            const localCleared = clearLocalPlannerUserData();
+            const lastUserCleared = storageRemove(APP_CONFIG.sharedLastUserKey);
+            const sharedConfigCleared = storageRemove(APP_CONFIG.sharedKey);
             await sharedRemoveChannel();
             sharedRemoveAuthSubscription();
             sharedSync = createSharedSyncState({ lifecycle: sharedSync.lifecycle + 1 });
             renderSharedStatusUI();
             renderSharedControls({ clearSensitive: true });
             renderSharedProject();
-            notifySuccess("계정과 이 기기의 로컬 데이터를 삭제했어요.");
+            if (localCleared && lastUserCleared && sharedConfigCleared)
+              notifySuccess("계정과 이 기기의 로컬 데이터를 삭제했어요.");
+            else
+              notifyError("계정은 삭제됐지만 이 기기의 일부 로컬 데이터를 지우지 못했어요. 브라우저 사이트 데이터를 직접 삭제해주세요.");
             return true;
           } catch (e) {
             console.error(e);
@@ -7579,24 +7582,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           openModal("shared-project-leave");
           return true;
         }
-        async function verifySharedCurrentPassword(password) {
-          const email = String(sharedSync.user?.email || sharedConfig().email || "").trim();
-          if (!email) throw new Error("현재 계정 이메일을 확인하지 못했어요. 다시 로그인해주세요.");
-          const cfg = sharedConfig();
-          const url = String(cfg.url || DEFAULT_SUPABASE_URL).replace(/\/$/, "");
-          const key = cfg.key || DEFAULT_SUPABASE_KEY;
-          sharedAssertClientSafeKey(key);
-          const verifier = window.supabase?.createClient?.(url, key, {
-            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-          });
-          if (!verifier) throw new Error("계정 확인 기능을 준비하지 못했어요. 인터넷 연결 후 다시 시도해주세요.");
-          const { data, error } = await verifier.auth.signInWithPassword({ email, password });
-          try { await verifier.auth.signOut(); } catch (_) {}
-          if (error) throw error;
-          if (String(data?.user?.id || "") !== String(sharedSync.user?.id || ""))
-            throw new Error("현재 로그인 계정과 비밀번호 확인 결과가 일치하지 않아요.");
-          return true;
-        }
         async function sharedConfirmLeaveProject() {
           if (!sharedSync.client || !sharedSync.user || !sharedSync.projectId) {
             notifyError("먼저 공동 프로젝트 연결 상태를 확인해주세요.");
@@ -7608,24 +7593,27 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return false;
           }
           try {
-            await verifySharedCurrentPassword(password);
             if (!(await flushCurrentSharedChangesBefore("프로젝트 나가기"))) return false;
-            const { error } = await sharedSync.client.rpc("leave_wedding_project", {
-              p_client_version: Number(APP_CONFIG.version) || 0,
+            const { data, error } = await sharedSync.client.functions.invoke("leave-project", {
+              body: { password, clientVersion: Number(APP_CONFIG.version) || 0 },
             });
             if (error) throw error;
+            if (data && data.ok === false) throw new Error(data.error || "프로젝트에서 나가지 못했어요.");
             closeModal();
             await sharedRemoveChannel();
-            clearLocalPlannerUserData();
-            clearSharedPendingSave();
-            storageRemove(APP_CONFIG.sharedBaselineKey);
+            const localCleared = clearLocalPlannerUserData();
+            const pendingCleared = clearSharedPendingSave();
+            const baselineCleared = storageRemove(APP_CONFIG.sharedBaselineKey);
             const cfg = sharedConfig();
             setSharedConfig({ ...cfg, projectId: null, inviteCode: "" });
             resetSharedProjectRuntime();
             sharedSync.projectId = null;
             renderSharedProject();
             renderSharedStatusUI();
-            notifySuccess("공동 프로젝트에서 나왔어요.");
+            if (localCleared && pendingCleared && baselineCleared)
+              notifySuccess("공동 프로젝트에서 나왔어요.");
+            else
+              notifyError("프로젝트에서는 나왔지만 이 기기의 일부 로컬 데이터를 지우지 못했어요. 브라우저 사이트 데이터를 직접 삭제해주세요.");
             return true;
           } catch (e) {
             console.error(e);
@@ -8333,7 +8321,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         async function sharedSignOut() {
           if (sharedSignOutInFlight) return false;
-          if (!(await flushCurrentSharedChangesBefore("로그아웃"))) return false;
+          let discardUnsynced = false;
+          if (!(await flushCurrentSharedChangesBefore("로그아웃"))) {
+            discardUnsynced = await appConfirm(
+              "아직 서버에 저장되지 않은 변경이 있어요. 이 기기의 미동기화 변경사항을 폐기하고 로그아웃할까요? 폐기한 내용은 복구할 수 없어요.",
+              { title: "미동기화 변경 폐기", confirmText: "폐기하고 로그아웃", danger: true },
+            );
+            if (!discardUnsynced) return false;
+          }
           const lifecycle = sharedSync.lifecycle + 1;
           sharedSync.lifecycle = lifecycle;
           sharedAfterLoginInFlight = null;
@@ -8341,7 +8336,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           let signedOut = false;
           try {
             if (sharedSync.client) {
-              const { error } = await sharedSync.client.auth.signOut();
+              const options = discardUnsynced && !sharedIsOnline() ? { scope: "local" } : undefined;
+              let { error } = await sharedSync.client.auth.signOut(options);
+              if (error && discardUnsynced && options?.scope !== "local") {
+                const localResult = await sharedSync.client.auth.signOut({ scope: "local" });
+                error = localResult.error;
+              }
               if (error) throw error;
             }
             signedOut = true;
@@ -8350,17 +8350,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             clearTimeout(sharedSync.pushTimer);
             sharedClearRetry();
             clearHistory();
-            clearLocalPlannerUserData();
-            storageRemove(APP_CONFIG.sharedLastUserKey);
+            const localCleared = clearLocalPlannerUserData();
+            const lastUserCleared = storageRemove(APP_CONFIG.sharedLastUserKey);
             const cfg = sharedConfig();
             setSharedConfig({ ...cfg, email: "", projectId: null, inviteCode: "" });
             sharedSync = createSharedSyncState({ lifecycle });
             renderSharedStatusUI();
             renderSharedControls({ clearSensitive: true });
             renderSharedProject();
-            notifySuccess(
-              "로그아웃했어요. 개인정보 보호를 위해 이 기기의 프로젝트 데이터·복구 지점·동기화 대기 정보도 지웠어요.",
-            );
+            if (localCleared && lastUserCleared)
+              notifySuccess(
+                "로그아웃했어요. 개인정보 보호를 위해 이 기기의 프로젝트 데이터·복구 지점·동기화 대기 정보도 지웠어요.",
+              );
+            else
+              notifyError("로그아웃은 완료됐지만 이 기기의 일부 로컬 데이터를 지우지 못했어요. 브라우저 사이트 데이터를 직접 삭제해주세요.");
           } catch (e) {
             console.error(e);
             notifyError(sharedFriendlyError(e, "로그아웃에 실패했어요."));
@@ -8582,7 +8585,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function pruneCorruptStorage(keep) {
           const keys = listCorruptStorageKeys();
-          keys.slice(0, Math.max(0, keys.length - keep)).forEach((key) => storageRemove(key));
+          return keys
+            .slice(0, Math.max(0, keys.length - keep))
+            .map((key) => storageRemove(key))
+            .every(Boolean);
         }
         function quarantineCorruptStoredState(raw, error) {
           if (!raw) return "";
@@ -8927,11 +8933,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           });
         }
         function clearLocalPlannerUserData({ resetState = true } = {}) {
-          [
+          const primaryRemoved = [
             APP_CONFIG.storageKey, APP_CONFIG.recoveryKey, APP_CONFIG.sharedPendingKey,
             APP_CONFIG.sharedBaselineKey, APP_CONFIG.sharedSyncedKey,
-          ].forEach((key) => storageRemove(key));
-          pruneCorruptStorage(0);
+          ].map((key) => storageRemove(key)).every(Boolean);
+          const corruptRemoved = pruneCorruptStorage(0);
           if (resetState) {
             state = deepFreeze(normalizeState(defaultState()));
             lastPersistedState = cloneValue(state);
@@ -8941,7 +8947,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             requestRender("all");
             renderRecoveryPoints();
           }
-          return true;
+          return primaryRemoved && corruptRemoved;
         }
         function saveLocalOnly() {
           if (guardFutureSchemaWrite("로컬 저장")) return false;
