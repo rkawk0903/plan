@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v383
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v392
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -111,7 +111,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-t1/w4NPZdbyVzuLpYEFc4Jy4VyjsjopukkbO5ySwoZ4=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-Cd6YbPIHRRCAnUa/zbhOtP0DPbXnhWmfCIJBpPX4FSE='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-V8E0tVITS5zY812Hc8eCVgQKa6TUBJ0UrsIXTG6UsEQ=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-DrbINoHdUlxcctpx31S7jGxMj/myGnCyH4tof/Q/Gv0='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -282,8 +282,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--card));
         --accent-soft-2: color-mix(in srgb, var(--accent2) 18%, var(--card));
         --surface-raised: var(--card);
-        --surface-grouped: color-mix(in srgb, var(--soft) 86%, var(--card));
+        /* The theme editor's “내부 카드·보조 영역” color owns grouped auxiliary surfaces directly. */
+        --surface-grouped: var(--soft);
         --field-fill: color-mix(in srgb, var(--soft) 86%, var(--card));
+        /* Contextual controls inside nested cards: same field family with a controlled accent2 tint. */
+        --field-fill-accent2: color-mix(in srgb, var(--field-fill) 76%, var(--accent2) 24%);
         --row-hover: color-mix(in srgb, var(--accent) 3.5%, var(--card));
         --row-pressed: color-mix(in srgb, var(--accent) 6%, var(--card));
         --nav-selected-bg: color-mix(in srgb, var(--card) 92%, var(--accent) 8%);
@@ -531,7 +534,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         padding: 0;
         border: 1px solid var(--control-border);
         border-radius: var(--radius-icon);
-        background: color-mix(in srgb, var(--surface-grouped) 90%, var(--card));
+        background: var(--icon-control-bg, color-mix(in srgb, var(--surface-grouped) 90%, var(--card)));
         color: var(--muted);
         font-size: var(--icon-font-size, var(--font-small));
         line-height: 1;
@@ -561,6 +564,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .more-menu {
         position: relative;
+      }
+      .more-menu:not(.more-menu--bare) {
+        /* Keep the shared MoreMenu component intact; only its visible trigger gets a theme-derived tint. */
+        --icon-control-bg: color-mix(in srgb, var(--soft) 76%, var(--accent2) 24%);
       }
       .more-menu summary {
         --icon-font-size: var(--more-menu-icon-font-size);
@@ -666,6 +673,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .order-button {
         flex: 0 0 var(--action-button-size);
+        /* Reorder controls live inside card rows, so keep them in the field family but tint with accent2. */
+        --icon-control-bg: var(--field-fill-accent2);
       }
       .order-arrow {
         display: block;
@@ -679,6 +688,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .order-button:hover:not(:disabled) {
         color: var(--ink);
         border-color: var(--line);
+        background: color-mix(in srgb, var(--field-fill-accent2) 94%, var(--accent) 6%);
       }
       .card-header {
         display: flex;
@@ -924,6 +934,83 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         text-align: center;
         color: var(--muted);
       }
+
+      /* ===== v384 grouped/form refinement ===== */
+      .form-field {
+        display: grid;
+        gap: 6px;
+        min-width: 0;
+      }
+      .form-field > label,
+      .form > label {
+        color: var(--text-secondary);
+        font-size: var(--font-caption);
+        font-weight: 650;
+        line-height: 1.25;
+        letter-spacing: -0.01em;
+      }
+      .field-shell {
+        position: relative;
+        min-width: 0;
+      }
+      .field-shell--money .field {
+        padding-right: 38px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
+      }
+      .field-unit {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        transform: translateY(-50%);
+        color: var(--text-tertiary);
+        font-size: var(--font-caption);
+        font-weight: 600;
+        pointer-events: none;
+      }
+      .grouped-list {
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--control-border) 76%, transparent);
+        border-radius: var(--radius-inset);
+        /* Keep grouped rows on the exact same fill family as search/select fields. */
+        background: var(--field-fill);
+        box-shadow: inset 0 1px 1px rgba(20, 20, 22, 0.015);
+      }
+      .grouped-list.list,
+      .grouped-list.event-list-host {
+        gap: 0;
+      }
+      .grouped-list > .empty {
+        background: transparent;
+      }
+      .grouped-list > .list-divided-item {
+        border-radius: 0;
+        background: transparent;
+      }
+      .grouped-list > .list-divided-item:not(:last-child) {
+        border-bottom-color: color-mix(in srgb, var(--control-border) 76%, transparent);
+      }
+      .modal-title {
+        margin: 0;
+        color: var(--ink);
+        font-size: clamp(var(--text-4xl), 2.2vw, var(--text-6xl));
+        line-height: 1.2;
+        font-weight: 720;
+        letter-spacing: -0.03em;
+      }
+      .modal-form {
+        margin-top: 16px;
+        gap: 14px;
+      }
+      .sheet .action-row--dialog {
+        margin: 6px calc(var(--modal-padding) * -1) calc(var(--modal-padding) * -1);
+        padding: 12px var(--modal-padding) var(--modal-padding);
+        border-top: 1px solid var(--separator);
+      }
+      .sheet .action-row--dialog .btn--modal-action {
+        min-width: 88px;
+      }
 /* ===== 04 COMPONENT VARIANTS — explicit semantic overrides ===== */
       .pill--badge {
         --pill-radius: var(--radius-badge);
@@ -1072,6 +1159,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .action-row--dialog {
         --action-row-margin-top: 16px;
+        justify-content: flex-end;
+        gap: 8px;
       }
       .action-row--item {
         --action-row-gap: var(--space-xs);
@@ -1127,13 +1216,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: grid;
         grid-template-columns: 1fr;
         gap: var(--space-sm);
-        margin: 10px 0;
+        margin: 0 0 var(--space-md);
       }
       .task-toolbar-controls {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: var(--space-sm);
+        gap: clamp(5px, 1.4vw, var(--space-sm));
         align-items: center;
+        min-width: 0;
+      }
+      .task-toolbar-controls > * {
+        min-width: 0;
+        width: 100%;
       }
       .list {
         display: flex;
@@ -1247,8 +1341,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .page-header + .card,
       .page-header + .grid,
-      .page-header + .card-grid,
-      .page-header + .task-toolbar {
+      .page-header + .card-grid {
         margin-top: 0;
       }
 /* ===== 06 DOMAIN VIEWS — composition and domain-specific typography ===== */
@@ -1426,6 +1519,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         white-space: pre-wrap;
         overflow-wrap: anywhere;
       }
+      .plan .field--inline-select {
+        /* Status select is nested inside the plan row: field fill + accent2 24%. */
+        --field-bg: var(--field-fill-accent2);
+      }
       .plan-status-home {
         margin-top: 0;
       }
@@ -1466,6 +1563,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         align-items: center;
         gap: 0;
         padding: 0 10px;
+        border: 1px solid color-mix(in srgb, var(--control-border) 76%, transparent);
+        border-radius: var(--radius-control);
+        background: var(--field-fill-accent2);
+        box-shadow: inset 0 1px 1px rgba(20, 20, 22, 0.015);
         color: var(--muted);
         font-size: var(--event-meta-font-size);
         font-weight: 500;
@@ -1495,6 +1596,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         align-items: center;
         margin-left: auto;
         padding-left: var(--card-action-gap);
+      }
+      .planner-event-item-meta .more-menu--bare > summary.icon-control,
+      .planner-event-item-meta .more-menu--bare > summary.icon-control:hover,
+      .planner-event-item-meta .more-menu--bare > summary.icon-control:active {
+        background: transparent;
       }
       .planner-event-item-main {
         width: 100%;
@@ -1664,14 +1770,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         align-items: flex-start;
         justify-content: flex-end;
       }
-      @media (hover: hover) and (pointer: fine) {
-        .task:hover {
-          background: var(--row-hover);
-        }
-      }
-      .task:active {
-        background: var(--row-pressed);
-      }
+      /* Task rows keep a stable field-matched surface on hover/press.
+         Interaction feedback stays on the checkbox and action controls instead. */
       .calendar-card {
         --card-padding: 13px 14px 14px;
       }
@@ -2203,6 +2303,116 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         border-color: transparent;
         box-shadow: none;
       }
+
+      /* ===== Grouped collection rows ===== */
+      .grouped-list.task-list-host {
+        padding: 0;
+      }
+      .grouped-list.task-list-host .task {
+        padding: 13px 12px;
+        border-radius: 0;
+      }
+      .grouped-list.task-list-host .task:hover,
+      .grouped-list.task-list-host .task:active {
+        border-radius: 0;
+      }
+      .grouped-list.event-list-host .planner-event-item {
+        padding: 13px 12px;
+      }
+      [data-page-root="budget"] .grouped-list > .budget-line,
+      [data-page-root="plans"] .grouped-list > .plan {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+      [data-page-root="memos"] .grouped-list > .memo-item {
+        padding: 14px 16px;
+      }
+      [data-page-root="memos"] .memo-item .card-header {
+        margin-bottom: 7px;
+      }
+      .budget-value-group {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--surface-border) 60%, transparent);
+        border-radius: var(--radius-inset);
+        background: color-mix(in srgb, var(--card) 46%, var(--surface-grouped));
+      }
+      .budget-value-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        min-height: 42px;
+        padding: 8px 11px;
+      }
+      .budget-value-row + .budget-value-row {
+        border-top: 1px solid var(--separator);
+      }
+      .budget-value-row span,
+      .budget-detail-group > .label {
+        color: var(--text-tertiary);
+        font-size: var(--font-caption);
+        font-weight: 600;
+      }
+      .budget-value-row b {
+        color: var(--ink);
+        font-size: var(--text-xl);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+      }
+      .budget-detail-group {
+        padding: 10px 11px;
+        border-radius: var(--radius-inset);
+        background: var(--surface-grouped);
+      }
+      .budget-detail-group .budget-detail {
+        margin-top: 5px;
+      }
+      .budget-page-reference-stat b,
+      .budget-home-reference-total > b,
+      .budget-home-reference-total > div,
+      .home-summary-pct,
+      .dday strong,
+      .plan-status-summary b {
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
+      }
+      .settings-page .card-body > .form {
+        gap: 14px;
+      }
+      .settings-page .shared-account-panel,
+      .settings-page .project-panel,
+      .settings-page .recovery-item {
+        border-color: transparent;
+        background: var(--surface-grouped);
+        box-shadow: none;
+      }
+      .settings-page .shared-account-panel,
+      .settings-page .project-panel {
+        padding: 12px 13px;
+      }
+      .settings-page .settings-status-note {
+        color: var(--text-tertiary);
+        line-height: 1.45;
+      }
+      .settings-page .theme-grid {
+        overflow: hidden;
+        gap: 1px;
+        padding: 1px;
+        border: 1px solid color-mix(in srgb, var(--surface-border) 60%, transparent);
+        border-radius: var(--radius-inset);
+        background: var(--separator);
+      }
+      .settings-page .theme-item {
+        border: 0;
+        border-radius: 0;
+        background: var(--surface-grouped);
+      }
 /* ===== 07 RESPONSIVE — viewport and motion rules ===== */
       @media (min-width: 700px) {
         .theme-grid {
@@ -2361,6 +2571,36 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           --font-tiny: var(--text-sm);
         }
       }
+
+      @media (max-width: 600px) {
+        .task-toolbar-controls {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 5px;
+        }
+        .task-toolbar-controls .field--compact {
+          --field-inset: 0 6px;
+          --field-size: var(--font-caption);
+        }
+        .task-toolbar-controls .btn--toolbar {
+          --btn-padding: 0 6px;
+          --btn-font-size: var(--font-caption);
+        }
+        .sheet .action-row--dialog {
+          margin-left: calc(max(var(--modal-padding), env(safe-area-inset-left)) * -1);
+          margin-right: calc(max(var(--modal-padding), env(safe-area-inset-right)) * -1);
+          margin-bottom: calc(max(var(--modal-padding), calc(env(safe-area-inset-bottom) + 12px)) * -1);
+          padding-left: max(var(--modal-padding), env(safe-area-inset-left));
+          padding-right: max(var(--modal-padding), env(safe-area-inset-right));
+          padding-bottom: max(var(--modal-padding), calc(env(safe-area-inset-bottom) + 12px));
+        }
+        .sheet .action-row--dialog .btn--modal-action {
+          flex: 1 1 0;
+          min-width: 0;
+        }
+        .budget-value-row {
+          min-height: 44px;
+        }
+      }
 /* ===== 08 STATE UTILITIES — explicit visibility/spacing ===== */
       .u-mt-xs {
         margin-top: var(--space-xs);
@@ -2504,7 +2744,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     </div>
                   </div>
                   <div data-ui-component="CardBody" class="card-body">
-                    <div class="u-mt-xs event-list-host event-list-host--stacked" data-dom="homeEvents"></div>
+                    <div class="u-mt-xs" data-dom="homeEvents"></div>
                   </div>
                 </div>
               </div>
@@ -2543,56 +2783,58 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               <h2 class="page-header-title">할 일</h2>
             </div>
           </div>
-          <!-- ===== TASKS: FILTERS / ACTIONS ===== -->
-          <div class="task-toolbar">
-            <input
-              aria-label="할 일 검색"
-              class="field field--compact-text field--search"
-              data-dom="taskSearch"
-              data-action="tasks-search"
-              placeholder="할 일 검색 (제목·분야·메모)"
-              type="search"
-            />
-            <div class="task-toolbar-controls">
-              <select
-                class="field field--compact"
-                aria-label="할 일 분야 필터"
-                data-dom="taskCat"
-                data-action="tasks-filter"
-              >
-                <option value="all">전체 분야</option></select
-              ><select
-                class="field field--compact"
-                aria-label="할 일 상태 필터"
-                data-dom="taskStatus"
-                data-action="tasks-filter"
-              >
-                <option value="all">전체 상태</option>
-                <option value="todo">미완료</option>
-                <option value="done">완료</option></select
-              ><select
-                aria-label="할 일 정렬"
-                class="field field--compact"
-                data-dom="taskSort"
-                data-action="tasks-filter"
-              >
-                <option value="dueAsc">날짜순 ↑</option>
-                <option value="dueDesc">날짜순 ↓</option>
-                <option value="priority">우선순위순</option>
-                <option value="category">분야순</option>
-                <option value="custom">기본순</option></select
-              ><button
-                class="btn primary btn--toolbar"
-                data-action="open-modal"
-                data-modal="task"
-                type="button"
-              >
-                + 추가
-              </button>
+          <!-- ===== TASKS: FILTERS / ACTIONS + LIST ===== -->
+          <div data-ui-component="Card" data-ui-variant="body-only" class="card task-list-card">
+            <div data-ui-component="CardBody" class="card-body">
+              <div class="task-toolbar">
+                <div class="task-toolbar-controls">
+                  <select
+                    class="field field--compact"
+                    aria-label="할 일 분야 필터"
+                    data-dom="taskCat"
+                    data-action="tasks-filter"
+                  >
+                    <option value="all">전체 분야</option></select
+                  ><select
+                    class="field field--compact"
+                    aria-label="할 일 상태 필터"
+                    data-dom="taskStatus"
+                    data-action="tasks-filter"
+                  >
+                    <option value="all">전체 상태</option>
+                    <option value="todo">미완료</option>
+                    <option value="done">완료</option></select
+                  ><select
+                    aria-label="할 일 정렬"
+                    class="field field--compact"
+                    data-dom="taskSort"
+                    data-action="tasks-filter"
+                  >
+                    <option value="dueAsc">날짜순 ↑</option>
+                    <option value="dueDesc">날짜순 ↓</option>
+                    <option value="priority">우선순위순</option>
+                    <option value="category">분야순</option>
+                    <option value="custom">기본순</option></select
+                  ><button
+                    class="btn primary btn--toolbar"
+                    data-action="open-modal"
+                    data-modal="task"
+                    type="button"
+                  >
+                    + 추가
+                  </button>
+                </div>
+                <input
+                  aria-label="할 일 검색"
+                  class="field field--compact-text field--search"
+                  data-dom="taskSearch"
+                  data-action="tasks-search"
+                  placeholder="할 일 검색 (제목·분야·메모)"
+                  type="search"
+                />
+              </div>
+              <div class="task-list-mount" data-collection="task"></div>
             </div>
-          </div>
-          <div data-ui-component="Card" data-ui-variant="body-only" class="card">
-            <div data-ui-component="CardBody" class="card-body" data-collection="task"></div>
           </div>
         </section>
         <!-- ===== PAGE: SCHEDULE · 일정 ===== -->
@@ -2659,7 +2901,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     </div>
                   </div>
                   <div data-ui-component="CardBody" class="card-body">
-                    <div class="event-list-host event-list-host--stacked" data-dom="scheduleList"></div>
+                    <div data-dom="scheduleList"></div>
                   </div>
                 </div>
               </div>
@@ -2693,7 +2935,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                   placeholder="일정 검색 (제목, 장소, 분류, 메모)"
                   type="search"
                 />
-                <div class="list event-list-host" data-collection="event"></div>
+                <div data-collection="event"></div>
               </div>
             </div>
           </div>
@@ -2746,7 +2988,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div data-collection="budget"></div>
+                <div class="grouped-list" data-collection="budget"></div>
               </div>
             </div>
           </div>
@@ -2776,7 +3018,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               </div>
             </div>
             <div data-ui-component="CardBody" class="card-body">
-              <div data-collection="plan"></div>
+              <div class="grouped-list" data-collection="plan"></div>
             </div>
           </div>
         </section>
@@ -2828,13 +3070,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                   placeholder="메모 검색"
                   type="search"
                 />
-                <div data-collection="memo"></div>
+                <div class="grouped-list" data-collection="memo"></div>
               </div>
             </div>
           </div>
         </section>
         <!-- ===== PAGE: SETTINGS · 설정 ===== -->
-        <section class="page" data-page-root="settings">
+        <section class="page settings-page" data-page-root="settings">
           <div class="page-header">
             <div class="page-header-copy">
               <h2 class="page-header-title">설정</h2>
@@ -2873,24 +3115,25 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     aria-live="polite"
                   ></div>
                   <form data-dom="syncLoginBox" novalidate>
-                    <label for="syncEmail">이메일</label
-                    ><input
-                      class="field field--compact-text"
-                      aria-label="공유 동기화 이메일"
-                      autocomplete="username"
-                      data-dom="syncEmail"
-                      placeholder="본인 이메일"
-                      type="email"
-                    /><label for="syncPassword">비밀번호</label
-                    ><input
-                      class="field field--compact-text"
-                      aria-label="공유 동기화 비밀번호"
-                      autocomplete="current-password"
-                      data-dom="syncPassword"
-                      placeholder="로그인할 때 입력"
-                      type="password"
-                    />
-                    <div data-dom="syncPasswordConfirmWrap">
+                    <div class="form-field"><label for="syncEmail">이메일</label
+                      ><input
+                        class="field field--compact-text"
+                        aria-label="공유 동기화 이메일"
+                        autocomplete="username"
+                        data-dom="syncEmail"
+                        placeholder="본인 이메일"
+                        type="email"
+                      /></div>
+                    <div class="form-field"><label for="syncPassword">비밀번호</label
+                      ><input
+                        class="field field--compact-text"
+                        aria-label="공유 동기화 비밀번호"
+                        autocomplete="current-password"
+                        data-dom="syncPassword"
+                        placeholder="로그인할 때 입력"
+                        type="password"
+                      /></div>
+                    <div class="form-field" data-dom="syncPasswordConfirmWrap">
                       <label for="syncPasswordConfirm">비밀번호 확인 <span class="small">(회원가입 시)</span></label
                       ><input
                         class="field field--compact-text"
@@ -3157,7 +3400,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "383",
+          version: "392",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -3569,8 +3812,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function FormField(field, value = "") {
           const { id, label, type = "text", options, placeholder } = field;
           const money = type === "money";
+          const controlId = DOM_IDS[id] || id;
           const attributes = htmlAttributes({
-            class: money ? "money-input field" : "field", id: DOM_IDS[id] || id, placeholder,
+            class: money ? "money-input field" : "field", id: controlId, placeholder,
             maxlength: field.maxLength, "aria-required": field.required ? "true" : null,
           });
           let control;
@@ -3581,7 +3825,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             inputmode: money ? "numeric" : null, autocomplete: money ? "off" : null,
             "data-action": money ? "format-money" : null,
           })}>`;
-          return `<label for="${attr(DOM_IDS[id] || id)}">${esc(label)}</label>${control}`;
+          const shell = money
+            ? `<div class="field-shell field-shell--money">${control}<span class="field-unit" aria-hidden="true">원</span></div>`
+            : control;
+          return `<div class="form-field${money ? " form-field--money" : ""}"><label for="${attr(controlId)}">${esc(label)}</label>${shell}</div>`;
         }
         function SelectOptions(options, selected) {
           return options.map((value) => `<option ${value === selected ? "selected" : ""}>${esc(value)}</option>`).join("");
@@ -3680,14 +3927,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             deleteAction ? Button("삭제", { action: deleteAction, id: deleteId, className: "btn--modal-action" }) : "",
             Button("취소", { action: "close-modal", className: "btn--modal-action" }),
             Button("저장", { action: saveAction, id: saveId, variant: "primary", className: "btn--modal-action" }),
-          ].join(""));
+          ].join(""), "action-row--dialog");
         }
         function FormModal(title, fields, item, actions) {
           const controls = fields.map((field) => {
             const initial = typeof field.initial === "function" ? field.initial() : field.initial ?? field.default;
             return FormField(field, item ? item[field.key] ?? "" : initial ?? "");
           }).join("");
-          return `<h2>${esc(title)}</h2><div class="form">${controls}${ModalActions(actions)}</div>`;
+          return `<h2 class="modal-title">${esc(title)}</h2><div class="form modal-form">${controls}${ModalActions(actions)}</div>`;
         }
 // ===== 03 COLLECTION / FORM / PAGE / ACTION / DOM REGISTRIES =====
         // Edit COLLECTION_SCHEMAS, not its derived FORM_SCHEMAS/CRUD actions. Fields own storage + form rules.
@@ -3697,7 +3944,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             stateKey: "tasks", view: "tasks", label: "할 일", target: "taskList",
             renderer: (item, index, total, options) => TaskItem(item, options),
             derive: (items) => buildTaskViewData(items, getOrderedCats()),
-            hostClass: "task-list-host", empty: "조건에 맞는 할 일이 없어요.",
+            hostClass: "task-list-host grouped-list", empty: "조건에 맞는 할 일이 없어요.",
             limit: 1000, defaults: () => seedTasks.map((item) => ({ ...item })),
             closeOnDelete: true,
             fields: [
@@ -3735,7 +3982,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             stateKey: "events", view: "schedule", label: "일정", target: "scheduleAllList",
             renderer: (item, index, total, options) => EventItem(item, options),
             derive: (items, context) => buildScheduleViewData(items, context.today),
-            empty: "조건에 맞는 일정이 없어요.", limit: 1000,
+            hostClass: "event-list-host grouped-list", empty: "조건에 맞는 일정이 없어요.", limit: 1000,
             afterSave: navigateToSavedEvent, afterRemove: () => showPage("schedule"),
           retain: (item) => isValidISODate(item.date),
             fields: [
@@ -4057,7 +4304,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const content = List(items,
               (item, index, total) => schema.renderer(item, index, total, options),
               options.emptyMessage ?? schema.empty);
-            return schema.hostClass ? `<div class="${attr(schema.hostClass)}">${content}</div>` : content;
+            const hostClass = [schema.hostClass, options.hostClass].filter(Boolean).join(" ");
+            return hostClass ? `<div class="${attr(hostClass)}">${content}</div>` : content;
           },
           render(name, items = getCollection(this.schema(name).stateKey), options = {}) {
             const schema = this.schema(name);
@@ -5114,7 +5362,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           setOwnedHTML(
             "schedule",
             "scheduleList",
-            Collection.html("event", selectedEvents, { today: v.today, showDate: false, emptyMessage: "선택한 날짜에 일정이 없어요." }),
+            Collection.html("event", selectedEvents, {
+              today: v.today, showDate: false, emptyMessage: "선택한 날짜에 일정이 없어요.",
+              hostClass: "event-list-host--stacked",
+            }),
           );
 
           const filter = selectedValue("scheduleFilter", "all");
@@ -5151,11 +5402,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function BudgetCard(item, index, total) {
           const actions = SortableCardActions(item.id, index, total, "budget", COLLECTION_SCHEMAS.budget.label);
           const amounts = [["예상금액", item.planned], ["실제금액", item.actual]].map(([label, amount]) =>
-            `<div class="inset-card budget-box"><div class="label">${label}</div><b>${won(amount)}</b></div>`).join("");
+            `<div class="budget-value-row"><span>${label}</span><b>${won(amount)}</b></div>`).join("");
           return UIComponentRoot("BudgetCard", "budget-line list-divided-item", `
             ${CardHeader(item.name, "", actions, "card-header--flush")}
-            <div class="budget-amounts">${amounts}</div>
-            ${item.details ? `<div class="inset-card budget-box">
+            <div class="budget-amounts budget-value-group">${amounts}</div>
+            ${item.details ? `<div class="budget-detail-group">
               <div class="label">세부 내용</div><div class="budget-detail">${esc(item.details)}</div>
             </div>` : ""}`);
         }
@@ -5320,6 +5571,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function renderHomeEventPreview(view) {
           setOwnedHTML("home", "homeEvents", Collection.html("event", view.upcomingEvents.slice(0, view.homeEventLimit), {
             showActions: false, emptyMessage: UI_CONFIG.text.upcomingEventsEmpty,
+            hostClass: "event-list-host--stacked",
           }));
           setOwnedValue("home", "homeEventLimit", String(view.homeEventLimit));
         }
@@ -5371,33 +5623,33 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           ], state, { saveAction: "save-wedding-date" });
         }
         function renderSharedPasswordModal() {
-          return `<h2>비밀번호 변경</h2><div class="form">
+          return `<h2 class="modal-title">비밀번호 변경</h2><div class="form modal-form">
             ${FormField({ key: "password", id: "syncNewPasswordModal", label: "새 비밀번호", type: "password", placeholder: "8자 이상" }, "")}
             ${FormField({ key: "passwordConfirm", id: "syncNewPasswordConfirmModal", label: "새 비밀번호 확인", type: "password", placeholder: "새 비밀번호를 한 번 더 입력" }, "")}
             ${ActionRow([
               Button("취소", { action: "close-modal", className: "btn--modal-action" }),
               Button("비밀번호 변경", { action: "shared-submit-password-change", variant: "primary", className: "btn--modal-action" }),
-            ].join(""))}
+            ].join(""), "action-row--dialog")}
           </div>`;
         }
         function renderSharedDeleteAccountModal() {
-          return `<h2>계정 삭제</h2><div class="form">
+          return `<h2 class="modal-title">계정 삭제</h2><div class="form modal-form">
             <div class="small">계정 삭제를 계속하려면 현재 비밀번호를 입력해주세요. 삭제 후에는 계정과 공동 프로젝트 연결을 복구할 수 없습니다.</div>
             ${FormField({ key: "password", id: "syncDeletePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "현재 비밀번호" }, "")}
             ${ActionRow([
               Button("취소", { action: "close-modal", className: "btn--modal-action" }),
               Button("계정 삭제", { action: "shared-confirm-delete-account", variant: "danger", className: "btn--modal-action" }),
-            ].join(""))}
+            ].join(""), "action-row--dialog")}
           </div>`;
         }
         function renderSharedLeaveProjectModal() {
-          return `<h2>프로젝트 나가기</h2><div class="form">
+          return `<h2 class="modal-title">프로젝트 나가기</h2><div class="form modal-form">
             <div class="small">프로젝트 나가기를 계속하려면 현재 계정 비밀번호를 입력해주세요. 확인되면 이 계정의 프로젝트 연결과 이 기기의 공동 프로젝트 데이터가 제거됩니다.</div>
             ${FormField({ key: "password", id: "syncLeavePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "현재 비밀번호" }, "")}
             ${ActionRow([
               Button("취소", { action: "close-modal", className: "btn--modal-action" }),
               Button("프로젝트 나가기", { action: "shared-confirm-leave-project", variant: "danger", className: "btn--modal-action" }),
-            ].join(""))}
+            ].join(""), "action-row--dialog")}
           </div>`;
         }
         function saveWeddingDate() {
