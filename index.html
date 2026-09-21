@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v397
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v398
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -111,7 +111,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-wVYftTs2c/D+JkPMTsiD5GKgMDjeidbMwWg1wzs9BMI=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-cxqW1VCdhn/hzDo3ULtw59wBzJIy7BXaRUPhDkBgrME='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-+IW37jwrvE8z+Ll3DLBdoqs1Jol5npVwwcVnNeXbtWY=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-qPCNX2ZhO8+otiBfeupTKYVJF7dEh/87xg3Qbhek4K0='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -1116,6 +1116,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .more-menu--bare > summary {
         border: 0;
         background: transparent;
+        box-shadow: none;
+      }
+      .more-menu--bare[open] > summary,
+      .more-menu--bare > summary:hover,
+      .more-menu--bare > summary:active {
+        box-shadow: none;
       }
       .btn--menu {
         --btn-width: 100%;
@@ -1243,6 +1249,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       main {
         padding: 10px var(--page-side-space);
+        touch-action: pan-y;
       }
       .grid {
         display: grid;
@@ -1644,12 +1651,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         margin-left: auto;
         padding-left: var(--card-action-gap);
       }
-      .planner-event-item-meta .more-menu--bare > summary.icon-control,
-      .planner-event-item-meta .more-menu--bare > summary.icon-control:hover,
-      .planner-event-item-meta .more-menu--bare > summary.icon-control:active {
-        background: transparent;
-        box-shadow: none;
-      }
       .planner-event-item-main {
         width: 100%;
         min-width: 0;
@@ -1939,6 +1940,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         background: var(--row-pressed);
       }
       .calendar-nav-button {
+        --icon-size: var(--calendar-nav-size);
         --icon-font-size: var(--calendar-nav-icon-font-size);
         border-color: transparent;
         background: transparent;
@@ -2651,6 +2653,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       @media (hover: none) and (pointer: coarse) {
         :root {
           --action-button-size: 44px;
+          --calendar-nav-size: 44px;
           --button-height: 44px;
           --ui-control-height-sm: 44px;
           --font-micro: var(--text-md);
@@ -3486,7 +3489,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "397",
+          version: "398",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4738,13 +4741,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               setTransform(snapshot.nextEl, endX + snapshot.width);
             });
             settleTimer = window.setTimeout(() => {
-              if (targetId) showPage(targetId, { scrollToTop: false, navBehavior: "auto" });
-              resetPeer(snapshot.currentEl);
-              resetPeer(snapshot.prevEl);
-              resetPeer(snapshot.nextEl);
-              main?.classList.remove("page-swipe-active");
-              settleTimer = 0;
-              if (gesture === snapshot) gesture = null;
+              try {
+                if (targetId) showPage(targetId, { scrollToTop: false, navBehavior: "auto" });
+              } catch (error) {
+                console.error("pager settle failed", error);
+                notifyError("화면 전환 중 오류가 발생했어요.");
+              } finally {
+                resetPeer(snapshot.currentEl);
+                resetPeer(snapshot.prevEl);
+                resetPeer(snapshot.nextEl);
+                main?.classList.remove("page-swipe-active");
+                settleTimer = 0;
+                if (gesture === snapshot) gesture = null;
+              }
             }, 310);
           };
           document.addEventListener("touchstart", (event) => {
@@ -7345,22 +7354,24 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (sharedSync.client !== client) return;
           if (event === "SIGNED_OUT" && sharedSignOutInFlight) return;
           const nextUser = session?.user || null;
-          applySharedUser(nextUser);
           if (event === "SIGNED_OUT") {
+            // Auth sessions can disappear for reasons other than the in-app logout button (remote
+            // revocation, token expiry, another tab, etc.). Never interpret that event as consent to
+            // destroy local edits, pending sync data, baselines, recovery points, or undo history.
             sharedSync.lifecycle += 1;
             sharedAfterLoginInFlight = null;
             await sharedRemoveChannel();
-            clearLocalPlannerUserData();
-            storageRemove(APP_CONFIG.sharedLastUserKey);
-            const cfg = sharedConfig();
-            setSharedConfig({ ...cfg, email: "", projectId: null, inviteCode: "" });
-            resetSharedProjectRuntime();
-            sharedSync.projectId = null;
+            clearTimeout(sharedSync.pushTimer);
+            sharedSync.pushTimer = null;
+            sharedClearRetry();
+            sharedSync.user = null;
+            if (sharedSync.projectId) setSharedPhase("offline");
             renderSharedStatusUI();
             renderSharedControls({ clearSensitive: true });
             renderSharedProject();
             return;
           }
+          applySharedUser(nextUser);
           if (!nextUser) {
             renderSharedStatusUI();
             renderSharedProject();
@@ -7550,7 +7561,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               ))) return false;
             }
             const { data, error } = await sharedSync.client.functions.invoke("delete-account", {
-              body: { confirm: true, password, clientVersion: Number(APP_CONFIG.version) || 0 },
+              body: { confirm: true, password },
             });
             if (error) throw error;
             if (data && data.ok === false) throw new Error(data.error || "계정 삭제에 실패했어요.");
@@ -7814,8 +7825,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             });
             if (error) throw error;
 
-            const pid = typeof data === "string" ? data : data?.project_id || data?.[0]?.project_id;
-            if (!pid) throw new Error("프로젝트를 찾지 못했어요.");
+            const row = Array.isArray(data) ? data[0] : data;
+            const status = typeof row?.status === "string" ? row.status : "";
+            if (status && status !== "ok") {
+              const messages = {
+                not_found: "프로젝트를 찾지 못했어요. 초대 코드를 확인해주세요.",
+                expired: "이 초대 코드는 만료됐어요. 프로젝트 소유자에게 새 코드를 요청해주세요.",
+                rate_limited: "초대 코드 확인을 너무 많이 시도했어요. 잠시 후 다시 시도해주세요.",
+                full: "이 프로젝트는 이미 두 명이 참여 중이에요.",
+              };
+              throw new Error(messages[status] || "공동 프로젝트에 참여하지 못했어요.");
+            }
+            const pid = typeof data === "string" ? data : row?.project_id;
+            if (!pid) throw new Error("프로젝트를 찾지 못했어요. 초대 코드를 확인해주세요.");
 
             await sharedRemoveChannel();
             if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true })) return;
@@ -7933,7 +7955,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           try {
             if (!(await flushCurrentSharedChangesBefore("프로젝트 나가기"))) return false;
             const { data, error } = await sharedSync.client.functions.invoke("leave-project", {
-              body: { password, clientVersion: Number(APP_CONFIG.version) || 0 },
+              body: { password },
             });
             if (error) throw error;
             if (data && data.ok === false) throw new Error(data.error || "프로젝트에서 나가지 못했어요.");
@@ -8058,6 +8080,25 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 conflicts: ["이 기기의 마지막 동기화 기준 스냅샷을 확인할 수 없음"],
               });
               notifyError("이 기기의 연결 전 편집과 원격 데이터를 안전하게 자동 병합할 기준이 없어 자동 반영을 멈췄어요. 어느 데이터를 유지할지 선택해주세요.");
+              return;
+            }
+            const pending = currentSharedPendingSave();
+            const hasUnbasedLocalWork = !sharedSync.lastSyncedState && (
+              !!sharedSync.needsPush || !!sharedSync.pushQueued || Number(sharedSync.pendingChangeCount || 0) > 0 ||
+              (!!pending && !pending.invalid)
+            );
+            if (hasUnbasedLocalWork && !valuesEqual(localState, remoteState)) {
+              createRecoveryPoint("동기화 기준 없는 실시간 변경 수신 전", { silent: true });
+              sharedSync.conflictCount += 1;
+              setSharedConflictContext({
+                base: null,
+                local: localState,
+                remote: cloneValue(remoteState),
+                remoteRevision: Math.max(incomingRevision, knownRevision),
+                resolutionMode: "whole-state",
+                conflicts: ["공유 기준점 없이 로컬/원격 변경이 동시에 존재함"],
+              });
+              notifyError("동기화 기준점 없이 이 기기와 원격 데이터가 모두 변경되어 자동 반영을 멈췄어요. 어느 데이터를 유지할지 선택해주세요.");
               return;
             }
             const base = sharedSync.lastSyncedState || localState;
@@ -8674,12 +8715,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           let signedOut = false;
           try {
             if (sharedSync.client) {
-              const options = discardUnsynced && !sharedIsOnline() ? { scope: "local" } : undefined;
-              let { error } = await sharedSync.client.auth.signOut(options);
-              if (error && discardUnsynced && options?.scope !== "local") {
-                const localResult = await sharedSync.client.auth.signOut({ scope: "local" });
-                error = localResult.error;
-              }
+              // Logging out on this device must not revoke sessions on another device where an
+              // offline edit may still be waiting to sync.
+              const { error } = await sharedSync.client.auth.signOut({ scope: "local" });
               if (error) throw error;
             }
             signedOut = true;
