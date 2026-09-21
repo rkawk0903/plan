@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v382
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v383
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -111,7 +111,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-ZHb9VcOrgFCAzw5aeBp95mt8y12ldrMH2F2QPhtbsvg=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-mOSwIkehcF/Kxf0oQZBGcqd+xzTs4PllIPylF0AAGNY='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-t1/w4NPZdbyVzuLpYEFc4Jy4VyjsjopukkbO5ySwoZ4=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-Cd6YbPIHRRCAnUa/zbhOtP0DPbXnhWmfCIJBpPX4FSE='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -905,8 +905,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         width: 100%;
         min-width: 0;
         flex-wrap: wrap;
-        padding-top: 11px;
-        border-top: 1px solid var(--separator);
+        /* Status text is a continuation of the card body, not a separate footer section. */
+        padding-top: 0;
+        border-top: 0;
       }
       .card-footer-status {
         min-width: 0;
@@ -1158,10 +1159,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: var(--space-sm);
         align-items: center;
         text-align: center;
-        margin-bottom: 12px;
+        margin-bottom: 9px;
       }
       .calendar-week {
-        margin-bottom: 5px;
+        margin-bottom: 3px;
       }
 
 
@@ -1272,8 +1273,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .calendar-week span {
         text-align: center;
         font-size: var(--font-caption);
-        color: var(--muted);
-        padding: 5px 0;
+        color: var(--text-tertiary);
+        padding: 4px 0 6px;
+        font-weight: 600;
       }
       .calendar-week span:first-child {
         color: var(--weekend-sun);
@@ -1379,15 +1381,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         padding: 14px 0;
       }
       .budget-box {
-        padding: 9px 10px;
+        padding: 10px 11px;
+        border-color: transparent;
+        box-shadow: none;
       }
       .budget-box .label {
         font-size: var(--font-caption);
-        color: var(--muted);
+        color: var(--text-tertiary);
+        font-weight: 600;
       }
       .budget-box b {
         display: block;
         margin-top: 3px;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.015em;
       }
       .budget-detail {
         margin-top: 0;
@@ -1666,9 +1673,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         background: var(--row-pressed);
       }
       .calendar-card {
-        --card-padding: 14px;
+        --card-padding: 13px 14px 14px;
       }
-
+      .calendar-head b {
+        font-size: var(--text-4xl);
+        font-weight: 720;
+        letter-spacing: -0.025em;
+      }
+      .calendar-head .small {
+        margin-top: 2px;
+        color: var(--text-tertiary);
+        line-height: 1.35;
+      }
       .calendar-cell {
         position: relative;
         min-width: 0;
@@ -1677,34 +1693,52 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: 3px;
         color: var(--ink);
         border: 1px solid transparent;
-        background: var(--surface-grouped);
+        background: transparent;
         border-radius: var(--radius-icon);
         text-align: center;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-        transition: 0.15s;
+        transition: background-color var(--motion-fast) ease, border-color var(--motion-fast) ease,
+          box-shadow var(--motion-fast) ease, transform var(--motion-fast) ease;
+        -webkit-tap-highlight-color: transparent;
       }
       .calendar-cell.muted {
-        background: var(--calendar-muted-bg);
-        color: var(--muted);
+        background: transparent;
+        color: var(--text-tertiary);
+        opacity: 0.48;
       }
       .calendar-cell.selected {
-        border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
-        box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 10%, transparent);
+        border-color: color-mix(in srgb, var(--accent) 18%, transparent);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 4%, transparent);
         background: var(--calendar-selected-bg);
       }
       .calendar-cell.today {
-        background: var(--calendar-today-bg);
+        background: transparent;
+      }
+      .calendar-cell.today.selected {
+        background: var(--calendar-selected-bg);
       }
       .calendar-num {
+        min-width: 28px;
+        height: 28px;
+        padding: 0 4px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-size: var(--calendar-number-size);
-        font-weight: 700;
-        line-height: 1.1;
+        font-weight: 650;
+        line-height: 1;
         text-align: center;
-        margin: 0 auto;
-        padding: 0;
+        font-variant-numeric: tabular-nums;
+      }
+      .calendar-cell.today .calendar-num {
+        background: var(--accent);
+        color: var(--accent-contrast);
+        font-weight: 720;
+        box-shadow: 0 1px 3px color-mix(in srgb, var(--accent) 18%, transparent);
       }
       .calendar-cell.sunday .calendar-num {
         color: var(--weekend-sun);
@@ -1713,22 +1747,28 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         color: var(--weekend-sat);
       }
       .calendar-cell.holiday .calendar-num {
-        font-weight: 900;
+        color: var(--holiday-color);
+      }
+      .calendar-cell.today.sunday .calendar-num,
+      .calendar-cell.today.saturday .calendar-num,
+      .calendar-cell.today.holiday .calendar-num {
+        color: var(--accent-contrast);
       }
       .calendar-holiday {
         max-width: 100%;
-        font-size: var(--calendar-holiday-size);
-        line-height: 1.25;
-        color: var(--holiday-color);
-        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: var(--calendar-holiday-size);
+        color: var(--holiday-color);
+        line-height: 1.15;
       }
       .calendar-dots {
         display: flex;
-        flex-wrap: wrap;
-        gap: 2px;
+        align-items: center;
         justify-content: center;
+        gap: 2px;
+        min-height: var(--calendar-dot-size);
       }
       .calendar-dot {
         width: var(--calendar-dot-size);
@@ -1738,19 +1778,35 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .calendar-more {
         font-size: var(--calendar-more-font-size);
-        color: var(--muted);
-        margin-top: 3px;
+        line-height: 1;
+        color: var(--text-tertiary);
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .calendar-cell:not(.selected):hover {
+          background: var(--row-hover);
+        }
       }
       .calendar-cell:active {
-        transform: scale(0.98);
+        transform: scale(0.96);
+        background: var(--row-pressed);
       }
       .calendar-nav-button {
-        --icon-size: var(--calendar-nav-size);
         --icon-font-size: var(--calendar-nav-icon-font-size);
-        font-weight: 500;
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+        color: var(--accent-ink);
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .calendar-nav-button:hover {
+          background: var(--row-hover);
+          border-color: transparent;
+          box-shadow: none;
+        }
       }
       .calendar-nav-button:active {
-        transform: scale(0.98);
+        background: var(--row-pressed);
+        transform: scale(0.94);
       }
       .category-card {
         background: var(--surface-grouped);
@@ -1842,6 +1898,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .shared-account-panel {
         padding: 10px 12px;
+        border-color: transparent;
+        box-shadow: none;
       }
       .shared-account-row {
         display: flex;
@@ -2026,37 +2084,52 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .budget-page-reference-stats {
         min-width: 0;
         display: grid;
-        gap: clamp(3px, 0.5vw, 4px);
+        gap: 0;
+        padding: 2px 10px;
+        border: 1px solid color-mix(in srgb, var(--surface-border) 62%, transparent);
+        border-radius: var(--radius-inset);
+        background: var(--surface-grouped);
       }
       .budget-page-reference-stat {
         display: grid;
         grid-template-columns: clamp(52px, 7vw, 72px) minmax(0, 1fr);
         align-items: center;
         column-gap: clamp(4px, 1vw, 10px);
+        min-height: 34px;
+        padding: 6px 2px;
+      }
+      .budget-page-reference-stat + .budget-page-reference-stat {
+        border-top: 1px solid var(--separator);
       }
       .budget-page-reference-stat span {
         font-size: var(--font-caption);
         line-height: 1.2;
-        color: var(--ink);
+        color: var(--text-tertiary);
+        font-weight: 600;
         white-space: nowrap;
       }
       .budget-page-reference-stat b {
         font-size: var(--budget-reference-value-font-size);
         line-height: 1.15;
         color: var(--ink);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
         white-space: nowrap;
         text-align: right;
       }
       .recovery-list {
         display: grid;
-        gap: var(--space-sm);
+        gap: 7px;
       }
       .recovery-item {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
         align-items: center;
-        padding: 10px 12px;
+        padding: 11px 12px;
+        border-color: transparent;
+        box-shadow: none;
       }
       .recovery-copy {
         min-width: 0;
@@ -2127,6 +2200,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: block;
         margin-top: 10px;
         padding: 12px;
+        border-color: transparent;
         box-shadow: none;
       }
 /* ===== 07 RESPONSIVE — viewport and motion rules ===== */
@@ -2163,6 +2237,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           flex-wrap: wrap;
         }
       }
+
+      @media (max-width: 520px) {
+        .budget-page-reference {
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 10px;
+        }
+        .budget-page-reference-stats {
+          padding-inline: 8px;
+        }
+        .budget-page-reference-stat {
+          grid-template-columns: 52px minmax(0, 1fr);
+          column-gap: 6px;
+        }
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .calendar-cell,
         .budget-arc-progress,
@@ -3068,7 +3157,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "382",
+          version: "383",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
