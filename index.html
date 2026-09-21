@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v375
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v378
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -111,7 +111,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-+FJh1TSpTrjgfV/Ljt6WuSM7GCNE5AMgUnJZ1DN8M0g=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-BajYFWhc2e4HOGsJuNTi05ayKNwrQrepISy5GxOflhs='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-mEz+muSF+u6Piow3E9hNvLzyOwd3p7rF4+bdkYujhUU=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-PTDWXseISmh6w2bf1KNAKa9MoNUM9JOG6B/eHyU8OYY='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -174,8 +174,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --header-title-size: var(--text-8xl);
         --page-title-size: clamp(var(--text-5xl), 2vw, var(--text-6xl));
         --home-summary-columns: minmax(0, 1.46fr) minmax(0, 1fr);
-        --task-check-size: 44px;
-        --task-check-column: 48px;
+        --task-check-size: 22px;
+        --task-check-column: 28px;
         --task-row-padding: 14px 0;
         --task-category-size: 15.5px;
         --task-title-size: var(--text-2xl);
@@ -1427,12 +1427,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         grid-template-columns: var(--task-check-column) minmax(0, 1fr);
       }
       .task-check {
+        position: relative;
         width: var(--task-check-size);
         height: var(--task-check-size);
         margin-top: 3px;
         border-radius: var(--radius-icon);
         border: 1.5px solid color-mix(in srgb, var(--muted) 38%, var(--line));
         background: var(--card);
+      }
+      @media (hover: none) and (pointer: coarse) {
+        .task-check::before {
+          content: "";
+          position: absolute;
+          inset: -9px;
+        }
       }
       .task-check.on {
         background: var(--accent);
@@ -1701,6 +1709,29 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+      .shared-account-actions {
+        flex: 0 0 auto;
+      }
+      .shared-account-danger-actions {
+        justify-content: flex-end;
+      }
+      @media (max-width: 520px) {
+        .shared-account-row {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .shared-account-text {
+          width: 100%;
+          white-space: normal;
+          overflow-wrap: anywhere;
+        }
+        .shared-account-actions,
+        .shared-account-danger-actions {
+          width: 100%;
+          max-width: 100%;
+          justify-content: flex-start;
+        }
       }
       .sync-detail-text {
         margin-top: 0;
@@ -2001,8 +2032,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       @media (hover: none) and (pointer: coarse) {
         :root {
           --action-button-size: 36px;
-          --task-check-size: 44px;
-          --task-check-column: 48px;
+          --task-check-size: 26px;
+          --task-check-column: 32px;
         }
         /* 필드 글꼴은 토큰으로만 조정합니다(타이포그래피 가드 준수). */
         :root {
@@ -2550,6 +2581,22 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                   <h3 class="card-title">공유 동기화</h3>
                   <div class="card-description u-hidden" data-dom="syncCardDescription"></div>
                 </div>
+                <div class="card-header-action">
+                  <details
+                    data-ui-component="MoreMenu"
+                    data-ui-variant="bare"
+                    data-ui-menu-kind="commands"
+                    class="more-menu more-menu--bare u-hidden"
+                    data-dom="syncAccountMenu"
+                  >
+                    <summary class="icon-control" aria-expanded="false" aria-label="공유 계정 메뉴">⋯</summary>
+                    <div class="more-menu-pop" popover="manual">
+                      <button class="btn btn--menu" data-action="shared-sign-out" type="button">로그아웃</button>
+                      <button class="btn btn--menu" data-action="shared-update-password" type="button">비밀번호 변경</button>
+                      <button class="btn btn--menu danger" data-action="shared-delete-account" type="button">계정 삭제</button>
+                    </div>
+                  </details>
+                </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
                 <div class="form u-mt-md">
@@ -2589,23 +2636,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                       />
                     </div>
                     <div data-ui-component="ActionRow" class="action-row action-row--wrap">
-                      <button class="btn btn--app-action" data-action="shared-sign-up" type="button">회원가입</button
-                      ><button class="btn btn--app-action primary" data-action="shared-sign-in" type="submit">로그인</button
-                      ><button class="btn btn--app-action" data-action="shared-reset-password" type="button">비밀번호 재설정 메일</button>
+                      <button class="btn btn--app-action" data-action="shared-reset-password" type="button">비밀번호 재설정 메일</button
+                      ><button class="btn btn--app-action" data-action="shared-sign-up" type="button">회원가입</button
+                      ><button class="btn btn--app-action primary" data-action="shared-sign-in" type="submit">로그인</button>
                     </div>
                   </form>
                   <div class="inset-card shared-account-panel u-hidden" data-dom="syncLoggedInBox">
                     <div class="shared-account-row">
                       <div class="small shared-account-text" data-dom="syncUserText">로그인 계정</div>
-                      <button class="btn btn--app-action" data-action="shared-sign-out" type="button">로그아웃</button>
-                    </div>
-                    <div class="form u-mt-sm">
-                      <label for="syncNewPassword">새 비밀번호</label
-                      ><input class="field field--compact-text" autocomplete="new-password" data-dom="syncNewPassword" placeholder="8자 이상" type="password" />
-                      <div data-ui-component="ActionRow" class="action-row action-row--wrap">
-                        <button class="btn btn--app-action" data-action="shared-update-password" type="button">비밀번호 변경</button
-                        ><button class="btn btn--app-action danger" data-action="shared-delete-account" type="button">계정 삭제</button>
-                      </div>
                     </div>
                   </div>
                   <div class="shared-conflict-box u-hidden" data-dom="syncConflictBox">
@@ -2643,12 +2681,27 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     두 사람이 같은 코드를 사용하면 데이터가 실시간으로 공유됩니다.
                   </div>
                 </div>
+                <div class="card-header-action">
+                  <details
+                    data-ui-component="MoreMenu"
+                    data-ui-variant="bare"
+                    data-ui-menu-kind="commands"
+                    class="more-menu more-menu--bare u-hidden"
+                    data-dom="syncProjectMenu"
+                  >
+                    <summary class="icon-control" aria-expanded="false" aria-label="프로젝트 메뉴">⋯</summary>
+                    <div class="more-menu-pop" popover="manual">
+                      <button class="btn btn--menu" data-action="shared-rotate-code" type="button">초대 코드 재발급</button>
+                      <button class="btn btn--menu danger" data-action="shared-leave-project" type="button">프로젝트 나가기</button>
+                    </div>
+                  </details>
+                </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
                 <div class="inset-card project-panel u-hidden" data-dom="currentProjectBox">
                   <div class="row between u-gap-sm">
                     <div class="u-minw-0">
-                      <div class="current-project-title">현재 프로젝트</div>
+                      <div class="current-project-title">내 프로젝트 코드</div>
                     </div>
                   </div>
                   <div class="row u-mt-sm u-gap-xs">
@@ -2662,13 +2715,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                       data-action="shared-copy-code"
                       type="button"
                     >
-                      코드 복사
+                      복사하기
                     </button>
                   </div>
                   <div class="small settings-status-note u-mt-xs">상대방을 초대할 때 이 코드를 사용하면 됩니다.</div>
-                  <div data-ui-component="ActionRow" class="action-row action-row--wrap u-mt-sm">
-                    <button class="btn btn--app-action" data-action="shared-rotate-code" type="button">초대 코드 재발급</button>
-                    <button class="btn btn--app-action danger" data-action="shared-leave-project" type="button">프로젝트 나가기</button>
+                </div>
+                <div data-dom="syncProjectDiscoveryError" class="inset-card project-panel u-hidden">
+                  <div class="small settings-status-note">기존 프로젝트 연결을 확인하지 못했어요. 네트워크 또는 Supabase 권한을 확인한 뒤 다시 시도해주세요.</div>
+                  <div data-ui-component="ActionRow" class="action-row action-row--compact u-mt-sm">
+                    <button class="btn btn--app-action" data-action="shared-refresh-project" type="button">연결 다시 확인</button>
                   </div>
                 </div>
                 <div data-dom="syncProjectActions" class="sync-project-actions u-hidden">
@@ -2836,7 +2891,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "375",
+          version: "378",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -3487,6 +3542,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           ...Object.fromEntries(Object.keys(COLLECTION_SCHEMAS).map((name) =>
             [name, (data) => renderCollectionModal(name, data)])),
           settings: renderSettingsModal,
+          "shared-password-change": renderSharedPasswordModal,
+          "shared-account-delete": renderSharedDeleteAccountModal,
+          "shared-project-leave": renderSharedLeaveProjectModal,
         });
         const onClick = (handler) => ({ event: "click", handler });
         const onInput = (handler) => ({ event: "input", handler });
@@ -3566,14 +3624,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             "shared-sign-in": onClick(() => SharedDomains.Auth.signIn()),
             "shared-sign-out": onClick(() => SharedDomains.Auth.signOut()),
             "shared-reset-password": onClick(() => SharedDomains.Auth.resetPassword()),
-            "shared-update-password": onClick(() => SharedDomains.Auth.updatePassword()),
+            "shared-update-password": onClick(() => openModal("shared-password-change")),
+            "shared-submit-password-change": onClick(() => SharedDomains.Auth.updatePassword()),
             "shared-delete-account": onClick(() => SharedDomains.Auth.deleteAccount()),
+            "shared-confirm-delete-account": onClick(() => SharedDomains.Auth.confirmDeleteAccount()),
             "shared-pull": onClick(() => SharedDomains.Transport.pull()),
             "resolve-conflict-local": onClick(() => SharedDomains.Merge.resolve("local")),
             "resolve-conflict-remote": onClick(() => SharedDomains.Merge.resolve("remote")),
             "shared-copy-code": onClick(() => SharedDomains.Projects.copyCode()),
+            "shared-refresh-project": onClick(() => SharedDomains.Projects.refreshConnection()),
             "shared-rotate-code": onClick(() => SharedDomains.Projects.rotateCode()),
             "shared-leave-project": onClick(() => SharedDomains.Projects.leave()),
+            "shared-confirm-leave-project": { ...onClick(() => SharedDomains.Projects.confirmLeave()), modalSave: true },
             "shared-create-project": onClick(() => SharedDomains.Projects.create()),
             "shared-join-project": onClick(() => SharedDomains.Projects.join()),
           },
@@ -3614,11 +3676,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             syncFooter: "syncFooter", syncConflictBox: "syncConflictBox", syncConflictText: "syncConflictText",
             currentProjectBox: "currentProjectBox", futureSchemaBox: "futureSchemaBox", footerText: "footerText",
             syncEmail: "syncEmail", syncPassword: "syncPassword", syncPasswordConfirm: "syncPasswordConfirm",
-            syncNewPassword: "syncNewPassword", syncCode: "syncCode", syncPasswordConfirmWrap: "syncPasswordConfirmWrap", syncDataActions: "syncDataActions",
+            syncCode: "syncCode", syncPasswordConfirmWrap: "syncPasswordConfirmWrap", syncDataActions: "syncDataActions",
             syncLoginBox: "syncLoginBox", syncLoggedInBox: "syncLoggedInBox", syncProjectActions: "syncProjectActions",
-            syncJoinCode: "syncJoinCode",
+            syncAccountMenu: "syncAccountMenu", syncProjectMenu: "syncProjectMenu",
+            syncProjectDiscoveryError: "syncProjectDiscoveryError", syncJoinCode: "syncJoinCode",
           },
-          modal: { modal: "modal", modalBody: "modalBody", modalTitle: "modalTitle", weddingDate: "weddingDate" },
+          modal: {
+            modal: "modal", modalBody: "modalBody", modalTitle: "modalTitle", weddingDate: "weddingDate",
+            syncNewPasswordModal: "syncNewPasswordModal", syncNewPasswordConfirmModal: "syncNewPasswordConfirmModal",
+            syncDeletePasswordModal: "syncDeletePasswordModal", syncLeavePasswordModal: "syncLeavePasswordModal",
+          },
           recovery: { recoveryList: "recoveryList", recoveryStatus: "recoveryStatus" },
           notifications: {
             toastStack: "toastStack", confirmDialog: "confirmDialog", confirmTitle: "confirmTitle",
@@ -5037,6 +5104,36 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             { key: "weddingDate", id: "weddingDate", label: "결혼식 날짜", type: "date" },
           ], state, { saveAction: "save-wedding-date" });
         }
+        function renderSharedPasswordModal() {
+          return `<h2>비밀번호 변경</h2><div class="form">
+            ${FormField({ key: "password", id: "syncNewPasswordModal", label: "새 비밀번호", type: "password", placeholder: "8자 이상" }, "")}
+            ${FormField({ key: "passwordConfirm", id: "syncNewPasswordConfirmModal", label: "새 비밀번호 확인", type: "password", placeholder: "새 비밀번호를 한 번 더 입력" }, "")}
+            ${ActionRow([
+              Button("취소", { action: "close-modal", className: "btn--modal-action" }),
+              Button("비밀번호 변경", { action: "shared-submit-password-change", variant: "primary", className: "btn--modal-action" }),
+            ].join(""))}
+          </div>`;
+        }
+        function renderSharedDeleteAccountModal() {
+          return `<h2>계정 삭제</h2><div class="form">
+            <div class="small">계정 삭제를 계속하려면 현재 비밀번호를 입력해주세요. 삭제 후에는 계정과 공동 프로젝트 연결을 복구할 수 없습니다.</div>
+            ${FormField({ key: "password", id: "syncDeletePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "현재 비밀번호" }, "")}
+            ${ActionRow([
+              Button("취소", { action: "close-modal", className: "btn--modal-action" }),
+              Button("계정 삭제", { action: "shared-confirm-delete-account", variant: "danger", className: "btn--modal-action" }),
+            ].join(""))}
+          </div>`;
+        }
+        function renderSharedLeaveProjectModal() {
+          return `<h2>프로젝트 나가기</h2><div class="form">
+            <div class="small">프로젝트 나가기를 계속하려면 현재 계정 비밀번호를 입력해주세요. 확인되면 이 계정의 프로젝트 연결과 이 기기의 공동 프로젝트 데이터가 제거됩니다.</div>
+            ${FormField({ key: "password", id: "syncLeavePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "현재 비밀번호" }, "")}
+            ${ActionRow([
+              Button("취소", { action: "close-modal", className: "btn--modal-action" }),
+              Button("프로젝트 나가기", { action: "shared-confirm-leave-project", variant: "danger", className: "btn--modal-action" }),
+            ].join(""))}
+          </div>`;
+        }
         function saveWeddingDate() {
           const nextDate = $(DOM_IDS.weddingDate).value;
           if (nextDate && !isValidISODate(nextDate)) {
@@ -5341,6 +5438,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             lastConflictPaths: [],
             lastConflictContext: null,
             phase: "idle",
+            projectDiscovery: "idle",
             ...overrides,
           };
         }
@@ -5960,7 +6058,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
           let text = "";
           let tone = "";
-          if (!sharedSync.projectId) {
+          if (sharedSync.projectDiscovery === "loading") {
+            text = "기존 공동 프로젝트 연결을 확인하는 중이에요.";
+            tone = "sync";
+          } else if (sharedSync.projectDiscovery === "error" && !sharedSync.projectId) {
+            text = "기존 공동 프로젝트 연결을 확인하지 못했어요. 아래 ‘연결 다시 확인’을 눌러 재시도해주세요.";
+            tone = "error";
+          } else if (!sharedSync.projectId) {
             text = "공동 프로젝트를 만들거나 초대 코드로 참여하면 실시간 공유가 시작돼요.";
           } else if (isFutureSchemaStateActive()) {
             text = "현재 데이터 버전이 더 최신이라 공유 저장을 잠시 보호하고 있어요.";
@@ -6101,7 +6205,28 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function renderSharedProject() {
           renderRecoveryPoints();
-          setOwnedDisplay("shared", "currentProjectBox", !!(sharedSync.user && sharedSync.projectId));
+          const logged = !!sharedSync.user;
+          const config = sharedConfig();
+          const connected = !!(logged && sharedSync.projectId);
+          const verifyingKnownProject = !!(
+            logged &&
+            !connected &&
+            config.projectId &&
+            (sharedSync.projectDiscovery === "loading" || sharedSync.projectDiscovery === "error")
+          );
+          const showKnownProject = connected || verifyingKnownProject;
+          const allowProjectActions = logged && !showKnownProject && sharedSync.projectDiscovery === "idle";
+          const showDiscoveryError = logged && sharedSync.projectDiscovery === "error";
+
+          setOwnedDisplay("shared", DOM_IDS.currentProjectBox, showKnownProject);
+          setOwnedDisplay("shared", DOM_IDS.syncProjectActions, allowProjectActions);
+          setOwnedDisplay("shared", DOM_IDS.syncProjectDiscoveryError, showDiscoveryError);
+          setOwnedDisplay("shared", DOM_IDS.syncProjectMenu, connected);
+
+          const codeEl = ownedElement("shared", DOM_IDS.syncCode);
+          if (codeEl) codeEl.value = showKnownProject ? (config.inviteCode || "") : "";
+          const joinCodeEl = ownedElement("shared", DOM_IDS.syncJoinCode);
+          if (showKnownProject && joinCodeEl) joinCodeEl.value = "";
         }
         async function sharedRemoveChannel() {
           const client = sharedSync.client;
@@ -6135,6 +6260,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               lastConflictPaths: [...sharedSync.lastConflictPaths],
               lastConflictContext: cloneValue(sharedSync.lastConflictContext),
               phase: sharedSync.phase,
+              projectDiscovery: sharedSync.projectDiscovery,
             },
           };
         }
@@ -6158,6 +6284,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           sharedSync.lastConflictPaths = [];
           sharedSync.lastConflictContext = null;
           sharedSync.phase = "idle";
+          sharedSync.projectDiscovery = "idle";
         }
         async function restoreSharedProjectContext(previous) {
           sharedSync.projectId = previous.projectId;
@@ -6174,6 +6301,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             lastConflictPaths: [...(previous.sync?.lastConflictPaths || [])],
             lastConflictContext: cloneValue(previous.sync?.lastConflictContext),
             phase: SHARED_PHASES.has(previous.sync?.phase) ? previous.sync.phase : "idle",
+            projectDiscovery: ["idle", "loading", "error"].includes(previous.sync?.projectDiscovery)
+              ? previous.sync.projectDiscovery
+              : "idle",
           });
           const restored = replaceState(previous.state, {
             persist: true,
@@ -6206,6 +6336,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             resetSharedProjectRuntime();
           }
           sharedSync.projectId = project.id;
+          sharedSync.projectDiscovery = "idle";
           sharedAssertClientVersion(project.min_client_version || 0);
           const config = sharedConfig();
           setSharedConfig({
@@ -6215,6 +6346,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             email: sharedSync.user?.email || config.email || "",
           });
           restoreSharedBaselineForContext();
+          renderSharedProject();
+          renderSharedStatusUI();
         }
         function sharedContextSnapshot() {
           return {
@@ -6232,44 +6365,75 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return false;
           return true;
         }
+        function sharedProjectMetadataColumnsMissing(error) {
+          const code = String(error?.code || "");
+          const message = String(error?.message || "");
+          return code === "42703" || code === "PGRST204" || /min_client_version|invite_expires_at/i.test(message) && /column|schema cache|does not exist/i.test(message);
+        }
         async function sharedRefreshProject() {
           const snapshot = sharedContextSnapshot();
           const client = snapshot.client;
           const user = sharedSync.user;
           if (!client || !user) return null;
-          let result = await client
+
+          // Resolve membership first. An embedded projects(...) select can legally return a membership row
+          // with projects=null when relationship/RLS metadata is temporarily unavailable; treating that as
+          // “no project” used to erase the locally remembered projectId/invite code.
+          const membershipResult = await client
             .from("project_members")
-            .select("project_id,role,joined_at,projects(id,name,invite_code,min_client_version,invite_expires_at)")
+            .select("project_id,role,joined_at")
             .eq("user_id", user.id)
             .order("joined_at", { ascending: true })
             .limit(2);
-          // Transitional compatibility with a legacy server that has not run the v375 migration yet.
-          if (result.error && String(result.error.code || "") === "42703") {
-            console.warn("v375 project metadata columns are not installed yet; using legacy project lookup.");
-            result = await client
-              .from("project_members")
-              .select("project_id,role,joined_at,projects(id,name,invite_code)")
-              .eq("user_id", user.id)
-              .order("joined_at", { ascending: true })
-              .limit(2);
-          }
-          const { data, error } = result;
-          if (error) throw error;
+          if (membershipResult.error) throw membershipResult.error;
           if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true })) return null;
-          const projects = [...new Map(
-            (data || []).map((entry) => entry.projects).filter(Boolean).map((project) => [String(project.id), project]),
-          ).values()];
-          if (projects.length > 1)
+
+          const projectIds = [...new Set((membershipResult.data || [])
+            .map((entry) => String(entry?.project_id || "").trim())
+            .filter(Boolean))];
+          if (projectIds.length > 1)
             throw new Error(
               "이 계정이 여러 공동 프로젝트에 연결되어 있어 안전하게 자동 선택할 수 없습니다. project_members에 사용자별 단일 프로젝트 제약을 확인해주세요.",
             );
-          const project = projects[0] || null;
-          if (project) sharedAssertClientVersion(project.min_client_version || 0);
+
+          if (!projectIds.length) {
+            const c = sharedConfig();
+            setSharedConfig({ ...c, projectId: null, inviteCode: "", email: user.email });
+            return null;
+          }
+
+          const projectId = projectIds[0];
+          let projectResult = await client
+            .from("projects")
+            .select("id,name,invite_code,min_client_version,invite_expires_at")
+            .eq("id", projectId)
+            .limit(1);
+          if (projectResult.error && sharedProjectMetadataColumnsMissing(projectResult.error)) {
+            console.warn("v375 project metadata columns are not installed yet; using legacy project lookup.");
+            projectResult = await client
+              .from("projects")
+              .select("id,name,invite_code")
+              .eq("id", projectId)
+              .limit(1);
+          }
+          if (projectResult.error) throw projectResult.error;
+          if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true })) return null;
+
+          const project = projectResult.data?.[0] || null;
+          if (!project) {
+            throw new Error(
+              "프로젝트 멤버십은 확인됐지만 프로젝트 정보를 읽지 못했어요. Supabase projects SELECT/RLS 설정을 확인해주세요.",
+            );
+          }
+          if (String(project.id || "") !== projectId)
+            throw new Error("프로젝트 멤버십과 프로젝트 정보가 일치하지 않아요.");
+
+          sharedAssertClientVersion(project.min_client_version || 0);
           const c = sharedConfig();
           setSharedConfig({
             ...c,
-            projectId: project?.id || null,
-            inviteCode: project?.invite_code || "",
+            projectId: project.id,
+            inviteCode: project.invite_code || c.inviteCode || "",
             email: user.email,
           });
           return project;
@@ -6291,15 +6455,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const passwordEl = ownedElement("shared", DOM_IDS.syncPassword);
           const confirmEl = ownedElement("shared", DOM_IDS.syncPasswordConfirm);
           const codeEl = ownedElement("shared", DOM_IDS.syncCode);
-          const newPasswordEl = ownedElement("shared", DOM_IDS.syncNewPassword);
           const confirmWrap = ownedElement("shared", DOM_IDS.syncPasswordConfirmWrap);
 
           setOwnedDisplay("shared", DOM_IDS.syncLoginBox, !logged);
           setOwnedDisplay("shared", DOM_IDS.syncLoggedInBox, logged);
-          setOwnedDisplay("shared", DOM_IDS.syncProjectActions, logged && !sharedSync.projectId);
+          setOwnedDisplay("shared", DOM_IDS.syncAccountMenu, logged);
 
           const dataActions = ownedElement("shared", DOM_IDS.syncDataActions);
-          if (dataActions) dataActions.classList.toggle("u-hidden", !logged);
+          if (dataActions) dataActions.classList.toggle("u-hidden", !(logged && sharedSync.projectId));
           if (confirmWrap) confirmWrap.classList.toggle("u-hidden", logged);
 
           const savedEmail = sharedSync.user?.email || c.email || "";
@@ -6311,7 +6474,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (clearSensitive || logged) {
             if (passwordEl) passwordEl.value = "";
             if (confirmEl) confirmEl.value = "";
-            if (newPasswordEl) newPasswordEl.value = "";
           }
         }
         function sharedRemoveAuthSubscription() {
@@ -6351,8 +6513,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           renderSharedStatusUI();
           renderSharedProject();
           if (event === "PASSWORD_RECOVERY") {
-            notifyInfo("비밀번호 재설정 링크로 들어왔어요. 새 비밀번호를 입력해 변경해주세요.");
-            setTimeout(() => ownedElement("shared", DOM_IDS.syncNewPassword)?.focus(), 0);
+            notifyInfo("비밀번호 재설정 링크로 들어왔어요. 새 비밀번호를 설정해주세요.");
+            setTimeout(() => openModal("shared-password-change"), 0);
           }
           if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && !sharedSync.projectId) void sharedAfterLogin();
         }
@@ -6481,14 +6643,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               notifyError("먼저 로그인해주세요.");
               return false;
             }
-            const password = ownedElement("shared", DOM_IDS.syncNewPassword)?.value || "";
+            const password = modalValue(DOM_IDS.syncNewPasswordModal);
+            const passwordConfirm = modalValue(DOM_IDS.syncNewPasswordConfirmModal);
             if (password.length < 8) {
               notifyError("새 비밀번호는 8자 이상 입력해주세요.");
               return false;
             }
+            if (password !== passwordConfirm) {
+              notifyError("새 비밀번호가 일치하지 않습니다. 다시 확인해주세요.");
+              return false;
+            }
             const { error } = await sharedSync.client.auth.updateUser({ password });
             if (error) throw error;
-            ownedElement("shared", DOM_IDS.syncNewPassword).value = "";
+            closeModal();
             notifySuccess("비밀번호를 변경했어요.");
             return true;
           } catch (e) {
@@ -6503,18 +6670,35 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return false;
           }
           if (!(await appConfirm(
-            "계정을 삭제하면 공동 프로젝트 연결과 서버 계정을 복구할 수 없어요. 필요한 데이터는 먼저 백업해주세요.",
-            { title: "계정 삭제", confirmText: "계정 삭제", danger: true },
+            "정말 계정을 삭제하시겠습니까? 계정을 삭제하면 공동 프로젝트 연결과 서버 계정을 복구할 수 없어요. 필요한 데이터는 먼저 백업해주세요.",
+            { title: "계정 삭제", confirmText: "계속", danger: true },
           ))) return false;
+          openModal("shared-account-delete");
+          return true;
+        }
+        async function sharedConfirmDeleteAccount() {
+          if (!sharedSync.client || !sharedSync.user) {
+            notifyError("먼저 로그인해주세요.");
+            return false;
+          }
+          const password = modalValue(DOM_IDS.syncDeletePasswordModal);
+          if (!password) {
+            notifyError("계정 삭제를 계속하려면 현재 비밀번호를 입력해주세요.");
+            return false;
+          }
           try {
             if (!(await flushCurrentSharedChangesBefore("계정 삭제", { showAlert: false }))) {
-              if (!(await appConfirm("아직 서버에 저장되지 않은 변경이 있어요. 그래도 계정을 삭제할까요?", { title: "저장되지 않은 변경", confirmText: "삭제 계속", danger: true }))) return false;
+              if (!(await appConfirm(
+                "아직 서버에 저장되지 않은 변경이 있어요. 그래도 계정을 삭제할까요?",
+                { title: "저장되지 않은 변경", confirmText: "삭제 계속", danger: true },
+              ))) return false;
             }
             const { data, error } = await sharedSync.client.functions.invoke("delete-account", {
-              body: { confirm: true, clientVersion: Number(APP_CONFIG.version) || 0 },
+              body: { confirm: true, password, clientVersion: Number(APP_CONFIG.version) || 0 },
             });
             if (error) throw error;
             if (data && data.ok === false) throw new Error(data.error || "계정 삭제에 실패했어요.");
+            closeModal();
             clearLocalPlannerUserData();
             storageRemove(APP_CONFIG.sharedLastUserKey);
             storageRemove(APP_CONFIG.sharedKey);
@@ -6522,12 +6706,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             sharedRemoveAuthSubscription();
             sharedSync = createSharedSyncState({ lifecycle: sharedSync.lifecycle + 1 });
             renderSharedStatusUI();
+            renderSharedControls({ clearSensitive: true });
             renderSharedProject();
             notifySuccess("계정과 이 기기의 로컬 데이터를 삭제했어요.");
             return true;
           } catch (e) {
             console.error(e);
-            notifyError(sharedFriendlyError(e, "계정을 삭제하지 못했어요. 서버의 delete-account Edge Function 배포 상태를 확인해주세요."));
+            notifyError(sharedFriendlyError(e, "계정을 삭제하지 못했어요. 비밀번호와 서버의 delete-account Edge Function 배포 상태를 확인해주세요."));
             return false;
           }
         }
@@ -6538,7 +6723,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (sharedAfterLoginInFlight) return sharedAfterLoginInFlight;
 
           const snapshot = sharedContextSnapshot();
+          sharedSync.projectDiscovery = "loading";
           renderSharedStatusUI();
+          renderSharedProject();
           const run = (async () => {
             try {
               const target = await sharedRefreshProject();
@@ -6546,7 +6733,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
               if (!target) {
                 sharedSync.projectId = null;
-                renderSharedStatusUI();
+                sharedSync.projectDiscovery = "idle";
+                if (sharedSync.phase === "error") setSharedPhase("idle");
+                else renderSharedStatusUI();
                 renderSharedProject();
                 return true;
               }
@@ -6572,10 +6761,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               if (!ok) throw new Error("공동 데이터를 불러오지 못했어요.");
 
               if (!(await sharedResumeRealtime(projectSnapshot))) return false;
+              sharedSync.projectDiscovery = "idle";
+              renderSharedProject();
+              renderSharedStatusUI();
               return true;
             } catch (e) {
               if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true })) return false;
               console.warn("auto project discovery failed", e);
+              sharedSync.projectDiscovery = "error";
+              if (!sharedSync.projectId) setSharedPhase("error");
+              else renderSharedStatusUI();
               renderSharedProject();
               return false;
             }
@@ -6586,6 +6781,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           } finally {
             if (sharedAfterLoginInFlight === run) sharedAfterLoginInFlight = null;
           }
+        }
+        async function sharedRefreshProjectConnection() {
+          if (!sharedSync.user) {
+            notifyError("먼저 로그인해주세요.");
+            return false;
+          }
+          const ok = await sharedAfterLogin();
+          if (!ok) notifyError("기존 프로젝트 연결을 다시 확인하지 못했어요. 동기화 상태 안내를 확인해주세요.");
+          return ok;
         }
         function secureRandomIndex(maxExclusive) {
           if (!Number.isInteger(maxExclusive) || maxExclusive <= 0) throw new RangeError("잘못된 난수 범위입니다.");
@@ -6810,6 +7014,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         async function sharedRotateInviteCode() {
           if (!sharedSync.client || !sharedSync.user || !sharedSync.projectId) return false;
+          if (!(await appConfirm(
+            "초대 코드를 재발급하면 기존 초대 코드는 즉시 사용할 수 없게 됩니다. 이미 프로젝트에 참여한 상대방과의 연결은 끊어지지 않습니다. 정말 새 초대 코드를 발급할까요?",
+            { title: "초대 코드 재발급", confirmText: "재발급" },
+          ))) return false;
           try {
             const nextCode = generateInviteCode();
             const { data, error } = await sharedSync.client.rpc("rotate_wedding_invite", {
@@ -6847,14 +7055,48 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             console.warn("프로젝트 멤버 수 확인 실패", e);
           }
           if (!(await appConfirm(
-            leaveMessage,
-            { title: "프로젝트 나가기", confirmText: "나가기", danger: true },
+            `${leaveMessage}\n\n정말 프로젝트에서 나가시겠습니까?`,
+            { title: "프로젝트 나가기", confirmText: "계속", danger: true },
           ))) return false;
+          openModal("shared-project-leave");
+          return true;
+        }
+        async function verifySharedCurrentPassword(password) {
+          const email = String(sharedSync.user?.email || sharedConfig().email || "").trim();
+          if (!email) throw new Error("현재 계정 이메일을 확인하지 못했어요. 다시 로그인해주세요.");
+          const cfg = sharedConfig();
+          const url = String(cfg.url || DEFAULT_SUPABASE_URL).replace(/\/$/, "");
+          const key = cfg.key || DEFAULT_SUPABASE_KEY;
+          sharedAssertClientSafeKey(key);
+          const verifier = window.supabase?.createClient?.(url, key, {
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+          });
+          if (!verifier) throw new Error("계정 확인 기능을 준비하지 못했어요. 인터넷 연결 후 다시 시도해주세요.");
+          const { data, error } = await verifier.auth.signInWithPassword({ email, password });
+          try { await verifier.auth.signOut(); } catch (_) {}
+          if (error) throw error;
+          if (String(data?.user?.id || "") !== String(sharedSync.user?.id || ""))
+            throw new Error("현재 로그인 계정과 비밀번호 확인 결과가 일치하지 않아요.");
+          return true;
+        }
+        async function sharedConfirmLeaveProject() {
+          if (!sharedSync.client || !sharedSync.user || !sharedSync.projectId) {
+            notifyError("먼저 공동 프로젝트 연결 상태를 확인해주세요.");
+            return false;
+          }
+          const password = modalValue(DOM_IDS.syncLeavePasswordModal);
+          if (!password) {
+            notifyError("프로젝트 나가기를 계속하려면 현재 비밀번호를 입력해주세요.");
+            return false;
+          }
           try {
+            await verifySharedCurrentPassword(password);
+            if (!(await flushCurrentSharedChangesBefore("프로젝트 나가기"))) return false;
             const { error } = await sharedSync.client.rpc("leave_wedding_project", {
               p_client_version: Number(APP_CONFIG.version) || 0,
             });
             if (error) throw error;
+            closeModal();
             await sharedRemoveChannel();
             clearLocalPlannerUserData();
             clearSharedPendingSave();
@@ -6869,7 +7111,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return true;
           } catch (e) {
             console.error(e);
-            notifyError(sharedFriendlyError(e, "프로젝트에서 나가지 못했어요."));
+            const message = /invalid login credentials|invalid credentials|wrong password/i.test(String(e?.message || ""))
+              ? "비밀번호가 올바르지 않아요. 현재 계정 비밀번호를 다시 확인해주세요."
+              : sharedFriendlyError(e, "프로젝트에서 나가지 못했어요.");
+            notifyError(message);
             return false;
           }
         }
@@ -7618,16 +7863,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             resetPassword: sharedResetPassword,
             updatePassword: sharedUpdatePassword,
             deleteAccount: sharedDeleteAccount,
+            confirmDeleteAccount: sharedConfirmDeleteAccount,
             handleStateChange: handleSharedAuthStateChange,
             removeSubscription: sharedRemoveAuthSubscription,
           }),
           Projects: Object.freeze({
             refresh: sharedRefreshProject,
+            refreshConnection: sharedRefreshProjectConnection,
             create: sharedCreateProject,
             join: sharedJoinProject,
             copyCode: sharedCopyCode,
             rotateCode: sharedRotateInviteCode,
             leave: sharedLeaveProject,
+            confirmLeave: sharedConfirmLeaveProject,
             apply: sharedApplyProject,
             restore: restoreSharedProjectContext,
             snapshot: sharedProjectContext,
