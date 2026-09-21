@@ -1,23 +1,16 @@
 {
   "name": "우리 결혼 플래너",
   "short_name": "결혼 플래너",
+  "description": "둘이 함께 일정, 할 일, 예산, 부부계획과 메모를 관리하는 결혼 준비 플래너",
+  "lang": "ko-KR",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f7f5f2",
   "theme_color": "#f7f5f2",
   "icons": [
-    {
-      "src": "./icons/icon-192.png?v=64",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "./icons/icon-512.png?v=64",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
