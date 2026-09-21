@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v378
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v379
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -111,7 +111,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-mEz+muSF+u6Piow3E9hNvLzyOwd3p7rF4+bdkYujhUU=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-PTDWXseISmh6w2bf1KNAKa9MoNUM9JOG6B/eHyU8OYY='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-0qqIrSxptGJyM8twW8XW8SrGWIAyQX86xr03XLGyrN0=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-PTDWXseISmh6w2bf1KNAKa9MoNUM9JOG6B/eHyU8OYY='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -2584,9 +2584,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 <div class="card-header-action">
                   <details
                     data-ui-component="MoreMenu"
-                    data-ui-variant="bare"
+                    data-ui-variant="default"
                     data-ui-menu-kind="commands"
-                    class="more-menu more-menu--bare u-hidden"
+                    class="more-menu u-hidden"
                     data-dom="syncAccountMenu"
                   >
                     <summary class="icon-control" aria-expanded="false" aria-label="공유 계정 메뉴">⋯</summary>
@@ -2684,9 +2684,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 <div class="card-header-action">
                   <details
                     data-ui-component="MoreMenu"
-                    data-ui-variant="bare"
+                    data-ui-variant="default"
                     data-ui-menu-kind="commands"
-                    class="more-menu more-menu--bare u-hidden"
+                    class="more-menu u-hidden"
                     data-dom="syncProjectMenu"
                   >
                     <summary class="icon-control" aria-expanded="false" aria-label="프로젝트 메뉴">⋯</summary>
@@ -2891,7 +2891,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "378",
+          version: "379",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
