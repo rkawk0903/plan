@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v393
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v397
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -111,7 +111,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-GgWOHhgdyD2oFcaE6+3PGWsdfrJxOAJ1vCDzgjQH1sI=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-DrbINoHdUlxcctpx31S7jGxMj/myGnCyH4tof/Q/Gv0='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-wVYftTs2c/D+JkPMTsiD5GKgMDjeidbMwWg1wzs9BMI=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-cxqW1VCdhn/hzDo3ULtw59wBzJIy7BXaRUPhDkBgrME='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -279,6 +279,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --material-saturate: 155%;
         --motion-fast: 110ms;
         --motion-standard: 180ms;
+        --motion-enter: 210ms;
+        --ease-interaction: cubic-bezier(0.25, 0.1, 0.25, 1);
+        --ease-settle: cubic-bezier(0.2, 0.7, 0.2, 1);
         --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--card));
         --accent-soft-2: color-mix(in srgb, var(--accent2) 18%, var(--card));
         --surface-raised: var(--card);
@@ -467,6 +470,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         height: 100%;
         background: var(--progress-fill, var(--accent));
         border-radius: inherit;
+        transition: width var(--motion-enter) var(--ease-settle);
       }
       .pill {
         display: inline-flex;
@@ -502,9 +506,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         letter-spacing: var(--btn-letter-spacing, inherit);
         white-space: var(--btn-white-space, normal);
         box-shadow: var(--control-shadow);
-        transition: transform var(--motion-fast) ease, opacity var(--motion-fast) ease,
-          background-color var(--motion-standard) ease, border-color var(--motion-standard) ease,
-          color var(--motion-standard) ease, box-shadow var(--motion-standard) ease;
+        transition: transform var(--motion-fast) var(--ease-interaction), opacity var(--motion-fast) linear,
+          background-color var(--motion-standard) var(--ease-interaction), border-color var(--motion-standard) var(--ease-interaction),
+          color var(--motion-standard) var(--ease-interaction), box-shadow var(--motion-standard) var(--ease-interaction);
         -webkit-tap-highlight-color: transparent;
       }
       .btn:disabled {
@@ -519,9 +523,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
       .btn:not(:disabled):not(.btn--menu):active {
-        transform: scale(0.975);
-        opacity: 0.86;
-        box-shadow: none;
+        transform: scale(0.985);
+        opacity: 0.93;
+        box-shadow: 0 1px 2px rgba(20, 20, 22, 0.018);
       }
       .icon-control {
         display: inline-flex;
@@ -540,9 +544,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         line-height: 1;
         cursor: pointer;
         box-shadow: var(--control-shadow);
-        transition: transform var(--motion-fast) ease, opacity var(--motion-fast) ease,
-          background-color var(--motion-standard) ease, border-color var(--motion-standard) ease,
-          color var(--motion-standard) ease, box-shadow var(--motion-standard) ease;
+        transition: transform var(--motion-fast) var(--ease-interaction), opacity var(--motion-fast) linear,
+          background-color var(--motion-standard) var(--ease-interaction), border-color var(--motion-standard) var(--ease-interaction),
+          color var(--motion-standard) var(--ease-interaction), box-shadow var(--motion-standard) var(--ease-interaction);
         -webkit-tap-highlight-color: transparent;
       }
       .icon-control:disabled {
@@ -558,9 +562,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
       .icon-control:not(:disabled):active {
-        transform: scale(0.94);
-        opacity: 0.84;
-        box-shadow: none;
+        transform: scale(0.965);
+        opacity: 0.92;
+        box-shadow: 0 1px 2px rgba(20, 20, 22, 0.018);
       }
       .more-menu {
         position: relative;
@@ -608,11 +612,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .more-menu-pop:popover-open {
         display: grid;
+        animation: quiet-menu-in var(--motion-standard) var(--ease-settle) both;
       }
       /* Popover API 미지원 브라우저용 폴백: JS 가 .is-open 을 토글합니다. */
       .more-menu-pop.is-open {
         display: grid;
         z-index: calc(var(--layer-modal) + 1);
+        animation: quiet-menu-in var(--motion-standard) var(--ease-settle) both;
       }
       .more-menu-pop::backdrop {
         background: transparent;
@@ -812,6 +818,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-size: var(--font-small);
         line-height: 1.45;
         white-space: pre-line;
+        animation: quiet-toast-in var(--motion-enter) var(--ease-settle) both;
+      }
+      .toast.is-leaving {
+        animation: quiet-toast-out var(--motion-standard) var(--ease-interaction) both;
+        pointer-events: none;
       }
       .toast.success {
         border-color: color-mix(in srgb, var(--good) 35%, var(--line));
@@ -834,6 +845,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .confirm-overlay.open {
         display: flex;
+        animation: quiet-overlay-in var(--motion-standard) linear both;
       }
       .confirm-card {
         max-height: calc(100dvh - 40px);
@@ -847,6 +859,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         box-shadow: var(--confirm-shadow);
         -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
         backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
+      }
+      .confirm-overlay.open .confirm-card {
+        animation: quiet-dialog-in var(--motion-enter) var(--ease-settle) both;
       }
       .confirm-card h2 {
         margin: 0;
@@ -872,6 +887,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .modal.open {
         display: flex;
+        animation: quiet-overlay-in var(--motion-standard) linear both;
       }
       .sheet {
         background: color-mix(in srgb, var(--card) 94%, transparent);
@@ -886,6 +902,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         width: 100%;
         max-height: var(--modal-max-height);
         overflow: auto;
+      }
+      .modal.open .sheet {
+        animation: quiet-sheet-in var(--motion-enter) var(--ease-settle) both;
       }
       .sheet h2 {
         margin: 0 0 15px;
@@ -1010,6 +1029,34 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .sheet .action-row--dialog .btn--modal-action {
         min-width: 88px;
+      }
+
+
+      /* ===== v395 restrained interaction polish =====
+         Static surfaces stay visually identical to v393; motion appears only at state boundaries. */
+      @keyframes quiet-overlay-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes quiet-sheet-in {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes quiet-dialog-in {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes quiet-menu-in {
+        from { opacity: 0; transform: translateY(-3px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes quiet-toast-in {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes quiet-toast-out {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(3px); }
       }
 /* ===== 04 COMPONENT VARIANTS — explicit semantic overrides ===== */
       .pill--badge {
@@ -1601,6 +1648,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .planner-event-item-meta .more-menu--bare > summary.icon-control:hover,
       .planner-event-item-meta .more-menu--bare > summary.icon-control:active {
         background: transparent;
+        box-shadow: none;
       }
       .planner-event-item-main {
         width: 100%;
@@ -2413,6 +2461,33 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         border-radius: 0;
         background: var(--surface-grouped);
       }
+
+      /* v397 — direct-manipulation page pager.
+         The active page and its immediate neighbours form one horizontal sheet only while a touch gesture is active. */
+      main.page-swipe-active {
+        position: relative;
+        overflow-x: clip;
+      }
+      .page.page-swipe-peer {
+        display: block;
+        will-change: transform;
+        backface-visibility: hidden;
+      }
+      .page.page-swipe-adjacent {
+        position: absolute;
+        top: 10px;
+        right: var(--page-side-space);
+        left: var(--page-side-space);
+        pointer-events: none;
+      }
+      .page.page-swipe-settling {
+        transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .page.page-swipe-settling {
+          transition: none;
+        }
+      }
 /* ===== 07 RESPONSIVE — viewport and motion rules ===== */
       @media (min-width: 700px) {
         .theme-grid {
@@ -2465,10 +2540,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       @media (prefers-reduced-motion: reduce) {
         .calendar-cell,
         .budget-arc-progress,
+        .progress i,
         .btn,
         .icon-control,
         .field {
           transition: none;
+        }
+        .modal.open,
+        .modal.open .sheet,
+        .confirm-overlay.open,
+        .confirm-overlay.open .confirm-card,
+        .more-menu-pop:popover-open,
+        .more-menu-pop.is-open,
+        .toast,
+        .toast.is-leaving {
+          animation: none;
         }
         .btn:not(:disabled):not(.btn--menu):active,
         .icon-control:not(:disabled):active {
@@ -3400,7 +3486,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "393",
+          version: "397",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4545,18 +4631,216 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (heading) heading.textContent = page.label;
           });
         }
-        function showPage(id) {
+        function showPage(id, { scrollToTop = true, navBehavior = "smooth" } = {}) {
           if (!Object.hasOwn(PAGE_REGISTRY, id)) return false;
           FloatingMenu.close();
           Object.keys(PAGE_REGISTRY).forEach((key) => ownedElement("pages", key)?.classList.toggle("active", key === id));
+          let activeNavButton = null;
           $$("button", ownedElement("navigation", "nav")).forEach((button) => {
             const active = button.dataset.page === id;
             button.classList.toggle("active", active);
-            if (active) button.setAttribute("aria-current", "page");
-            else button.removeAttribute("aria-current");
+            if (active) {
+              button.setAttribute("aria-current", "page");
+              activeNavButton = button;
+            } else button.removeAttribute("aria-current");
           });
           requestRender(id);
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+          activeNavButton?.scrollIntoView?.({
+            block: "nearest", inline: "center", behavior: reducedMotion ? "auto" : navBehavior,
+          });
+          if (scrollToTop) window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
+          return true;
+        }
+        function renderPageImmediately(id) {
+          const page = PAGE_REGISTRY[id];
+          if (!page || !dirtyViews.has(id)) return;
+          const view = getViewData();
+          page.refresh?.(view);
+          if (page.render) page.render(view);
+          else Collection.render(page.collection, view[Collection.schema(page.collection).stateKey]);
+          dirtyViews.delete(id);
+        }
+        function bindPageSwipeNavigation() {
+          let gesture = null;
+          let suppressClickUntil = 0;
+          let settleTimer = 0;
+          const main = document.querySelector("main");
+          const blockedStart = (target) => !!target?.closest?.(
+            '.nav, .modal.open, .confirm-overlay.open, .more-menu-pop, input, textarea, select, [contenteditable="true"]',
+          );
+          const resetPeer = (element) => {
+            if (!element) return;
+            element.classList.remove("page-swipe-peer", "page-swipe-adjacent", "page-swipe-settling");
+            element.style.removeProperty("transform");
+            element.removeAttribute("aria-hidden");
+            element.removeAttribute("inert");
+          };
+          const cleanupPager = () => {
+            if (settleTimer) clearTimeout(settleTimer);
+            settleTimer = 0;
+            main?.classList.remove("page-swipe-active");
+            if (!gesture) return;
+            resetPeer(gesture.currentEl);
+            resetPeer(gesture.prevEl);
+            resetPeer(gesture.nextEl);
+          };
+          const setTransform = (element, x) => {
+            if (element) element.style.transform = `translate3d(${x}px, 0, 0)`;
+          };
+          const preparePager = () => {
+            if (!gesture || gesture.prepared || !main) return;
+            const pages = Object.keys(PAGE_REGISTRY);
+            const currentIndex = pages.indexOf(gesture.currentId);
+            if (currentIndex < 0) return;
+            const prevId = pages[currentIndex - 1] || null;
+            const nextId = pages[currentIndex + 1] || null;
+            renderPageImmediately(gesture.currentId);
+            if (prevId) renderPageImmediately(prevId);
+            if (nextId) renderPageImmediately(nextId);
+            gesture.currentEl = ownedElement("pages", gesture.currentId);
+            gesture.prevEl = prevId ? ownedElement("pages", prevId) : null;
+            gesture.nextEl = nextId ? ownedElement("pages", nextId) : null;
+            gesture.prevId = prevId;
+            gesture.nextId = nextId;
+            gesture.width = Math.max(1, main.getBoundingClientRect().width);
+            gesture.prepared = true;
+            main.classList.add("page-swipe-active");
+            gesture.currentEl?.classList.add("page-swipe-peer");
+            for (const peer of [gesture.prevEl, gesture.nextEl]) {
+              if (!peer) continue;
+              peer.classList.add("page-swipe-peer", "page-swipe-adjacent");
+              peer.setAttribute("aria-hidden", "true");
+              peer.setAttribute("inert", "");
+            }
+            setTransform(gesture.currentEl, 0);
+            setTransform(gesture.prevEl, -gesture.width);
+            setTransform(gesture.nextEl, gesture.width);
+          };
+          const applyDrag = (rawDx) => {
+            if (!gesture?.prepared) return 0;
+            let dx = Math.max(-gesture.width, Math.min(gesture.width, rawDx));
+            if ((dx < 0 && !gesture.nextEl) || (dx > 0 && !gesture.prevEl)) dx *= 0.22;
+            gesture.dx = dx;
+            setTransform(gesture.currentEl, dx);
+            setTransform(gesture.prevEl, dx - gesture.width);
+            setTransform(gesture.nextEl, dx + gesture.width);
+            return dx;
+          };
+          const settlePager = (targetId, endX) => {
+            if (!gesture?.prepared) return;
+            const snapshot = gesture;
+            for (const peer of [snapshot.currentEl, snapshot.prevEl, snapshot.nextEl])
+              peer?.classList.add("page-swipe-settling");
+            requestAnimationFrame(() => {
+              setTransform(snapshot.currentEl, endX);
+              setTransform(snapshot.prevEl, endX - snapshot.width);
+              setTransform(snapshot.nextEl, endX + snapshot.width);
+            });
+            settleTimer = window.setTimeout(() => {
+              if (targetId) showPage(targetId, { scrollToTop: false, navBehavior: "auto" });
+              resetPeer(snapshot.currentEl);
+              resetPeer(snapshot.prevEl);
+              resetPeer(snapshot.nextEl);
+              main?.classList.remove("page-swipe-active");
+              settleTimer = 0;
+              if (gesture === snapshot) gesture = null;
+            }, 310);
+          };
+          document.addEventListener("touchstart", (event) => {
+            if (settleTimer) return;
+            if (event.touches.length !== 1 || blockedStart(event.target)) {
+              gesture = null;
+              return;
+            }
+            const touch = event.touches[0];
+            // Respect browser/system edge gestures instead of stealing them for in-app navigation.
+            if (touch.clientX < 18 || touch.clientX > innerWidth - 18) {
+              gesture = null;
+              return;
+            }
+            const pages = Object.keys(PAGE_REGISTRY);
+            const currentId = getActivePageId();
+            const currentIndex = pages.indexOf(currentId);
+            gesture = {
+              x: touch.clientX,
+              y: touch.clientY,
+              time: performance.now(),
+              currentId,
+              prevId: currentIndex > 0 ? pages[currentIndex - 1] : null,
+              nextId: currentIndex >= 0 && currentIndex < pages.length - 1 ? pages[currentIndex + 1] : null,
+              axis: null,
+              prepared: false,
+              dx: 0,
+              reducedMotion: !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches,
+            };
+          }, { passive: true });
+          document.addEventListener("touchmove", (event) => {
+            if (settleTimer || !gesture || event.touches.length !== 1) return;
+            const touch = event.touches[0];
+            const dx = touch.clientX - gesture.x;
+            const dy = touch.clientY - gesture.y;
+            if (!gesture.axis) {
+              if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+              gesture.axis = Math.abs(dx) > Math.abs(dy) * 1.08 ? "x" : "y";
+              if (gesture.axis !== "x") return;
+              if (!gesture.reducedMotion) preparePager();
+            }
+            if (gesture.axis !== "x") return;
+            event.preventDefault();
+            if (!gesture.reducedMotion) applyDrag(dx);
+            else gesture.dx = dx;
+          }, { passive: false });
+          document.addEventListener("touchcancel", () => {
+            if (settleTimer) return;
+            if (gesture?.prepared) settlePager(null, 0);
+            else {
+              cleanupPager();
+              gesture = null;
+            }
+          }, { passive: true });
+          document.addEventListener("touchend", (event) => {
+            if (settleTimer) return;
+            if (!gesture || event.changedTouches.length !== 1) {
+              cleanupPager();
+              gesture = null;
+              return;
+            }
+            const snapshot = gesture;
+            const touch = event.changedTouches[0];
+            const rawDx = touch.clientX - snapshot.x;
+            const dy = touch.clientY - snapshot.y;
+            const elapsed = Math.max(1, performance.now() - snapshot.time);
+            if (snapshot.axis !== "x") {
+              cleanupPager();
+              gesture = null;
+              return;
+            }
+            event.preventDefault();
+            suppressClickUntil = performance.now() + 340;
+            const dx = snapshot.reducedMotion ? rawDx : snapshot.dx;
+            const distance = Math.abs(dx);
+            const width = snapshot.width || Math.max(1, main?.getBoundingClientRect().width || innerWidth);
+            const threshold = Math.max(48, Math.min(96, width * 0.14));
+            const velocity = rawDx / elapsed;
+            const direction = dx < 0 ? 1 : -1;
+            const targetId = direction > 0 ? snapshot.nextId : snapshot.prevId;
+            const horizontalEnough = distance > Math.abs(dy) * 1.12;
+            const committed = !!targetId && horizontalEnough &&
+              (distance >= threshold || (distance >= 28 && Math.abs(velocity) >= 0.45));
+            if (snapshot.reducedMotion) {
+              if (committed) showPage(targetId, { scrollToTop: false, navBehavior: "auto" });
+              cleanupPager();
+              gesture = null;
+              return;
+            }
+            settlePager(committed ? targetId : null, committed ? (direction > 0 ? -width : width) : 0);
+          }, { passive: false });
+          document.addEventListener("click", (event) => {
+            if (performance.now() >= suppressClickUntil || event.detail === 0) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }, true);
         }
         function requestRender(...changes) {
           invalidateViewData();
@@ -4652,6 +4936,45 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             next?.focus?.({ preventScroll: true });
           });
         }
+        function captureReorderLayout(actionElement) {
+          if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return null;
+          const group = actionElement?.closest?.(".order-buttons");
+          const type = group?.dataset.orderType;
+          if (!type) return null;
+          const selector = `.order-buttons[data-order-type="${CSS.escape(type)}"]`;
+          const rows = new Map();
+          for (const controls of document.querySelectorAll(selector)) {
+            if (!controls.getClientRects().length) continue;
+            const item = controls.closest(".category-card, .budget-line, .plan");
+            const id = controls.dataset.orderId;
+            if (item && id != null) rows.set(String(id), item.getBoundingClientRect());
+          }
+          return rows.size ? { type, rows } : null;
+        }
+        function animateReorderLayout(snapshot) {
+          if (!snapshot?.rows?.size) return;
+          requestAnimationFrame(() => {
+            const selector = `.order-buttons[data-order-type="${CSS.escape(snapshot.type)}"]`;
+            for (const controls of document.querySelectorAll(selector)) {
+              if (!controls.getClientRects().length) continue;
+              const id = String(controls.dataset.orderId ?? "");
+              const before = snapshot.rows.get(id);
+              const item = controls.closest(".category-card, .budget-line, .plan");
+              if (!before || !item) continue;
+              const after = item.getBoundingClientRect();
+              const dx = before.left - after.left;
+              const dy = before.top - after.top;
+              if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+              item.animate?.(
+                [
+                  { transform: `translate3d(${dx}px, ${dy}px, 0)` },
+                  { transform: "translate3d(0, 0, 0)" },
+                ],
+                { duration: 300, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+              );
+            }
+          });
+        }
         function handleRegisteredActionEvent(eventType, e) {
           const action = e.target.closest?.("[data-action]") || null;
           if (!action) return false;
@@ -4659,12 +4982,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (actionType !== eventType) return false;
           if (eventType === "click") e.preventDefault();
           const focusSelector = eventType === "click" ? captureActionFocus(action) : null;
+          const reorderLayout = eventType === "click" ? captureReorderLayout(action) : null;
           handleAction(action);
+          animateReorderLayout(reorderLayout);
           restoreActionFocus(focusSelector);
           return true;
         }
         function bindAppEvents() {
           FloatingMenu.bind();
+          bindPageSwipeNavigation();
           new Set(Object.values(ACTIONS).map(({ event }) => event)).forEach((event) =>
             document.addEventListener(event, (e) => handleRegisteredActionEvent(event, e)));
 
@@ -4917,7 +5243,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const ttl = Number.isFinite(Number(duration))
             ? Number(duration)
             : APP_CONFIG.toastMs[resolvedTone];
-          setTimeout(() => toast.remove(), Math.max(APP_CONFIG.toastMs.min, ttl));
+          setTimeout(() => {
+            if (!toast.isConnected) return;
+            if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+              toast.remove();
+              return;
+            }
+            toast.classList.add("is-leaving");
+            const fallback = setTimeout(() => toast.remove(), 220);
+            toast.addEventListener("animationend", () => {
+              clearTimeout(fallback);
+              toast.remove();
+            }, { once: true });
+          }, Math.max(APP_CONFIG.toastMs.min, ttl));
           return toast;
         }
         function notifyInfo(message, options = {}) {
