@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v379
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v380
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -111,7 +111,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-0qqIrSxptGJyM8twW8XW8SrGWIAyQX86xr03XLGyrN0=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-PTDWXseISmh6w2bf1KNAKa9MoNUM9JOG6B/eHyU8OYY='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-XCOI+hy02RCm7iFd22tF75Do1A3g/TCdeHoJTaeSbN0=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-9Q5cohz/dbx7BXlA3mUlRVXVycTnOf3E11Pyt+eRsHk='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -155,13 +155,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --unified-button-height: var(--button-height);
         --unified-button-padding-x: 12px;
         --unified-button-font-size: var(--font-small);
-        --unified-button-font-weight: 400;
+        --unified-button-font-weight: 500;
         --unified-button-radius: var(--ui-control-radius);
         /* Modal/dialog buttons intentionally keep their own semantic variant. */
         --modal-button-min-height: var(--button-height);
         --modal-button-padding: var(--button-padding);
         --modal-button-font-size: var(--button-font-size);
-        --modal-button-font-weight: 400;
+        --modal-button-font-weight: 600;
         --field-height: 40px;
         --field-padding: 10px 12px;
         --field-font-size: var(--font-body);
@@ -246,24 +246,39 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --soft: #faf8f5;
         --button-bg: #fff;
         --button-text: #222;
-        --shadow: 0 8px 28px rgba(30, 20, 10, 0.07);
+        /* Quiet, layered elevation: borders define surfaces; shadows only separate depth. */
+        --shadow: 0 1px 2px rgba(30, 20, 10, 0.025), 0 7px 24px rgba(30, 20, 10, 0.045);
         --weekend-sat-base: #4a80c1;
         --weekend-sun-base: #d15454;
         /* Semantic/effect colors intentionally outside the user-editable theme palette. */
         --contrast-on-strong: #fff;
-        --menu-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
-        --toast-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
-        --confirm-overlay-bg: rgba(0, 0, 0, 0.42);
-        --confirm-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
-        --modal-overlay-bg: rgba(0, 0, 0, 0.38);
+        --menu-shadow: 0 2px 8px rgba(0, 0, 0, 0.055), 0 14px 38px rgba(0, 0, 0, 0.11);
+        --toast-shadow: 0 2px 8px rgba(0, 0, 0, 0.055), 0 16px 42px rgba(0, 0, 0, 0.12);
+        --confirm-overlay-bg: rgba(18, 18, 20, 0.30);
+        --confirm-shadow: 0 4px 14px rgba(0, 0, 0, 0.08), 0 24px 64px rgba(0, 0, 0, 0.16);
+        --modal-overlay-bg: rgba(18, 18, 20, 0.26);
         --radius: 20px;
-        /* Optical radius scale — base 20px => 20 / 18 / 12 / 9 / 7 / 5 by UI role. */
-        --radius-surface: max(0px, var(--radius));
-        --radius-modal: max(0px, calc(var(--radius) * 0.9));
-        --radius-inset: max(0px, calc(var(--radius) * 0.6));
-        --radius-control: max(0px, calc(var(--radius) * 0.45));
-        --radius-icon: max(0px, calc(var(--radius) * 0.35));
-        --radius-badge: max(0px, calc(var(--radius) * 0.25));
+        /* Optical radius scale — large surfaces stay soft while controls remain compact. */
+        --radius-surface: max(0px, calc(var(--radius) * 1.05));
+        --radius-modal: max(0px, calc(var(--radius) * 1.1));
+        --radius-inset: max(0px, calc(var(--radius) * 0.7));
+        --radius-control: max(0px, calc(var(--radius) * 0.55));
+        --radius-icon: max(0px, calc(var(--radius) * 0.5));
+        --radius-badge: max(0px, calc(var(--radius) * 0.4));
+        /* Derived semantic surfaces follow the user's selected theme automatically. */
+        --text-secondary: color-mix(in srgb, var(--muted) 92%, var(--ink));
+        --text-tertiary: color-mix(in srgb, var(--muted) 76%, transparent);
+        --surface-border: color-mix(in srgb, var(--line) 78%, transparent);
+        --control-border: color-mix(in srgb, var(--line) 88%, transparent);
+        --separator: color-mix(in srgb, var(--line) 68%, transparent);
+        --control-shadow: 0 1px 2px rgba(20, 20, 22, 0.025);
+        --focus-ring: color-mix(in srgb, var(--accent) 18%, transparent);
+        --material-surface: color-mix(in srgb, var(--card) 92%, transparent);
+        --material-button: color-mix(in srgb, var(--button-bg) 92%, transparent);
+        --material-blur: 20px;
+        --material-saturate: 145%;
+        --motion-fast: 110ms;
+        --motion-standard: 180ms;
         --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--card));
         --accent-soft-2: color-mix(in srgb, var(--accent2) 18%, var(--card));
         --accent-ink: color-mix(in srgb, var(--accent) 70%, var(--ink));
@@ -280,7 +295,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --card-radius: var(--radius-surface);
         --card-title-size: clamp(var(--text-2xl), 1.6vw, var(--text-3xl));
         --card-title-line-height: clamp(19px, 2vw, 20px);
-        --card-title-weight: 800;
+        --card-title-weight: 700;
         --card-title-letter-spacing: -0.02em;
         --card-description-size: clamp(var(--text-sm), 1.3vw, var(--text-md));
         --card-description-line-height: clamp(16px, 1.8vw, 17px);
@@ -293,7 +308,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --card-footer-gap: 10px;
         --card-footer-margin-top: 10px;
         --list-divider-width: 1px;
-        --list-divider-border: var(--list-divider-width) solid var(--line);
+        --list-divider-border: var(--list-divider-width) solid var(--separator);
         --layer-nav: 10;
         --layer-modal: 30;
         --layer-confirm: 70;
@@ -319,6 +334,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       * {
         box-sizing: border-box;
       }
+      html {
+        -webkit-text-size-adjust: 100%;
+        text-rendering: optimizeLegibility;
+      }
       body {
         margin: 0;
         background: var(--bg);
@@ -326,6 +345,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-family: var(--font-family);
         font-size: var(--font-body);
         letter-spacing: -0.02em;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
       }
       button,
       input,
@@ -336,6 +358,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       button {
         cursor: pointer;
         -webkit-appearance: none;
+        -webkit-tap-highlight-color: transparent;
       }
       body.modal-open {
         overflow: hidden;
@@ -349,8 +372,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         -webkit-text-fill-color: currentColor;
       }
       :where(button, input, select, textarea, summary, a, [tabindex]:not([tabindex="-1"])):focus-visible {
-        outline: 3px solid var(--accent);
+        outline: 2px solid var(--accent);
         outline-offset: 2px;
+      }
+      ::selection {
+        background: var(--accent-soft);
+        color: var(--ink);
       }
       :where(button, input, select, textarea, summary, a, [tabindex]:not([tabindex="-1"])):focus:not(
           :focus-visible
@@ -364,7 +391,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         z-index: var(--layer-nav);
         padding: 8px var(--page-side-space);
         background: var(--nav-bg);
-        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--separator);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
+        -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
+        backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
         display: flex;
         gap: var(--nav-gap);
         overflow-x: auto;
@@ -387,11 +417,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .nav-button.active {
         --btn-bg: var(--accent); --btn-color: var(--accent-contrast, var(--button-text));
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--accent) 24%, transparent),
+          0 4px 12px color-mix(in srgb, var(--accent) 12%, transparent);
       }
       .card {
         min-width: 0;
         background: var(--card);
-        border: 1px solid var(--line);
+        border: 1px solid var(--surface-border);
         border-radius: var(--card-radius);
         padding: var(--card-padding);
         box-shadow: var(--shadow);
@@ -424,6 +456,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         background: var(--pill-bg, var(--accent-soft));
         color: var(--pill-color, var(--accent-ink));
         min-height: var(--pill-min-height, 24px);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 5%, transparent);
       }
       .btn {
         display: inline-flex;
@@ -444,10 +477,27 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         line-height: var(--btn-line-height, 1.2);
         letter-spacing: var(--btn-letter-spacing, inherit);
         white-space: var(--btn-white-space, normal);
+        box-shadow: var(--control-shadow);
+        transition: transform var(--motion-fast) ease, opacity var(--motion-fast) ease,
+          background-color var(--motion-standard) ease, border-color var(--motion-standard) ease,
+          color var(--motion-standard) ease, box-shadow var(--motion-standard) ease;
+        -webkit-tap-highlight-color: transparent;
       }
       .btn:disabled {
         opacity: 0.45;
         cursor: not-allowed;
+        box-shadow: none;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .btn:not(:disabled):not(.btn--menu):hover {
+          border-color: color-mix(in srgb, var(--accent) 18%, var(--control-border));
+          box-shadow: 0 1px 2px rgba(20, 20, 22, 0.03), 0 4px 12px rgba(20, 20, 22, 0.035);
+        }
+      }
+      .btn:not(:disabled):not(.btn--menu):active {
+        transform: scale(0.975);
+        opacity: 0.86;
+        box-shadow: none;
       }
       .icon-control {
         display: inline-flex;
@@ -458,17 +508,35 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         height: var(--icon-size, var(--action-button-size));
         min-height: var(--icon-size, var(--action-button-size));
         padding: 0;
-        border: 1px solid var(--line);
+        border: 1px solid var(--control-border);
         border-radius: var(--radius-icon);
-        background: var(--soft);
+        background: color-mix(in srgb, var(--soft) 92%, var(--card));
         color: var(--muted);
         font-size: var(--icon-font-size, var(--font-small));
         line-height: 1;
         cursor: pointer;
+        box-shadow: var(--control-shadow);
+        transition: transform var(--motion-fast) ease, opacity var(--motion-fast) ease,
+          background-color var(--motion-standard) ease, border-color var(--motion-standard) ease,
+          color var(--motion-standard) ease, box-shadow var(--motion-standard) ease;
+        -webkit-tap-highlight-color: transparent;
       }
       .icon-control:disabled {
         opacity: 0.4;
         cursor: not-allowed;
+        box-shadow: none;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .icon-control:not(:disabled):hover {
+          background: color-mix(in srgb, var(--accent) 7%, var(--soft));
+          border-color: color-mix(in srgb, var(--accent) 20%, var(--control-border));
+          color: var(--ink);
+        }
+      }
+      .icon-control:not(:disabled):active {
+        transform: scale(0.94);
+        opacity: 0.84;
+        box-shadow: none;
       }
       .more-menu {
         position: relative;
@@ -482,6 +550,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .more-menu[open] summary {
         color: var(--ink);
+        background: var(--accent-soft);
+        border-color: color-mix(in srgb, var(--accent) 24%, var(--control-border));
       }
       .more-menu-pop {
         /* Native top layer escapes ancestor overflow/transform without moving DOM/actions. */
@@ -496,10 +566,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         max-height: calc(100dvh - 2 * var(--menu-viewport-margin));
         overflow: auto;
         padding: var(--menu-padding);
-        background: var(--button-bg);
-        border: 1px solid var(--line);
+        background: var(--material-button);
+        border: 1px solid var(--surface-border);
         border-radius: var(--radius-inset);
         box-shadow: var(--menu-shadow);
+        -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
+        backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
         color: var(--ink);
         font-size: var(--font-body);
         font-weight: 400;
@@ -524,26 +596,31 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-height: var(--field-min-height, var(--field-height));
         height: var(--field-fixed-height, auto);
         padding: var(--field-inset, var(--field-padding));
-        border: 1px solid var(--line);
+        border: 1px solid var(--control-border);
         border-radius: var(--field-radius, var(--ui-control-radius));
         background: var(--field-bg, var(--card));
         color: var(--field-color, var(--ink));
         font-size: var(--field-size, var(--field-font-size));
         line-height: var(--field-line-height, normal);
+        box-shadow: inset 0 1px 1px rgba(20, 20, 22, 0.015);
+        transition: border-color var(--motion-standard) ease, background-color var(--motion-standard) ease,
+          box-shadow var(--motion-standard) ease;
       }
       .field:focus {
-        border-color: var(--accent);
+        outline: none;
+        border-color: color-mix(in srgb, var(--accent) 72%, var(--control-border));
+        box-shadow: 0 0 0 3px var(--focus-ring), inset 0 1px 1px rgba(20, 20, 22, 0.015);
       }
       .field::placeholder {
-        color: var(--muted);
-        opacity: 0.78;
+        color: var(--text-tertiary);
+        opacity: 1;
       }
       .list-divided-item:not(:last-child) {
         border-bottom: var(--list-divider-border);
       }
       .inset-card {
         background: var(--inset-card-bg, var(--soft));
-        border: 1px solid var(--inset-card-border, var(--line));
+        border: 1px solid var(--inset-card-border, var(--surface-border));
         border-radius: var(--radius-inset);
       }
       .money-input {
@@ -606,7 +683,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .card-description {
         margin: 4px 0 0;
         padding: 0;
-        color: var(--muted);
+        color: var(--text-secondary);
         font-size: var(--card-description-size);
         line-height: var(--card-description-line-height);
         font-weight: 400;
@@ -694,9 +771,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         padding: 11px 13px;
         border: 1px solid var(--line);
         border-radius: var(--radius-inset);
-        background: var(--card);
+        background: var(--material-surface);
         color: var(--ink);
         box-shadow: var(--toast-shadow);
+        -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
+        backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
         font-size: var(--font-small);
         line-height: 1.45;
         white-space: pre-line;
@@ -717,6 +796,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         justify-content: center;
         padding: 20px;
         background: var(--confirm-overlay-bg);
+        -webkit-backdrop-filter: blur(4px);
+        backdrop-filter: blur(4px);
       }
       .confirm-overlay.open {
         display: flex;
@@ -727,10 +808,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         overflow-wrap: anywhere;
         width: min(420px, 100%);
         padding: 18px;
-        border: 1px solid var(--line);
+        border: 1px solid var(--surface-border);
         border-radius: var(--radius-modal);
-        background: var(--card);
+        background: color-mix(in srgb, var(--card) 96%, transparent);
         box-shadow: var(--confirm-shadow);
+        -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
+        backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
       }
       .confirm-card h2 {
         margin: 0;
@@ -751,14 +834,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         align-items: flex-end;
         justify-content: center;
         z-index: var(--layer-modal);
+        -webkit-backdrop-filter: blur(3px);
+        backdrop-filter: blur(3px);
       }
       .modal.open {
         display: flex;
       }
       .sheet {
-        background: var(--card);
+        background: color-mix(in srgb, var(--card) 98%, transparent);
+        border: 1px solid var(--surface-border);
+        border-bottom: 0;
         border-radius: var(--radius-modal) var(--radius-modal) 0 0;
         padding: var(--modal-padding);
+        box-shadow: 0 -2px 8px rgba(20, 20, 22, 0.025), 0 -18px 46px rgba(20, 20, 22, 0.07);
+        -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
+        backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
         max-width: var(--modal-max-width);
         width: 100%;
         max-height: var(--modal-max-height);
@@ -2017,8 +2107,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       @media (prefers-reduced-motion: reduce) {
         .calendar-cell,
-        .budget-arc-progress {
+        .budget-arc-progress,
+        .btn,
+        .icon-control,
+        .field {
           transition: none;
+        }
+        .btn:not(:disabled):not(.btn--menu):active,
+        .icon-control:not(:disabled):active {
+          transform: none;
         }
       }
 
@@ -2044,6 +2141,26 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         .field--inline-select,
         .sync-code {
           --field-size: var(--text-3xl);
+        }
+      }
+
+      @media (prefers-reduced-transparency: reduce) {
+        .nav,
+        .more-menu-pop,
+        .toast,
+        .confirm-card,
+        .sheet {
+          -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+        }
+        .more-menu-pop { background: var(--button-bg); }
+        .toast,
+        .confirm-card,
+        .sheet { background: var(--card); }
+        .confirm-overlay,
+        .modal {
+          -webkit-backdrop-filter: none;
+          backdrop-filter: none;
         }
       }
 
@@ -2891,7 +3008,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "379",
+          version: "380",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
