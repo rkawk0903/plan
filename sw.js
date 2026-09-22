@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "417";
+const APP_VERSION = "418";
 const CACHE_NAME = `wedding-planner-v${APP_VERSION}-shell`;
 const RUNTIME_CACHE = `wedding-planner-v${APP_VERSION}-runtime`;
 const SUPABASE_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js";
@@ -18,13 +18,19 @@ async function fetchFresh(request) {
   return fetch(new Request(request, { cache: "reload" }));
 }
 
-async function safePut(cacheName, request, response) {
+async function safePut(cacheName, request, response, { required = false } = {}) {
   try {
     const cache = await caches.open(cacheName);
     await cache.put(request, response);
+    return true;
   } catch (error) {
-    // Cache quota/write failures must never turn a successful network response into an offline failure.
+    if (required) {
+      console.error("required service worker shell cache write failed", request, error);
+      throw error;
+    }
+    // Runtime cache quota/write failures must never turn a successful network response into an offline failure.
     console.warn("service worker cache write failed", error);
+    return false;
   }
 }
 
@@ -43,7 +49,7 @@ self.addEventListener("install", (event) => {
     for (const url of APP_SHELL) {
       const response = await fetchFresh(url);
       if (!response.ok) throw new Error(`precache failed: ${url} (${response.status})`);
-      await safePut(CACHE_NAME, url, response);
+      await safePut(CACHE_NAME, url, response, { required: true });
     }
     await self.skipWaiting();
   })());

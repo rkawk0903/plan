@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v417
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v418
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-Rgtt+lJdOrScRYZvbNpPUydYXygx4gbDRSEB2nRw6tY=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-LHX/yBo9udEUH0YW+rJgRwRvpOW6vVfhbVmaTs966B8='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-CFeZ9QB5rp8V7JIlT8Ux0ss7sMxsNs7igqWYcZBFajE=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-n/h3uuiyevU/cOSq9Y/nh4i8ZIuyOpfAiR9vh4Vn04E='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -267,7 +267,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --radius-inner-card: max(0px, calc(var(--radius) * 0.86));
         /* Compact surfaces are short cards/status rows. They need a smaller optical radius
            than full InnerCard surfaces or they read as pills at 40–60px tall. */
-        --radius-compact-surface: max(0px, calc(var(--radius) * 0.45));
+        --radius-compact-surface: max(0px, calc(var(--radius) * 0.44));
         /* Medium surfaces sit between full InnerCard and compact status rows.
            D-DAY is visually taller than compact chips, so a medium radius keeps it
            consistent with surrounding surfaces without making it pill-like. */
@@ -3611,17 +3611,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "417",
+          version: "418",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
           sharedStateMetaKey: "__plannerSync",
           sharedDeviceKey: "wedding_planner_device_v1",
           undoLimit: 30,
+          undoMinLimit: 3,
+          undoMemoryBudgetBytes: 8 * 1024 * 1024,
           renderDebounceMs: 120,
           sharedPushDebounceMs: 500,
           sharedRetryMs: 250,
-          modalActionUnlockMs: 600,
           recoveryLimit: 5,
           maxCorruptCopies: 2,
           maxMoneyValue: 999999999999,
@@ -4361,9 +4362,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             "shared-sign-out": onClick(() => SharedDomains.Auth.signOut()),
             "shared-reset-password": onClick(() => SharedDomains.Auth.resetPassword()),
             "shared-update-password": onClick(() => openModal("shared-password-change")),
-            "shared-submit-password-change": onClick(() => SharedDomains.Auth.updatePassword()),
+            "shared-submit-password-change": { ...onClick(() => SharedDomains.Auth.updatePassword()), modalSave: true },
             "shared-delete-account": onClick(() => SharedDomains.Auth.deleteAccount()),
-            "shared-confirm-delete-account": onClick(() => SharedDomains.Auth.confirmDeleteAccount()),
+            "shared-confirm-delete-account": { ...onClick(() => SharedDomains.Auth.confirmDeleteAccount()), modalSave: true },
             "shared-pull": onClick(() => SharedDomains.Transport.pull()),
             "resolve-conflict-local": onClick(() => SharedDomains.Merge.resolve("local")),
             "resolve-conflict-remote": onClick(() => SharedDomains.Merge.resolve("remote")),
@@ -5015,41 +5016,58 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }, delay);
           renderDebounceTimers.set(view, timer);
         }
+        function reportActionError(error, action) {
+          console.error(`action ${action} 실패`, error);
+          notifyError(error?.message || "작업 처리 중 오류가 발생했어요.");
+        }
         function reportActionResult(result, action) {
           if (!result || typeof result.then !== "function") return result;
-          void Promise.resolve(result).catch((error) => {
-            console.error(`action ${action} 실패`, error);
-            notifyError(error?.message || "작업 처리 중 오류가 발생했어요.");
+          return Promise.resolve(result).catch((error) => {
+            reportActionError(error, action);
+            return false;
           });
-          return result;
+        }
+        function releaseModalAction(el) {
+          modalActionBusy = false;
+          const modal = $(DOM_IDS.modal);
+          if (modal?.classList.contains("open") && el?.isConnected) el.disabled = false;
+        }
+        function runModalAction(el, handler, action) {
+          const modal = $(DOM_IDS.modal);
+          if (!modal?.classList.contains("open") || modalActionBusy) return false;
+          modalActionBusy = true;
+          el.disabled = true;
+          let result;
+          try {
+            result = handler(el);
+          } catch (error) {
+            reportActionError(error, action);
+            releaseModalAction(el);
+            return true;
+          }
+          const reported = reportActionResult(result, action);
+          if (reported && typeof reported.then === "function") {
+            void Promise.resolve(reported).finally(() => releaseModalAction(el));
+          } else {
+            queueMicrotask(() => releaseModalAction(el));
+          }
+          return true;
         }
         function handleAction(el) {
           const action = el?.dataset?.action;
           const handler = Object.hasOwn(ACTIONS, action) ? ACTIONS[action].handler : null;
           if (!handler) return false;
+          let handled = true;
           if (ACTIONS[action].modalSave) {
-            const modal = $(DOM_IDS.modal);
-            if (!modal?.classList.contains("open")) return false;
-            if (modalActionBusy) return false;
-            modalActionBusy = true;
-            el.disabled = true;
+            handled = runModalAction(el, handler, action);
+          } else {
             try {
               reportActionResult(handler(el), action);
-            } finally {
-              queueMicrotask(() => {
-                if (!$(DOM_IDS.modal)?.classList.contains("open")) {
-                  modalActionBusy = false;
-                  return;
-                }
-                setTimeout(() => {
-                  if ($(DOM_IDS.modal)?.classList.contains("open")) modalActionBusy = false;
-                  el.disabled = false;
-                }, APP_CONFIG.modalActionUnlockMs);
-              });
+            } catch (error) {
+              reportActionError(error, action);
             }
-          } else {
-            reportActionResult(handler(el), action);
           }
+          if (!handled) return false;
           FloatingMenu.closeWithin(el.closest(".more-menu"));
           return true;
         }
@@ -5144,7 +5162,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (e.target === e.currentTarget) settleAppConfirm(false);
           });
         }
-
         // ===== 04 ENGINES / FloatingMenu lifecycle =====
         // Public component lifecycle: open/close/position. Domain views only render MoreMenu.
         // Native Popover top layer keeps action ancestry intact and escapes clipping/stacking contexts.
@@ -8998,6 +9015,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // Live state is frozen. mutateState works on a draft; persistence failure rolls back atomically.
         let state;
         let lastPersistedState;
+        let lastPersistedSerializedBytes = 0;
         let startupStorageRecoveryWarning = "";
         let localStorageBudgetWarningLevel = 0;
         let localStateChannel = null;
@@ -9267,9 +9285,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }
           return "";
         }
-        function hasPrototypePollutionKey(value) {
-          return !!objectGraphSafetyIssue(value);
-        }
         function validateStateIntegrity(value, { lenient = false } = {}) {
           const issues = [];
           const addIssue = (message) => {
@@ -9428,6 +9443,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           trimRecoveryStorage(2);
           compactSharedBaselineStorage();
         }
+        function serializedByteLength(value) {
+          const text = typeof value === "string" ? value : JSON.stringify(value);
+          return new TextEncoder().encode(text).byteLength;
+        }
         function estimateLocalStorageUsageBytes({ primarySerialized = "" } = {}) {
           const encoder = new TextEncoder();
           try {
@@ -9492,8 +9511,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             localStateChannel.postMessage({
               type: "state-written",
               tabId: getLocalTabId(),
-              baseState: cloneValue(baseState),
-              state: cloneValue(nextState),
+              baseState,
+              state: nextState,
             });
           } catch (e) {
             console.warn("다른 탭에 상태 변경을 알리지 못했습니다.", e);
@@ -9546,7 +9565,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const corruptRemoved = pruneCorruptStorage(0);
           if (resetState) {
             state = deepFreeze(normalizeState(defaultState()));
-            lastPersistedState = cloneValue(state);
+            lastPersistedState = state;
+            lastPersistedSerializedBytes = serializedByteLength(state);
             clearHistory();
             applyTheme();
             renderThemeControls();
@@ -9564,21 +9584,22 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }
           try {
             const serialized = JSON.stringify(state);
-            const serializedBytes = new TextEncoder().encode(serialized).byteLength;
+            const serializedBytes = serializedByteLength(serialized);
             const estimatedStorageBytes = estimateLocalStorageUsageBytes({ primarySerialized: serialized });
             maybeWarnLocalStorageBudget(estimatedStorageBytes);
             if (estimatedStorageBytes > APP_CONFIG.localStorageSoftBudgetBytes) {
               console.warn("이 origin의 로컬 저장 사용량이 권장 예산을 초과해 보조 복사본을 먼저 정리합니다.");
               freeAuxiliaryStorageForPrimaryState();
             }
-            const before = cloneValue(lastPersistedState || state);
+            const before = lastPersistedState || state;
             let persisted = storageSet(APP_CONFIG.storageKey, serialized);
             if (!persisted) {
               freeAuxiliaryStorageForPrimaryState();
               persisted = storageSet(APP_CONFIG.storageKey, serialized);
             }
             if (persisted) {
-              lastPersistedState = cloneValue(state);
+              lastPersistedState = state;
+              lastPersistedSerializedBytes = serializedBytes;
               broadcastLocalStateChange(before, state);
             }
             return persisted;
@@ -9621,7 +9642,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             console.error("상태 교체 무결성 검사 실패", nextValidation.issues);
             return false;
           }
-          const previous = cloneValue(state);
+          const previous = state;
           state = deepFreeze(normalizedNext);
           if (theme) {
             applyTheme();
@@ -9645,7 +9666,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function commitStateChange(views = "all") {
           if (guardFutureSchemaWrite("데이터 저장")) return false;
-          const previous = cloneValue(lastPersistedState);
+          const previous = lastPersistedState || state;
           const changed = !valuesEqual(state, previous);
           const renderViews = Array.isArray(views) ? views : [views];
           if (!changed) {
@@ -9670,17 +9691,31 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           updateHistoryUI();
           return true;
         }
-
         // ===== 06 STATE / History, Recovery and Backup =====
         let undoStack = [];
         let redoStack = [];
         let historyRestoring = false;
+        function historyCapacity() {
+          const hardLimit = Math.max(1, Number(APP_CONFIG.undoLimit) || 1);
+          const minimum = Math.min(hardLimit, Math.max(1, Number(APP_CONFIG.undoMinLimit) || 1));
+          const budget = Math.max(1, Number(APP_CONFIG.undoMemoryBudgetBytes) || 1);
+          const snapshotBytes = Math.max(1, lastPersistedSerializedBytes || serializedByteLength(state));
+          return Math.max(minimum, Math.min(hardLimit, Math.floor(budget / snapshotBytes) || 1));
+        }
+        function trimHistoryStack(stack) {
+          const limit = historyCapacity();
+          if (stack.length > limit) stack.splice(0, stack.length - limit);
+          return stack;
+        }
         function historySnapshot() {
-          return { undo: cloneValue(undoStack), redo: cloneValue(redoStack) };
+          // State snapshots are immutable/frozen; copy only the stack containers instead of duplicating every graph.
+          return { undo: [...undoStack], redo: [...redoStack] };
         }
         function restoreHistorySnapshot(snapshot) {
-          undoStack = Array.isArray(snapshot?.undo) ? cloneValue(snapshot.undo) : [];
-          redoStack = Array.isArray(snapshot?.redo) ? cloneValue(snapshot.redo) : [];
+          undoStack = Array.isArray(snapshot?.undo) ? [...snapshot.undo] : [];
+          redoStack = Array.isArray(snapshot?.redo) ? [...snapshot.redo] : [];
+          trimHistoryStack(undoStack);
+          trimHistoryStack(redoStack);
           updateHistoryUI();
         }
         function clearHistory() {
@@ -9690,8 +9725,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function pushUndoCheckpoint(snapshot) {
           if (historyRestoring || !snapshot) return;
-          undoStack.push(cloneValue(snapshot));
-          if (undoStack.length > APP_CONFIG.undoLimit) undoStack.splice(0, undoStack.length - APP_CONFIG.undoLimit);
+          // Mutations replace the frozen state object. Recovery/import clones are frozen once here,
+          // so history can safely keep graph references without duplicating every snapshot.
+          const checkpoint = Object.isFrozen(snapshot) ? snapshot : deepFreeze(snapshot);
+          undoStack.push(checkpoint);
+          trimHistoryStack(undoStack);
           redoStack = [];
           updateHistoryUI();
         }
@@ -9726,14 +9764,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             });
           } finally {
             historyRestoring = false;
+            // replaceState may materially change serialized state size, so recalculate both stack caps.
+            trimHistoryStack(undoStack);
+            trimHistoryStack(redoStack);
             updateHistoryUI();
           }
         }
         function undoLastChange() {
           if (!undoStack.length || historyRestoring) return false;
           const target = undoStack.pop(),
-            current = cloneValue(state);
+            current = state;
           redoStack.push(current);
+          trimHistoryStack(redoStack);
           if (!commitHistoryState(target, "실행 취소")) {
             undoStack.push(target);
             redoStack.pop();
@@ -9747,8 +9789,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function redoLastChange() {
           if (!redoStack.length || historyRestoring) return false;
           const target = redoStack.pop(),
-            current = cloneValue(state);
+            current = state;
           undoStack.push(current);
+          trimHistoryStack(undoStack);
           if (!commitHistoryState(target, "다시 실행")) {
             redoStack.push(target);
             undoStack.pop();
@@ -10306,7 +10349,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         mountStaticUiComponents();
         bindDomAnchors();
         state = deepFreeze(normalizeState(loadStoredState()));
-        lastPersistedState = cloneValue(state);
+        lastPersistedState = state;
+        lastPersistedSerializedBytes = serializedByteLength(state);
         initLocalTabCoordination();
         mountThemeEditor();
         bindAppEvents();
