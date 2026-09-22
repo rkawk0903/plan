@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v405
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v409
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -37,7 +37,7 @@ EDIT MAP — 검색할 이름 / 수정할 곳 / 직접 수정하지 않을 곳
   Theme color: THEME_FIELDS + CSS에서 사용할 의미적 binding. 프리셋 색상을 별도로 고르면 THEME_PRESETS.
     :root 색상은 JS 실행 전 fallback이며 저장된 값은 THEME_FIELDS 정규화 이후 우선합니다.
   Radius: --radius에서 surface/modal/inset/control/icon/badge 1.10/1.10/.88/.78/.72/.68 파생(큰 surface는 optical 보정).
-    rounded rectangle은 지원 브라우저에서 squircle corner-shape를 progressive enhancement로 사용합니다.
+    rounded rectangle은 지원 브라우저에서 round에 가까운 superellipse(1.15) corner-shape를 progressive enhancement로 사용합니다.
     progress/calendar date capsule, 원형 dot/swatch, gauge는 의미상 형태를 유지하는 예외입니다.
   목록 구분선: --list-divider-width / --list-divider-border + .list-divided-item.
   새 action: 반복 CRUD는 schema에서 파생. 특수 동작만 ACTION_REGISTRY에 등록합니다.
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-dN40Y5J/7HDrhZzFNxWr0Q3OMvIzdif4MqYpm8VFP/4=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-j+ducTl9cN+qByJSi/Hj0qouKlQDNJRtldf2501+qCw='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-hg6cbIU0I08aTBOzUmMHyMlG7yHdzLUtkJeeC0D+i8c=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-Iwg5+aMDZtSbhUQUzvWH4qdinp9amlrXKe74mx6ipiE='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -263,9 +263,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --radius-surface: max(0px, calc(var(--radius) * 1.10));
         --radius-modal: max(0px, calc(var(--radius) * 1.10));
         --radius-inset: max(0px, calc(var(--radius) * 0.88));
-        --radius-control: max(0px, calc(var(--radius) * 0.78));
-        --radius-icon: max(0px, calc(var(--radius) * 0.72));
-        --radius-badge: max(0px, calc(var(--radius) * 0.68));
+        /* Inner cards are optically tightened a touch so they do not read rounder than the larger outer Card. */
+        --radius-inner-card: max(0px, calc(var(--radius) * 0.86));
+        /* Compact controls need visibly longer straight runs than cards.
+           Keep their radius below half-height so buttons/icons do not read as pills or circles. */
+        --radius-control: max(0px, calc(var(--radius) * 0.66));
+        --radius-icon: max(0px, calc(var(--radius) * 0.52));
+        --radius-badge: max(0px, calc(var(--radius) * 0.60));
+        /* Size-aware continuous-corner profiles. Large surfaces stay near-round; compact
+           controls use a slightly flatter curve so the edge begins turning later without
+           introducing the abrupt curvature break of a plain circular corner. */
+        --corner-shape-surface: superellipse(1.15);
+        --corner-shape-control: superellipse(1.28);
         /* Derived semantic surfaces follow the user's selected theme automatically. */
         --text-secondary: color-mix(in srgb, var(--muted) 92%, var(--ink));
         --text-tertiary: color-mix(in srgb, var(--muted) 76%, transparent);
@@ -659,7 +668,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-width: 0;
         background: var(--surface-grouped);
         border: 1px solid color-mix(in srgb, var(--surface-border) 66%, transparent);
-        border-radius: var(--radius-inset);
+        border-radius: var(--radius-inner-card);
         box-shadow: none;
       }
       /* Semantic nested-card variant: one visual level deeper than the shared grouped surface. */
@@ -1043,15 +1052,23 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-width: 88px;
       }
 
-      /* v399 — progressive continuous-corner polish.
+      /* v409 — size-aware continuous corners.
+         Large surfaces remain near-round. Compact controls use a slightly flatter
+         profile and a smaller radius so their straight edges stay visible instead
+         of reading as pills/circles, while the tangent into the corner remains smooth.
          Unsupported browsers keep the tuned border-radius fallback above. */
-      @supports (corner-shape: squircle) {
+      @supports (corner-shape: superellipse(1.15)) {
         :where(
-          .card, .inner-card, .btn, .icon-control, .more-menu-pop, .field, .pill,
-          .toast, .confirm-card, .sheet, .dday, .task, .task-check, .calendar-cell,
-          .theme-color-control, .shared-conflict-box, .shared-schema-warning
+          .card, .inner-card, .more-menu-pop, .toast, .confirm-card, .sheet, .dday,
+          .shared-conflict-box, .shared-schema-warning
         ) {
-          corner-shape: squircle;
+          corner-shape: var(--corner-shape-surface);
+        }
+        :where(
+          .btn:not(.theme-swatch), .icon-control, .field, .pill, .task, .task-check, .calendar-cell,
+          .theme-color-control
+        ) {
+          corner-shape: var(--corner-shape-control);
         }
       }
 
@@ -3413,7 +3430,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "405",
+          version: "409",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
