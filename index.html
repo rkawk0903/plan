@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v409
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v412
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -37,7 +37,7 @@ EDIT MAP — 검색할 이름 / 수정할 곳 / 직접 수정하지 않을 곳
   Theme color: THEME_FIELDS + CSS에서 사용할 의미적 binding. 프리셋 색상을 별도로 고르면 THEME_PRESETS.
     :root 색상은 JS 실행 전 fallback이며 저장된 값은 THEME_FIELDS 정규화 이후 우선합니다.
   Radius: --radius에서 surface/modal/inset/control/icon/badge 1.10/1.10/.88/.78/.72/.68 파생(큰 surface는 optical 보정).
-    rounded rectangle은 지원 브라우저에서 round에 가까운 superellipse(1.15) corner-shape를 progressive enhancement로 사용합니다.
+    rounded rectangle은 지원 브라우저에서 surface는 superellipse(1.12), compact control은 superellipse(1.08) corner-shape를 progressive enhancement로 사용합니다.
     progress/calendar date capsule, 원형 dot/swatch, gauge는 의미상 형태를 유지하는 예외입니다.
   목록 구분선: --list-divider-width / --list-divider-border + .list-divided-item.
   새 action: 반복 CRUD는 schema에서 파생. 특수 동작만 ACTION_REGISTRY에 등록합니다.
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-hg6cbIU0I08aTBOzUmMHyMlG7yHdzLUtkJeeC0D+i8c=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-Iwg5+aMDZtSbhUQUzvWH4qdinp9amlrXKe74mx6ipiE='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-Wz0bx/k0izwc3Ghejufbz8Mn9ekHYnprRGL2qZWtOuA=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-T3ohEv3+4+Yi5sRQzOvNbNLFKbDyIVFjei9UtSbF1mI='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -265,16 +265,24 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --radius-inset: max(0px, calc(var(--radius) * 0.88));
         /* Inner cards are optically tightened a touch so they do not read rounder than the larger outer Card. */
         --radius-inner-card: max(0px, calc(var(--radius) * 0.86));
-        /* Compact controls need visibly longer straight runs than cards.
-           Keep their radius below half-height so buttons/icons do not read as pills or circles. */
-        --radius-control: max(0px, calc(var(--radius) * 0.66));
-        --radius-icon: max(0px, calc(var(--radius) * 0.52));
-        --radius-badge: max(0px, calc(var(--radius) * 0.60));
-        /* Size-aware continuous-corner profiles. Large surfaces stay near-round; compact
-           controls use a slightly flatter curve so the edge begins turning later without
-           introducing the abrupt curvature break of a plain circular corner. */
-        --corner-shape-surface: superellipse(1.15);
-        --corner-shape-control: superellipse(1.28);
+        /* Optical control radii. Compact controls need longer straight runs than cards,
+           but keep a continuous near-round transition into the corner. These ratios map
+           the default 20px theme radius to 11px / 8px / 9px respectively. */
+        --radius-control: max(0px, calc(var(--radius) * 0.55));
+        --radius-icon: max(0px, calc(var(--radius) * 0.40));
+        --radius-badge: max(0px, calc(var(--radius) * 0.45));
+        /* Two-family corner model: large surfaces stay softly continuous while compact
+           controls sit much closer to a normal round rect and avoid a squircle shoulder. */
+        --corner-shape-surface: superellipse(1.12);
+        --corner-shape-control: superellipse(1.08);
+        /* Continuous-corner fallback coefficients. Safari/iOS does not yet ship corner-shape,
+           so shape() reproduces the same near-round superellipse with two cubic segments per corner. */
+        --continuous-surface-a: 0.1006;
+        --continuous-surface-d: 0.453878;
+        --continuous-surface-y: 0.273061;
+        --continuous-control-a: 0.0876;
+        --continuous-control-d: 0.440901;
+        --continuous-control-y: 0.27955;
         /* Derived semantic surfaces follow the user's selected theme automatically. */
         --text-secondary: color-mix(in srgb, var(--muted) 92%, var(--ink));
         --text-tertiary: color-mix(in srgb, var(--muted) 76%, transparent);
@@ -1052,12 +1060,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-width: 88px;
       }
 
-      /* v409 — size-aware continuous corners.
-         Large surfaces remain near-round. Compact controls use a slightly flatter
-         profile and a smaller radius so their straight edges stay visible instead
-         of reading as pills/circles, while the tangent into the corner remains smooth.
-         Unsupported browsers keep the tuned border-radius fallback above. */
-      @supports (corner-shape: superellipse(1.15)) {
+      /* v411 — optical two-family corners.
+         Surfaces and compact controls use separate optical radii and near-round
+         continuous profiles. Controls keep longer straight runs without developing
+         a squircle shoulder or a hard circular-corner transition. */
+      @supports (corner-shape: superellipse(1.12)) {
         :where(
           .card, .inner-card, .more-menu-pop, .toast, .confirm-card, .sheet, .dday,
           .shared-conflict-box, .shared-schema-warning
@@ -1098,6 +1105,166 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       @keyframes quiet-toast-out {
         from { opacity: 1; transform: translateY(0); }
         to { opacity: 0; transform: translateY(3px); }
+      }
+
+      /* ===== v412 cross-browser continuous corners =====
+         Chromium can render the near-round superellipse directly with corner-shape.
+         Safari/iOS and Firefox currently fall back to border-radius, which reintroduces
+         the visible curvature break where a circular arc meets the straight edge.
+         On browsers that support shape() but not corner-shape, draw the same profile as
+         a responsive two-segment cubic corner. The first two control points leave the
+         straight edge collinear, so curvature approaches zero at the join instead of
+         changing abruptly. */
+      @supports not (corner-shape: superellipse(1.08)) {
+        @supports (clip-path: shape(from 0 0, hline to 100%, vline to 100%, close)) {
+          :where(
+            .card, .inner-card, .more-menu-pop, .toast, .confirm-card, .dday,
+            .shared-conflict-box, .shared-schema-warning,
+            .btn:not(.theme-swatch), .icon-control, .field, .pill--badge,
+            .task, .task-check, .calendar-cell, .theme-color-control
+          ) {
+            --cc-a: calc(var(--cc-r) * var(--cc-a-factor));
+            --cc-d: calc(var(--cc-r) * var(--cc-d-factor));
+            --cc-y: calc(var(--cc-r) * var(--cc-y-factor));
+            --cc-qd: calc(var(--cc-r) - var(--cc-d));
+            --cc-qa: calc(var(--cc-r) - var(--cc-a));
+            clip-path: shape(
+              from var(--cc-r) 0,
+              hline to calc(100% - var(--cc-r)),
+              curve to calc(100% - var(--cc-y)) var(--cc-y)
+                with calc(100% - var(--cc-qa)) 0 / calc(100% - var(--cc-qd)) 0,
+              curve to 100% var(--cc-r)
+                with 100% var(--cc-qd) / 100% var(--cc-qa),
+              vline to calc(100% - var(--cc-r)),
+              curve to calc(100% - var(--cc-y)) calc(100% - var(--cc-y))
+                with 100% calc(100% - var(--cc-qa)) / 100% calc(100% - var(--cc-qd)),
+              curve to calc(100% - var(--cc-r)) 100%
+                with calc(100% - var(--cc-qd)) 100% / calc(100% - var(--cc-qa)) 100%,
+              hline to var(--cc-r),
+              curve to var(--cc-y) calc(100% - var(--cc-y))
+                with var(--cc-qa) 100% / var(--cc-qd) 100%,
+              curve to 0 calc(100% - var(--cc-r))
+                with 0 calc(100% - var(--cc-qd)) / 0 calc(100% - var(--cc-qa)),
+              vline to var(--cc-r),
+              curve to var(--cc-y) var(--cc-y)
+                with 0 var(--cc-qa) / 0 var(--cc-qd),
+              curve to var(--cc-r) 0
+                with var(--cc-qd) 0 / var(--cc-qa) 0,
+              close
+            );
+          }
+
+          :where(.card, .inner-card, .more-menu-pop, .toast, .confirm-card, .dday, .shared-conflict-box, .shared-schema-warning) {
+            --cc-a-factor: var(--continuous-surface-a);
+            --cc-d-factor: var(--continuous-surface-d);
+            --cc-y-factor: var(--continuous-surface-y);
+          }
+          .card { --cc-r: var(--card-radius); }
+          .inner-card { --cc-r: var(--radius-inner-card); }
+          .more-menu-pop,
+          .toast,
+          .dday,
+          .shared-conflict-box,
+          .shared-schema-warning { --cc-r: var(--radius-inset); }
+          .confirm-card { --cc-r: var(--radius-modal); }
+
+          :where(.btn:not(.theme-swatch), .icon-control, .field, .pill--badge, .task, .task-check, .calendar-cell, .theme-color-control) {
+            --cc-a-factor: var(--continuous-control-a);
+            --cc-d-factor: var(--continuous-control-d);
+            --cc-y-factor: var(--continuous-control-y);
+          }
+          .btn:not(.theme-swatch) { --cc-r: var(--btn-radius, var(--ui-control-radius)); }
+          .icon-control,
+          .task-check,
+          .calendar-cell,
+          .theme-color-control { --cc-r: var(--radius-icon); }
+          .field { --cc-r: var(--field-radius, var(--ui-control-radius)); }
+          .pill--badge { --cc-r: var(--pill-radius, var(--radius-badge)); }
+          .task { --cc-r: var(--radius-control); }
+
+          /* clip-path clips the outside portion of box-shadow. Restore only the subtle
+             external depth; inset highlights remain inside the clipped element. */
+          .card {
+            filter: drop-shadow(0 1px 2px rgba(30, 20, 10, 0.018)) drop-shadow(0 6px 20px rgba(30, 20, 10, 0.032));
+          }
+          .btn:not(.theme-swatch),
+          .icon-control,
+          .dday {
+            filter: drop-shadow(0 1px 2px rgba(20, 20, 22, 0.018));
+          }
+          .btn.primary {
+            filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--accent) 16%, transparent))
+              drop-shadow(0 5px 14px color-mix(in srgb, var(--accent) 10%, transparent));
+          }
+          .more-menu-pop {
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.055)) drop-shadow(0 14px 38px rgba(0, 0, 0, 0.11));
+          }
+          .toast {
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.055)) drop-shadow(0 16px 42px rgba(0, 0, 0, 0.12));
+          }
+          .confirm-card {
+            filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.08)) drop-shadow(0 24px 64px rgba(0, 0, 0, 0.16));
+          }
+
+          /* A clipped box cannot paint an outside outline. Use a post-clip glow so keyboard
+             and field focus remain visible on fallback browsers. */
+          :where(.btn:not(.theme-swatch), .icon-control, .pill--badge, .task-check, .calendar-cell, .theme-color-control):focus-visible {
+            outline: none;
+            filter: drop-shadow(0 0 1px var(--accent)) drop-shadow(0 0 2px var(--accent));
+          }
+          .field:focus {
+            outline: none;
+            box-shadow: inset 0 1px 1px rgba(20, 20, 22, 0.015);
+            filter: drop-shadow(0 0 2px var(--focus-ring)) drop-shadow(0 0 2px var(--focus-ring));
+          }
+        }
+      }
+
+      /* Touch form sheets have four rounded corners (desktop keeps square bottom corners),
+         so they can use the same Safari/Firefox continuous fallback without changing the
+         desktop bottom-sheet silhouette. */
+      @supports not (corner-shape: superellipse(1.08)) {
+        @supports (clip-path: shape(from 0 0, hline to 100%, vline to 100%, close)) {
+          @media (any-pointer: coarse) {
+            .sheet {
+              --cc-r: var(--radius-modal);
+              --cc-a-factor: var(--continuous-surface-a);
+              --cc-d-factor: var(--continuous-surface-d);
+              --cc-y-factor: var(--continuous-surface-y);
+              --cc-a: calc(var(--cc-r) * var(--cc-a-factor));
+              --cc-d: calc(var(--cc-r) * var(--cc-d-factor));
+              --cc-y: calc(var(--cc-r) * var(--cc-y-factor));
+              --cc-qd: calc(var(--cc-r) - var(--cc-d));
+              --cc-qa: calc(var(--cc-r) - var(--cc-a));
+              clip-path: shape(
+                from var(--cc-r) 0,
+                hline to calc(100% - var(--cc-r)),
+                curve to calc(100% - var(--cc-y)) var(--cc-y)
+                  with calc(100% - var(--cc-qa)) 0 / calc(100% - var(--cc-qd)) 0,
+                curve to 100% var(--cc-r)
+                  with 100% var(--cc-qd) / 100% var(--cc-qa),
+                vline to calc(100% - var(--cc-r)),
+                curve to calc(100% - var(--cc-y)) calc(100% - var(--cc-y))
+                  with 100% calc(100% - var(--cc-qa)) / 100% calc(100% - var(--cc-qd)),
+                curve to calc(100% - var(--cc-r)) 100%
+                  with calc(100% - var(--cc-qd)) 100% / calc(100% - var(--cc-qa)) 100%,
+                hline to var(--cc-r),
+                curve to var(--cc-y) calc(100% - var(--cc-y))
+                  with var(--cc-qa) 100% / var(--cc-qd) 100%,
+                curve to 0 calc(100% - var(--cc-r))
+                  with 0 calc(100% - var(--cc-qd)) / 0 calc(100% - var(--cc-qa)),
+                vline to var(--cc-r),
+                curve to var(--cc-y) var(--cc-y)
+                  with 0 var(--cc-qa) / 0 var(--cc-qd),
+                curve to var(--cc-r) 0
+                  with var(--cc-qd) 0 / var(--cc-qa) 0,
+                close
+              );
+              filter: drop-shadow(0 -2px 8px rgba(20, 20, 22, 0.025))
+                drop-shadow(0 -18px 46px rgba(20, 20, 22, 0.07));
+            }
+          }
+        }
       }
 /* ===== 04 COMPONENT VARIANTS — explicit semantic overrides ===== */
       .pill--badge {
@@ -2641,22 +2808,24 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 
-      /* Touch devices: form dialogs float slightly above center and follow the VisualViewport.
-         When the software keyboard shrinks the visible viewport, the sheet shrinks/scrolls inside it
-         instead of remaining pinned behind the keyboard. Pointer-based PCs keep the desktop layout. */
-      @media (hover: none) and (pointer: coarse) {
+      /* Touch-capable devices: form dialogs live near the top of the current VisualViewport.
+         `any-pointer: coarse` deliberately covers iPad when a trackpad/mouse is also attached; using
+         only the primary pointer could otherwise fall back to the desktop bottom sheet. When the
+         software keyboard shrinks the visible viewport, the sheet shrinks/scrolls inside it. */
+      @media (any-pointer: coarse) {
         .modal {
+          --modal-touch-top-gap: max(20px, calc(env(safe-area-inset-top) + 12px));
           inset: auto 0 auto 0;
           top: var(--modal-visual-top, 0px);
           height: var(--modal-visual-height, 100dvh);
           align-items: flex-start;
-          padding: clamp(64px, 16dvh, 168px) max(12px, env(safe-area-inset-right))
+          padding: var(--modal-touch-top-gap) max(12px, env(safe-area-inset-right))
             max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
           box-sizing: border-box;
         }
         .sheet {
           width: min(100%, var(--modal-max-width));
-          max-height: calc(var(--modal-visual-height, 100dvh) - clamp(64px, 16dvh, 168px) - max(16px, env(safe-area-inset-bottom)));
+          max-height: calc(var(--modal-visual-height, 100dvh) - var(--modal-touch-top-gap) - max(16px, env(safe-area-inset-bottom)));
           border: 1px solid var(--surface-border);
           border-radius: var(--radius-modal);
         }
@@ -3144,7 +3313,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     role="status"
                     aria-live="polite"
                   ></div>
-                  <form data-dom="syncLoginBox" novalidate>
+                  <form class="form shared-auth-form" data-dom="syncLoginBox" novalidate>
                     <div class="form-field"><label for="syncEmail">이메일</label
                       ><input
                         class="field field--compact-text"
@@ -3430,7 +3599,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "409",
+          version: "412",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
