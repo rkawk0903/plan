@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v412
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v414
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-Wz0bx/k0izwc3Ghejufbz8Mn9ekHYnprRGL2qZWtOuA=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-T3ohEv3+4+Yi5sRQzOvNbNLFKbDyIVFjei9UtSbF1mI='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-Q5sf8va75ps9iMPcFZfRqJUDnpNSjzHtRQHXu5uqtMI=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-d/dhUus4rXHrimV30cSsswdQfVrWx6/c2Ml6uYcEeZY='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -689,6 +689,22 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .inner-card--raised {
         background: var(--surface-raised);
       }
+      .callout {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-inset);
+        line-height: 1.5;
+      }
+      .callout--warning {
+        margin-top: 8px;
+        padding: 9px 10px;
+        background: var(--soft);
+      }
+      .callout--conflict {
+        margin-top: 10px;
+        padding: 11px 12px;
+        border-color: color-mix(in srgb, var(--danger) 28%, var(--line));
+        background: color-mix(in srgb, var(--danger) 6%, var(--card));
+      }
       .money-input {
         font-variant-numeric: tabular-nums;
         letter-spacing: 0.01em;
@@ -1067,7 +1083,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       @supports (corner-shape: superellipse(1.12)) {
         :where(
           .card, .inner-card, .more-menu-pop, .toast, .confirm-card, .sheet, .dday,
-          .shared-conflict-box, .shared-schema-warning
+          .callout
         ) {
           corner-shape: var(--corner-shape-surface);
         }
@@ -1119,7 +1135,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         @supports (clip-path: shape(from 0 0, hline to 100%, vline to 100%, close)) {
           :where(
             .card, .inner-card, .more-menu-pop, .toast, .confirm-card, .dday,
-            .shared-conflict-box, .shared-schema-warning,
+            .callout,
             .btn:not(.theme-swatch), .icon-control, .field, .pill--badge,
             .task, .task-check, .calendar-cell, .theme-color-control
           ) {
@@ -1154,7 +1170,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             );
           }
 
-          :where(.card, .inner-card, .more-menu-pop, .toast, .confirm-card, .dday, .shared-conflict-box, .shared-schema-warning) {
+          :where(.card, .inner-card, .more-menu-pop, .toast, .confirm-card, .dday, .callout) {
             --cc-a-factor: var(--continuous-surface-a);
             --cc-d-factor: var(--continuous-surface-d);
             --cc-y-factor: var(--continuous-surface-y);
@@ -1164,8 +1180,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           .more-menu-pop,
           .toast,
           .dday,
-          .shared-conflict-box,
-          .shared-schema-warning { --cc-r: var(--radius-inset); }
+          .callout { --cc-r: var(--radius-inset); }
           .confirm-card { --cc-r: var(--radius-modal); }
 
           :where(.btn:not(.theme-swatch), .icon-control, .field, .pill--badge, .task, .task-check, .calendar-cell, .theme-color-control) {
@@ -2227,12 +2242,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .shared-account-actions {
-        flex: 0 0 auto;
-      }
-      .shared-account-danger-actions {
-        justify-content: flex-end;
-      }
       @media (max-width: 520px) {
         .shared-account-row {
           align-items: flex-start;
@@ -2242,12 +2251,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           width: 100%;
           white-space: normal;
           overflow-wrap: anywhere;
-        }
-        .shared-account-actions,
-        .shared-account-danger-actions {
-          width: 100%;
-          max-width: 100%;
-          justify-content: flex-start;
         }
       }
       .sync-detail-text {
@@ -2270,13 +2273,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --field-radius: var(--sync-field-radius, var(--radius-control));
         appearance: none;
       }
-      .shared-conflict-box {
-        margin-top: 10px;
-        padding: 11px 12px;
-        border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--line));
-        border-radius: var(--radius-inset);
-        background: color-mix(in srgb, var(--danger) 6%, var(--card));
-      }
       .shared-conflict-title {
         font-weight: 800;
         font-size: var(--font-small);
@@ -2284,14 +2280,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .shared-conflict-desc {
         margin-top: 5px;
         line-height: 1.45;
-      }
-      .shared-schema-warning {
-        margin-top: 8px;
-        padding: 9px 10px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-inset);
-        background: var(--soft);
-        line-height: 1.5;
       }
       .sync-project-actions {
         margin-top: 12px;
@@ -3308,7 +3296,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               <div data-ui-component="CardBody" class="card-body">
                 <div class="form u-mt-md">
                   <div
-                    class="small shared-schema-warning u-hidden"
+                    data-ui-component="Callout"
+                    data-ui-variant="warning"
+                    class="callout callout--warning small u-hidden"
                     data-dom="futureSchemaBox"
                     role="status"
                     aria-live="polite"
@@ -3354,7 +3344,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                       <div class="small shared-account-text" data-dom="syncUserText">로그인 계정</div>
                     </div>
                   </div>
-                  <div class="shared-conflict-box u-hidden" data-dom="syncConflictBox">
+                  <div data-ui-component="Callout" data-ui-variant="conflict" class="callout callout--conflict u-hidden" data-dom="syncConflictBox">
                     <div class="shared-conflict-title">동시 수정 충돌</div>
                     <div class="small shared-conflict-desc" data-dom="syncConflictText"></div>
                     <div data-ui-component="ActionRow" class="action-row action-row--compact">
@@ -3599,7 +3589,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "412",
+          version: "414",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -3626,6 +3616,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           sharedLibraryLoadTimeoutMs: 8000,
           sharedBaselineSnapshotMaxBytes: 512 * 1024,
           localStorageSoftBudgetBytes: 4 * 1024 * 1024,
+          localStorageSoftWarningRatio: 0.8,
           maxBackupBytes: 2 * 1024 * 1024,
           maxCategoryCount: 500,
           maxIdLength: 128,
@@ -3989,6 +3980,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           Button: ["", "primary", "soft", "danger"],
           Card: [""],
           InnerCard: ["", "tinted", "raised"],
+          Callout: ["warning", "conflict"],
           CardHeader: ["card-header--fixed-actions", "card-header--flush"],
           ActionRow: ["action-row--wrap", "action-row--flush", "action-row--compact", "action-row--spaced", "action-row--dialog", "action-row--item"],
           Toast: ["info", "success", "error"],
@@ -4042,6 +4034,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           assertUiVariant("InnerCard", variant);
           const variantClass = variant ? `inner-card--${variant}` : "";
           return UIComponentRoot("InnerCard", ["inner-card", variantClass, className].filter(Boolean).join(" "), content);
+        }
+        function Callout(content = "", variant = "warning", className = "") {
+          assertUiVariant("Callout", variant);
+          return UIComponentRoot("Callout", ["callout", `callout--${variant}`, className].filter(Boolean).join(" "), content);
         }
         function CardHeader(title, description = "", action = "", variant = "") {
           assertUiVariant("CardHeader", variant);
@@ -7821,6 +7817,41 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           for (let index = 0; index < 8; index++) code += chars[secureRandomIndex(chars.length)];
           return code;
         }
+        function isInviteCodeCollisionError(error) {
+          return String(error?.code || "") === "23505"
+            && /invite code collision/i.test(String(error?.message || ""));
+        }
+        async function createProjectRpcWithInviteRetry(name, maxAttempts = 3) {
+          let lastError = null;
+          for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            const code = generateInviteCode();
+            const { data, error } = await sharedSync.client.rpc("create_wedding_project", {
+              p_name: name,
+              p_invite_code: code,
+              p_client_version: Number(APP_CONFIG.version) || 0,
+            });
+            if (!error) return { data, code };
+            lastError = error;
+            if (!isInviteCodeCollisionError(error) || attempt === maxAttempts - 1) break;
+            console.warn("초대 코드가 중복되어 새 코드를 생성해 다시 시도합니다.");
+          }
+          throw lastError || new Error("프로젝트를 생성하지 못했어요.");
+        }
+        async function rotateInviteRpcWithRetry(maxAttempts = 3) {
+          let lastError = null;
+          for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            const code = generateInviteCode();
+            const { data, error } = await sharedSync.client.rpc("rotate_wedding_invite", {
+              p_invite_code: code,
+              p_client_version: Number(APP_CONFIG.version) || 0,
+            });
+            if (!error) return { data, code };
+            lastError = error;
+            if (!isInviteCodeCollisionError(error) || attempt === maxAttempts - 1) break;
+            console.warn("초대 코드가 중복되어 새 코드를 생성해 다시 시도합니다.");
+          }
+          throw lastError || new Error("초대 코드를 재발급하지 못했어요.");
+        }
         async function sharedCreateProjectCore() {
           let previous = null;
           let operationSnapshot = null;
@@ -7843,13 +7874,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             operationSnapshot = sharedContextSnapshot();
             const snapshot = operationSnapshot;
             const name = "우리 결혼 플래너";
-            const code = generateInviteCode();
-            const { data, error } = await sharedSync.client.rpc("create_wedding_project", {
-              p_name: name,
-              p_invite_code: code,
-              p_client_version: Number(APP_CONFIG.version) || 0,
-            });
-            if (error) throw error;
+            const { data, code } = await createProjectRpcWithInviteRetry(name);
 
             const row = Array.isArray(data) ? data[0] : data;
             if (!row?.project_id) throw new Error("프로젝트 생성 응답이 올바르지 않아요.");
@@ -8044,12 +8069,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             { title: "초대 코드 재발급", confirmText: "재발급" },
           ))) return false;
           try {
-            const nextCode = generateInviteCode();
-            const { data, error } = await sharedSync.client.rpc("rotate_wedding_invite", {
-              p_invite_code: nextCode,
-              p_client_version: Number(APP_CONFIG.version) || 0,
-            });
-            if (error) throw error;
+            const { data, code: nextCode } = await rotateInviteRpcWithRetry();
             const row = Array.isArray(data) ? data[0] : data;
             const code = row?.invite_code || nextCode;
             const cfg = sharedConfig();
@@ -8962,6 +8982,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         let state;
         let lastPersistedState;
         let startupStorageRecoveryWarning = "";
+        let localStorageBudgetWarningLevel = 0;
         let localStateChannel = null;
         let localCoordinationApplying = false;
         let LOCAL_TAB_ID = "";
@@ -9390,6 +9411,31 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           trimRecoveryStorage(2);
           compactSharedBaselineStorage();
         }
+        function maybeWarnLocalStorageBudget(serializedBytes) {
+          const budget = Number(APP_CONFIG.localStorageSoftBudgetBytes) || 0;
+          const warningRatio = Number(APP_CONFIG.localStorageSoftWarningRatio) || 0.8;
+          if (!(budget > 0) || !(serializedBytes >= 0)) return;
+          const ratio = serializedBytes / budget;
+          if (ratio < Math.max(0.5, warningRatio - 0.15)) {
+            localStorageBudgetWarningLevel = 0;
+            return;
+          }
+          if (ratio >= 1 && localStorageBudgetWarningLevel < 2) {
+            localStorageBudgetWarningLevel = 2;
+            notifyError(
+              "이 기기에 저장된 플래너 데이터가 권장 로컬 저장 한도를 넘었어요. 자동 정리를 시도하지만, 브라우저 저장 공간이 부족해지기 전에 백업 파일을 만들어두는 것을 권장해요.",
+              { duration: 9000 },
+            );
+            return;
+          }
+          if (ratio >= warningRatio && localStorageBudgetWarningLevel < 1) {
+            localStorageBudgetWarningLevel = 1;
+            notifyInfo(
+              "플래너 데이터가 커지고 있어요. 브라우저 저장 공간 한도에 가까워지기 전에 백업 파일을 만들어두는 것을 권장해요.",
+              { duration: 7000 },
+            );
+          }
+        }
         function parseCoordinatedState(raw, source) {
           if (!raw) return null;
           try {
@@ -9479,6 +9525,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           try {
             const serialized = JSON.stringify(state);
             const serializedBytes = new TextEncoder().encode(serialized).byteLength;
+            maybeWarnLocalStorageBudget(serializedBytes);
             if (serializedBytes > APP_CONFIG.localStorageSoftBudgetBytes) {
               console.warn("상태 데이터가 권장 로컬 저장소 예산을 초과해 보조 복사본을 먼저 정리합니다.");
               freeAuxiliaryStorageForPrimaryState();
@@ -10065,6 +10112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           UI: {
             Card,
             InnerCard,
+            Callout,
             FloatingMenu,
             Button,
             ActionRow,
