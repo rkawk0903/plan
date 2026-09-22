@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v398
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v405
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -36,8 +36,9 @@ EDIT MAP — 검색할 이름 / 수정할 곳 / 직접 수정하지 않을 곳
     assertTypographyArchitecture가 이 규칙을 강제합니다.
   Theme color: THEME_FIELDS + CSS에서 사용할 의미적 binding. 프리셋 색상을 별도로 고르면 THEME_PRESETS.
     :root 색상은 JS 실행 전 fallback이며 저장된 값은 THEME_FIELDS 정규화 이후 우선합니다.
-  Radius: --radius에서 surface/modal/inset/control/icon/badge 1/.9/.6/.45/.35/.25 파생.
-    pill/progress의 999px, 원형 dot/swatch의 50%, gauge의 0은 의도된 형태 예외입니다.
+  Radius: --radius에서 surface/modal/inset/control/icon/badge 1.10/1.10/.88/.78/.72/.68 파생(큰 surface는 optical 보정).
+    rounded rectangle은 지원 브라우저에서 squircle corner-shape를 progressive enhancement로 사용합니다.
+    progress/calendar date capsule, 원형 dot/swatch, gauge는 의미상 형태를 유지하는 예외입니다.
   목록 구분선: --list-divider-width / --list-divider-border + .list-divided-item.
   새 action: 반복 CRUD는 schema에서 파생. 특수 동작만 ACTION_REGISTRY에 등록합니다.
   페이지: PAGE_REGISTRY가 navigation/render/dependencies, DOM_AREAS가 비파생 DOM 소유권을 소유합니다.
@@ -111,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-+IW37jwrvE8z+Ll3DLBdoqs1Jol5npVwwcVnNeXbtWY=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-qPCNX2ZhO8+otiBfeupTKYVJF7dEh/87xg3Qbhek4K0='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-dN40Y5J/7HDrhZzFNxWr0Q3OMvIzdif4MqYpm8VFP/4=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-j+ducTl9cN+qByJSi/Hj0qouKlQDNJRtldf2501+qCw='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -172,7 +173,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --nav-padding: 8px 13px;
         --nav-gap: 3px;
         --header-title-size: clamp(24px, 5.8vw, 28px);
-        --page-title-size: clamp(var(--text-5xl), 2vw, var(--text-6xl));
         --home-summary-columns: minmax(0, 1.46fr) minmax(0, 1fr);
         --task-check-size: 22px;
         --task-check-column: 28px;
@@ -258,13 +258,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --confirm-shadow: 0 4px 14px rgba(0, 0, 0, 0.08), 0 24px 64px rgba(0, 0, 0, 0.16);
         --modal-overlay-bg: rgba(18, 18, 20, 0.26);
         --radius: 22px;
-        /* Optical radius scale — large surfaces stay soft while controls remain compact. */
-        --radius-surface: max(0px, calc(var(--radius) * 1));
-        --radius-modal: max(0px, calc(var(--radius) * 1.08));
-        --radius-inset: max(0px, calc(var(--radius) * 0.68));
-        --radius-control: max(0px, calc(var(--radius) * 0.52));
-        --radius-icon: max(0px, calc(var(--radius) * 0.46));
-        --radius-badge: max(0px, calc(var(--radius) * 0.4));
+        /* Optical radius scale — large surfaces need a little extra radius to read as
+           equally soft as smaller nested controls. This is an optical, not geometric, match. */
+        --radius-surface: max(0px, calc(var(--radius) * 1.10));
+        --radius-modal: max(0px, calc(var(--radius) * 1.10));
+        --radius-inset: max(0px, calc(var(--radius) * 0.88));
+        --radius-control: max(0px, calc(var(--radius) * 0.78));
+        --radius-icon: max(0px, calc(var(--radius) * 0.72));
+        --radius-badge: max(0px, calc(var(--radius) * 0.68));
         /* Derived semantic surfaces follow the user's selected theme automatically. */
         --text-secondary: color-mix(in srgb, var(--muted) 92%, var(--ink));
         --text-tertiary: color-mix(in srgb, var(--muted) 76%, transparent);
@@ -338,7 +339,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --btn-max-width: none;
         --pill-line-height: 1;
         --pill-min-height: 24px;
-        --pill-radius: 999px;
+        --pill-radius: var(--radius-badge);
         --progress-bg: var(--accent-soft-2);
         --progress-fill: var(--accent);
         --progress-radius: 999px;
@@ -597,6 +598,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         max-width: calc(100vw - 2 * var(--menu-viewport-margin));
         max-height: calc(100dvh - 2 * var(--menu-viewport-margin));
         overflow: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
         padding: var(--menu-padding);
         background: var(--material-button);
         border: 1px solid var(--surface-border);
@@ -652,11 +655,22 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .list-divided-item:not(:last-child) {
         border-bottom: var(--list-divider-border);
       }
-      .inset-card {
-        background: var(--inset-card-bg, var(--surface-grouped));
-        border: 1px solid var(--inset-card-border, color-mix(in srgb, var(--surface-border) 70%, transparent));
+      .inner-card {
+        min-width: 0;
+        background: var(--surface-grouped);
+        border: 1px solid color-mix(in srgb, var(--surface-border) 66%, transparent);
         border-radius: var(--radius-inset);
-        box-shadow: inset 0 1px 0 color-mix(in srgb, var(--surface-highlight) 48%, transparent);
+        box-shadow: none;
+      }
+      /* Semantic nested-card variant: one visual level deeper than the shared grouped surface. */
+      .inner-card--tinted {
+        background: var(--field-fill-accent2);
+        border-color: color-mix(in srgb, var(--control-border) 76%, transparent);
+        box-shadow: inset 0 1px 1px rgba(20, 20, 22, 0.015);
+      }
+      /* Semantic nested-card variant: reuse the top-level Card color without changing InnerCard geometry/depth. */
+      .inner-card--raised {
+        background: var(--surface-raised);
       }
       .money-input {
         font-variant-numeric: tabular-nums;
@@ -909,6 +923,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .sheet h2 {
         margin: 0 0 15px;
       }
+      .sheet textarea.field {
+        resize: none;
+      }
       .form {
         display: grid;
         gap: 10px;
@@ -990,11 +1007,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .grouped-list {
         overflow: hidden;
-        border: 1px solid color-mix(in srgb, var(--control-border) 76%, transparent);
-        border-radius: var(--radius-inset);
-        /* Keep grouped rows on the exact same fill family as search/select fields. */
-        background: var(--field-fill);
-        box-shadow: inset 0 1px 1px rgba(20, 20, 22, 0.015);
       }
       .grouped-list.list,
       .grouped-list.event-list-host {
@@ -1031,6 +1043,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-width: 88px;
       }
 
+      /* v399 — progressive continuous-corner polish.
+         Unsupported browsers keep the tuned border-radius fallback above. */
+      @supports (corner-shape: squircle) {
+        :where(
+          .card, .inner-card, .btn, .icon-control, .more-menu-pop, .field, .pill,
+          .toast, .confirm-card, .sheet, .dday, .task, .task-check, .calendar-cell,
+          .theme-color-control, .shared-conflict-box, .shared-schema-warning
+        ) {
+          corner-shape: squircle;
+        }
+      }
+
 
       /* ===== v395 restrained interaction polish =====
          Static surfaces stay visually identical to v393; motion appears only at state boundaries. */
@@ -1047,8 +1071,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         to { opacity: 1; transform: translateY(0); }
       }
       @keyframes quiet-menu-in {
-        from { opacity: 0; transform: translateY(-3px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
       @keyframes quiet-toast-in {
         from { opacity: 0; transform: translateY(6px); }
@@ -1343,18 +1367,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: var(--card-section-gap);
         min-width: 0;
       }
-      .page-header {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: clamp(8px, 1.2vw, var(--card-section-gap));
-        min-width: 0;
-        margin: 22px 0 var(--card-section-gap);
-      }
-      .page-header-copy {
-        min-width: 0;
-        flex: 1 1 auto;
-      }
       .home-top-grid {
         grid-template-columns: var(--home-summary-columns);
         align-items: stretch;
@@ -1393,18 +1405,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
       }
-      .page-header + .card,
-      .page-header + .grid,
-      .page-header + .card-grid {
-        margin-top: 0;
-      }
 /* ===== 06 DOMAIN VIEWS — composition and domain-specific typography ===== */
-      .plan-status-grid > div {
+      .plan-status-grid > .inner-card {
         display: flex;
         align-items: center;
         gap: var(--space-sm);
         padding: 10px;
-        box-shadow: none;
       }
       .plan-status-grid b {
         display: block;
@@ -1527,22 +1533,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: var(--space-sm);
         padding: 14px 0;
       }
-      .budget-box {
-        padding: 10px 11px;
-        border-color: transparent;
-        box-shadow: none;
-      }
-      .budget-box .label {
-        font-size: var(--font-caption);
-        color: var(--text-tertiary);
-        font-weight: 600;
-      }
-      .budget-box b {
-        display: block;
-        margin-top: 3px;
-        font-variant-numeric: tabular-nums;
-        letter-spacing: -0.015em;
-      }
       .budget-detail {
         margin-top: 0;
         font-size: var(--font-small);
@@ -1617,10 +1607,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         align-items: center;
         gap: 0;
         padding: 0 10px;
-        border: 1px solid color-mix(in srgb, var(--control-border) 76%, transparent);
-        border-radius: var(--radius-control);
-        background: var(--field-fill-accent2);
-        box-shadow: inset 0 1px 1px rgba(20, 20, 22, 0.015);
         color: var(--muted);
         font-size: var(--event-meta-font-size);
         font-weight: 500;
@@ -1959,9 +1945,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         transform: scale(0.94);
       }
       .category-card {
-        background: var(--surface-grouped);
-        border-color: color-mix(in srgb, var(--surface-border) 66%, transparent);
-        box-shadow: none;
+        padding: var(--card-padding-compact);
         --card-title-size: var(--category-card-title-font-size);
         --card-title-line-height: 1.25;
       }
@@ -1981,9 +1965,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: 10px;
         min-width: 0;
         padding: 11px 12px;
-        background: var(--surface-grouped);
-        border-color: color-mix(in srgb, var(--surface-border) 66%, transparent);
-        box-shadow: none;
       }
       .theme-item label {
         min-width: 0;
@@ -2048,8 +2029,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .shared-account-panel {
         padding: 10px 12px;
-        border-color: transparent;
-        box-shadow: none;
       }
       .shared-account-row {
         display: flex;
@@ -2221,10 +2200,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .sync-join-code::placeholder {
         font-size: var(--sync-note-font-size);
       }
-      .card--compact {
-        --card-padding: var(--card-padding-compact);
-        --card-radius: var(--radius-inset);
-      }
       .budget-page-reference {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
@@ -2236,9 +2211,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: grid;
         gap: 0;
         padding: 2px 10px;
-        border: 1px solid color-mix(in srgb, var(--surface-border) 62%, transparent);
-        border-radius: var(--radius-inset);
-        background: var(--surface-grouped);
       }
       .budget-page-reference-stat {
         display: grid;
@@ -2278,8 +2250,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: 10px;
         align-items: center;
         padding: 11px 12px;
-        border-color: transparent;
-        box-shadow: none;
       }
       .recovery-copy {
         min-width: 0;
@@ -2339,19 +2309,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         line-height: 1.15;
         text-align: left;
       }
-      .page-header-title {
-        margin: 0;
-        font-size: var(--page-title-size);
-        line-height: 1.18;
-        font-weight: 700;
-        letter-spacing: -0.035em;
-      }
       .project-panel {
         display: block;
         margin-top: 10px;
         padding: 12px;
-        border-color: transparent;
-        box-shadow: none;
       }
 
       /* ===== Grouped collection rows ===== */
@@ -2385,9 +2346,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         grid-template-columns: 1fr;
         gap: 0;
         overflow: hidden;
-        border: 1px solid color-mix(in srgb, var(--surface-border) 60%, transparent);
-        border-radius: var(--radius-inset);
-        background: color-mix(in srgb, var(--card) 46%, var(--surface-grouped));
       }
       .budget-value-row {
         display: grid;
@@ -2417,8 +2375,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .budget-detail-group {
         padding: 10px 11px;
-        border-radius: var(--radius-inset);
-        background: var(--surface-grouped);
       }
       .budget-detail-group .budget-detail {
         margin-top: 5px;
@@ -2436,13 +2392,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: 14px;
       }
       .settings-page .shared-account-panel,
-      .settings-page .project-panel,
-      .settings-page .recovery-item {
-        border-color: transparent;
-        background: var(--surface-grouped);
-        box-shadow: none;
-      }
-      .settings-page .shared-account-panel,
       .settings-page .project-panel {
         padding: 12px 13px;
       }
@@ -2451,17 +2400,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         line-height: 1.45;
       }
       .settings-page .theme-grid {
-        overflow: hidden;
-        gap: 1px;
-        padding: 1px;
-        border: 1px solid color-mix(in srgb, var(--surface-border) 60%, transparent);
-        border-radius: var(--radius-inset);
-        background: var(--separator);
-      }
-      .settings-page .theme-item {
-        border: 0;
-        border-radius: 0;
-        background: var(--surface-grouped);
+        gap: 8px;
       }
 
       /* v397 — direct-manipulation page pager.
@@ -2564,12 +2503,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 
-      /* 컴포넌트 소유권 규칙 준수: InsetCard 가 노출한 변수만 설정합니다. */
-      .planner-event-item-today {
-        --inset-card-bg: var(--calendar-today-bg);
-        --inset-card-border: color-mix(in srgb, var(--accent) 45%, var(--line));
-      }
-
       /* 터치 기기: 입력창 16px 미만이면 iOS 가 포커스 시 화면을 확대하므로 하한을 둡니다. 터치 타깃도 키웁니다. */
       @media (hover: none) and (pointer: coarse) {
         :root {
@@ -2640,7 +2573,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
 
       @media (max-width: 600px) {
-        /* Toasts live at the top on phones so they do not cover bottom-sheet save/cancel controls. */
+        /* Toasts live at the top on phones so they do not cover modal save/cancel controls. */
         .toast-stack {
           top: max(12px, calc(env(safe-area-inset-top) + 8px));
           right: max(12px, env(safe-area-inset-right));
@@ -2688,6 +2621,27 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         .budget-value-row {
           min-height: 44px;
+        }
+      }
+
+      /* Touch devices: form dialogs float slightly above center and follow the VisualViewport.
+         When the software keyboard shrinks the visible viewport, the sheet shrinks/scrolls inside it
+         instead of remaining pinned behind the keyboard. Pointer-based PCs keep the desktop layout. */
+      @media (hover: none) and (pointer: coarse) {
+        .modal {
+          inset: auto 0 auto 0;
+          top: var(--modal-visual-top, 0px);
+          height: var(--modal-visual-height, 100dvh);
+          align-items: flex-start;
+          padding: clamp(64px, 16dvh, 168px) max(12px, env(safe-area-inset-right))
+            max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+          box-sizing: border-box;
+        }
+        .sheet {
+          width: min(100%, var(--modal-max-width));
+          max-height: calc(var(--modal-visual-height, 100dvh) - clamp(64px, 16dvh, 168px) - max(16px, env(safe-area-inset-bottom)));
+          border: 1px solid var(--surface-border);
+          border-radius: var(--radius-modal);
         }
       }
 /* ===== 08 STATE UTILITIES — explicit visibility/spacing ===== */
@@ -2867,11 +2821,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         </section>
         <!-- ===== PAGE: TASKS · 할 일 ===== -->
         <section class="page" data-page-root="tasks">
-          <div class="page-header">
-            <div class="page-header-copy">
-              <h2 class="page-header-title">할 일</h2>
-            </div>
-          </div>
           <!-- ===== TASKS: FILTERS / ACTIONS + LIST ===== -->
           <div data-ui-component="Card" data-ui-variant="body-only" class="card task-list-card">
             <div data-ui-component="CardBody" class="card-body">
@@ -2928,11 +2877,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         </section>
         <!-- ===== PAGE: SCHEDULE · 일정 ===== -->
         <section class="page" data-page-root="schedule">
-          <div class="page-header">
-            <div class="page-header-copy">
-              <h2 class="page-header-title">일정</h2>
-            </div>
-          </div>
           <!-- ===== SCHEDULE: CALENDAR + SELECTED DATE ===== -->
           <div class="card-stack">
             <div class="card-grid schedule-main-grid">
@@ -3031,16 +2975,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         </section>
         <!-- ===== PAGE: BUDGET · 예산 ===== -->
         <section class="page" data-page-root="budget">
-          <div class="page-header">
-            <div class="page-header-copy">
-              <h2 class="page-header-title">예산</h2>
-            </div>
-          </div>
           <!-- ===== BUDGET: SUMMARY ===== -->
           <div class="card-stack">
             <div data-ui-component="Card" data-ui-variant="body-only" class="card">
               <div data-ui-component="CardBody" class="card-body budget-page-reference">
-                <div class="budget-page-reference-stats">
+                <div data-ui-component="InnerCard" class="inner-card budget-page-reference-stats">
                   <div class="budget-page-reference-stat">
                     <span>예상 지출</span><b data-dom="totalPlan">0 원</b>
                   </div>
@@ -3077,18 +3016,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="grouped-list" data-collection="budget"></div>
+                <div data-ui-component="InnerCard" class="inner-card grouped-list" data-collection="budget"></div>
               </div>
             </div>
           </div>
         </section>
         <!-- ===== PAGE: PLANS · 부부계획 ===== -->
         <section class="page" data-page-root="plans">
-          <div class="page-header">
-            <div class="page-header-copy">
-              <h2 class="page-header-title">부부계획</h2>
-            </div>
-          </div>
           <div data-ui-component="Card" class="card">
             <div data-ui-component="CardHeader" class="card-header">
               <div class="card-header-copy">
@@ -3107,17 +3041,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               </div>
             </div>
             <div data-ui-component="CardBody" class="card-body">
-              <div class="grouped-list" data-collection="plan"></div>
+              <div data-ui-component="InnerCard" class="inner-card grouped-list" data-collection="plan"></div>
             </div>
           </div>
         </section>
         <!-- ===== PAGE: MEMOS · 메모 ===== -->
         <section class="page" data-page-root="memos">
-          <div class="page-header">
-            <div class="page-header-copy">
-              <h2 class="page-header-title">메모</h2>
-            </div>
-          </div>
           <div class="card-grid">
             <div data-ui-component="Card" class="card col12">
               <div data-ui-component="CardHeader" class="card-header">
@@ -3159,18 +3088,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                   placeholder="메모 검색"
                   type="search"
                 />
-                <div class="grouped-list" data-collection="memo"></div>
+                <div data-ui-component="InnerCard" class="inner-card grouped-list" data-collection="memo"></div>
               </div>
             </div>
           </div>
         </section>
         <!-- ===== PAGE: SETTINGS · 설정 ===== -->
         <section class="page settings-page" data-page-root="settings">
-          <div class="page-header">
-            <div class="page-header-copy">
-              <h2 class="page-header-title">설정</h2>
-            </div>
-          </div>
           <div class="card-grid">
             <div data-ui-component="Card" class="card col12">
               <div data-ui-component="CardHeader" class="card-header">
@@ -3239,7 +3163,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                       ><button class="btn btn--app-action primary" data-action="shared-sign-in" type="submit">로그인</button>
                     </div>
                   </form>
-                  <div class="inset-card shared-account-panel u-hidden" data-dom="syncLoggedInBox">
+                  <div data-ui-component="InnerCard" class="inner-card shared-account-panel u-hidden" data-dom="syncLoggedInBox">
                     <div class="shared-account-row">
                       <div class="small shared-account-text" data-dom="syncUserText">로그인 계정</div>
                     </div>
@@ -3296,7 +3220,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="inset-card project-panel u-hidden" data-dom="currentProjectBox">
+                <div data-ui-component="InnerCard" class="inner-card project-panel u-hidden" data-dom="currentProjectBox">
                   <div class="row between u-gap-sm">
                     <div class="u-minw-0">
                       <div class="current-project-title">내 프로젝트 코드</div>
@@ -3318,7 +3242,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                   </div>
                   <div class="small settings-status-note u-mt-xs">상대방을 초대할 때 이 코드를 사용하면 됩니다.</div>
                 </div>
-                <div data-dom="syncProjectDiscoveryError" class="inset-card project-panel u-hidden">
+                <div data-ui-component="InnerCard" data-dom="syncProjectDiscoveryError" class="inner-card project-panel u-hidden">
                   <div class="small settings-status-note">기존 프로젝트 연결을 확인하지 못했어요. 네트워크 또는 Supabase 권한을 확인한 뒤 다시 시도해주세요.</div>
                   <div data-ui-component="ActionRow" class="action-row action-row--compact u-mt-sm">
                     <button class="btn btn--app-action" data-action="shared-refresh-project" type="button">연결 다시 확인</button>
@@ -3489,7 +3413,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "398",
+          version: "405",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -3877,7 +3801,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         const UI_VARIANTS = Object.freeze({
           Button: ["", "primary", "soft", "danger"],
-          Card: ["card--compact"],
+          Card: [""],
+          InnerCard: ["", "tinted", "raised"],
           CardHeader: ["card-header--fixed-actions", "card-header--flush"],
           ActionRow: ["action-row--wrap", "action-row--flush", "action-row--compact", "action-row--spaced", "action-row--dialog", "action-row--item"],
           Toast: ["info", "success", "error"],
@@ -3927,6 +3852,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (name.startsWith("card--")) assertUiVariant("Card", name);
           return UIComponentRoot("Card", ["card", className].filter(Boolean).join(" "), content);
         }
+        function InnerCard(content = "", className = "", variant = "") {
+          assertUiVariant("InnerCard", variant);
+          const variantClass = variant ? `inner-card--${variant}` : "";
+          return UIComponentRoot("InnerCard", ["inner-card", variantClass, className].filter(Boolean).join(" "), content);
+        }
         function CardHeader(title, description = "", action = "", variant = "") {
           assertUiVariant("CardHeader", variant);
           return UIComponentRoot("CardHeader", `card-header ${variant}`.trim(), `
@@ -3956,10 +3886,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             <div class="budget-arc-value"><strong data-dom="${attr(valueDom)}">0%</strong></div>`);
         }
         function PlanStatusSummary() {
-          return `<div class="plan-status-grid">${PLAN_STATUS_DEFINITIONS.map(status => `
-            <div class="inset-card"><span class="status-dot ${attr(status.dot)}"></span>
-              <div><b data-dom="${attr(status.dom)}">0</b><span>${esc(status.label)}</span></div>
-            </div>`).join("")}</div>`;
+          return `<div class="plan-status-grid">${PLAN_STATUS_DEFINITIONS.map(status =>
+            InnerCard(`<span class="status-dot ${attr(status.dot)}"></span>
+              <div><b data-dom="${attr(status.dom)}">0</b><span>${esc(status.label)}</span></div>`)).join("")}</div>`;
         }
         function mountStaticUiComponents() {
           document.querySelectorAll('[data-ui-static="PlanStatusSummary"]').forEach(host => {
@@ -4033,7 +3962,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             stateKey: "tasks", view: "tasks", label: "할 일", target: "taskList",
             renderer: (item, index, total, options) => TaskItem(item, options),
             derive: (items) => buildTaskViewData(items, getOrderedCats()),
-            hostClass: "task-list-host grouped-list", empty: "조건에 맞는 할 일이 없어요.",
+            hostClass: "task-list-host grouped-list", hostComponent: "InnerCard", empty: "조건에 맞는 할 일이 없어요.",
             limit: 1000, defaults: () => seedTasks.map((item) => ({ ...item })),
             closeOnDelete: true,
             fields: [
@@ -4071,7 +4000,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             stateKey: "events", view: "schedule", label: "일정", target: "scheduleAllList",
             renderer: (item, index, total, options) => EventItem(item, options),
             derive: (items, context) => buildScheduleViewData(items, context.today),
-            hostClass: "event-list-host grouped-list", empty: "조건에 맞는 일정이 없어요.", limit: 1000,
+            hostClass: "event-list-host grouped-list", hostComponent: "InnerCard", empty: "조건에 맞는 일정이 없어요.", limit: 1000,
             afterSave: navigateToSavedEvent, afterRemove: () => showPage("schedule"),
           retain: (item) => isValidISODate(item.date),
             fields: [
@@ -4394,7 +4323,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               (item, index, total) => schema.renderer(item, index, total, options),
               options.emptyMessage ?? schema.empty);
             const hostClass = [schema.hostClass, options.hostClass].filter(Boolean).join(" ");
-            return hostClass ? `<div class="${attr(hostClass)}">${content}</div>` : content;
+            if (!hostClass) return content;
+            return schema.hostComponent === "InnerCard" ? InnerCard(content, hostClass) : `<div class="${attr(hostClass)}">${content}</div>`;
           },
           render(name, items = getCollection(this.schema(name).stateKey), options = {}) {
             const schema = this.schema(name);
@@ -4629,10 +4559,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           setOwnedHTML("navigation", "nav", Object.entries(PAGE_REGISTRY).map(([id, page], index) =>
             Button(page.label, { action: "show-page", className: `nav-button${index ? "" : " active"}`,
               attributes: { "data-page": id, "aria-current": index ? null : "page" } })).join(""));
-          Object.entries(PAGE_REGISTRY).forEach(([id, page]) => {
-            const heading = ownedElement("pages", id)?.querySelector(".page-header-title");
-            if (heading) heading.textContent = page.label;
-          });
         }
         function showPage(id, { scrollToTop = true, navBehavior = "smooth" } = {}) {
           if (!Object.hasOwn(PAGE_REGISTRY, id)) return false;
@@ -5000,6 +4926,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function bindAppEvents() {
           FloatingMenu.bind();
           bindPageSwipeNavigation();
+          bindModalVisualViewport();
           new Set(Object.values(ACTIONS).map(({ event }) => event)).forEach((event) =>
             document.addEventListener(event, (e) => handleRegisteredActionEvent(event, e)));
 
@@ -5041,25 +4968,45 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (!active) return;
             const menu = active, anchor = menu.firstElementChild, popup = popupOf(menu);
             const anchorVisible = anchor.checkVisibility ? anchor.checkVisibility() : anchor.getClientRects().length > 0;
-          if (!menu.isConnected || !anchorVisible) return close();
+            if (!menu.isConnected || !anchorVisible) return close();
+
+            // getBoundingClientRect(), VisualViewport and top-layer position:fixed have historically
+            // disagreed on iPad/WebKit about whether the visual-viewport offset is already applied.
+            // Work in client coordinates (the same space as the anchor rect), then measure the opened
+            // popover itself at left/top 0 and correct the CSS position by its actual fixed origin.
             const a = anchor.getBoundingClientRect();
             const viewport = window.visualViewport;
-            const left = viewport?.offsetLeft || 0, top = viewport?.offsetTop || 0;
-            const width = viewport?.width || innerWidth, height = viewport?.height || innerHeight;
-            if (a.bottom < top || a.top > top + height || a.right < left || a.left > left + width) return close();
+            const width = viewport?.width || document.documentElement.clientWidth || innerWidth;
+            const height = viewport?.height || document.documentElement.clientHeight || innerHeight;
+            const left = 0, top = 0;
+            if (a.bottom < top || a.top > height || a.right < left || a.left > width) return close();
+
             const css = getComputedStyle(popup);
-            const margin = parseFloat(css.getPropertyValue("--menu-viewport-margin"));
-            const gap = parseFloat(css.getPropertyValue("--menu-gap"));
+            const margin = parseFloat(css.getPropertyValue("--menu-viewport-margin")) || 0;
+            const gap = parseFloat(css.getPropertyValue("--menu-gap")) || 0;
             popup.style.maxHeight = `${Math.max(0, height - margin * 2)}px`;
             popup.style.maxWidth = `${Math.max(0, width - margin * 2)}px`;
-            const r = popup.getBoundingClientRect();
-            const x = Math.max(left + margin, Math.min(a.right - r.width, left + width - r.width - margin));
+
+            // Establish the actual client-space origin for this top-layer fixed element.
+            popup.style.left = "0px";
+            popup.style.top = "0px";
+            const origin = popup.getBoundingClientRect();
+            const popupWidth = origin.width;
+            const popupHeight = origin.height;
+            const targetX = Math.max(left + margin, Math.min(a.right - popupWidth, width - popupWidth - margin));
             const below = a.bottom + gap;
-            const above = a.top - gap - r.height;
-            const y = below + r.height <= top + height - margin ? below
-              : Math.max(top + margin, Math.min(above, top + height - r.height - margin));
-            popup.style.left = `${x}px`;
-            popup.style.top = `${y}px`;
+            const above = a.top - gap - popupHeight;
+            const targetY = below + popupHeight <= height - margin ? below
+              : Math.max(top + margin, Math.min(above, height - popupHeight - margin));
+
+            // Translate desired client coordinates back into the browser's fixed-position coordinate
+            // space. A final feedback correction absorbs remaining WebKit/top-layer rounding offsets.
+            popup.style.left = `${targetX - origin.left}px`;
+            popup.style.top = `${targetY - origin.top}px`;
+            const placed = popup.getBoundingClientRect();
+            const dx = targetX - placed.left, dy = targetY - placed.top;
+            if (Math.abs(dx) > 0.25) popup.style.left = `${parseFloat(popup.style.left) + dx}px`;
+            if (Math.abs(dy) > 0.25) popup.style.top = `${parseFloat(popup.style.top) + dy}px`;
           }
           function open(menu) {
             const popup = popupOf(menu);
@@ -5122,6 +5069,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         let modalActionBusy = false;
         let modalPreviousFocus = null;
         let modalInitialSnapshot = "";
+        function syncModalVisualViewport() {
+          const modal = ownedElement("modal", DOM_IDS.modal);
+          if (!modal?.classList.contains("open")) return;
+          const viewport = window.visualViewport;
+          const height = Math.max(0, viewport?.height || innerHeight);
+          const top = Math.max(0, viewport?.offsetTop || 0);
+          modal.style.setProperty("--modal-visual-height", `${height}px`);
+          modal.style.setProperty("--modal-visual-top", `${top}px`);
+        }
+        function bindModalVisualViewport() {
+          const sync = () => syncModalVisualViewport();
+          window.addEventListener("resize", sync);
+          window.visualViewport?.addEventListener("resize", sync);
+          window.visualViewport?.addEventListener("scroll", sync);
+        }
         function modalFormSnapshot() {
           const body = ownedElement("modal", DOM_IDS.modalBody);
           if (!body) return "";
@@ -5151,6 +5113,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const app = $(DOM_IDS.appRoot);
             if (app) app.inert = open;
             document.body.classList.toggle("modal-open", open);
+            if (open) requestAnimationFrame(syncModalVisualViewport);
           }
           if (labelledBy) modal.setAttribute("aria-labelledby", labelledBy);
           else if (labelledBy === null) modal.removeAttribute("aria-labelledby");
@@ -5598,7 +5561,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             ? `<div class="planner-event-item-meta-menu">${MoreMenu("일정", e.id, "event", { variant: "bare" })}</div>`
             : "";
           const metaBar = metaParts.length || metaMenu
-            ? `<div class="inset-card planner-event-item-meta">${metaParts.join("")}${metaMenu}</div>`
+            ? InnerCard(`${metaParts.join("")}${metaMenu}`, "planner-event-item-meta", "tinted")
             : "";
 
           return `<div data-ui-component="EventItem" data-ui-actions="${showActions}" data-ui-date="${showDate}" class="planner-event-item list-divided-item${isToday ? " planner-event-item-today" : ""}">
@@ -5752,10 +5715,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             `<div class="budget-value-row"><span>${label}</span><b>${won(amount)}</b></div>`).join("");
           return UIComponentRoot("BudgetCard", "budget-line list-divided-item", `
             ${CardHeader(item.name, "", actions, "card-header--flush")}
-            <div class="budget-amounts budget-value-group">${amounts}</div>
-            ${item.details ? `<div class="budget-detail-group">
-              <div class="label">세부 내용</div><div class="budget-detail">${esc(item.details)}</div>
-            </div>` : ""}`);
+            ${InnerCard(amounts, "budget-amounts budget-value-group", "raised")}
+            ${item.details ? InnerCard(`<div class="label">세부 내용</div><div class="budget-detail">${esc(item.details)}</div>`, "budget-detail-group", "raised") : ""}`);
         }
         function formatMoneyInputValue(value) {
           const n = Number(String(value ?? "").replace(/\D/g, "")) || 0;
@@ -5795,10 +5756,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const status = `<select class="field field--inline-select" aria-label="부부계획 상태"
             data-action="update-plan" data-id="${attr(item.id)}">${SelectOptions(PLAN_STATUSES, item.status)}</select>`;
           const actions = SortableCardActions(item.id, index, total, "plan", COLLECTION_SCHEMAS.plan.label, status);
-          const blocks = COLLECTION_SCHEMAS.plan.fields.filter(field => field.display === "block").map(({ key, label }) => `
-            <div class="inset-card plan-block"><div class="plan-label">${label}</div>
-              <div class="plan-text">${esc(item[key] || "미입력")}</div>
-            </div>`).join("");
+          const blocks = COLLECTION_SCHEMAS.plan.fields.filter(field => field.display === "block").map(({ key, label }) =>
+            InnerCard(`<div class="plan-label">${label}</div><div class="plan-text">${esc(item[key] || "미입력")}</div>`, "plan-block", "raised")
+          ).join("");
           return UIComponentRoot("PlanCard", "plan list-divided-item", CardHeader(item.name, "", actions, "card-header--flush card-header--fixed-actions") + blocks);
         }
 
@@ -5926,12 +5886,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const stats = view.categoryStats.get(category) || { total: 0, done: 0, progress: 0 };
           const { total, done, progress } = stats;
           const actions = OrderButtons(category, index, view.cats.length, "category");
-          return Card(
+          return InnerCard(
             CardHeader(category, "", actions) +
               CardBody(
                 `<div class="category-progress-meta small">${done}/${total}</div><div class="progress category-progress"><i style="--progress-value:${progress}%"></i></div>`,
               ),
-            "card--compact category-card inset-card",
+            "category-card",
           );
         }
         function renderHomeCategories(view) {
@@ -6085,13 +6045,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function mountThemeEditor() {
           setOwnedHTML("theme", "themeFields", Object.entries(THEME_FIELDS)
             .filter(([, field]) => field.type === "color" && field.label)
-            .map(([, field]) => `<div class="inset-card theme-item">
-              <label for="${attr(DOM_IDS[field.id])}">${esc(field.label)}</label>
+            .map(([, field]) => InnerCard(`<label for="${attr(DOM_IDS[field.id])}">${esc(field.label)}</label>
               <span class="theme-color-control">
                 <span class="theme-color-preview" aria-hidden="true"></span>
                 <input id="${attr(DOM_IDS[field.id])}" type="color" data-action="preview-theme">
-              </span>
-            </div>`).join(""));
+              </span>`, "theme-item")).join(""));
           setOwnedHTML("theme", "themePresets", Object.entries(THEME_PRESETS).map(([key, preset]) =>
             Button("", { action: "theme-preset", className: "theme-swatch", attributes: {
               "data-preset": key, title: preset.label, "aria-label": `${preset.label} 테마`,
@@ -9620,11 +9578,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               disabled: !sameScope, "aria-disabled": sameScope ? null : "true",
               title: sameScope ? null : userScoped ? "이 백업을 만든 사용자만 삭제할 수 있어요." : "해당 사용자/프로젝트의 복구 지점만 삭제할 수 있어요.",
             } }), "action-row--item");
-          return `<div data-ui-component="RecoveryItem" class="inset-card recovery-item">
-            <div class="recovery-copy"><div class="recovery-title">${esc(point.reason)}</div>
+          return InnerCard(`<div class="recovery-copy"><div class="recovery-title">${esc(point.reason)}</div>
               <div class="recovery-meta">${esc(time)} · ${scopeLabel}${sameScope ? "" : " · 다른 사용자/프로젝트"}</div>
-            </div>${actions}
-          </div>`;
+            </div>${actions}`, "recovery-item");
         }
         function renderRecoveryPoints() {
           const points = readRecoveryPoints();
@@ -9922,6 +9878,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
           UI: {
             Card,
+            InnerCard,
             FloatingMenu,
             Button,
             ActionRow,
