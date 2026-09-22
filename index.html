@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v414
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v415
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-Q5sf8va75ps9iMPcFZfRqJUDnpNSjzHtRQHXu5uqtMI=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-d/dhUus4rXHrimV30cSsswdQfVrWx6/c2Ml6uYcEeZY='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-zk4M375q/3XhLuN5/FSJPs0CIkGuUrPwn6lMm1aoZxI=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-7DEoSPqCShqaoWe7lGcx7G/Q2L7gXoIYKPUpTVbtg10='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -265,6 +265,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --radius-inset: max(0px, calc(var(--radius) * 0.88));
         /* Inner cards are optically tightened a touch so they do not read rounder than the larger outer Card. */
         --radius-inner-card: max(0px, calc(var(--radius) * 0.86));
+        /* Compact surfaces are short cards/status rows. They need a smaller optical radius
+           than full InnerCard surfaces or they read as pills at 40–60px tall. */
+        --radius-compact-surface: max(0px, calc(var(--radius) * 0.45));
         /* Optical control radii. Compact controls need longer straight runs than cards,
            but keep a continuous near-round transition into the corner. These ratios map
            the default 20px theme radius to 11px / 8px / 9px respectively. */
@@ -689,9 +692,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .inner-card--raised {
         background: var(--surface-raised);
       }
+      /* Geometry modifier for short nested surfaces. Tone variants remain orthogonal. */
+      .inner-card--compact {
+        border-radius: var(--radius-compact-surface);
+      }
       .callout {
         border: 1px solid var(--line);
-        border-radius: var(--radius-inset);
+        border-radius: var(--radius-compact-surface);
         line-height: 1.5;
       }
       .callout--warning {
@@ -1093,6 +1100,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         ) {
           corner-shape: var(--corner-shape-control);
         }
+        :where(.inner-card--compact, .dday, .callout) {
+          corner-shape: var(--corner-shape-control);
+        }
       }
 
 
@@ -1182,6 +1192,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           .dday,
           .callout { --cc-r: var(--radius-inset); }
           .confirm-card { --cc-r: var(--radius-modal); }
+
+          /* Short surfaces share compact control geometry so their straight runs remain visible. */
+          :where(.inner-card--compact, .dday, .callout) {
+            --cc-r: var(--radius-compact-surface);
+            --cc-a-factor: var(--continuous-control-a);
+            --cc-d-factor: var(--continuous-control-d);
+            --cc-y-factor: var(--continuous-control-y);
+          }
 
           :where(.btn:not(.theme-swatch), .icon-control, .field, .pill--badge, .task, .task-check, .calendar-cell, .theme-color-control) {
             --cc-a-factor: var(--continuous-control-a);
@@ -1654,7 +1672,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .dday {
         background: var(--material-surface);
         border: 1px solid var(--surface-border);
-        border-radius: var(--radius-inset);
+        border-radius: var(--radius-compact-surface);
         text-align: center;
         box-shadow: var(--control-shadow);
         color: inherit;
@@ -3589,7 +3607,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "414",
+          version: "415",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -3979,14 +3997,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         const UI_VARIANTS = Object.freeze({
           Button: ["", "primary", "soft", "danger"],
           Card: [""],
-          InnerCard: ["", "tinted", "raised"],
+          InnerCard: ["", "tinted", "raised", "compact"],
           Callout: ["warning", "conflict"],
           CardHeader: ["card-header--fixed-actions", "card-header--flush"],
           ActionRow: ["action-row--wrap", "action-row--flush", "action-row--compact", "action-row--spaced", "action-row--dialog", "action-row--item"],
           Toast: ["info", "success", "error"],
         });
         function assertUiVariant(component, value) {
-          const values = ["ActionRow", "CardHeader"].includes(component) ? String(value).trim().split(/\s+/).filter(Boolean) : [value];
+          const values = ["ActionRow", "CardHeader", "InnerCard"].includes(component) ? String(value).trim().split(/\s+/).filter(Boolean) : [value];
           if (values.some((entry) => !UI_VARIANTS[component]?.includes(entry)))
             throw new Error(`${component}: unsupported variant "${value}"`);
         }
@@ -4032,8 +4050,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function InnerCard(content = "", className = "", variant = "") {
           assertUiVariant("InnerCard", variant);
-          const variantClass = variant ? `inner-card--${variant}` : "";
-          return UIComponentRoot("InnerCard", ["inner-card", variantClass, className].filter(Boolean).join(" "), content);
+          const variantClasses = String(variant).trim().split(/\s+/).filter(Boolean).map((name) => `inner-card--${name}`);
+          return UIComponentRoot("InnerCard", ["inner-card", ...variantClasses, className].filter(Boolean).join(" "), content);
         }
         function Callout(content = "", variant = "warning", className = "") {
           assertUiVariant("Callout", variant);
@@ -4070,7 +4088,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function PlanStatusSummary() {
           return `<div class="plan-status-grid">${PLAN_STATUS_DEFINITIONS.map(status =>
             InnerCard(`<span class="status-dot ${attr(status.dot)}"></span>
-              <div><b data-dom="${attr(status.dom)}">0</b><span>${esc(status.label)}</span></div>`)).join("")}</div>`;
+              <div><b data-dom="${attr(status.dom)}">0</b><span>${esc(status.label)}</span></div>`, "", "compact")).join("")}</div>`;
         }
         function mountStaticUiComponents() {
           document.querySelectorAll('[data-ui-static="PlanStatusSummary"]').forEach(host => {
@@ -5743,7 +5761,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             ? `<div class="planner-event-item-meta-menu">${MoreMenu("일정", e.id, "event", { variant: "bare" })}</div>`
             : "";
           const metaBar = metaParts.length || metaMenu
-            ? InnerCard(`${metaParts.join("")}${metaMenu}`, "planner-event-item-meta", "tinted")
+            ? InnerCard(`${metaParts.join("")}${metaMenu}`, "planner-event-item-meta", "tinted compact")
             : "";
 
           return `<div data-ui-component="EventItem" data-ui-actions="${showActions}" data-ui-date="${showDate}" class="planner-event-item list-divided-item${isToday ? " planner-event-item-today" : ""}">
@@ -6231,7 +6249,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               <span class="theme-color-control">
                 <span class="theme-color-preview" aria-hidden="true"></span>
                 <input id="${attr(DOM_IDS[field.id])}" type="color" data-action="preview-theme">
-              </span>`, "theme-item")).join(""));
+              </span>`, "theme-item", "compact")).join(""));
           setOwnedHTML("theme", "themePresets", Object.entries(THEME_PRESETS).map(([key, preset]) =>
             Button("", { action: "theme-preset", className: "theme-swatch", attributes: {
               "data-preset": key, title: preset.label, "aria-label": `${preset.label} 테마`,
