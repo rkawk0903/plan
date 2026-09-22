@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v415
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v416
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-zk4M375q/3XhLuN5/FSJPs0CIkGuUrPwn6lMm1aoZxI=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-7DEoSPqCShqaoWe7lGcx7G/Q2L7gXoIYKPUpTVbtg10='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-rStn62GI0/VK0FxWSGXJmymuLc1y2fgyE93dU7fHNOQ=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-LHX/yBo9udEUH0YW+rJgRwRvpOW6vVfhbVmaTs966B8='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -268,6 +268,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         /* Compact surfaces are short cards/status rows. They need a smaller optical radius
            than full InnerCard surfaces or they read as pills at 40–60px tall. */
         --radius-compact-surface: max(0px, calc(var(--radius) * 0.45));
+        /* Medium surfaces sit between full InnerCard and compact status rows.
+           D-DAY is visually taller than compact chips, so a medium radius keeps it
+           consistent with surrounding surfaces without making it pill-like. */
+        --radius-medium-surface: max(0px, calc(var(--radius) * 0.60));
         /* Optical control radii. Compact controls need longer straight runs than cards,
            but keep a continuous near-round transition into the corner. These ratios map
            the default 20px theme radius to 11px / 8px / 9px respectively. */
@@ -1100,7 +1104,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         ) {
           corner-shape: var(--corner-shape-control);
         }
-        :where(.inner-card--compact, .dday, .callout) {
+        :where(.inner-card--compact, .callout) {
           corner-shape: var(--corner-shape-control);
         }
       }
@@ -1189,12 +1193,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           .inner-card { --cc-r: var(--radius-inner-card); }
           .more-menu-pop,
           .toast,
-          .dday,
           .callout { --cc-r: var(--radius-inset); }
+          .dday { --cc-r: var(--radius-medium-surface); }
           .confirm-card { --cc-r: var(--radius-modal); }
 
           /* Short surfaces share compact control geometry so their straight runs remain visible. */
-          :where(.inner-card--compact, .dday, .callout) {
+          :where(.inner-card--compact, .callout) {
             --cc-r: var(--radius-compact-surface);
             --cc-a-factor: var(--continuous-control-a);
             --cc-d-factor: var(--continuous-control-d);
@@ -1672,7 +1676,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .dday {
         background: var(--material-surface);
         border: 1px solid var(--surface-border);
-        border-radius: var(--radius-compact-surface);
+        border-radius: var(--radius-medium-surface);
         text-align: center;
         box-shadow: var(--control-shadow);
         color: inherit;
@@ -2393,7 +2397,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .budget-page-reference {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
-        gap: var(--space-sm);
+        gap: var(--card-content-padding);
         align-items: center;
       }
       .budget-page-reference-stats {
@@ -2657,7 +2661,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       @media (max-width: 520px) {
         .budget-page-reference {
           grid-template-columns: minmax(0, 1fr) auto;
-          gap: 10px;
+          gap: var(--card-content-padding);
         }
         .budget-page-reference-stats {
           padding-inline: 8px;
@@ -3607,7 +3611,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "415",
+          version: "416",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4073,8 +4077,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return UIComponentRoot("CardFooter", "card-footer-row", content);
         }
         const BUDGET_GAUGE_GEOMETRY = Object.freeze({
-          viewBox: "0 10 100 58",
-          path: "M 12 58 A 38 38 0 0 1 88 58",
+          viewBox: "0 8 100 58",
+          path: "M 8 58 A 42 42 0 0 1 92 58",
         });
         function BudgetGauge({ progressDom, valueDom }) {
           const { viewBox, path } = BUDGET_GAUGE_GEOMETRY;
