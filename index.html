@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v418
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v420
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -46,12 +46,12 @@ EDIT MAP — 검색할 이름 / 수정할 곳 / 직접 수정하지 않을 곳
 
 
 SOURCE / BUILD
-  VERSION 파일이 앱 버전의 단일 원천입니다. CSS/JS 결합 순서는 scripts/build.py의 명시적 manifest가 소유합니다.
-  python3 scripts/build.py                 # 운영: dist/index.html + PWA 파일, 테스트 하네스 제외
-  python3 scripts/build.py --dev           # 개발: dist/index.dev.html, 테스트 하네스 포함
-  python3 scripts/build.py --check         # 운영 결과 재현성 검사
-  python3 scripts/build.py --dev --check   # 개발 결과 재현성 검사
-  python3 scripts/build.py --release       # index.html + manifest + sw.js 배포 zip 생성
+  app/VERSION 파일이 앱 버전의 단일 원천입니다. CSS/JS 결합 순서는 developer/internal/core_build.py의 명시적 manifest가 소유합니다.
+  python3 developer/internal/core_build.py                 # 운영: output/index.html + PWA 파일, 테스트 하네스 제외
+  python3 developer/internal/core_build.py --dev           # 개발: output/index.dev.html, 테스트 하네스 포함
+  python3 developer/internal/core_build.py --check         # 운영 결과 재현성 검사
+  python3 developer/internal/core_build.py --dev --check   # 개발 결과 재현성 검사
+  python3 developer/internal/core_build.py --release       # index.html + manifest + sw.js 배포 zip 생성
   앱 본체는 계속 단일 index.html이며, PWA 사용 시 manifest.webmanifest / sw.js를 함께 배포합니다.
 
 CURRENT CONTRACTS
@@ -93,9 +93,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
   삭제↔수정 충돌은 conflictPreference(local/remote)에 따라 선택한 쪽의 삭제/수정을 그대로 적용합니다.
   사용자/프로젝트 문맥이 바뀌면 undo/redo history를 초기화하며, 프로젝트 전환 실패 rollback은 기존 history snapshot까지 복원합니다.
   공휴일은 2026–2027 확정 테이블과 2028 잠정 테이블을 사용합니다. screenshot pixel diff 자동 gate는 없습니다.
-  루트 VERSION 파일이 APP_CONFIG.version, backup appVersion, sw.js cache 버전을 소유합니다.
+  app/VERSION 파일이 APP_CONFIG.version, backup appVersion, sw.js cache 버전을 소유합니다.
   sw.js는 VERSION에서 주입된 정확한 CACHE_NAME을 사용하며 activate에서 그 이름 외의 wedding-planner-* 캐시만 삭제합니다.
-  src/css 또는 src/js 를 수정한 뒤 python3 scripts/build.py 를 실행하면 dist/index.html 과 CSP sha256 해시가 함께 갱신됩니다.
+  app/src/css 또는 app/src/js 를 수정한 뒤 python3 developer/internal/core_build.py 를 실행하면 output/index.html 과 CSP sha256 해시가 함께 갱신됩니다.
   운영 index.html에는 대형 테스트 하네스가 들어가지 않습니다. 테스트는 --dev 빌드에서 Planner.Testing으로 실행합니다.
 -->
 
@@ -112,8 +112,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-CFeZ9QB5rp8V7JIlT8Ux0ss7sMxsNs7igqWYcZBFajE=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-n/h3uuiyevU/cOSq9Y/nh4i8ZIuyOpfAiR9vh4Vn04E='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-sMr4nhpU4DrC4wnh2RtGZ8hXzpozjIdT/Gx5YtxENJQ=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-4jV2YtLJgRSq7rb/QptilnBkpEVKvRYGE8FowoZlpmI='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
+    <meta content="staging" name="planner-build-mode" />
+    <meta content="" name="planner-supabase-sri" />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
     <link href="icons/icon-180.png" rel="apple-touch-icon" />
@@ -2818,26 +2820,68 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 
-      /* Touch-capable devices: form dialogs live near the top of the current VisualViewport.
-         `any-pointer: coarse` deliberately covers iPad when a trackpad/mouse is also attached; using
-         only the primary pointer could otherwise fall back to the desktop bottom sheet. When the
-         software keyboard shrinks the visible viewport, the sheet shrinks/scrolls inside it. */
+      /* Touch-capable devices use VisualViewport height only. Avoid offsetTop math: iPad/WebKit can
+         already position fixed layers in visual-viewport coordinates, which made the previous rule
+         double-shift dialogs. Phones keep a top sheet; tablets get a stable centered dialog. */
       @media (any-pointer: coarse) {
         .modal {
-          --modal-touch-top-gap: max(20px, calc(env(safe-area-inset-top) + 12px));
-          inset: auto 0 auto 0;
-          top: var(--modal-visual-top, 0px);
+          inset: 0;
+          top: 0;
+          width: 100%;
           height: var(--modal-visual-height, 100dvh);
-          align-items: flex-start;
-          padding: var(--modal-touch-top-gap) max(12px, env(safe-area-inset-right))
+          padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
             max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
           box-sizing: border-box;
+          overflow: hidden;
         }
         .sheet {
           width: min(100%, var(--modal-max-width));
-          max-height: calc(var(--modal-visual-height, 100dvh) - var(--modal-touch-top-gap) - max(16px, env(safe-area-inset-bottom)));
+          max-height: calc(var(--modal-visual-height, 100dvh) - max(24px, env(safe-area-inset-top)) - max(24px, env(safe-area-inset-bottom)));
           border: 1px solid var(--surface-border);
           border-radius: var(--radius-modal);
+          overscroll-behavior: contain;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* Touch MoreMenu: a compact bottom action sheet avoids Safari's Popover/fixed anchoring bugs. */
+        .more-menu-pop:popover-open,
+        .more-menu-pop.is-open {
+          position: fixed !important;
+          left: 50% !important;
+          right: auto !important;
+          top: auto !important;
+          bottom: max(14px, env(safe-area-inset-bottom)) !important;
+          width: min(320px, calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+          min-width: 0;
+          max-width: calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)) !important;
+          max-height: min(50dvh, 360px) !important;
+          transform: translateX(-50%);
+          padding: 8px;
+          gap: 4px;
+        }
+        .more-menu-pop .btn--menu {
+          min-height: 44px;
+        }
+      }
+
+      @media (any-pointer: coarse) and (max-width: 600px) {
+        .modal {
+          --modal-touch-top-gap: max(16px, calc(env(safe-area-inset-top) + 8px));
+          align-items: flex-start;
+          padding-top: var(--modal-touch-top-gap);
+        }
+      }
+
+      @media (any-pointer: coarse) and (min-width: 601px) {
+        .modal {
+          align-items: center;
+          justify-content: center;
+          padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+            max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+        }
+        .sheet {
+          width: min(var(--modal-max-width), calc(100vw - 48px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+          max-height: calc(var(--modal-visual-height, 100dvh) - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         }
       }
 /* ===== 08 STATE UTILITIES — explicit visibility/spacing ===== */
@@ -3482,9 +3526,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 <div class="theme-presets" data-dom="themePresets"></div>
                 <div class="theme-grid u-mt-md" data-dom="themeFields"></div>
                 <div class="theme-controls u-mt-md">
-                  <label data-theme-label="radius">모서리 둥글기</label
+                  <label data-theme-label="radius" for="themeRadiusControl">모서리 둥글기</label
                   ><input
                     class="theme-range"
+                    id="themeRadiusControl"
                     data-action="preview-theme"
                     data-theme-control="radius"
                     max="40"
@@ -3611,7 +3656,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "418",
+          version: "420",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4407,7 +4452,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           },
           memos: { quickMemo: "quickMemo", memoSearch: "memoSearch" },
           history: { undoButton: "undoButton", redoButton: "redoButton", historyStatus: "historyStatus" },
-          theme: { themeFields: "themeFields", themePresets: "themePresets", thRadiusVal: "thRadiusVal" },
+          theme: { themeFields: "themeFields", themePresets: "themePresets", themeRadiusControl: "themeRadiusControl", thRadiusVal: "thRadiusVal" },
           shared: {
             syncUserText: "syncUserText", syncCardDescription: "syncCardDescription", syncDetailText: "syncDetailText",
             syncFooter: "syncFooter", syncConflictBox: "syncConflictBox", syncConflictText: "syncConflictText",
@@ -5209,7 +5254,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             popup.style.maxHeight = `${Math.max(0, height - margin * 2)}px`;
             popup.style.maxWidth = `${Math.max(0, width - margin * 2)}px`;
 
-            // Establish the actual client-space origin for this top-layer fixed element.
+            // iPad/WebKit has had several Popover + fixed-position coordinate bugs. On touch-capable
+            // devices, use a viewport-stable compact action sheet instead of anchoring the top-layer
+            // popover to a moving layout/visual-viewport coordinate. CSS owns its exact placement.
+            if (window.matchMedia?.("(any-pointer: coarse)")?.matches) {
+              popup.style.removeProperty("left");
+              popup.style.removeProperty("top");
+              popup.style.removeProperty("right");
+              popup.style.removeProperty("bottom");
+              return;
+            }
+
+            // Desktop/fine-pointer path: establish the actual client-space origin for this top-layer
+            // fixed element, then place it next to the trigger and correct any browser rounding drift.
             popup.style.left = "0px";
             popup.style.top = "0px";
             const origin = popup.getBoundingClientRect();
@@ -5221,8 +5278,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const targetY = below + popupHeight <= height - margin ? below
               : Math.max(top + margin, Math.min(above, height - popupHeight - margin));
 
-            // Translate desired client coordinates back into the browser's fixed-position coordinate
-            // space. A final feedback correction absorbs remaining WebKit/top-layer rounding offsets.
             popup.style.left = `${targetX - origin.left}px`;
             popup.style.top = `${targetY - origin.top}px`;
             const placed = popup.getBoundingClientRect();
@@ -5296,9 +5351,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (!modal?.classList.contains("open")) return;
           const viewport = window.visualViewport;
           const height = Math.max(0, viewport?.height || innerHeight);
-          const top = Math.max(0, viewport?.offsetTop || 0);
+          // Do not add visualViewport.offsetTop to a fixed overlay. On iPad Safari fixed/top-layer
+          // elements are already visual-viewport aware in common states; applying offsetTop again can
+          // double-shift the dialog when browser chrome or the software keyboard changes the viewport.
           modal.style.setProperty("--modal-visual-height", `${height}px`);
-          modal.style.setProperty("--modal-visual-top", `${top}px`);
         }
         function bindModalVisualViewport() {
           const sync = () => syncModalVisualViewport();
@@ -6111,7 +6167,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return InnerCard(
             CardHeader(category, "", actions) +
               CardBody(
-                `<div class="category-progress-meta small">${done}/${total}</div><div class="progress category-progress"><i style="--progress-value:${progress}%"></i></div>`,
+                `<div class="category-progress-meta small">${done}/${total}</div><div class="progress category-progress"><i data-progress-value="${progress}"></i></div>`,
               ),
             "category-card",
           );
@@ -6123,6 +6179,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             "categoryProgressList",
             html || EmptyState("등록된 분야가 없어요."),
           );
+          plannerLiveQueryAll('[data-dom="categoryProgressList"] [data-progress-value]').forEach((bar) => {
+            const pct = Math.max(0, Math.min(100, Number(bar.dataset.progressValue) || 0));
+            bar.style.setProperty("--progress-value", `${pct}%`);
+          });
         }
         function renderHomePlanSummary(view) {
           PLAN_STATUS_DEFINITIONS.forEach(status => setOwnedText("home", status.dom, view[status.countKey]));
@@ -6421,7 +6481,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (/member limit|project full/i.test(message)) return "이 프로젝트는 두 명이 모두 참여한 상태예요.";
           if (/minimum client|client version|upgrade/i.test(message)) return "공동 데이터가 더 최신 앱 버전을 요구해요. 앱을 새로고침해 업데이트해주세요.";
           if (/CAS 동기화 계약|compare_and_swap_wedding_state|최신 SQL 마이그레이션/i.test(message))
-            return "공유 서버의 동기화 계약이 현재 앱보다 오래됐어요. v417 SQL 마이그레이션을 먼저 적용해주세요.";
+            return "공유 서버의 동기화 계약이 현재 앱보다 오래됐어요. v420 SQL 마이그레이션을 먼저 적용해주세요.";
           if (/서버 저장 한도|Shared state exceeds|2 MiB/i.test(message))
             return "공동 데이터가 서버 저장 한도(2 MiB)를 초과했어요. 불필요한 항목을 정리하거나 백업한 뒤 다시 시도해주세요.";
           const known = {
@@ -6998,10 +7058,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function normalizeSharedConfig(config = {}) {
           const rest = { ...(config || {}) };
           delete rest.projects;
+          // Backend identity is a deployment property, not mutable user state. Keeping stale/custom
+          // url/key values would conflict with the production CSP connect-src allowlist.
+          delete rest.url;
+          delete rest.key;
           return {
             ...rest,
-            url: rest.url || DEFAULT_SUPABASE_URL,
-            key: rest.key || DEFAULT_SUPABASE_KEY,
+            url: DEFAULT_SUPABASE_URL,
+            key: DEFAULT_SUPABASE_KEY,
           };
         }
         function sharedConfig() {
@@ -7610,7 +7674,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           } catch (e) {
             console.error(e);
             renderSharedStatusUI();
-            if (!silent) notifyError(sharedFriendlyError(e, "연결에 실패했어요. Supabase URL/키를 확인해주세요."));
+            if (!silent) notifyError(sharedFriendlyError(e, "연결에 실패했어요. 공유 서버 연결 상태를 확인해주세요."));
             else console.warn("initial shared connection failed", e);
             return false;
           }
