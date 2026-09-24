@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v431
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v432
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-WVKMz1AK3MVA4EHK+o2fb3gUJh6VfwF64kh6USQ8v94=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-0ka8QYrHhsWMYhGRfcu6FQi5tSJUl4BoxQx+CtXyL14='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-p46QTZ9+r+ikLnYcBL9GwOKxXB2VBWmqcmZo2pcgHs4=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-PRJryETYa0+bP5Sawn/kCvEhuYg4Oc7Wh14NQtjIF3A='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -1109,15 +1109,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .modal-form .form-field {
         min-width: 0;
         grid-template-columns: minmax(0, 1fr);
-      }
-      .modal-form .field[type="date"],
-      .modal-form .field[type="time"] {
-        display: block;
-        inline-size: 100%;
-        min-inline-size: 0;
-        max-inline-size: 100%;
-        box-sizing: border-box;
-        overflow: hidden;
       }
       .sheet .action-row--dialog {
         margin: 6px calc(var(--modal-padding) * -1) calc(var(--modal-padding) * -1);
@@ -2757,6 +2748,17 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 
+      /* iOS WebKit: padding on native date/time inputs miscalculates width:100%
+         and pushes the control beyond its modal. Keep the native picker intact. */
+      @media (any-pointer: coarse) {
+        @supports (-webkit-touch-callout: none) {
+          .modal-form .field[type="date"],
+          .modal-form .field[type="time"] {
+            padding: 0;
+          }
+        }
+      }
+
       @media (prefers-reduced-transparency: reduce) {
         .nav,
         .dday,
@@ -3685,7 +3687,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "431",
+          version: "432",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
