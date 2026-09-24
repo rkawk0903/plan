@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v430
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v431
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-qpfQrErVhQj+vku3uGMh5drP0ZGMEO1rjT3lvbXhd6s=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-Y/uyHPJ6CDTRom2nx3nCKBCoTvDFJUx0pn+8BM4wLFA='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-WVKMz1AK3MVA4EHK+o2fb3gUJh6VfwF64kh6USQ8v94=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-0ka8QYrHhsWMYhGRfcu6FQi5tSJUl4BoxQx+CtXyL14='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -367,6 +367,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --menu-viewport-margin: 8px;
         --menu-min-width: 92px;
         --menu-max-width: 220px;
+        --menu-max-height: 132px;
         --menu-padding: 5px;
         --menu-item-gap: 2px;
         --ui-control-radius: var(--radius-control);
@@ -629,12 +630,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         margin: 0;
         display: none;
         width: max-content;
-        height: max-content;
+        height: auto;
         grid-template-columns: minmax(0, 1fr);
+        grid-auto-rows: max-content;
+        align-content: start;
         gap: var(--menu-item-gap);
         min-width: min(var(--menu-min-width), calc(100vw - 2 * var(--menu-viewport-margin)));
         max-width: min(var(--menu-max-width), calc(100vw - 2 * var(--menu-viewport-margin)));
-        max-height: calc(100dvh - 2 * var(--menu-viewport-margin));
+        max-height: min(var(--menu-max-height), calc(100dvh - 2 * var(--menu-viewport-margin)));
         overflow: auto;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
@@ -972,6 +975,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
         backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
         max-width: var(--modal-max-width);
+        min-width: 0;
         width: 100%;
         max-height: min(var(--modal-max-height), calc(100dvh - 48px));
         overflow: auto;
@@ -1098,14 +1102,22 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         margin-top: 16px;
         gap: 14px;
         /* Safari date/time controls must not size the implicit grid track past the dialog. */
+        min-width: 0;
+        width: 100%;
         grid-template-columns: minmax(0, 1fr);
       }
       .modal-form .form-field {
+        min-width: 0;
         grid-template-columns: minmax(0, 1fr);
       }
       .modal-form .field[type="date"],
       .modal-form .field[type="time"] {
-        max-width: 100%;
+        display: block;
+        inline-size: 100%;
+        min-inline-size: 0;
+        max-inline-size: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
       }
       .sheet .action-row--dialog {
         margin: 6px calc(var(--modal-padding) * -1) calc(var(--modal-padding) * -1);
@@ -3673,7 +3685,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "430",
+          version: "431",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -5288,8 +5300,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const css = getComputedStyle(popup);
             const margin = parseFloat(css.getPropertyValue("--menu-viewport-margin")) || 0;
             const gap = parseFloat(css.getPropertyValue("--menu-gap")) || 0;
-            popup.style.maxHeight = `${Math.max(0, height - margin * 2)}px`;
-            popup.style.maxWidth = `${Math.max(0, width - margin * 2)}px`;
+            const compactHeight = parseFloat(css.getPropertyValue("--menu-max-height")) || 132;
+            const compactWidth = parseFloat(css.getPropertyValue("--menu-max-width")) || 220;
+            popup.style.maxHeight = `${Math.max(0, Math.min(compactHeight, height - margin * 2))}px`;
+            popup.style.maxWidth = `${Math.max(0, Math.min(compactWidth, width - margin * 2))}px`;
 
             // Measure at a known origin, then anchor directly below the trigger when space permits.
             // Touch/iPad uses the ordinary fixed fallback (no top-layer Popover), so targetX/targetY
