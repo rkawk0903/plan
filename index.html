@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v432
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v433
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-p46QTZ9+r+ikLnYcBL9GwOKxXB2VBWmqcmZo2pcgHs4=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-PRJryETYa0+bP5Sawn/kCvEhuYg4Oc7Wh14NQtjIF3A='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-mgb0nxhawk1riWoPbI0CdH9oO7zXGcIUr1pPDt8zj8s=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-lLprUEw+T0S0G1DpVC6FIOOBVobo8wP2gQpo7E/pqtQ='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -2748,13 +2748,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 
-      /* iOS WebKit: padding on native date/time inputs miscalculates width:100%
-         and pushes the control beyond its modal. Keep the native picker intact. */
+      /* iOS WebKit miscalculates width:100% on padded native date/time inputs.
+         Grid stretch gives these the same outer width and padding as other fields. */
       @media (any-pointer: coarse) {
         @supports (-webkit-touch-callout: none) {
           .modal-form .field[type="date"],
           .modal-form .field[type="time"] {
-            padding: 0;
+            width: auto;
           }
         }
       }
@@ -3687,7 +3687,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "432",
+          version: "433",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -5231,6 +5231,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function bindAppEvents() {
           FloatingMenu.bind();
           bindPageSwipeNavigation();
+          bindModalHistory();
           bindModalVisualViewport();
           new Set(Object.values(ACTIONS).map(({ event }) => event)).forEach((event) =>
             document.addEventListener(event, (e) => handleRegisteredActionEvent(event, e)));
@@ -5401,6 +5402,42 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         let modalActionBusy = false;
         let modalPreviousFocus = null;
         let modalInitialSnapshot = "";
+        const MODAL_HISTORY_KEY = "__weddingPlannerModal";
+        let modalHistoryToken = null;
+        function pushModalHistoryEntry() {
+          if (modalHistoryToken) return;
+          const token = `${Date.now()}-${Math.random()}`;
+          try {
+            history.pushState({ ...(history.state || {}), [MODAL_HISTORY_KEY]: token }, "", location.href);
+            modalHistoryToken = token;
+          } catch (error) {
+            console.warn("모달 뒤로가기 기록을 만들 수 없습니다.", error);
+          }
+        }
+        function handleModalPopstate() {
+          if (!modalHistoryToken || history.state?.[MODAL_HISTORY_KEY] === modalHistoryToken) return;
+          if (!$(DOM_IDS.modal)?.classList.contains("open")) {
+            modalHistoryToken = null;
+            return;
+          }
+          if (modalHasUnsavedChanges()) {
+            // Back consumed the modal entry; keep the app here until the discard prompt is answered.
+            history.pushState({ ...(history.state || {}), [MODAL_HISTORY_KEY]: modalHistoryToken }, "", location.href);
+            requestCloseModal();
+          } else {
+            modalHistoryToken = null;
+            closeModal();
+          }
+        }
+        function bindModalHistory() {
+          // Reloading an open dialog may leave a stale entry in this tab's history.
+          if (history.state?.[MODAL_HISTORY_KEY]) {
+            const state = { ...history.state };
+            delete state[MODAL_HISTORY_KEY];
+            history.replaceState(state, "", location.href);
+          }
+          window.addEventListener("popstate", handleModalPopstate);
+        }
         function syncModalVisualViewport() {
           const modal = ownedElement("modal", DOM_IDS.modal);
           if (!modal?.classList.contains("open")) return;
@@ -5457,27 +5494,31 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             title.id = DOM_IDS.modalTitle;
             title.setAttribute("tabindex", "-1");
             renderModalShell({ labelledBy: DOM_IDS.modalTitle });
+            // Read the dialog title without opening the mobile keyboard.
+            title.focus({ preventScroll: true });
           }
-          const target = $("modalBody")?.querySelector('[aria-required="true"]') ||
-            $("modalBody")?.querySelector(
-              "input:not([disabled]),select:not([disabled]),textarea:not([disabled]),button:not([disabled])",
-            );
-          (target || title)?.focus?.();
         }
         function openModal(type, data) {
           const body = MODAL_RENDERERS[type]?.(data) ?? null;
           if (body === null) return;
+          const alreadyOpen = $(DOM_IDS.modal)?.classList.contains("open");
           FloatingMenu.close({ restoreFocus: true });
           modalPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
           setOwnedHTML("modal", DOM_IDS.modalBody, body);
           modalActionBusy = false;
           renderModalShell({ open: true, labelledBy: null });
+          if (!alreadyOpen) pushModalHistoryEntry();
           requestAnimationFrame(() => {
             modalInitialSnapshot = modalFormSnapshot();
             focusModalInitial();
           });
         }
         function closeModal() {
+          if (modalHistoryToken) {
+            const token = modalHistoryToken;
+            modalHistoryToken = null;
+            if (history.state?.[MODAL_HISTORY_KEY] === token) history.back();
+          }
           renderModalShell({ open: false, labelledBy: null });
           modalActionBusy = false;
           const previous = modalPreviousFocus;
@@ -5508,7 +5549,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (!focusable.length) return;
           const first = focusable[0],
             last = focusable[focusable.length - 1];
-          if (event.shiftKey && document.activeElement === first) {
+          if (event.shiftKey && (document.activeElement === first || document.activeElement?.id === DOM_IDS.modalTitle)) {
             event.preventDefault();
             last.focus();
           } else if (!event.shiftKey && document.activeElement === last) {
