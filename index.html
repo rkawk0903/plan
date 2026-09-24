@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v420
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v421
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-sMr4nhpU4DrC4wnh2RtGZ8hXzpozjIdT/Gx5YtxENJQ=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-4jV2YtLJgRSq7rb/QptilnBkpEVKvRYGE8FowoZlpmI='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-mJbuv+aCNso2RIko7iTRlU+PLoG3MuoLX5m/2tlfIKk=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-bK/MqY4ECZBlMG3auC1hb9xOVZzla6obDOxo5vi91Ig='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="staging" name="planner-build-mode" />
     <meta content="" name="planner-supabase-sri" />
@@ -2843,24 +2843,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           -webkit-overflow-scrolling: touch;
         }
 
-        /* Touch MoreMenu: a compact bottom action sheet avoids Safari's Popover/fixed anchoring bugs. */
-        .more-menu-pop:popover-open,
-        .more-menu-pop.is-open {
-          position: fixed !important;
-          left: 50% !important;
-          right: auto !important;
-          top: auto !important;
-          bottom: max(14px, env(safe-area-inset-bottom)) !important;
-          width: min(320px, calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)));
-          min-width: 0;
-          max-width: calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)) !important;
-          max-height: min(50dvh, 360px) !important;
-          transform: translateX(-50%);
-          padding: 8px;
-          gap: 4px;
-        }
-        .more-menu-pop .btn--menu {
-          min-height: 44px;
+        /* Touch MoreMenu keeps the familiar anchored popup. JS intentionally avoids Safari's
+           native top-layer Popover on coarse pointers and positions the fixed fallback directly
+           from the trigger's client rect, so no bottom action-sheet override is needed here. */
+        .btn--menu {
+          --btn-min-height: 44px;
         }
       }
 
@@ -2881,7 +2868,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         .sheet {
           width: min(var(--modal-max-width), calc(100vw - 48px - env(safe-area-inset-left) - env(safe-area-inset-right)));
-          max-height: calc(var(--modal-visual-height, 100dvh) - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+          /* iPad dialog must read as a floating panel, not an almost full-height sheet.
+             Long forms scroll inside this bounded panel. */
+          max-height: min(760px, 82dvh, calc(var(--modal-visual-height, 100dvh) - 96px));
         }
       }
 /* ===== 08 STATE UTILITIES — explicit visibility/spacing ===== */
@@ -3525,11 +3514,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               <div data-ui-component="CardBody" class="card-body">
                 <div class="theme-presets" data-dom="themePresets"></div>
                 <div class="theme-grid u-mt-md" data-dom="themeFields"></div>
-                <div class="theme-controls u-mt-md">
+                <div class="theme-controls u-mt-md" data-dom="themeRadiusControl">
                   <label data-theme-label="radius" for="themeRadiusControl">모서리 둥글기</label
                   ><input
                     class="theme-range"
-                    id="themeRadiusControl"
                     data-action="preview-theme"
                     data-theme-control="radius"
                     max="40"
@@ -3656,7 +3644,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "420",
+          version: "421",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -5219,9 +5207,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         const SUPPORTS_POPOVER =
           typeof HTMLElement !== "undefined" && typeof HTMLElement.prototype.showPopover === "function" &&
           typeof CSS !== "undefined" && CSS.supports?.("selector(:popover-open)") === true;
-        const isPopupOpen = popup => !!popup && (SUPPORTS_POPOVER ? popup.matches(":popover-open") : popup.classList.contains("is-open"));
-        const showPopup = popup => { if (SUPPORTS_POPOVER) popup.showPopover(); else popup.classList.add("is-open"); };
-        const hidePopup = popup => { if (SUPPORTS_POPOVER) popup.hidePopover(); else popup.classList.remove("is-open"); };
+        // iPad/WebKit can misalign a native top-layer Popover against getBoundingClientRect().
+        // Keep the familiar anchored menu UX, but use our fixed-position fallback on coarse/touch
+        // pointers so the menu and trigger share the same client-coordinate system.
+        const useNativePopover = () => SUPPORTS_POPOVER && !window.matchMedia?.("(any-pointer: coarse)")?.matches;
+        const isPopupOpen = popup => !!popup && (useNativePopover() ? popup.matches(":popover-open") : popup.classList.contains("is-open"));
+        const showPopup = popup => {
+          if (useNativePopover()) popup.showPopover();
+          else popup.classList.add("is-open");
+        };
+        const hidePopup = popup => {
+          if (useNativePopover() && popup.matches?.(":popover-open")) popup.hidePopover();
+          popup.classList.remove("is-open");
+        };
           function close({ restoreFocus = false } = {}) {
             if (!active) return;
             const menu = active, popup = popupOf(menu);
@@ -5254,19 +5252,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             popup.style.maxHeight = `${Math.max(0, height - margin * 2)}px`;
             popup.style.maxWidth = `${Math.max(0, width - margin * 2)}px`;
 
-            // iPad/WebKit has had several Popover + fixed-position coordinate bugs. On touch-capable
-            // devices, use a viewport-stable compact action sheet instead of anchoring the top-layer
-            // popover to a moving layout/visual-viewport coordinate. CSS owns its exact placement.
-            if (window.matchMedia?.("(any-pointer: coarse)")?.matches) {
-              popup.style.removeProperty("left");
-              popup.style.removeProperty("top");
-              popup.style.removeProperty("right");
-              popup.style.removeProperty("bottom");
-              return;
-            }
-
-            // Desktop/fine-pointer path: establish the actual client-space origin for this top-layer
-            // fixed element, then place it next to the trigger and correct any browser rounding drift.
+            // Measure at a known origin, then anchor directly below the trigger when space permits.
+            // Touch/iPad uses the ordinary fixed fallback (no top-layer Popover), so targetX/targetY
+            // can be assigned directly. Fine-pointer browsers keep native Popover and compensate for
+            // its browser-specific top-layer origin before applying the same visual target.
+            popup.style.removeProperty("right");
+            popup.style.removeProperty("bottom");
+            popup.style.removeProperty("transform");
             popup.style.left = "0px";
             popup.style.top = "0px";
             const origin = popup.getBoundingClientRect();
@@ -5277,6 +5269,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const above = a.top - gap - popupHeight;
             const targetY = below + popupHeight <= height - margin ? below
               : Math.max(top + margin, Math.min(above, height - popupHeight - margin));
+
+            if (!useNativePopover()) {
+              popup.style.left = `${targetX}px`;
+              popup.style.top = `${targetY}px`;
+              return;
+            }
 
             popup.style.left = `${targetX - origin.left}px`;
             popup.style.top = `${targetY - origin.top}px`;
