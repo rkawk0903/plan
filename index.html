@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v421
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v430
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,16 +112,25 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-mJbuv+aCNso2RIko7iTRlU+PLoG3MuoLX5m/2tlfIKk=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-bK/MqY4ECZBlMG3auC1hb9xOVZzla6obDOxo5vi91Ig='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-7OR7FWf4UXXMMUUfDFp0r7whWUbyzNktAsFE2iPxQGU=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-EHpaNdHuDa+C7a6kHb3x8NJ/IOyHddcRoZ73VUFug4c='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
-    <meta content="staging" name="planner-build-mode" />
-    <meta content="" name="planner-supabase-sri" />
+    <meta content="production" name="planner-build-mode" />
+    <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
     <meta content="no-referrer" name="referrer" />
     <link href="manifest.webmanifest" rel="manifest" />
     <link href="icons/icon-180.png" rel="apple-touch-icon" />
     <title>우리 결혼 플래너</title>
     <style>/* ===== 01 TOKENS — semantic geometry, palette, radius and layer scale ===== */
       :root {
+        /* 자주 수정하는 디자인 설정 — 오른쪽 값의 실제 정의는 이 파일 아래에 있습니다.
+           색상/둥글기는 앱 설정에서 선택한 개인 테마가 우선할 수 있습니다.
+           배경/포인트/본문/보조 글씨: --bg / --accent / --ink / --muted
+           페이지 좌우/섹션/카드 간격: --page-side-space / --page-section-gap / --card-content-padding
+           카드/모달/버튼 둥글기: --radius-surface / --radius-modal / --radius-control
+           버튼 높이: --button-height (터치 기기는 07-responsive.css에서 44px)
+           본문/작은 글씨/제목: --font-body / --font-small / --header-title-size
+           모달 폭: --modal-max-width (iPad 높이는 07-responsive.css)
+           같은 이름의 아래 정의 한 곳을 바꾸면 해당 부품에 반영됩니다. */
         /* UI EDIT MAP — 크기·폰트·배치는 이 구역부터 수정하세요.
      공통값 → 컴포넌트 → 명시적 변형 → 화면 배치 순서.
      색상/전체 둥글기는 설정 화면의 저장된 테마가 우선합니다. */
@@ -304,7 +313,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --material-button: color-mix(in srgb, var(--button-bg) 88%, transparent);
         --material-blur: 24px;
         --material-saturate: 155%;
-        --motion-fast: 110ms;
+        --motion-fast: 140ms;
         --motion-standard: 180ms;
         --motion-enter: 210ms;
         --ease-interaction: cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -939,8 +948,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         inset: 0;
         background: var(--modal-overlay-bg);
         display: none;
-        align-items: flex-end;
+        align-items: center;
         justify-content: center;
+        padding: 24px;
+        box-sizing: border-box;
         z-index: var(--layer-modal);
         -webkit-backdrop-filter: blur(3px);
         backdrop-filter: blur(3px);
@@ -952,16 +963,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .sheet {
         background: color-mix(in srgb, var(--card) 94%, transparent);
         border: 1px solid var(--surface-border);
-        border-bottom: 0;
-        border-radius: var(--radius-modal) var(--radius-modal) 0 0;
+        border-radius: var(--radius-modal);
         padding: var(--modal-padding);
-        box-shadow: 0 -2px 8px rgba(20, 20, 22, 0.025), 0 -18px 46px rgba(20, 20, 22, 0.07);
+        box-shadow: var(--confirm-shadow);
         -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
         backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
         max-width: var(--modal-max-width);
         width: 100%;
-        max-height: var(--modal-max-height);
+        max-height: min(var(--modal-max-height), calc(100dvh - 48px));
         overflow: auto;
+        overscroll-behavior: contain;
       }
       .modal.open .sheet {
         animation: quiet-sheet-in var(--motion-enter) var(--ease-settle) both;
@@ -1015,6 +1026,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         padding: 35px 10px;
         text-align: center;
         color: var(--muted);
+        line-height: 1.55;
+      }
+      .empty .btn {
+        margin-top: 12px;
       }
 
       /* ===== v384 grouped/form refinement ===== */
@@ -2626,8 +2641,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 /* ===== 07 RESPONSIVE — viewport and motion rules ===== */
+      /* DESKTOP / WIDE TABLET — columns only; overlay dimensions live with the overlay rules below. */
       @media (min-width: 700px) {
         .theme-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .category-cards {
           grid-template-columns: repeat(3, minmax(0, 1fr));
         }
       }
@@ -2635,17 +2654,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         .theme-grid {
           grid-template-columns: repeat(4, minmax(0, 1fr));
         }
-      }
-      @media (min-width: 700px) {
-        .category-cards {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-      }
-      @media (min-width: 980px) {
         .category-cards {
           grid-template-columns: repeat(4, minmax(0, 1fr));
         }
       }
+      /* PHONE — keep content and actions within narrow screens. */
       @media (max-width: 375px) {
         .home-top-grid {
           grid-template-columns: minmax(0, 1fr);
@@ -2674,6 +2687,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 
+      /* ACCESSIBILITY — honor system motion/transparency preferences. */
       @media (prefers-reduced-motion: reduce) {
         .calendar-cell,
         .budget-arc-progress,
@@ -2699,6 +2713,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 
+      /* TOUCH / COARSE POINTER — input zoom and comfortable targets. */
       /* 터치 기기: 입력창 16px 미만이면 iOS 가 포커스 시 화면을 확대하므로 하한을 둡니다. 터치 타깃도 키웁니다. */
       @media (hover: none) and (pointer: coarse) {
         :root {
@@ -2820,7 +2835,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 
-      /* Touch-capable devices use VisualViewport height only. Avoid offsetTop math: iPad/WebKit can
+      /* TABLET / IPAD + PHONE overlays — VisualViewport height only. Avoid offsetTop math: iPad/WebKit can
          already position fixed layers in visual-viewport coordinates, which made the previous rule
          double-shift dialogs. Phones keep a top sheet; tablets get a stable centered dialog. */
       @media (any-pointer: coarse) {
@@ -3644,7 +3659,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "421",
+          version: "430",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -3668,7 +3683,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           localTabKey: "wedding_planner_tab_v1",
           localChannelName: "wedding-planner-local-v1",
           sharedLibraryUrl: "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js",
-          sharedLibraryIntegrity: "",
+          sharedLibraryIntegrity: "sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP",
           sharedLibraryLoadTimeoutMs: 8000,
           sharedBaselineSnapshotMaxBytes: 512 * 1024,
           sharedStateMaxBytes: 2 * 1024 * 1024,
@@ -4144,12 +4159,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           assertUiVariant("ActionRow", variant);
           return UIComponentRoot("ActionRow", `action-row ${variant}`.trim(), content);
         }
-        function EmptyState(message) {
-          return `<div class="empty">${esc(message)}</div>`;
+        function EmptyState(message, action = "") {
+          return `<div class="empty"><div>${esc(message)}</div>${action}</div>`;
         }
-        function List(items, renderer, emptyMessage = "") {
+        function List(items, renderer, emptyMessage = "", emptyAction = "") {
           return items?.length ? items.map((item, index) => renderer(item, index, items.length)).join("")
-            : emptyMessage ? EmptyState(emptyMessage) : "";
+            : emptyMessage ? EmptyState(emptyMessage, emptyAction) : "";
         }
         const MORE_MENU_VARIANTS = Object.freeze(["default", "bare"]);
         function MoreMenu(label, id, type, { variant = "default" } = {}) {
@@ -4558,9 +4573,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           },
           html(name, items, options = {}) {
             const schema = this.schema(name);
+            // Offer a first step only when the collection really is empty. Filtered lists
+            // (for example an empty search result) should keep their existing message.
+            const firstItemAction = !schema.editOnly && !getCollection(schema.stateKey).length
+              ? Button(`+ 첫 ${schema.label} 추가`, { action: "open-modal", variant: "soft",
+                  attributes: { "data-modal": name } }) : "";
             const content = List(items,
               (item, index, total) => schema.renderer(item, index, total, options),
-              options.emptyMessage ?? schema.empty);
+              options.emptyMessage ?? schema.empty, firstItemAction);
             const hostClass = [schema.hostClass, options.hostClass].filter(Boolean).join(" ");
             if (!hostClass) return content;
             return schema.hostComponent === "InnerCard" ? InnerCard(content, hostClass) : `<div class="${attr(hostClass)}">${content}</div>`;
@@ -5401,9 +5421,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             title.setAttribute("tabindex", "-1");
             renderModalShell({ labelledBy: DOM_IDS.modalTitle });
           }
-          const target = $("modalBody")?.querySelector(
-            "input:not([disabled]),select:not([disabled]),textarea:not([disabled]),button:not([disabled])",
-          );
+          const target = $("modalBody")?.querySelector('[aria-required="true"]') ||
+            $("modalBody")?.querySelector(
+              "input:not([disabled]),select:not([disabled]),textarea:not([disabled]),button:not([disabled])",
+            );
           (target || title)?.focus?.();
         }
         function openModal(type, data) {
