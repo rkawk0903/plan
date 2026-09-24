@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-7OR7FWf4UXXMMUUfDFp0r7whWUbyzNktAsFE2iPxQGU=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-EHpaNdHuDa+C7a6kHb3x8NJ/IOyHddcRoZ73VUFug4c='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-qpfQrErVhQj+vku3uGMh5drP0ZGMEO1rjT3lvbXhd6s=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-Y/uyHPJ6CDTRom2nx3nCKBCoTvDFJUx0pn+8BM4wLFA='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -127,7 +127,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
            배경/포인트/본문/보조 글씨: --bg / --accent / --ink / --muted
            페이지 좌우/섹션/카드 간격: --page-side-space / --page-section-gap / --card-content-padding
            카드/모달/버튼 둥글기: --radius-surface / --radius-modal / --radius-control
-           버튼 높이: --button-height (터치 기기는 07-responsive.css에서 44px)
+           버튼 높이: --button-height (Android 터치 기기의 44px 규칙은 07-responsive.css)
            본문/작은 글씨/제목: --font-body / --font-small / --header-title-size
            모달 폭: --modal-max-width (iPad 높이는 07-responsive.css)
            같은 이름의 아래 정의 한 곳을 바꾸면 해당 부품에 반영됩니다. */
@@ -366,6 +366,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --menu-gap: 8px;
         --menu-viewport-margin: 8px;
         --menu-min-width: 92px;
+        --menu-max-width: 220px;
         --menu-padding: 5px;
         --menu-item-gap: 2px;
         --ui-control-radius: var(--radius-control);
@@ -622,15 +623,17 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         border-color: color-mix(in srgb, var(--accent) 24%, var(--control-border));
       }
       .more-menu-pop {
-        /* Native top layer escapes ancestor overflow/transform without moving DOM/actions. */
+        /* Native top layer, or the same node temporarily moved to body on touch devices. */
         position: fixed;
         inset: auto;
         margin: 0;
         display: none;
+        width: max-content;
+        height: max-content;
         grid-template-columns: minmax(0, 1fr);
         gap: var(--menu-item-gap);
         min-width: min(var(--menu-min-width), calc(100vw - 2 * var(--menu-viewport-margin)));
-        max-width: calc(100vw - 2 * var(--menu-viewport-margin));
+        max-width: min(var(--menu-max-width), calc(100vw - 2 * var(--menu-viewport-margin)));
         max-height: calc(100dvh - 2 * var(--menu-viewport-margin));
         overflow: auto;
         overscroll-behavior: contain;
@@ -1094,6 +1097,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .modal-form {
         margin-top: 16px;
         gap: 14px;
+        /* Safari date/time controls must not size the implicit grid track past the dialog. */
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .modal-form .form-field {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .modal-form .field[type="date"],
+      .modal-form .field[type="time"] {
+        max-width: 100%;
       }
       .sheet .action-row--dialog {
         margin: 6px calc(var(--modal-padding) * -1) calc(var(--modal-padding) * -1);
@@ -2714,7 +2726,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
 
       /* TOUCH / COARSE POINTER — input zoom and comfortable targets. */
-      /* 터치 기기: 입력창 16px 미만이면 iOS 가 포커스 시 화면을 확대하므로 하한을 둡니다. 터치 타깃도 키웁니다. */
+      /* 터치 기기: 입력창 16px 미만이면 iOS 가 포커스 시 화면을 확대하므로 글씨 하한을 둡니다. */
       @media (hover: none) and (pointer: coarse) {
         :root {
           --action-button-size: 36px;
@@ -2796,12 +2808,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
       @media (hover: none) and (pointer: coarse) {
         :root {
-          --action-button-size: 44px;
-          --calendar-nav-size: 44px;
-          --button-height: 44px;
-          --ui-control-height-sm: 44px;
           --font-micro: var(--text-md);
           --font-tiny: var(--text-sm);
+        }
+        /* Existing Android touch sizing stays the same. iOS uses the compact base
+           tokens above; it no longer inherits the blanket 44px button rule. */
+        @supports not (-webkit-touch-callout: none) {
+          :root {
+            --action-button-size: 44px;
+            --calendar-nav-size: 44px;
+            --button-height: 44px;
+            --ui-control-height-sm: 44px;
+          }
+          .btn--menu { --btn-min-height: 44px; }
         }
       }
 
@@ -2858,12 +2877,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           -webkit-overflow-scrolling: touch;
         }
 
-        /* Touch MoreMenu keeps the familiar anchored popup. JS intentionally avoids Safari's
-           native top-layer Popover on coarse pointers and positions the fixed fallback directly
-           from the trigger's client rect, so no bottom action-sheet override is needed here. */
-        .btn--menu {
-          --btn-min-height: 44px;
-        }
+        /* Touch MoreMenu stays anchored near the trigger; JS moves its node above card clipping. */
       }
 
       @media (any-pointer: coarse) and (max-width: 600px) {
@@ -4221,9 +4235,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             closeOnDelete: true,
             fields: [
               { key: "cat", id: "fCat", label: "분야", default: "기타", maxLength: 200,
-                initial: () => getCats()[0] || "기타", read: (value) => value.trim() || "기타",
+                initial: "", placeholder: "예: 예식 준비 (비우면 기타)", read: (value) => value.trim() || "기타",
             normalize: (value) => String(value ?? "").trim() || "기타" },
-              { key: "title", id: "fTitle", label: "할 일", maxLength: 500, required: "할 일을 입력해주세요.", repairEmpty: "(제목 없음)" },
+              { key: "title", id: "fTitle", label: "할 일", maxLength: 500, required: "할 일을 입력해주세요.",
+                placeholder: "예: 예식장 예약하기", repairEmpty: "(제목 없음)" },
               { key: "memo", id: "fMemo", label: "메모", type: "textarea", maxLength: 2000,
                 placeholder: "예약번호, 업체 연락처, 준비할 내용 등을 적어보세요." },
               { key: "due", id: "fDue", label: "마감일", type: "date", allowEmpty: true,
@@ -4240,7 +4255,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             renderer: BudgetCard, derive: buildBudgetViewData, empty: "등록된 예산 항목이 없어요.", sortable: true,
             limit: 500, defaults: () => seedBudgets.map(([name, planned, actual]) =>
               ({ id: newId(), name, planned, actual, details: "" })),
-            deleteInModal: true, closeOnDelete: true,
+            closeOnDelete: true,
             fields: [
               { key: "name", id: "bName", label: "항목", maxLength: 300,
                 required: "항목을 입력해주세요.", repairEmpty: "(이름 없음)", placeholder: "예: 본식 식대" },
@@ -5221,15 +5236,17 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // Requires Popover API (current Chromium/Firefox/Safari); no portal clone or parallel markup.
         const FloatingMenu = (() => {
           let active = null;
+          let activePopup = null;
           let frame = 0;
-          const popupOf = menu => menu?.querySelector(":scope > .more-menu-pop");
+          const popupOf = menu => menu?.querySelector(":scope > .more-menu-pop") ||
+            (menu === active ? activePopup : null);
         // Popover API(Safari 17+, Chrome 114+, Firefox 125+) 미지원 브라우저에서는 .is-open 클래스로 폴백합니다.
         const SUPPORTS_POPOVER =
           typeof HTMLElement !== "undefined" && typeof HTMLElement.prototype.showPopover === "function" &&
           typeof CSS !== "undefined" && CSS.supports?.("selector(:popover-open)") === true;
         // iPad/WebKit can misalign a native top-layer Popover against getBoundingClientRect().
-        // Keep the familiar anchored menu UX, but use our fixed-position fallback on coarse/touch
-        // pointers so the menu and trigger share the same client-coordinate system.
+        // On coarse pointers, move the very same menu node to body while it is open. This keeps
+        // client-coordinate positioning and escapes card overflow/stacking contexts without cloning actions.
         const useNativePopover = () => SUPPORTS_POPOVER && !window.matchMedia?.("(any-pointer: coarse)")?.matches;
         const isPopupOpen = popup => !!popup && (useNativePopover() ? popup.matches(":popover-open") : popup.classList.contains("is-open"));
         const showPopup = popup => {
@@ -5243,8 +5260,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           function close({ restoreFocus = false } = {}) {
             if (!active) return;
             const menu = active, popup = popupOf(menu);
-            active = null;
             if (isPopupOpen(popup)) hidePopup(popup);
+            if (popup?.parentElement === document.body) menu.appendChild(popup);
+            active = null;
+            activePopup = null;
             menu.open = false;
             menu.firstElementChild?.setAttribute("aria-expanded", "false");
             if (restoreFocus && menu.isConnected) menu.firstElementChild?.focus();
@@ -5304,12 +5323,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (Math.abs(dy) > 0.25) popup.style.top = `${parseFloat(popup.style.top) + dy}px`;
           }
           function open(menu) {
-            const popup = popupOf(menu);
+            const popup = menu?.querySelector(":scope > .more-menu-pop");
             if (!menu?.isConnected || !popup) return false;
             if (active !== menu) close();
             active = menu;
+            activePopup = popup;
             menu.open = true;
             menu.firstElementChild.setAttribute("aria-expanded", "true");
+            if (!useNativePopover()) document.body.appendChild(popup);
             if (!isPopupOpen(popup)) showPopup(popup);
             position();
             return true;
@@ -5328,7 +5349,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 event.preventDefault();
                 if (active === summary.parentElement) close();
                 else open(summary.parentElement);
-              } else if (active && !active.contains(event.target)) close();
+              } else if (active && !active.contains(event.target) && !activePopup?.contains(event.target)) close();
             });
             document.addEventListener("toggle", event => {
               if (!event.target.matches?.(".more-menu")) return;
@@ -5350,7 +5371,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               }
             });
             document.addEventListener("focusin", event => {
-              if (active && !active.contains(event.target)) close();
+              if (active && !active.contains(event.target) && !activePopup?.contains(event.target)) close();
             });
             window.addEventListener("scroll", schedulePosition, true);
             window.addEventListener("resize", schedulePosition);
