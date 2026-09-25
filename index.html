@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v434
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v435
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-sy6QHMde7VzbUqC4+L9TAFr/NpdU7nv5KhmV1rdTRDE=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-8KThZKTjktRFnBd9vNO+MyiwkO/FAOR/YA/eCJOuLWk='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-X3lslD2lS52my0jxexhdbahig//FedEY2l2I/555pN0=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-s92C3Jw1qJO34kC36i+xLpix5azTeQDBc47SUfgXpnA='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -2868,6 +2868,34 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         /* Touch MoreMenu stays anchored near the trigger; JS moves its node above card clipping. */
       }
 
+      /* iOS keyboard: position the sheet within the measured visible viewport.
+         The backdrop follows that viewport even when Safari pans a fixed layer. */
+      .modal.keyboard-open {
+        align-items: flex-start;
+        padding-top: 0;
+        overflow: visible;
+        background: transparent;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+      .modal.keyboard-open::before {
+        content: "";
+        position: absolute;
+        top: var(--modal-visible-top, 0px);
+        left: 0;
+        right: 0;
+        height: var(--modal-visual-height, 100dvh);
+        background: var(--modal-overlay-bg);
+        -webkit-backdrop-filter: blur(3px);
+        backdrop-filter: blur(3px);
+      }
+      .modal.keyboard-open .sheet {
+        position: relative;
+        z-index: 1;
+        margin-top: calc(var(--modal-visible-top, 0px) + 12px);
+        max-height: calc(var(--modal-visual-height, 100dvh) - 24px);
+      }
+
       @media (any-pointer: coarse) and (max-width: 600px) {
         .modal {
           --modal-touch-top-gap: max(16px, calc(env(safe-area-inset-top) + 8px));
@@ -3661,7 +3689,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "434",
+          version: "435",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -5212,6 +5240,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
           document.addEventListener("keydown", handleConfirmKeydown);
           document.addEventListener("keydown", handleModalKeydown);
+          $(DOM_IDS.modal)?.addEventListener("focusin", syncModalVisualViewport);
+          $(DOM_IDS.modal)?.addEventListener("focusout", () => requestAnimationFrame(syncModalVisualViewport));
           $(DOM_IDS.modal)?.addEventListener("mousedown", (e) => {
             if (e.target === e.currentTarget) requestCloseModal();
           });
@@ -5376,6 +5406,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         let modalActionBusy = false;
         let modalPreviousFocus = null;
         let modalInitialSnapshot = "";
+        let modalOpenViewportHeight = 0;
         const MODAL_HISTORY_KEY = "__weddingPlannerModal";
         let modalHistoryToken = null;
         function pushModalHistoryEntry() {
@@ -5417,10 +5448,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (!modal?.classList.contains("open")) return;
           const viewport = window.visualViewport;
           const height = Math.max(0, viewport?.height || innerHeight);
-          // Do not add visualViewport.offsetTop to a fixed overlay. On iPad Safari fixed/top-layer
-          // elements are already visual-viewport aware in common states; applying offsetTop again can
-          // double-shift the dialog when browser chrome or the software keyboard changes the viewport.
           modal.style.setProperty("--modal-visual-height", `${height}px`);
+          const active = document.activeElement;
+          const iosKeyboard = window.matchMedia?.("(any-pointer: coarse)")?.matches &&
+            CSS.supports?.("-webkit-touch-callout", "none") &&
+            modal.contains(active) && active.matches?.("input,textarea,select") &&
+            height < modalOpenViewportHeight - 120;
+          modal.classList.toggle("keyboard-open", !!iosKeyboard);
+          if (iosKeyboard) {
+            // Both values use layout-viewport coordinates. Measuring the fixed layer's actual
+            // origin avoids applying offsetTop twice when WebKit already moved that layer.
+            const visibleTop = (viewport.offsetTop || 0) - modal.getBoundingClientRect().top;
+            modal.style.setProperty("--modal-visible-top", `${visibleTop}px`);
+          } else {
+            modal.style.removeProperty("--modal-visible-top");
+          }
         }
         function bindModalVisualViewport() {
           const sync = () => syncModalVisualViewport();
@@ -5458,6 +5500,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (app) app.inert = open;
             document.body.classList.toggle("modal-open", open);
             if (open) syncModalVisualViewport();
+            else {
+              modal.classList.remove("keyboard-open");
+              modal.style.removeProperty("--modal-visible-top");
+            }
           }
           if (labelledBy) modal.setAttribute("aria-labelledby", labelledBy);
           else if (labelledBy === null) modal.removeAttribute("aria-labelledby");
@@ -5476,6 +5522,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const body = MODAL_RENDERERS[type]?.(data) ?? null;
           if (body === null) return;
           const alreadyOpen = $(DOM_IDS.modal)?.classList.contains("open");
+          if (!alreadyOpen) modalOpenViewportHeight = window.visualViewport?.height || innerHeight;
           FloatingMenu.close({ restoreFocus: true });
           modalPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
           setOwnedHTML("modal", DOM_IDS.modalBody, body);
@@ -5498,6 +5545,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const previous = modalPreviousFocus;
           modalPreviousFocus = null;
           modalInitialSnapshot = "";
+          modalOpenViewportHeight = 0;
           if (previous?.isConnected) requestAnimationFrame(() => previous.focus());
           return true;
         }
