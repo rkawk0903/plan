@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v433
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v434
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-mgb0nxhawk1riWoPbI0CdH9oO7zXGcIUr1pPDt8zj8s=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-lLprUEw+T0S0G1DpVC6FIOOBVobo8wP2gQpo7E/pqtQ='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-sy6QHMde7VzbUqC4+L9TAFr/NpdU7nv5KhmV1rdTRDE=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-8KThZKTjktRFnBd9vNO+MyiwkO/FAOR/YA/eCJOuLWk='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -920,7 +920,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .confirm-overlay.open {
         display: flex;
-        animation: quiet-overlay-in var(--motion-standard) linear both;
       }
       .confirm-card {
         max-height: calc(100dvh - 40px);
@@ -934,9 +933,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         box-shadow: var(--confirm-shadow);
         -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
         backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
-      }
-      .confirm-overlay.open .confirm-card {
-        animation: quiet-dialog-in var(--motion-enter) var(--ease-settle) both;
       }
       .confirm-card h2 {
         margin: 0;
@@ -964,7 +960,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .modal.open {
         display: flex;
-        animation: quiet-overlay-in var(--motion-standard) linear both;
       }
       .sheet {
         background: color-mix(in srgb, var(--card) 94%, transparent);
@@ -980,9 +975,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         max-height: min(var(--modal-max-height), calc(100dvh - 48px));
         overflow: auto;
         overscroll-behavior: contain;
-      }
-      .modal.open .sheet {
-        animation: quiet-sheet-in var(--motion-enter) var(--ease-settle) both;
       }
       .sheet h2 {
         margin: 0 0 15px;
@@ -1144,18 +1136,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
       /* ===== v395 restrained interaction polish =====
          Static surfaces stay visually identical to v393; motion appears only at state boundaries. */
-      @keyframes quiet-overlay-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      @keyframes quiet-sheet-in {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes quiet-dialog-in {
-        from { opacity: 0; transform: translateY(5px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
       @keyframes quiet-menu-in {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -2712,10 +2692,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         .field {
           transition: none;
         }
-        .modal.open,
-        .modal.open .sheet,
-        .confirm-overlay.open,
-        .confirm-overlay.open .confirm-card,
         .more-menu-pop:popover-open,
         .more-menu-pop.is-open,
         .toast,
@@ -2868,15 +2844,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 
-      /* TABLET / IPAD + PHONE overlays — VisualViewport height only. Avoid offsetTop math: iPad/WebKit can
-         already position fixed layers in visual-viewport coordinates, which made the previous rule
-         double-shift dialogs. Phones keep a top sheet; tablets get a stable centered dialog. */
+      /* TABLET / IPAD + PHONE overlays — the backdrop covers the full fixed viewport.
+         VisualViewport height limits only the scrolling sheet when the keyboard opens. */
       @media (any-pointer: coarse) {
         .modal {
           inset: 0;
           top: 0;
           width: 100%;
-          height: var(--modal-visual-height, 100dvh);
           padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
             max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
           box-sizing: border-box;
@@ -3687,7 +3661,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "433",
+          version: "434",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -5483,7 +5457,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const app = $(DOM_IDS.appRoot);
             if (app) app.inert = open;
             document.body.classList.toggle("modal-open", open);
-            if (open) requestAnimationFrame(syncModalVisualViewport);
+            if (open) syncModalVisualViewport();
           }
           if (labelledBy) modal.setAttribute("aria-labelledby", labelledBy);
           else if (labelledBy === null) modal.removeAttribute("aria-labelledby");

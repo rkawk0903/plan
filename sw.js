@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "433";
+const APP_VERSION = "434";
 const CACHE_NAME = `wedding-planner-v${APP_VERSION}-shell`;
 const RUNTIME_CACHE = `wedding-planner-v${APP_VERSION}-runtime`;
 const SUPABASE_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js";
