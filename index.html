@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v436
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v437
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-G5mppeaPWSeWnE4i54a0SU+0wqlaKiJiGYAKhP0mCSg=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-XoZ4lVO2QUvJBIhgRFCTtCo+Ru+91wyBwpJrfrBF+VA='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-ghxAy0h9lQcUfwTQ/FqD0JDCgc5PSjHSLtBNOz7KibQ=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-oPI7sqbphBgnCe1OFHgV8ygPeOKEVBUujJVwSGLrY3M='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -2728,8 +2728,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
          Grid stretch gives these the same outer width and padding as other fields. */
       @media (any-pointer: coarse) {
         @supports (-webkit-touch-callout: none) {
-          .modal-form .field[type="date"],
-          .modal-form .field[type="time"] {
+          .field[type="date"],
+          .field[type="time"] {
             width: auto;
           }
         }
@@ -3666,7 +3666,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "436",
+          version: "437",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -3689,6 +3689,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           sharedLastUserKey: "wedding_planner_shared_last_user_v1",
           localTabKey: "wedding_planner_tab_v1",
           localChannelName: "wedding-planner-local-v1",
+          localClearKey: "wedding_planner_local_clear_v1",
           sharedLibraryUrl: "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js",
           sharedLibraryIntegrity: "sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP",
           sharedLibraryLoadTimeoutMs: 8000,
@@ -3696,7 +3697,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           sharedStateMaxBytes: 2 * 1024 * 1024,
           localStorageSoftBudgetBytes: 4 * 1024 * 1024,
           localStorageSoftWarningRatio: 0.8,
-          maxBackupBytes: 2 * 1024 * 1024,
+          // Export envelope and older indented exports need room beyond the shared-state limit.
+          maxBackupBytes: 5 * 1024 * 1024,
           maxCategoryCount: 500,
           maxIdLength: 128,
           maxValidationNodes: 50000,
@@ -4679,12 +4681,33 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return null;
           }
           const data = schema.read();
-          const error = validateFormData(schema, data);
+          const baseline = modalEditBaseline?.name === name && modalEditBaseline.id === String(id)
+            ? modalEditBaseline.item : null;
+          let submitted = data;
+          if (baseline && !isNewId(id)) {
+            const current = findById(getCollection(COLLECTION_SCHEMAS[name].stateKey), id);
+            if (!current) {
+              notifyError("수정하는 동안 이 항목이 삭제됐어요. 창을 닫고 목록을 확인해주세요.");
+              return null;
+            }
+            const changed = schema.fields.filter(field => !valuesEqual(data[field.key], baseline[field.key]));
+            const conflicting = changed.filter(field =>
+              !valuesEqual(current[field.key], baseline[field.key]) &&
+              !valuesEqual(current[field.key], data[field.key]));
+            if (conflicting.length) {
+              notifyError(`${conflicting.map(field => field.label).join(", ")} 항목이 다른 기기에서 변경됐어요. 창을 닫고 최신 내용을 확인한 뒤 다시 수정해주세요.`);
+              return null;
+            }
+            submitted = Object.fromEntries(changed.map(field => [field.key, data[field.key]]));
+          }
+          const error = validateFormData(schema, baseline ? { ...findById(getCollection(COLLECTION_SCHEMAS[name].stateKey), id), ...submitted } : submitted);
           if (error) {
             notifyError(error);
             return null;
           }
-          const item = Collection.write(name, id, data);
+          const item = baseline && !Object.keys(submitted).length
+            ? cloneValue(findById(getCollection(COLLECTION_SCHEMAS[name].stateKey), id))
+            : Collection.write(name, id, submitted);
           return item ? { item, data } : null;
         }
         function renderCollectionModal(name, data) {
@@ -5380,6 +5403,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         let modalActionBusy = false;
         let modalPreviousFocus = null;
         let modalInitialSnapshot = "";
+        let modalEditBaseline = null;
         const MODAL_HISTORY_KEY = "__weddingPlannerModal";
         let modalHistoryToken = null;
         function pushModalHistoryEntry() {
@@ -5460,12 +5484,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }
         }
         function openModal(type, data) {
+          modalEditBaseline = null;
           const body = MODAL_RENDERERS[type]?.(data) ?? null;
           if (body === null) return;
           const alreadyOpen = $(DOM_IDS.modal)?.classList.contains("open");
           FloatingMenu.close({ restoreFocus: true });
           modalPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
           setOwnedHTML("modal", DOM_IDS.modalBody, body);
+          if (COLLECTION_SCHEMAS[type] && !isNewId(data)) {
+            const id = typeof data === "object" ? data.id : data;
+            const original = findById(getCollection(COLLECTION_SCHEMAS[type].stateKey), id);
+            if (original) modalEditBaseline = { name: type, id: String(id), item: cloneValue(original) };
+          }
           modalActionBusy = false;
           renderModalShell({ open: true, labelledBy: null });
           if (!alreadyOpen) pushModalHistoryEntry();
@@ -5485,6 +5515,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const previous = modalPreviousFocus;
           modalPreviousFocus = null;
           modalInitialSnapshot = "";
+          modalEditBaseline = null;
           if (previous?.isConnected) requestAnimationFrame(() => previous.focus());
           return true;
         }
@@ -6055,21 +6086,26 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             ${item.details ? InnerCard(`<div class="label">세부 내용</div><div class="budget-detail">${esc(item.details)}</div>`, "budget-detail-group", "raised") : ""}`);
         }
         function formatMoneyInputValue(value) {
-          const n = Number(String(value ?? "").replace(/\D/g, "")) || 0;
-          return n ? formatNumber(n) : "";
+          const n = num(value);
+          if (!n) return "";
+          const [whole, fraction] = String(n).split(".");
+          return Number(whole).toLocaleString("ko-KR") + (fraction ? `.${fraction}` : "");
         }
         function formatMoneyInput(el) {
           if (!el) return;
           const raw = String(el.value || "");
           const caret = el.selectionStart ?? raw.length;
-          const digitsBeforeCaret = raw.slice(0, caret).replace(/\D/g, "").length;
-          const digits = raw.replace(/\D/g, "").slice(0, String(APP_CONFIG.maxMoneyValue).length);
-          const next = digits ? formatNumber(Number(digits)) : "";
+          const digitsBeforeCaret = raw.slice(0, caret).replace(/[^\d.]/g, "").length;
+          const cleaned = raw.replace(/[^\d.]/g, "");
+          const dot = cleaned.indexOf(".");
+          const whole = (dot < 0 ? cleaned : cleaned.slice(0, dot)).slice(0, String(APP_CONFIG.maxMoneyValue).length);
+          const fraction = dot < 0 ? "" : `.${cleaned.slice(dot + 1).replace(/\./g, "")}`;
+          const next = whole ? Number(whole).toLocaleString("ko-KR") + fraction : "";
           el.value = next;
           let position = 0;
           let seen = 0;
-          while (position < next.length && seen < Math.min(digitsBeforeCaret, digits.length)) {
-            if (/\d/.test(next[position])) seen++;
+          while (position < next.length && seen < Math.min(digitsBeforeCaret, cleaned.length)) {
+            if (/[\d.]/.test(next[position])) seen++;
             position++;
           }
           el.setSelectionRange(position, position);
@@ -6611,7 +6647,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         let sharedSync = createSharedSyncState();
         let SHARED_DEVICE_ID;
-        function applySharedUser(nextUser) {
+        function applySharedUser(nextUser, { explicitLogin = false } = {}) {
           const previousId = String(sharedSync.user?.id || "");
           const nextId = String(nextUser?.id || "");
           if (previousId !== nextId) clearHistory();
@@ -6622,6 +6658,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               notifyInfo("이 기기에서 다른 계정으로 로그인해 이전 계정의 로컬 데이터를 분리했어요.");
             }
             storageSet(APP_CONFIG.sharedLastUserKey, nextId);
+            if (explicitLogin) {
+              try { localClearGeneration = JSON.parse(storageGet(APP_CONFIG.localClearKey, "{}") || "{}").generation || null; }
+              catch { localClearGeneration = null; }
+              localWriteLocked = false;
+            }
           }
           sharedSync.user = nextUser || null;
           return sharedSync.user;
@@ -7677,6 +7718,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             renderSharedProject();
             return;
           }
+          if (localWriteLocked) return;
           applySharedUser(nextUser);
           if (!nextUser) {
             renderSharedStatusUI();
@@ -7689,7 +7731,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             notifyInfo("비밀번호 재설정 링크로 들어왔어요. 새 비밀번호를 설정해주세요.");
             setTimeout(() => openModal("shared-password-change"), 0);
           }
-          if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && !sharedSync.projectId) void sharedAfterLogin();
+          if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && !sharedSync.projectId && !localWriteLocked) void sharedAfterLogin();
         }
         async function sharedConnect({ silent = false } = {}) {
           const lifecycle = sharedSync.lifecycle + 1;
@@ -7721,8 +7763,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (error) throw error;
             if (lifecycle !== sharedSync.lifecycle || sharedSync.client !== client) return false;
 
-            applySharedUser(data.session?.user || null);
-            if (sharedSync.user) {
+            if (!localWriteLocked) applySharedUser(data.session?.user || null);
+            if (sharedSync.user && !localWriteLocked) {
               await sharedAfterLogin();
             } else {
               renderSharedStatusUI();
@@ -7763,7 +7805,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             });
             if (error) throw error;
             if (data.session) {
-              applySharedUser(data.user);
+              applySharedUser(data.user, { explicitLogin: true });
               await sharedAfterLogin();
               notifySuccess("회원가입과 로그인이 완료됐어요.");
             } else notifySuccess("회원가입이 완료됐어요. 이메일 인증이 켜져 있다면 인증 후 로그인해주세요.");
@@ -7783,7 +7825,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             }
             const { data, error } = await sharedSync.client.auth.signInWithPassword({ email, password });
             if (error) throw error;
-            applySharedUser(data.user);
+            applySharedUser(data.user, { explicitLogin: true });
             await sharedAfterLogin();
             notifySuccess("로그인했어요.");
           } catch (e) {
@@ -8453,17 +8495,26 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               payload.new.updated_at || parsed.meta.updatedAt || new Date().toISOString();
             if (merged.conflicts.length) {
               sharedSync.conflictCount += merged.conflicts.length;
-              setSharedConflictContext({
-                base: cloneValue(base),
-                local: localState,
-                remote: cloneValue(remoteState),
-                conflicts: merged.conflicts,
+              const unresolved = sharedSync.lastConflictContext;
+              if (unresolved?.base && unresolved?.local) {
+                unresolved.remote = cloneValue(remoteState);
+                unresolved.remoteRevision = incomingRevision;
+                unresolved.conflicts = [...new Set([...unresolved.conflicts, ...merged.conflicts])];
+                sharedSync.lastConflictPaths = unresolved.conflicts.slice(0, UI_CONFIG.limits.sharedConflictPaths);
+                setSharedPhase("conflict");
+              } else setSharedConflictContext({
+                base: cloneValue(base), local: localState, remote: cloneValue(remoteState),
+                remoteRevision: incomingRevision, conflicts: merged.conflicts,
               });
+            } else if (sharedSync.lastConflictContext) {
+              sharedSync.lastConflictContext.remote = cloneValue(remoteState);
+              sharedSync.lastConflictContext.remoteRevision = incomingRevision;
+              setSharedPhase("conflict");
             }
             sharedSync.syncRevision = incomingRevision;
             sharedSync.lastSyncedState = cloneValue(remoteState);
             persistSharedBaseline(remoteState, sharedSync.syncRevision);
-            if (!merged.conflicts.length) {
+            if (!merged.conflicts.length && !sharedSync.lastConflictContext) {
               sharedSync.lastConflictContext = null;
               sharedSync.lastConflictPaths = [];
               if (sharedSync.phase === "conflict") setSharedPhase("idle");
@@ -8511,6 +8562,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (!sharedContextIsCurrent(snapshot)) return;
 
           const projectId = String(sharedSync.projectId);
+          let subscriptionReconciled = false;
           sharedSync.channel = sharedSync.client
             .channel("wedding-project-" + projectId)
             .on(
@@ -8526,7 +8578,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               },
             )
             .subscribe((status) => {
-              if (sharedContextIsCurrent(snapshot)) sharedHandleChannelStatus(status);
+              if (!sharedContextIsCurrent(snapshot)) return;
+              sharedHandleChannelStatus(status);
+              if (status === "SUBSCRIBED" && !subscriptionReconciled) {
+                subscriptionReconciled = true;
+                // Recheck after the channel opens: a change between the first pull and subscribe
+                // may have no Realtime event. Revision filtering also protects events during this fetch.
+                if (sharedSync.phase !== "conflict") void sharedPull(false, { flushPending: false });
+              }
             });
         }
         async function sharedResumeRealtime(snapshot) {
@@ -8576,6 +8635,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const { data, error } = pullResult;
             if (error) throw error;
             if (!sharedContextIsCurrent(snapshot)) return false;
+            if (sharedSync.phase === "conflict") return false;
             if (!data) {
               setSharedPhase("idle");
               if (showAlert) notifyInfo("공동 데이터가 아직 없어요.");
@@ -8616,6 +8676,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const pullBase = pullBaseBeforeRequest;
             const pullMutationRevision = pullMutationRevisionBeforeRequest;
             const remoteRevision = Number(data.revision ?? parsed.meta.revision) || 0;
+            if (remoteRevision && remoteRevision < (Number(sharedSync.syncRevision) || 0)) return true;
             const localState = cloneValue(state);
             if (sharedSync.baselineWithoutSnapshot && !valuesEqual(localState, remoteState)) {
               if (!showAlert) createRecoveryPoint("연결 전 편집 자동 병합 중단 전", { silent: true });
@@ -8831,7 +8892,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                   projectId = snapshot.projectId,
                   userId = snapshot.userId;
                 if (!client || !projectId || !userId) return false;
-                const localState = cloneValue(state);
                 const pending = currentSharedPendingSave();
                 if (pending?.invalid) {
                   setSharedPhase("error");
@@ -8868,7 +8928,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
                 const remote = await fetchSharedRemote(client, projectId);
                 if (!sharedContextIsCurrent(snapshot)) return false;
+                // A CAS and the subsequent fetch can both wait while the user keeps editing.
+                // Merge against the state at response time, never the snapshot sent to CAS.
+                const localState = cloneValue(state);
                 const remoteRevision = Number(remote?.revision ?? remote?.meta?.revision) || 0;
+                if (remoteRevision && remoteRevision < (Number(sharedSync.syncRevision) || 0)) continue;
                 if (!sharedSync.lastSyncedState && pendingBaseState) {
                   sharedSync.lastSyncedState = cloneValue(pendingBaseState);
                   sharedSync.syncRevision = Math.max(Number(sharedSync.syncRevision) || 0, pendingBaseRevision);
@@ -9130,7 +9194,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         });
         function handleVisibilityChange() {
           if (document.hidden) void SharedDomains.Transport.flush("visibilitychange");
-          else refreshScheduleToday();
+          else {
+            refreshScheduleToday();
+            if (sharedSync.projectId && sharedSync.user && sharedIsOnline())
+              void sharedReconcileAfterReconnect();
+          }
         }
 // ===== 06 STATE / migration, validation and persistence =====
         // INTENTIONAL COMPAT: storage key, schema v5, legacy memo/owner migrations and future-schema protection stay intact.
@@ -9142,6 +9210,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         let localStorageBudgetWarningLevel = 0;
         let localStateChannel = null;
         let localCoordinationApplying = false;
+        let localClearGeneration = null;
+        let localWriteLocked = false;
         let LOCAL_TAB_ID = "";
         function cloneValue(value) {
           return typeof structuredClone === "function"
@@ -9662,24 +9732,68 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function initLocalTabCoordination() {
           getLocalTabId();
+          localClearGeneration = storageGet(APP_CONFIG.localClearKey, null);
           if (typeof BroadcastChannel === "function") {
             localStateChannel = new BroadcastChannel(APP_CONFIG.localChannelName);
             localStateChannel.addEventListener("message", (event) => {
               const msg = event.data;
-              if (!msg || msg.type !== "state-written" || msg.tabId === LOCAL_TAB_ID) return;
+              if (!msg || msg.tabId === LOCAL_TAB_ID) return;
+              if (msg.type === "user-data-cleared") {
+                receiveLocalClear(msg);
+                return;
+              }
+              if (msg.type !== "state-written" || localWriteLocked) return;
               const base = prepareIncomingState(msg.baseState, { source: "다른 탭 기준 상태" });
               const remote = prepareIncomingState(msg.state, { source: "다른 탭 상태" });
               if (base.ok && remote.ok) applyCrossTabState(base.state, remote.state, "다른 탭");
             });
           }
           window.addEventListener("storage", (event) => {
+            if (event.storageArea === localStorage && event.key === APP_CONFIG.localClearKey && event.newValue) {
+              try { receiveLocalClear(JSON.parse(event.newValue)); } catch { /* invalid marker */ }
+              return;
+            }
             if (event.storageArea !== localStorage || event.key !== APP_CONFIG.storageKey || !event.newValue) return;
+            if (localWriteLocked) return;
             const remote = parseCoordinatedState(event.newValue, "다른 탭 저장 상태");
             const base = parseCoordinatedState(event.oldValue, "다른 탭 저장 전 상태") || cloneValue(lastPersistedState);
             if (remote && base) applyCrossTabState(base, remote, "다른 탭");
           });
         }
-        function clearLocalPlannerUserData({ resetState = true } = {}) {
+        function receiveLocalClear(message) {
+          if (!message?.generation || message.generation === localClearGeneration) return;
+          const currentUser = String(sharedSync?.user?.id || storageGet(APP_CONFIG.sharedLastUserKey, "") || "");
+          if (message.userId && currentUser && message.userId !== currentUser) return;
+          localClearGeneration = message.generation;
+          localWriteLocked = true;
+          sharedSync.lifecycle += 1;
+          clearTimeout(sharedSync.pushTimer);
+          sharedClearRetry();
+          void sharedRemoveChannel();
+          closeModal();
+          clearLocalPlannerUserData({ broadcast: false });
+          storageRemove(APP_CONFIG.sharedLastUserKey);
+          const cfg = sharedConfig();
+          setSharedConfig({ ...cfg, email: "", projectId: null, inviteCode: "" });
+          sharedSync = createSharedSyncState({ lifecycle: sharedSync.lifecycle, client: sharedSync.client,
+            authSubscription: sharedSync.authSubscription });
+          renderSharedStatusUI();
+          renderSharedControls({ clearSensitive: true });
+          renderSharedProject();
+          notifyInfo("다른 탭에서 이 계정의 데이터를 지웠어요. 다시 로그인하면 편집할 수 있어요.");
+        }
+        function clearLocalPlannerUserData({ resetState = true, broadcast = true } = {}) {
+          if (broadcast) {
+            const message = {
+              type: "user-data-cleared", tabId: getLocalTabId(),
+              userId: String(sharedSync?.user?.id || storageGet(APP_CONFIG.sharedLastUserKey, "") || ""),
+              projectId: String(sharedSync?.projectId || ""),
+              generation: `${Date.now()}-${newId()}`,
+            };
+            if (!storageSet(APP_CONFIG.localClearKey, JSON.stringify(message))) return false;
+            localClearGeneration = message.generation;
+            try { localStateChannel?.postMessage(message); } catch { /* storage event still delivers */ }
+          }
           const primaryRemoved = [
             APP_CONFIG.storageKey, APP_CONFIG.recoveryKey, APP_CONFIG.sharedPendingKey,
             APP_CONFIG.sharedBaselineKey, APP_CONFIG.sharedSyncedKey,
@@ -9698,6 +9812,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return primaryRemoved && corruptRemoved;
         }
         function saveLocalOnly() {
+          let latestClearGeneration = localClearGeneration;
+          try { latestClearGeneration = JSON.parse(storageGet(APP_CONFIG.localClearKey, "{}") || "{}").generation || null; }
+          catch { /* keep the current generation */ }
+          if (localWriteLocked || latestClearGeneration !== localClearGeneration) {
+            notifyError("다른 탭에서 데이터를 지웠어요. 다시 로그인한 뒤 편집해주세요.");
+            return false;
+          }
           if (guardFutureSchemaWrite("로컬 저장")) return false;
           const validation = validateStateIntegrity(state);
           if (!validation.ok) {
@@ -10088,8 +10209,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               schemaVersion: snapshot.schemaVersion,
               state: snapshot,
             },
-            null,
-            2,
           );
         }
         function exportData() {
