@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v468
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v476
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -13,6 +13,7 @@ CURRENT ARCHITECTURE
 
 EDIT MAP — 검색할 이름 / 수정할 곳 / 직접 수정하지 않을 곳
   버튼 geometry: :root --unified-button-* (페이지 액션), --action-button-size (아이콘/상태 select).
+    상단 탭은 --nav-button-height로 모달 액션과 같은 큰 세로 높이를 공유합니다.
     .btn/.icon-control이 적용합니다. 개별 화면에 height/padding/font patch를 추가하지 않습니다.
   CardHeader 간격: --card-header-gap / --card-header-margin-bottom / --card-action-gap.
     부모 gap이 간격을 소유하면 card-header--flush, 우측 고정 액션은 --fixed-actions를 조합합니다.
@@ -38,7 +39,8 @@ EDIT MAP — 검색할 이름 / 수정할 곳 / 직접 수정하지 않을 곳
   Theme color: THEME_FIELDS + CSS에서 사용할 의미적 binding. 프리셋 색상을 별도로 고르면 THEME_PRESETS.
     :root 색상은 JS 실행 전 fallback이며 저장된 값은 THEME_FIELDS 정규화 이후 우선합니다.
   Radius: --radius에서 큰 surface와 compact UI 두 단계만 파생합니다.
-    모든 사각형 컴포넌트는 같은 superellipse(1.12) continuous-corner family를 사용합니다.
+    compact는 더 낮은 optical ratio로 전역 radius를 끝까지 따라가며 하드캡을 사용하지 않습니다.
+    모든 사각형 컴포넌트는 같은 superellipse(1.15) near-round continuous-corner family를 사용합니다.
     progress/calendar date capsule, 원형 dot/swatch, gauge는 의미상 형태를 유지하는 예외입니다.
   목록 구분선: --list-divider-width / --list-divider-border + .list-divided-item.
   새 action: 반복 CRUD는 schema에서 파생. 특수 동작만 ACTION_REGISTRY에 등록합니다.
@@ -112,7 +114,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-9j1L/cxx24oKydsGIF802vtA43qkeAWpto6AcuZl0qA=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-xIkMZIuSHV5lKaGHyt9Ec2fkHQMDHEvRrivX/74kT9E='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-zRM5NAu2y7L32ReM85rdn9WDcXxclZKCyH9Qs1h+D1s=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-MTeCHsZddw6/oJL0qpZGrrom9ci7kjomTqlmsnaaKHg='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -160,7 +162,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --font-tiny: var(--text-2xs);
         --button-font-size: var(--font-body);
         --button-padding: 8px 12px;
-        --button-height: 40px;
+        --button-height: var(--action-button-size);
         --button-small-font: var(--font-caption);
         --button-disabled-opacity: var(--state-disabled-opacity);
 
@@ -170,15 +172,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --unified-button-font-size: var(--font-small);
         --unified-button-font-weight: 500;
         --unified-button-radius: var(--ui-control-radius);
-        /* Modal/dialog buttons intentionally keep their own semantic variant. */
-        --modal-button-min-height: var(--button-height);
+        /* Modal/dialog actions intentionally use a larger size variant than page controls. */
+        --modal-button-height: 40px;
+        --modal-button-min-height: var(--modal-button-height);
+        /* Top navigation intentionally shares the larger modal action height. */
+        --nav-button-height: var(--modal-button-height);
         --modal-button-padding: var(--button-padding);
         --modal-button-font-size: var(--button-font-size);
         --modal-button-font-weight: 600;
-        /* FIELD SYSTEM — one typography/state model with explicit density tiers. */
-        --field-height: 44px;
-        --field-compact-height: 40px;
-        --field-inline-height: var(--action-button-size);
+        /* FIELD SYSTEM — single-line fields share the same visible height as normal buttons. */
+        --field-control-height: var(--button-height);
+        --field-height: var(--field-control-height);
+        --field-compact-height: var(--field-control-height);
+        --field-inline-height: var(--field-control-height);
         --field-padding-x: 12px;
         --field-padding-y: 10px;
         --field-padding: var(--field-padding-y) var(--field-padding-x);
@@ -191,7 +197,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         /* Single-line field typography follows the Tasks toolbar select scale everywhere. */
         --field-control-font-size: var(--font-caption);
         --field-font-size: var(--field-control-font-size);
-        --field-search-height: var(--field-compact-height);
+        --field-search-height: var(--field-control-height);
         --field-search-font-size: var(--field-control-font-size);
         --field-small-font: var(--field-control-font-size);
         --textarea-height: 100px;
@@ -213,7 +219,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --calendar-number-size: var(--text-xl);
         --calendar-holiday-size: var(--font-tiny);
         --calendar-dot-size: 4px;
-        --calendar-nav-size: 38px;
+        --calendar-nav-size: var(--button-height);
 
         /* Role-specific typography; preserves the current visual scale while centralizing edits. */
         --more-menu-icon-font-size: var(--text-6xl);
@@ -306,13 +312,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --modal-overlay-bg: rgba(18, 18, 22, 0.20);
         --radius: 22px;
         /* Unified continuous-corner geometry.
-           Rectangular UI uses only two optical radius tiers: large surfaces and compact UI.
-           Both tiers share the exact same superellipse curve so cards, fields, buttons, menus,
-           nested surfaces and short status panels read as one corner family at every size.
-           True circles/capsules (progress bars, date dots, swatches) remain semantic exceptions. */
+           Rectangular UI keeps two semantic tiers: large surfaces and compact UI.
+           Compact UI follows the same user-controlled radius continuously at a lower optical ratio,
+           so small controls stay less round at the default setting without becoming stuck at a hard cap
+           when the user deliberately increases corner roundness. Both tiers share one near-round
+           continuous profile. True circles/capsules remain semantic exceptions. */
         --radius-surface: max(0px, var(--radius));
         --radius-modal: var(--radius-surface);
-        --radius-compact: max(0px, calc(var(--radius) * 0.68));
+        --radius-compact: calc(var(--radius) * 0.58);
         --radius-inset: var(--radius-compact);
         --radius-inner-card: var(--radius-compact);
         --radius-compact-surface: var(--radius-compact);
@@ -320,7 +327,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --radius-control: var(--radius-compact);
         --radius-icon: var(--radius-compact);
         --radius-badge: var(--radius-compact);
-        --corner-shape-continuous: superellipse(1.12);
+        --corner-shape-continuous: superellipse(1.15);
         --corner-shape-surface: var(--corner-shape-continuous);
         --corner-shape-control: var(--corner-shape-continuous);
         /* Derived semantic surfaces follow the user's selected theme automatically. */
@@ -660,6 +667,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         width: var(--skeleton-width, 100%);
         height: var(--skeleton-height, 10px);
         border-radius: var(--radius-badge);
+        corner-shape: var(--corner-shape-control);
         background: linear-gradient(90deg, var(--skeleton-base) 0%, var(--skeleton-peak) 50%, var(--skeleton-base) 100%);
         background-size: 220% 100%;
         animation: planner-skeleton-shift 1.35s var(--ease-interaction) infinite;
@@ -801,7 +809,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 
-      @supports (corner-shape: superellipse(1.12)) {
+      @supports (corner-shape: superellipse(1.15)) {
         .btn { corner-shape: var(--btn-corner-shape, var(--corner-shape-control)); }
         .icon-control { corner-shape: var(--corner-shape-control); }
       }
@@ -896,6 +904,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         background: var(--overlay-surface-bg);
         border: 1px solid var(--overlay-border);
         border-radius: var(--radius-inset);
+        corner-shape: var(--corner-shape-control);
         box-shadow: var(--menu-shadow);
         color: var(--ink);
         font-size: var(--field-control-font-size);
@@ -1163,12 +1172,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         letter-spacing: -0.03em;
         color: var(--ink);
       }
-      .calendar-head b {
+      .calendar-period-title {
         font-size: var(--text-4xl);
         font-weight: 720;
         letter-spacing: -0.025em;
+        white-space: nowrap;
       }
-      .calendar-head .small {
+      .calendar-period-hint {
         margin-top: 2px;
         color: var(--text-tertiary);
         line-height: 1.35;
@@ -1183,6 +1193,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         border: 1px solid transparent;
         background: transparent;
         border-radius: var(--radius-icon);
+        corner-shape: var(--corner-shape-control);
         text-align: center;
         display: flex;
         flex-direction: column;
@@ -1336,6 +1347,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         padding: 0 8px;
         border: 0;
         border-radius: var(--radius-control);
+        corner-shape: var(--corner-shape-control);
         background: transparent;
         color: var(--accent-ink);
         font: inherit;
@@ -1465,6 +1477,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         padding: 10px 12px;
         border: 1px solid var(--state-warning-border);
         border-radius: var(--radius-compact-surface);
+        corner-shape: var(--corner-shape-control);
         background: var(--state-warning-bg);
         color: var(--state-warning-color);
         font-size: var(--font-small);
@@ -1818,9 +1831,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --btn-border: 1px solid transparent;
         --btn-bg: transparent;
         --btn-color: var(--text-secondary);
-        --btn-height: 40px;
-        --btn-min-height: 40px;
-        --btn-max-height: 40px;
+        --btn-height: var(--nav-button-height);
+        --btn-min-height: var(--nav-button-height);
+        --btn-max-height: var(--nav-button-height);
         --btn-padding: var(--nav-padding);
         --btn-radius: var(--radius-control);
         --btn-corner-shape: var(--corner-shape-control);
@@ -1968,9 +1981,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .field--memo-input {
         --textarea-min-height: var(--field-search-height);
         --field-size: var(--field-search-font-size);
-        /* 1-line quick memo should optically center like the 40px search/select controls. */
+        /* 1-line quick memo follows the same control-height rhythm as buttons/search/select. */
         --field-line-height: 1.45;
-        --field-inset: 11px var(--field-padding-x);
+        --field-inset: 7px var(--field-padding-x);
         height: var(--field-autosize-height, auto);
         overflow-y: hidden;
         resize: none;
@@ -2014,9 +2027,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
 
       /* Card / nested surface variants */
-      .card--calendar {
-        --card-padding: 13px 14px 14px;
-      }
       .card-body--fill-stack {
         flex: 1 1 auto;
         min-height: 0;
@@ -2146,7 +2156,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         width: 100%;
         grid-template-columns: minmax(0, 1fr);
       }
-      .status-state--empty .status-state-marker::before { content: "+"; }
+      /* Empty lists are message-only; add actions live in the owning card/page header. */
+      .status-state--empty .status-state-marker { display: none; }
       .status-state--search .status-state-marker::before { content: "…"; }
       .status-state--complete .status-state-marker {
         border-color: var(--state-complete-border);
@@ -2319,13 +2330,31 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
 
 
-      .calendar-head {
+      .calendar-period-block {
+        min-width: 0;
+        margin-left: -6px;
         display: grid;
-        grid-template-columns: var(--calendar-nav-size) minmax(0, 1fr) var(--calendar-nav-size);
-        gap: var(--space-sm);
+        grid-template-columns: var(--calendar-nav-size) max-content var(--calendar-nav-size);
+        grid-template-areas:
+          "prev title next"
+          ". hint hint";
+        justify-content: start;
         align-items: center;
-        text-align: center;
-        margin-bottom: 9px;
+        column-gap: 2px;
+        row-gap: 2px;
+      }
+      .calendar-period-block > [data-delta="-1"] { grid-area: prev; }
+      .calendar-period-block > [data-delta="1"] { grid-area: next; }
+      .calendar-period-block > .calendar-period-title {
+        grid-area: title;
+        min-width: 0;
+        text-align: left;
+      }
+      .calendar-period-block > .calendar-period-hint {
+        grid-area: hint;
+        min-width: 0;
+        max-width: 100%;
+        text-align: left;
       }
       .calendar-week {
         margin-bottom: 3px;
@@ -2854,6 +2883,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         overflow: hidden;
         border: 1px solid var(--line);
         border-radius: var(--radius-icon);
+        corner-shape: var(--corner-shape-control);
         background: var(--theme-preview-color, transparent);
       }
       .theme-color-preview {
@@ -2927,6 +2957,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         padding: 8px 10px;
         border: 1px solid color-mix(in srgb, var(--control-border) 70%, transparent);
         border-radius: var(--radius-compact-surface);
+        corner-shape: var(--corner-shape-control);
         background: color-mix(in srgb, var(--surface-grouped) 86%, var(--card) 14%);
       }
       .sync-status-indicator {
@@ -3503,7 +3534,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                   data-modal="task"
                   type="button"
                 >
-                  + 추가
+                  + 할 일 추가
                 </button>
               </div>
             </div>
@@ -3567,32 +3598,42 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           <div class="card-stack">
             <div class="card-grid schedule-main-grid">
               <div class="schedule-main-item">
-                <div data-ui-component="Card" data-ui-layout="body-only" data-ui-variant="calendar" class="card card--calendar calendar-card">
+                <div data-ui-component="Card" class="card calendar-card">
+                  <div data-ui-component="CardHeader" class="card-header">
+                    <div class="card-header-copy calendar-period-block">
+                      <button
+                        aria-label="이전 달"
+                        class="icon-control icon-control--calendar-nav"
+                        data-action="calendar-month"
+                        data-delta="-1"
+                        type="button"
+                      >
+                        <span class="ui-icon-glyph ui-icon-glyph--calendar" aria-hidden="true">‹</span>
+                      </button>
+                      <h3 class="card-title calendar-period-title" data-dom="calendarTitle"></h3>
+                      <button
+                        aria-label="다음 달"
+                        class="icon-control icon-control--calendar-nav"
+                        data-action="calendar-month"
+                        data-delta="1"
+                        type="button"
+                      >
+                        <span class="ui-icon-glyph ui-icon-glyph--calendar" aria-hidden="true">›</span>
+                      </button>
+                      <div class="card-description calendar-period-hint" data-dom="calendarHint"></div>
+                    </div>
+                    <div class="card-header-action">
+                      <button
+                        class="btn btn--app-action btn--primary"
+                        data-action="open-modal"
+                        data-modal="event"
+                        type="button"
+                      >
+                        + 일정 추가
+                      </button>
+                    </div>
+                  </div>
                   <div data-ui-component="CardBody" class="card-body">
-                    <div class="calendar-head">
-                    <button
-                      aria-label="이전 달"
-                      class="icon-control icon-control--calendar-nav"
-                      data-action="calendar-month"
-                      data-delta="-1"
-                      type="button"
-                    >
-                      <span class="ui-icon-glyph ui-icon-glyph--calendar" aria-hidden="true">‹</span>
-                    </button>
-                    <div>
-                      <b data-dom="calendarTitle"></b>
-                      <div class="small" data-dom="calendarHint"></div>
-                    </div>
-                    <button
-                      aria-label="다음 달"
-                      class="icon-control icon-control--calendar-nav"
-                      data-action="calendar-month"
-                      data-delta="1"
-                      type="button"
-                    >
-                      <span class="ui-icon-glyph ui-icon-glyph--calendar" aria-hidden="true">›</span>
-                    </button>
-                    </div>
                     <div class="calendar-week">
                       <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span
                       ><span>금</span><span>토</span>
@@ -3607,16 +3648,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     <div class="card-header-copy">
                       <h3 class="card-title" data-dom="selectedDateTitle">선택한 날짜의 일정</h3>
                       <div class="card-description">날짜를 누르면 해당 날짜의 일정이 보여요.</div>
-                    </div>
-                    <div class="card-header-action">
-                      <button
-                        class="btn btn--app-action btn--primary"
-                        data-action="open-modal"
-                        data-modal="event"
-                        type="button"
-                      >
-                        일정 추가
-                      </button>
                     </div>
                   </div>
                   <div data-ui-component="CardBody" class="card-body">
@@ -4126,7 +4157,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "468",
+          version: "476",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4517,7 +4548,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           Button: ["", "primary", "tertiary", "danger"],
           Field: ["compact", "compact-text", "inline-select", "search", "search-block", "memo-input", "modal-textarea", "money", "sync", "sync-code", "join-code", "plan-status", "toolbar"],
           IconControl: ["reorder", "calendar-nav", "modal-close", "field-clear"],
-          Card: ["", "calendar"],
+          Card: [""],
           CardBody: ["", "fill-stack", "budget-reference"],
           CardFooter: ["", "baseline"],
           InnerCard: ["", "tinted", "raised", "compact", "status-summary", "event-meta", "plan-block", "budget-detail", "budget-stats", "theme-item", "category", "panel", "recovery", "grouped-list", "stacked-list"],
@@ -5177,16 +5208,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           },
           html(name, items, options = {}) {
             const schema = this.schema(name);
-            // Offer a first step only when the collection really is empty. Filtered lists
-            // (for example an empty search result) should keep their existing message.
+            // Empty collection states are informational only. Primary add actions already live
+            // in each page/card header, so duplicating them inside the empty state adds noise.
             const collectionEmpty = !getCollection(schema.stateKey).length;
-            const firstItemAction = !schema.editOnly && collectionEmpty
-              ? Button(`+ 첫 ${schema.label} 추가`, { action: "open-modal", variant: "primary",
-                  attributes: { "data-modal": name } }) : "";
             const emptyVariant = options.emptyVariant || (collectionEmpty ? "empty" : "search");
             const content = List(items,
               (item, index, total) => schema.renderer(item, index, total, options),
-              options.emptyMessage ?? schema.empty, firstItemAction, emptyVariant);
+              options.emptyMessage ?? schema.empty, "", emptyVariant);
             const hostClass = [schema.hostClass, options.hostClass].filter(Boolean).join(" ");
             const hostVariant = [schema.hostVariant, options.hostVariant].filter(Boolean).join(" ");
             if (!hostClass && !hostVariant) return content;
@@ -6636,12 +6664,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             }));
           }
           setOwnedHTML("schedule", DOM_IDS.calendarGrid, grid.join(""));
-          const count = eventCountByDate.get(selectedScheduleDate) || 0;
           const holiday = getKoreaHoliday(selectedScheduleDate);
           setOwnedText(
             "schedule",
             "calendarHint",
-            [count ? `${formatCount(count)} 일정` : "일정 없음", holiday ? `공휴일 · ${holiday}` : "",
+            [holiday ? `공휴일 · ${holiday}` : "",
             KOREA_HOLIDAY_PROVISIONAL_YEARS.has(y) ? "2028 공휴일은 한국천문연구원 사전 달력자료 기준 잠정 정보예요" : "",
             KOREA_HOLIDAYS_BY_YEAR[y] ? "" : "이 해의 공휴일 정보는 없어요"]
               .filter(Boolean)
