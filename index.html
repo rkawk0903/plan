@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v464
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v468
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -112,7 +112,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-moL2PIre45bJ7ceSS3wdba4l3ojtdNTtED7Xxp3muug=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-lcNHz7dEdWHuSWgE1Zk3SPaU4StykGlrOUIGJTVoTzE='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-9j1L/cxx24oKydsGIF802vtA43qkeAWpto6AcuZl0qA=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-xIkMZIuSHV5lKaGHyt9Ec2fkHQMDHEvRrivX/74kT9E='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -325,11 +325,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --corner-shape-control: var(--corner-shape-continuous);
         /* Derived semantic surfaces follow the user's selected theme automatically. */
         --text-secondary: color-mix(in srgb, var(--muted) 92%, var(--ink));
-        --text-tertiary: color-mix(in srgb, var(--muted) 76%, transparent);
+        --text-tertiary: color-mix(in srgb, var(--muted) 98%, var(--ink));
         --surface-border: color-mix(in srgb, var(--line) 58%, transparent);
         --control-border: color-mix(in srgb, var(--line) 70%, transparent);
         --separator: color-mix(in srgb, var(--line) 44%, transparent);
         --control-shadow: 0 1px 2px rgba(20, 20, 24, 0.025), inset 0 1px 0 rgba(255, 255, 255, 0.56);
+        --focus-outline: color-mix(in srgb, var(--accent) 72%, var(--ink));
         --focus-ring: color-mix(in srgb, var(--accent) 20%, transparent);
         --material-surface: color-mix(in srgb, var(--card) 76%, transparent);
         --material-button: color-mix(in srgb, var(--button-bg) 90%, transparent);
@@ -373,9 +374,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --state-complete-border: color-mix(in srgb, var(--good) 28%, var(--control-border));
         --state-complete-color: var(--good-ink);
         --state-complete-muted: color-mix(in srgb, var(--good) 22%, var(--muted));
-        --state-disabled-opacity: 0.46;
+        --state-disabled-opacity: 0.58;
         --state-disabled-bg: color-mix(in srgb, var(--field-fill) 82%, var(--bg) 18%);
-        --state-disabled-color: color-mix(in srgb, var(--muted) 78%, transparent);
+        --state-disabled-color: color-mix(in srgb, var(--muted) 94%, var(--ink));
         --state-warning-bg: color-mix(in srgb, var(--warning) 10%, var(--card));
         --state-warning-border: color-mix(in srgb, var(--warning) 30%, var(--line));
         --state-warning-color: color-mix(in srgb, var(--warning) 78%, var(--ink));
@@ -414,7 +415,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --field-disabled-color: var(--state-disabled-color);
         --field-error-border: var(--state-error-border);
         --field-error-ring: var(--state-error-ring);
-        --field-select-icon-color: color-mix(in srgb, var(--muted) 78%, transparent);
+        --field-select-icon-color: color-mix(in srgb, var(--muted) 94%, var(--ink));
         /* Contextual controls inside nested cards: same field family with a controlled accent2 tint. */
         --field-fill-accent2: color-mix(in srgb, var(--field-fill) 76%, var(--accent2) 24%);
         --row-hover: color-mix(in srgb, var(--accent) 5%, var(--card));
@@ -528,7 +529,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         -webkit-text-fill-color: currentColor;
       }
       :where(button, input, select, textarea, summary, a, [tabindex]:not([tabindex="-1"])):focus-visible {
-        outline: 2px solid color-mix(in srgb, var(--accent) 78%, transparent);
+        outline: 2px solid var(--focus-outline);
         outline-offset: 3px;
       }
       ::selection {
@@ -762,7 +763,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
 
       .icon-control:focus-visible {
-        outline: 2px solid var(--accent);
+        outline: 2px solid var(--focus-outline);
         outline-offset: 2px;
       }
 
@@ -950,7 +951,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .more-menu-item:focus-visible,
       .more-menu-trigger:focus-visible {
-        outline: 2px solid var(--focus-ring);
+        outline: 2px solid var(--focus-outline);
         outline-offset: 1px;
       }
 
@@ -1093,6 +1094,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-size: var(--card-description-size);
         line-height: var(--card-description-line-height);
         font-weight: 400;
+        overflow-wrap: anywhere;
       }
       .card-header-action {
         min-width: 0;
@@ -1349,7 +1351,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .toast-action:active { background: var(--row-pressed); opacity: 0.82; }
       .toast-action:focus-visible {
-        outline: 2px solid var(--focus-ring);
+        outline: 2px solid var(--focus-outline);
         outline-offset: 1px;
       }
       .confirm-overlay {
@@ -1648,6 +1650,60 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         pointer-events: none;
       }
 
+
+      /* Search/filter feedback system */
+      .field-shell--search {
+        position: relative;
+        width: 100%;
+        min-width: 0;
+      }
+      .field-shell--search > input[type="search"] {
+        padding-right: 42px;
+      }
+      .field-shell--search-block {
+        margin: 4px 0 8px;
+      }
+      .field-shell--search input[type="search"]::-webkit-search-cancel-button {
+        -webkit-appearance: none;
+        appearance: none;
+      }
+      .field-shell--search:has(input[type="search"]:placeholder-shown) > [data-action="clear-search"] {
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .field[data-filter-active="true"] {
+        --field-bg: color-mix(in srgb, var(--accent) 7%, var(--field-fill));
+        --field-color: var(--accent-ink);
+      }
+      .filter-feedback {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-sm);
+        min-height: 0;
+        margin: 0 0 6px;
+      }
+      .filter-feedback-summary {
+        min-width: 0;
+        color: var(--text-tertiary);
+        font-size: var(--font-caption);
+        line-height: 1.35;
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
+        overflow-wrap: anywhere;
+      }
+      .filter-feedback > .btn[hidden] {
+        display: none;
+      }
+      @media (max-width: 380px) {
+        .filter-feedback {
+          align-items: flex-start;
+          flex-wrap: wrap;
+          gap: 4px 8px;
+        }
+      }
 /* Continuous-corner behavior is owned by each component base/variant.
    This file is intentionally kept as a compatibility slot in the build order;
    compositor-heavy clip/filter fallbacks are forbidden. */
@@ -1678,6 +1734,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --pill-font-weight: 600;
         flex: 0 0 auto;
         white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
       }
       .pill--event-category {
         flex: 0 0 auto;
@@ -2137,6 +2195,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       @media (max-width: 520px) {
         .inner-card--budget-stats { --inner-card-padding: 2px 8px; }
       }
+      @media (max-width: 380px) {
+        .card-header--fixed-actions {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .card-header--fixed-actions > .card-header-action {
+          width: 100%;
+          justify-content: flex-end;
+          overflow-x: auto;
+          scrollbar-width: none;
+        }
+        .card-header--fixed-actions > .card-header-action::-webkit-scrollbar { display: none; }
+        .action-row--compact { flex-wrap: wrap; }
+        .field--toolbar { --field-select-arrow-space: 24px; }
+      }
       @media (max-width: 600px) {
         .field--toolbar {
           --field-inset: 0 6px;
@@ -2155,6 +2227,25 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           min-width: 0;
         }
       }
+
+      .icon-control--field-clear {
+        --icon-size: 28px;
+        --touch-icon-hit-slop: 8px;
+        --icon-font-size: var(--font-small);
+        --icon-control-border: transparent;
+        --icon-control-bg: transparent;
+        --icon-control-color: var(--text-tertiary);
+        --icon-control-shadow: none;
+        --icon-control-hover-bg: var(--button-tertiary-hover-bg);
+        --icon-control-hover-border: transparent;
+        --icon-control-hover-shadow: none;
+        --icon-control-active-bg: var(--row-pressed);
+        position: absolute;
+        top: 50%;
+        right: 6px;
+        transform: translateY(-50%);
+        z-index: 1;
+      }
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
       .calendar-grid {
@@ -2169,10 +2260,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .top {
         padding: var(--page-top-space) var(--page-side-space) 14px;
+        min-width: 0;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 14px;
+      }
+      .top > :first-child {
+        flex: 1 1 auto;
+        min-width: 0;
       }
       main {
         padding: 12px var(--page-side-space);
@@ -2197,7 +2293,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: grid;
         grid-template-columns: 1fr;
         gap: var(--space-sm);
-        margin: 0 0 var(--space-md);
+        margin: 0;
       }
       .task-toolbar-controls {
         display: grid;
@@ -2320,6 +2416,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         .home-top-grid > .budget-home { grid-column: 2; }
       }
+
+      @media (max-width: 380px) {
+        .top { gap: 10px; }
+        .task-toolbar-controls,
+        .plan-status-grid { gap: 6px; }
+        .theme-grid { grid-template-columns: minmax(0, 1fr); }
+      }
+
       @supports (padding: max(0px)) {
         .app main {
           padding-left: max(var(--page-side-space), env(safe-area-inset-left));
@@ -2327,6 +2431,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
 /* ===== 06 DOMAIN VIEWS — composition and domain-specific typography ===== */
+      .plan-status-grid > * { min-width: 0; }
       .plan-status-grid b {
         display: block;
         font-size: var(--plan-status-count-font-size);
@@ -2337,6 +2442,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         margin-top: 3px;
         font-size: var(--font-caption);
         color: var(--muted);
+        overflow-wrap: anywhere;
       }
       .calendar-week span {
         text-align: center;
@@ -2366,7 +2472,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-weight: 780;
         line-height: 1.06;
         letter-spacing: -0.045em;
-        white-space: nowrap;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-wrap: balance;
       }
       @media (max-width: 430px) {
         .title {
@@ -2375,6 +2483,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
       .dday {
+        flex: 0 0 auto;
+        max-width: min(42vw, 150px);
         background: color-mix(in srgb, var(--card) 92%, var(--accent) 8%);
         border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--surface-border));
         border-radius: var(--radius-medium-surface);
@@ -2389,6 +2499,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-width: 104px;
         padding: 10px 13px;
         transition: box-shadow var(--motion-standard) var(--ease-interaction), background-color var(--motion-standard) var(--ease-interaction);
+      }
+      @media (max-width: 380px) {
+        .dday {
+          min-width: 92px;
+          max-width: 40vw;
+          padding: 9px 10px;
+        }
       }
       @media (hover: hover) and (pointer: fine) {
         .dday:hover {
@@ -2498,6 +2615,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         text-align: center;
         font-size: var(--font-small);
         color: var(--muted);
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
       }
       .plan-status-summary b {
         color: var(--ink);
@@ -2536,6 +2655,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .planner-event-item-meta-date,
       .planner-event-item-meta-time {
         flex: 0 0 auto;
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
       }
       .planner-event-item-meta-location {
         flex: 1 1 auto;
@@ -2563,15 +2684,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         align-items: center;
         flex-wrap: nowrap;
         gap: var(--collection-meta-gap);
-        overflow: hidden;
+        overflow: visible;
       }
       .planner-event-item-title {
         flex: 0 1 auto;
         min-width: 0;
         max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
+        overflow-wrap: anywhere;
         font-size: var(--event-title-size);
         font-weight: 700;
         line-height: 1.4;
@@ -2710,6 +2832,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .category-progress-meta {
         margin-top: 4px;
         text-align: right;
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
       }
       .theme-item {
         display: grid;
@@ -2754,7 +2878,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         appearance: none;
       }
       .theme-color-control:focus-within {
-        outline: 2px solid var(--accent);
+        outline: 2px solid var(--focus-outline);
         outline-offset: 2px;
       }
       .theme-range {
@@ -2868,6 +2992,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .sync-detail-text[data-tone="sync"] {
         color: var(--state-active-color);
+      }
+      @media (max-width: 430px) {
+        .sync-status-row {
+          grid-template-columns: auto minmax(0, 1fr);
+        }
+        .sync-status-row > [data-dom="syncStatusAction"] {
+          grid-column: 2;
+          justify-self: start;
+        }
       }
       .sync-data-actions-footer {
         margin-top: var(--card-footer-margin-top);
@@ -3084,6 +3217,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-size: var(--font-small);
         line-height: 1.15;
         text-align: left;
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
       }
       .project-panel {
         display: block;
@@ -3119,6 +3254,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-feature-settings: "tnum" 1;
         letter-spacing: -0.02em;
         white-space: nowrap;
+        text-align: right;
       }
       .budget-detail-group .budget-detail {
         margin-top: 5px;
@@ -3147,6 +3283,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           --action-button-size: 36px;
           --task-check-size: 26px;
           --task-check-column: 32px;
+        }
+      }
+
+
+      @media (prefers-contrast: more) {
+        :root {
+          --field-placeholder-color: var(--muted);
+          --field-select-icon-color: var(--muted);
+          --focus-outline: var(--ink);
+          --state-disabled-opacity: 0.68;
         }
       }
 
@@ -3395,14 +3541,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     <option value="custom">기본순</option>
                   </select>
                 </div>
-                <input
-                  aria-label="할 일 검색"
-                  class="field field--compact-text field--search"
-                  data-dom="taskSearch"
-                  data-action="tasks-search"
-                  placeholder="할 일 검색 (제목·분야·메모)"
-                  type="search"
-                />
+                <div class="field-shell field-shell--search">
+                  <input
+                    aria-label="할 일 검색"
+                    class="field field--compact-text field--search"
+                    data-dom="taskSearch"
+                    data-action="tasks-search"
+                    placeholder="할 일 검색 (제목·분야·메모)"
+                    type="search"
+                  />
+                  <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>
+                </div>
+                <div class="filter-feedback" aria-live="polite">
+                  <span class="filter-feedback-summary" data-dom="taskFilterSummary">0개 표시 · 활성 조건 0개</span>
+                  <button class="btn btn--status-action btn--tertiary" data-action="reset-task-filters" data-dom="taskFilterReset" type="button" hidden>필터 초기화</button>
+                </div>
               </div>
               <div class="task-list-mount" data-collection="task"></div>
             </div>
@@ -3493,14 +3646,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <input
-                  aria-label="전체 일정 검색"
-                  class="field field--compact-text field--search field--search-block"
-                  data-dom="scheduleAllSearch"
-                  data-action="schedule-search"
-                  placeholder="일정 검색 (제목, 장소, 분류, 메모)"
-                  type="search"
-                />
+                <div class="field-shell field-shell--search field-shell--search-block">
+                  <input
+                    aria-label="전체 일정 검색"
+                    class="field field--compact-text field--search"
+                    data-dom="scheduleAllSearch"
+                    data-action="schedule-search"
+                    placeholder="일정 검색 (제목, 장소, 분류, 메모)"
+                    type="search"
+                  />
+                  <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>
+                </div>
+                <div class="filter-feedback" aria-live="polite">
+                  <span class="filter-feedback-summary" data-dom="scheduleFilterSummary">0개 표시 · 활성 조건 0개</span>
+                  <button class="btn btn--status-action btn--tertiary" data-action="reset-schedule-filters" data-dom="scheduleFilterReset" type="button" hidden>필터 초기화</button>
+                </div>
                 <div data-collection="event"></div>
               </div>
             </div>
@@ -3613,14 +3773,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <input
-                  aria-label="메모 검색"
-                  class="field field--compact-text field--search field--search-block"
-                  data-dom="memoSearch"
-                  data-action="memo-search"
-                  placeholder="메모 검색"
-                  type="search"
-                />
+                <div class="field-shell field-shell--search field-shell--search-block">
+                  <input
+                    aria-label="메모 검색"
+                    class="field field--compact-text field--search"
+                    data-dom="memoSearch"
+                    data-action="memo-search"
+                    placeholder="메모 검색"
+                    type="search"
+                  />
+                  <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>
+                </div>
+                <div class="filter-feedback" aria-live="polite">
+                  <span class="filter-feedback-summary" data-dom="memoSearchSummary">0개 표시 · 활성 조건 0개</span>
+                </div>
                 <div data-ui-component="InnerCard" class="inner-card inner-card--grouped-list" data-collection="memo"></div>
               </div>
             </div>
@@ -3960,7 +4126,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "464",
+          version: "468",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4032,7 +4198,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           PRIORITY: "priority",
           CATEGORY: "category",
         });
-        const moneyFmt = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 });
+        const numberFmt = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 });
+        const moneyFmt = numberFmt;
+        const WEEKDAY_SHORT = Object.freeze(["일", "월", "화", "수", "목", "금", "토"]);
         const THEME_FIELDS = {
           bg: { type: "color", value: "#f7f5f2", css: "--bg", id: "thBg", label: "페이지 배경" },
           card: { type: "color", value: "#ffffff", css: "--card", id: "thCard", label: "기본 카드 배경" },
@@ -4348,7 +4516,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         const UI_VARIANTS = Object.freeze({
           Button: ["", "primary", "tertiary", "danger"],
           Field: ["compact", "compact-text", "inline-select", "search", "search-block", "memo-input", "modal-textarea", "money", "sync", "sync-code", "join-code", "plan-status", "toolbar"],
-          IconControl: ["reorder", "calendar-nav", "modal-close"],
+          IconControl: ["reorder", "calendar-nav", "modal-close", "field-clear"],
           Card: ["", "calendar"],
           CardBody: ["", "fill-stack", "budget-reference"],
           CardFooter: ["", "baseline"],
@@ -4778,6 +4946,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             "confirm-accept": onClick(() => settleAppConfirm(true)),
             "confirm-cancel": onClick(() => settleAppConfirm(false)),
             "autosize-textarea": onInput((el) => autosizeTextarea(el)),
+            "clear-search": onClick((el) => clearSearchControl(el)),
           },
           Home: {
             "move-category": onClick((el) =>
@@ -4787,11 +4956,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           Tasks: {
             "tasks-search": onInput(() => requestRenderDebounced("tasks")),
             "tasks-filter": onChange(() => requestRender("tasks")),
+            "reset-task-filters": onClick(() => resetTaskFilters()),
             "toggle-task": onClick((el) => toggleTask(el.dataset.id)),
           },
           Schedule: {
             "schedule-filter": onChange(() => requestRender("schedule")),
             "schedule-search": onInput(() => requestRenderDebounced("schedule")),
+            "reset-schedule-filters": onClick(() => resetScheduleFilters()),
             "calendar-month": onClick((el) => changeCalendarMonth(Number(el.dataset.delta || 0))),
             "select-date": onClick((el) => selectScheduleDate(el.dataset.date)),
           },
@@ -4864,13 +5035,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             homeTasks: "homeTasks", homeTaskLimit: "homeTaskLimit", homeEvents: "homeEvents", homeEventLimit: "homeEventLimit",
             categoryProgressList: "categoryProgressList", homePlanDonePct: "homePlanDonePct", homePlanTotal: "homePlanTotal",
           },
-          tasks: { taskCat: "taskCat", taskSearch: "taskSearch", taskStatus: "taskStatus", taskSort: "taskSort" },
+          tasks: { taskCat: "taskCat", taskSearch: "taskSearch", taskStatus: "taskStatus", taskSort: "taskSort",
+            taskFilterSummary: "taskFilterSummary", taskFilterReset: "taskFilterReset" },
           schedule: {
             calendarTitle: "calendarTitle", calendarGrid: "calendarGrid", calendarHint: "calendarHint",
             selectedDateTitle: "selectedDateTitle", scheduleList: "scheduleList",
             scheduleFilter: "scheduleFilter", scheduleAllSearch: "scheduleAllSearch",
+            scheduleFilterSummary: "scheduleFilterSummary", scheduleFilterReset: "scheduleFilterReset",
           },
-          memos: { quickMemo: "quickMemo", memoSearch: "memoSearch" },
+          memos: { quickMemo: "quickMemo", memoSearch: "memoSearch", memoSearchSummary: "memoSearchSummary" },
           history: { undoButton: "undoButton", redoButton: "redoButton", historyStatus: "historyStatus" },
           theme: { themeFields: "themeFields", themePresets: "themePresets", themeRadiusControl: "themeRadiusControl", thRadiusVal: "thRadiusVal" },
           shared: {
@@ -6219,8 +6392,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           };
         }
         function getTaskFilters() {
+          const queryLabel = ($(DOM_IDS.taskSearch)?.value || "").trim();
           return {
-            query: ($(DOM_IDS.taskSearch)?.value || "").trim().toLowerCase(),
+            query: queryLabel.toLowerCase(),
+            queryLabel,
             category: $(DOM_IDS.taskCat)?.value || TASK_STATUS_FILTER.ALL,
             status: $(DOM_IDS.taskStatus)?.value || TASK_STATUS_FILTER.ALL,
             sort: $(DOM_IDS.taskSort)?.value || TASK_SORT.CUSTOM,
@@ -6279,7 +6454,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               <div class="task-category-row">
                 <div class="task-category">${esc(item.cat)}</div>
                 <div class="task-meta">
-                  ${item.due ? Pill(item.due, "task") : ""}
+                  ${item.due ? Pill(formatDateCompact(item.due), "task") : ""}
                   ${Pill(item.priority, ["task", priorityVariant].filter(Boolean).join(" "))}
                 </div>
               </div>
@@ -6294,7 +6469,28 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function renderTasks(view = getViewData()) {
           const filters = getTaskFilters();
           filters.category = syncTaskCategoryOptions([...view.taskCategorySet]);
-          Collection.render("task", filterAndSortTasks(view.tasks, filters, view.priorityRank));
+          const items = filterAndSortTasks(view.tasks, filters, view.priorityRank);
+          const activeParts = [];
+          if (filters.query) activeParts.push("search");
+          if (filters.category !== TASK_STATUS_FILTER.ALL) activeParts.push("category");
+          if (filters.status !== TASK_STATUS_FILTER.ALL) activeParts.push("status");
+          const filterActiveCount = Number(filters.category !== TASK_STATUS_FILTER.ALL) + Number(filters.status !== TASK_STATUS_FILTER.ALL);
+          setOwnedText("tasks", DOM_IDS.taskFilterSummary,
+            `${formatCount(items.length)} 표시 · 활성 조건 ${formatCount(activeParts.length)}`);
+          const reset = ownedElement("tasks", DOM_IDS.taskFilterReset);
+          if (reset) reset.hidden = filterActiveCount === 0;
+          setFilterActiveState($(DOM_IDS.taskSearch), !!filters.query);
+          setFilterActiveState($(DOM_IDS.taskCat), filters.category !== TASK_STATUS_FILTER.ALL);
+          setFilterActiveState($(DOM_IDS.taskStatus), filters.status !== TASK_STATUS_FILTER.ALL);
+          Collection.render("task", items, {
+            emptyMessage: view.tasks.length && activeParts.length ? "현재 검색·필터 조건에 맞는 할 일이 없어요." : undefined,
+          });
+        }
+        function resetTaskFilters() {
+          setOwnedValue("tasks", DOM_IDS.taskCat, TASK_STATUS_FILTER.ALL);
+          setOwnedValue("tasks", DOM_IDS.taskStatus, TASK_STATUS_FILTER.ALL);
+          requestRender("tasks");
+          return true;
         }
 
         // ===== 05 DOMAIN / Schedule =====
@@ -6351,10 +6547,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function EventItem(e, { today = null, showActions = true, showDate = true } = {}) {
           const ed = parseLocalDate(e.date);
           const isToday = today instanceof Date && ed.getTime() === today.getTime();
-          const dayName = ["일", "월", "화", "수", "목", "금", "토"][ed.getDay()];
-          const dateLabel = Number.isNaN(ed.getTime())
-            ? "날짜 없음"
-            : `${e.date.slice(0, 4).slice(-2)}.${e.date.slice(5, 7)}.${e.date.slice(8, 10)} (${dayName})`;
+          const dateLabel = formatDateCompact(e.date);
 
           const category = e.category
             ? Pill(e.category, "badge event-category")
@@ -6386,14 +6579,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function CalendarCell({ iso, day, count, holiday, dayClass, muted, selected, today }) {
           const classes = ["calendar-cell", dayClass, muted && "muted", holiday && "holiday", selected && "selected", today && "today"];
-          const label = `${iso}${holiday ? ` ${holiday}` : ""}${count ? ` 일정 ${count}개` : ""}`;
+          const label = `${iso}${holiday ? ` ${holiday}` : ""}${count ? ` 일정 ${formatCount(count)}` : ""}`;
           const dots = count ? `<span class="calendar-dots">${'<i class="calendar-dot"></i>'.repeat(Math.min(count, 4))}</span>` : "";
           return `<button data-ui-component="CalendarCell" type="button" aria-label="${attr(label)}" class="${classes.filter(Boolean).join(" ")}"
             aria-pressed="${selected ? "true" : "false"}"${today ? ' aria-current="date"' : ""}
             data-action="select-date" data-date="${attr(iso)}">
             <span class="calendar-num">${day}</span>
             ${holiday ? `<span class="calendar-holiday" title="${attr(holiday)}">${esc(holiday)}</span>` : ""}
-            ${dots}${count > 4 ? `<span class="calendar-more">+${count - 4}</span>` : ""}
+            ${dots}${count > 4 ? `<span class="calendar-more">+${formatNumber(count - 4)}</span>` : ""}
           </button>`;
         }
         function renderCalendar(v = getViewData()) {
@@ -6401,7 +6594,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const y = calendarCursor.getFullYear(),
             m = calendarCursor.getMonth(),
             pad = (n) => String(n).padStart(2, "0");
-          setOwnedText("schedule", DOM_IDS.calendarTitle, `${y}년 ${m + 1}월`);
+          setOwnedText("schedule", DOM_IDS.calendarTitle, formatMonthLabel(calendarCursor));
           const todayIso = localDateISO();
           const first = new Date(y, m, 1),
             start = first.getDay(),
@@ -6448,7 +6641,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           setOwnedText(
             "schedule",
             "calendarHint",
-            [count ? `${count}개의 일정` : "일정 없음", holiday ? `공휴일 · ${holiday}` : "",
+            [count ? `${formatCount(count)} 일정` : "일정 없음", holiday ? `공휴일 · ${holiday}` : "",
             KOREA_HOLIDAY_PROVISIONAL_YEARS.has(y) ? "2028 공휴일은 한국천문연구원 사전 달력자료 기준 잠정 정보예요" : "",
             KOREA_HOLIDAYS_BY_YEAR[y] ? "" : "이 해의 공휴일 정보는 없어요"]
               .filter(Boolean)
@@ -6478,11 +6671,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           renderCalendar(v);
 
           const selectedEvents = v.sortedEvents.filter((e) => e.date === selectedScheduleDate);
-          const d = parseLocalDate(selectedScheduleDate);
           setOwnedText(
             "schedule",
             "selectedDateTitle",
-            `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 일정`,
+            `${formatDateLong(selectedScheduleDate)} 일정`,
           );
           setOwnedHTML(
             "schedule",
@@ -6494,7 +6686,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           );
 
           const filter = selectedValue("scheduleFilter", "all");
-          const search = selectedValue("scheduleAllSearch").trim().toLowerCase();
+          const searchLabel = selectedValue("scheduleAllSearch").trim();
+          const search = searchLabel.toLowerCase();
           let allEvents = v.sortedEvents;
           if (filter === "upcoming") allEvents = allEvents.filter((e) => parseLocalDate(e.date) >= v.today);
           else if (filter === "past") allEvents = allEvents.filter((e) => parseLocalDate(e.date) < v.today);
@@ -6505,8 +6698,25 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 .some((x) => String(x).toLowerCase().includes(search)),
             );
           }
+          const activeParts = [];
+          if (search) activeParts.push("search");
+          if (filter !== "all") activeParts.push("range");
+          setOwnedText("schedule", DOM_IDS.scheduleFilterSummary,
+            `${formatCount(allEvents.length)} 표시 · 활성 조건 ${formatCount(activeParts.length)}`);
+          const reset = ownedElement("schedule", DOM_IDS.scheduleFilterReset);
+          if (reset) reset.hidden = filter === "all";
+          setFilterActiveState($(DOM_IDS.scheduleAllSearch), !!search);
+          setFilterActiveState($(DOM_IDS.scheduleFilter), filter !== "all");
 
-          Collection.render("event", allEvents, { today: v.today });
+          Collection.render("event", allEvents, {
+            today: v.today,
+            emptyMessage: v.events.length && activeParts.length ? "현재 검색·필터 조건에 맞는 일정이 없어요." : undefined,
+          });
+        }
+        function resetScheduleFilters() {
+          setOwnedValue("schedule", DOM_IDS.scheduleFilter, "all");
+          requestRender("schedule");
+          return true;
         }
 
         // ===== 05 DOMAIN / Budget and Plans =====
@@ -6537,7 +6747,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const n = num(value);
           if (!n) return "";
           const [whole, fraction] = String(n).split(".");
-          return Number(whole).toLocaleString("ko-KR") + (fraction ? `.${fraction}` : "");
+          return numberFmt.format(Number(whole)) + (fraction ? `.${fraction}` : "");
         }
         function formatMoneyInput(el) {
           if (!el) return;
@@ -6548,7 +6758,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const dot = cleaned.indexOf(".");
           const whole = (dot < 0 ? cleaned : cleaned.slice(0, dot)).slice(0, String(APP_CONFIG.maxMoneyValue).length);
           const fraction = dot < 0 ? "" : `.${cleaned.slice(dot + 1).replace(/\./g, "")}`;
-          const next = whole ? Number(whole).toLocaleString("ko-KR") + fraction : "";
+          const next = whole ? numberFmt.format(Number(whole)) + fraction : "";
           el.value = next;
           let position = 0;
           let seen = 0;
@@ -6599,12 +6809,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           );
         }
         function renderMemos(view = getViewData()) {
-          const query = selectedValue("memoSearch").trim().toLowerCase();
+          const queryLabel = selectedValue("memoSearch").trim();
+          const query = queryLabel.toLowerCase();
           const items = view.memos.filter((item) => !query || item.text.toLowerCase().includes(query));
           const positions = new Map(view.memos.map((item, index) => [String(item.id), index]));
+          setOwnedText("memos", DOM_IDS.memoSearchSummary,
+            `${formatCount(items.length)} 표시 · 활성 조건 ${formatCount(query ? 1 : 0)}`);
+          setFilterActiveState($(DOM_IDS.memoSearch), !!query);
           setOwnedHTML("memos", COLLECTION_SCHEMAS.memo.target,
             List(items, (item) => MemoCard(item, positions.get(String(item.id)), view.memos.length),
-              query ? "검색 결과가 없어요." : COLLECTION_SCHEMAS.memo.empty, "", query ? "search" : "empty"));
+              query ? `“${summarizeSearchQuery(queryLabel)}” 검색 결과가 없어요.` : COLLECTION_SCHEMAS.memo.empty, "", query ? "search" : "empty"));
           autosizeTextarea($(DOM_IDS.quickMemo));
         }
         function autosizeTextarea(element) {
@@ -6647,7 +6861,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const target = parseLocalDate(weddingDate);
             if (!Number.isNaN(target.getTime())) {
               const diff = Math.round((target - today) / 86400000);
-              ddayLabel = diff === 0 ? "D-DAY" : diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
+              ddayLabel = diff === 0 ? "D-DAY" : diff > 0 ? `D-${formatNumber(diff)}` : `D+${formatNumber(Math.abs(diff))}`;
             }
           }
           return {
@@ -6666,20 +6880,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function renderTaskProgressSummary(view) {
           const pct = view.taskTotal ? Math.round((view.taskDone / view.taskTotal) * 100) : 0;
-          setOwnedText("taskSummary", DOM_IDS.overallPct, pct + "%");
+          setOwnedText("taskSummary", DOM_IDS.overallPct, formatPercent(pct));
           const bar = ownedElement("taskSummary", DOM_IDS.overallBar);
           if (bar) bar.style.setProperty("--progress-value", pct + "%");
-          setOwnedText("taskSummary", DOM_IDS.overallText, `${view.taskDone}/${view.taskTotal}`);
+          setOwnedText("taskSummary", DOM_IDS.overallText, formatRatio(view.taskDone, view.taskTotal));
         }
         function renderBudgetSummary(view) {
           const { budgetPlan: plan, budgetActual: actual, budgetOver: over, budgetPct: pct } = view;
           setOwnedText("budgetSummary", DOM_IDS.totalPlan, wonUnit(plan));
           setOwnedText("budgetSummary", DOM_IDS.totalActual, wonUnit(actual));
           setOwnedText("budgetSummary", DOM_IDS.overBudget, wonUnit(over));
-          setOwnedText("budgetSummary", DOM_IDS.budgetPctBig, pct + "%");
-          setOwnedText("budgetSummary", DOM_IDS.homeTotalPlan, "/" + wonUnit(plan));
+          setOwnedText("budgetSummary", DOM_IDS.budgetPctBig, formatPercent(pct));
+          setOwnedText("budgetSummary", DOM_IDS.homeTotalPlan, "/ " + wonUnit(plan));
           setOwnedText("budgetSummary", DOM_IDS.homeTotalActual, wonUnit(actual));
-          setOwnedText("budgetSummary", DOM_IDS.homeBudgetPct, pct + "%");
+          setOwnedText("budgetSummary", DOM_IDS.homeBudgetPct, formatPercent(pct));
           [
             ownedElement("budgetSummary", DOM_IDS.budgetGaugeProgress),
             ownedElement("budgetSummary", DOM_IDS.homeBudgetGaugeProgress),
@@ -6717,7 +6931,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return InnerCard(
             CardHeader(category, "", actions) +
               CardBody(
-                `<div class="category-progress-meta small">${done}/${total}</div>${Progress(progress, "category")}`,
+                `<div class="category-progress-meta small">${formatRatio(done, total)}</div>${Progress(progress, "category")}`,
               ),
             "category-card", "category",
           );
@@ -6735,9 +6949,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           });
         }
         function renderHomePlanSummary(view) {
-          PLAN_STATUS_DEFINITIONS.forEach(status => setOwnedText("home", status.dom, view[status.countKey]));
-          setOwnedText("home", DOM_IDS.homePlanDonePct, view.planDonePct + "%");
-          setOwnedText("home", DOM_IDS.homePlanTotal, view.planTotal);
+          PLAN_STATUS_DEFINITIONS.forEach(status => setOwnedText("home", status.dom, formatNumber(view[status.countKey])));
+          setOwnedText("home", DOM_IDS.homePlanDonePct, formatPercent(view.planDonePct));
+          setOwnedText("home", DOM_IDS.homePlanTotal, formatNumber(view.planTotal));
         }
         function renderHome(view = getViewData()) {
           renderHomeTaskPreview(view);
@@ -11213,7 +11427,48 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return Number(raw) || 0;
         }
         function formatNumber(value) {
-          return moneyFmt.format(num(value));
+          return numberFmt.format(num(value));
+        }
+        function formatPercent(value) {
+          return `${formatNumber(Math.round(num(value)))}%`;
+        }
+        function formatRatio(current, total) {
+          return `${formatNumber(current)}/${formatNumber(total)}`;
+        }
+        function formatCount(value, unit = "개") {
+          return `${formatNumber(value)}${unit}`;
+        }
+        function formatDateCompact(iso) {
+          const date = parseLocalDate(iso);
+          if (Number.isNaN(date.getTime())) return "날짜 없음";
+          return `${String(date.getFullYear()).slice(-2)}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")} (${WEEKDAY_SHORT[date.getDay()]})`;
+        }
+        function formatDateLong(iso) {
+          const date = parseLocalDate(iso);
+          if (Number.isNaN(date.getTime())) return "날짜 없음";
+          return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+        }
+        function formatMonthLabel(date) {
+          return date instanceof Date && !Number.isNaN(date.getTime()) ? `${date.getFullYear()}년 ${date.getMonth() + 1}월` : "";
+        }
+        function summarizeSearchQuery(value, maxLength = 24) {
+          const query = String(value || "").trim();
+          if (!query) return "";
+          return query.length > maxLength ? `${query.slice(0, maxLength)}…` : query;
+        }
+        function setFilterActiveState(element, active) {
+          if (!(element instanceof HTMLElement)) return;
+          if (active) element.setAttribute("data-filter-active", "true");
+          else element.removeAttribute("data-filter-active");
+        }
+        function clearSearchControl(button) {
+          const named = button?.dataset?.searchDom;
+          const input = named ? $(DOM_IDS[named] || named) : button?.closest(".field-shell--search")?.querySelector('input[type="search"]');
+          if (!(input instanceof HTMLInputElement)) return false;
+          input.value = "";
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.focus({ preventScroll: true });
+          return true;
         }
         function newId() {
           if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
