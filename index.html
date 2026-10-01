@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v476
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v490
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -12,8 +12,8 @@ CURRENT ARCHITECTURE
   Domain View는 데이터와 컴포넌트를 조합합니다. CSS 위치보다 아래 책임 경계를 우선하세요.
 
 EDIT MAP — 검색할 이름 / 수정할 곳 / 직접 수정하지 않을 곳
-  버튼 geometry: :root --unified-button-* (페이지 액션), --action-button-size (아이콘/상태 select).
-    상단 탭은 --nav-button-height로 모달 액션과 같은 큰 세로 높이를 공유합니다.
+  컨트롤 geometry: --control-height (일반), --control-height-large (모달/상단 탭).
+    상단 탭은 --control-height-large로 모달 액션과 같은 큰 세로 높이를 공유합니다.
     .btn/.icon-control이 적용합니다. 개별 화면에 height/padding/font patch를 추가하지 않습니다.
   CardHeader 간격: --card-header-gap / --card-header-margin-bottom / --card-action-gap.
     부모 gap이 간격을 소유하면 card-header--flush, 우측 고정 액션은 --fixed-actions를 조합합니다.
@@ -32,10 +32,14 @@ EDIT MAP — 검색할 이름 / 수정할 곳 / 직접 수정하지 않을 곳
   새 CRUD collection: COLLECTION_SCHEMAS + domain renderer + PAGE_REGISTRY + HTML page/collection host.
     Collection engine/Forms/Actions/DOM registration/merge collection keys는 자동 파생됩니다.
     홈 요약·특수 필터·기존 공개 API alias가 필요하면 해당 명시적 경계에 추가합니다.
+  Spacing: --space-1..6 = 4/8/12/16/20/24px. 일반 card/collection/layout 간격은 이 scale을 우선합니다.
+    날짜 정렬·광학 보정처럼 의도된 예외만 literal 값을 유지합니다.
   Typography: --font-family / --font-family-mono / --font-family-symbol + --text-* primitive scale.
-    입력/검색/select 글자 크기는 --field-control-font-size 하나를 기준으로 하며 할 일 toolbar select와 동일합니다.
-    실제 UI 역할은 semantic font-size token을 사용합니다. :root 밖에서 literal font-size/font-family를 직접 쓰지 않습니다.
-    assertTypographyArchitecture가 이 규칙을 강제합니다.
+    가까운 primitive size는 같은 실제 크기로 합칠 수 있으며, 굵기는 --weight-* 400/500/600/700/800만 사용합니다.
+    입력/검색/select 글자 크기는 --field-font-size 하나를 기준으로 하며 할 일 toolbar select와 동일합니다.
+    할 일/일정 반복 행은 --collection-title-* / --collection-meta-* / --collection-note-size를 함께 사용합니다.
+    실제 UI 역할은 semantic font-size token을 사용합니다. :root 밖에서 literal font-size/font-family/font-weight를 직접 쓰지 않습니다.
+    assertTypographyArchitecture와 source contract가 이 규칙을 강제합니다.
   Theme color: THEME_FIELDS + CSS에서 사용할 의미적 binding. 프리셋 색상을 별도로 고르면 THEME_PRESETS.
     :root 색상은 JS 실행 전 fallback이며 저장된 값은 THEME_FIELDS 정규화 이후 우선합니다.
   Radius: --radius에서 큰 surface와 compact UI 두 단계만 파생합니다.
@@ -114,7 +118,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-zRM5NAu2y7L32ReM85rdn9WDcXxclZKCyH9Qs1h+D1s=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-MTeCHsZddw6/oJL0qpZGrrom9ci7kjomTqlmsnaaKHg='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-7yXw6JDBzsBn2deAJZ3OEKXxiqRqzFjxkxQg/xWMIHo=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-AutzCbWRDcD/hXjMFoeiJQn+kKOGmdkC7AfJyd7mckY='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -128,8 +132,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
            색상/둥글기는 앱 설정에서 선택한 개인 테마가 우선할 수 있습니다.
            배경/포인트/본문/보조 글씨: --bg / --accent / --ink / --muted
            페이지 좌우/섹션/카드 간격: --page-side-space / --page-section-gap / --card-content-padding
-           카드/모달/버튼 둥글기: --radius-surface / --radius-modal / --radius-control
-           버튼 높이: --button-height (터치 환경에서도 버튼 geometry는 확대하지 않음)
+           큰 surface / 작은 UI 둥글기: --radius-surface / --radius-compact
+           일반/큰 컨트롤 높이: --control-height / --control-height-large
            본문/작은 글씨/제목: --font-body / --font-small / --header-title-size
            모달 폭: --modal-max-width (iPad 높이는 07-responsive.css)
            같은 이름의 아래 정의 한 곳을 바꾸면 해당 부품에 반영됩니다. */
@@ -140,16 +144,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
         --font-family-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
         --font-family-symbol: Arial, sans-serif;
-        --text-2xs: 9px;
+        /* Compact primitive scale. Nearby legacy steps intentionally collapse onto the
+           same rendered size so hierarchy comes from role, not one-off 1px differences. */
+        --text-2xs: 10px;
         --text-xs: 10px;
         --text-sm: 11px;
         --text-md: 12px;
-        --text-lg: 13px;
+        --text-lg: 12px;
         --text-xl: 14px;
         --text-2xl: 15px;
         --text-3xl: 16px;
         --text-4xl: 18px;
-        --text-5xl: 19px;
+        --text-5xl: 20px;
         --text-6xl: 20px;
         --text-7xl: 22px;
         --text-8xl: 24px;
@@ -160,69 +166,48 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --font-caption: var(--text-sm);
         --font-micro: var(--text-xs);
         --font-tiny: var(--text-2xs);
+        --weight-regular: 400;
+        --weight-medium: 500;
+        --weight-semibold: 600;
+        --weight-bold: 700;
+        --weight-extrabold: 800;
         --button-font-size: var(--font-body);
         --button-padding: 8px 12px;
-        --button-height: var(--action-button-size);
-        --button-small-font: var(--font-caption);
-        --button-disabled-opacity: var(--state-disabled-opacity);
-
-        /* UNIFIED ACTION BUTTON — 일정/예산/부부계획/메모/설정의 텍스트 버튼 공통 규격 */
-        --unified-button-height: var(--button-height);
-        --unified-button-padding-x: 12px;
-        --unified-button-font-size: var(--font-small);
-        --unified-button-font-weight: 500;
-        --unified-button-radius: var(--ui-control-radius);
-        /* Modal/dialog actions intentionally use a larger size variant than page controls. */
-        --modal-button-height: 40px;
-        --modal-button-min-height: var(--modal-button-height);
-        /* Top navigation intentionally shares the larger modal action height. */
-        --nav-button-height: var(--modal-button-height);
-        --modal-button-padding: var(--button-padding);
-        --modal-button-font-size: var(--button-font-size);
-        --modal-button-font-weight: 600;
-        /* FIELD SYSTEM — single-line fields share the same visible height as normal buttons. */
-        --field-control-height: var(--button-height);
-        --field-height: var(--field-control-height);
-        --field-compact-height: var(--field-control-height);
-        --field-inline-height: var(--field-control-height);
+        /* FIELD SYSTEM — single-line fields share the normal control geometry. */
         --field-padding-x: 12px;
         --field-padding-y: 10px;
         --field-padding: var(--field-padding-y) var(--field-padding-x);
         --field-line-height: 1.45;
         --field-select-arrow-space: 30px;
-        --field-label-gap: 6px;
+        --field-label-gap: var(--space-1);
         --field-label-font-size: var(--font-caption);
-        --field-label-font-weight: 600;
+        --field-label-font-weight: var(--weight-semibold);
         --field-error-font-size: var(--font-caption);
         /* Single-line field typography follows the Tasks toolbar select scale everywhere. */
-        --field-control-font-size: var(--font-caption);
-        --field-font-size: var(--field-control-font-size);
-        --field-search-height: var(--field-control-height);
-        --field-search-font-size: var(--field-control-font-size);
-        --field-small-font: var(--field-control-font-size);
+        --field-font-size: var(--font-caption);
         --textarea-height: 100px;
-        --nav-padding: 8px 14px;
-        --nav-gap: 4px;
+        --nav-padding: var(--space-2) var(--space-3);
+        --nav-gap: var(--space-1);
         --header-title-size: clamp(28px, 6.8vw, 34px);
         --header-title-size-mobile: clamp(25px, 6.55vw, 28px);
         --home-summary-columns: minmax(0, 1.46fr) minmax(0, 1fr);
         --task-check-size: 22px;
-        --task-check-column: 28px;
-        --task-category-size: var(--text-lg);
-        --task-title-size: var(--text-2xl);
-        --task-note-size: var(--font-small);
+        --collection-leading-width: 36px;
+        --collection-title-size: var(--text-2xl);
+        --collection-title-weight: var(--weight-semibold);
+        --collection-meta-font-size: var(--font-caption);
+        --collection-meta-font-weight: var(--weight-medium);
+        --collection-note-size: var(--font-small);
+        --collection-action-width: var(--control-height);
         --task-badge-size: var(--font-micro);
-        --task-badge-padding: 4px 7px;
-        --event-title-size: var(--text-xl);
+        --task-badge-padding: var(--space-1) var(--space-2);
         --calendar-cell-height: clamp(64px, 9vw, 86px);
         --calendar-cell-padding: 7px 2px;
         --calendar-number-size: var(--text-xl);
         --calendar-holiday-size: var(--font-tiny);
         --calendar-dot-size: 4px;
-        --calendar-nav-size: var(--button-height);
 
         /* Role-specific typography; preserves the current visual scale while centralizing edits. */
-        --more-menu-icon-font-size: var(--text-6xl);
         --budget-gauge-value-font-size: var(--text-6xl);
         --confirm-title-font-size: var(--text-4xl);
         --confirm-message-font-size: var(--text-lg);
@@ -232,7 +217,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --memo-text-font-size: var(--text-xl);
         --plan-text-font-size: var(--text-xl);
         --plan-summary-value-font-size: var(--text-lg);
-        --event-meta-font-size: var(--font-micro);
         --calendar-more-font-size: var(--font-tiny);
         --calendar-nav-icon-font-size: var(--text-7xl);
         --category-card-title-font-size: var(--font-small);
@@ -243,11 +227,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --home-summary-pct-font-size: clamp(31px, 4vw, 42px);
 
         --modal-max-width: 680px;
-        --modal-padding: 20px;
+        --modal-padding: var(--space-5);
         --modal-max-height: 88dvh;
-        --modal-section-gap: 18px;
-        --modal-content-gap: 12px;
-        --modal-footer-gap: 14px;
+        --modal-section-gap: var(--space-5);
+        --modal-content-gap: var(--space-3);
+        --modal-footer-gap: var(--space-3);
         --modal-divider: 1px solid color-mix(in srgb, var(--surface-border) 72%, transparent);
         --modal-close-size: 36px;
         --modal-close-offset: -8px;
@@ -260,32 +244,43 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
         --layout-max-width: 1040px;
         --layout-bottom-space: 88px;
-        --page-side-space: 16px;
-        --page-top-space: 28px;
-        --page-section-gap: 16px;
-        /* Spacing scale — utility/layout spacing should reference these tokens. */
-        --space-xs: 6px;
-        --space-sm: 8px;
-        --space-md: 12px;
+        --page-side-space: var(--space-4);
+        --page-top-space: 28px; /* deliberate page-title optical offset */
+        --page-section-gap: var(--space-4);
+        /* Spacing scale — regular UI spacing uses 4px increments. Optical exceptions stay explicit. */
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 20px;
+        --space-6: 24px;
+        --space-xs: var(--space-1);
+        --space-sm: var(--space-2);
+        --space-md: var(--space-3);
+        --space-lg: var(--space-4);
+        --space-xl: var(--space-5);
+        --space-2xl: var(--space-6);
         /* Collection density: repeated rows and nested surfaces share one vertical rhythm. */
-        --collection-row-padding-x: 12px;
-        --collection-row-padding-y: 12px;
+        --collection-row-padding-x: var(--space-3);
+        --collection-row-padding-y: var(--space-3);
         --collection-row-padding: var(--collection-row-padding-y) var(--collection-row-padding-x);
-        --collection-row-gap: 8px;
-        --collection-copy-gap: 5px;
-        --collection-meta-gap: 6px;
+        --collection-primary-row-padding-y: var(--space-4);
+        --collection-row-gap: var(--space-2);
+        --collection-copy-gap: var(--space-1);
+        --collection-meta-gap: var(--space-1);
         --collection-stat-row-min-height: 40px;
-        --nested-surface-padding-x: 11px;
-        --nested-surface-padding-y: 10px;
+        --nested-surface-padding-x: var(--space-3);
+        --nested-surface-padding-y: var(--space-2);
         --nested-surface-padding: var(--nested-surface-padding-y) var(--nested-surface-padding-x);
-        --card-content-padding: 19px;
-        --action-button-size: clamp(34px, 3.4vw, 38px);
+        --card-content-padding: var(--space-5);
+        /* CONTROL GEOMETRY — one normal height and one deliberate large-action height. */
+        --control-height: clamp(34px, 3.4vw, 38px);
+        --control-height-large: 40px;
         --touch-hit-slop: 2px;
         --touch-icon-hit-slop: 4px;
         --icon-glyph-size-sm: var(--text-lg);
         --icon-glyph-size-md: var(--text-4xl);
         --icon-glyph-size-lg: var(--text-6xl);
-        --ui-control-height-sm: var(--button-height);
         --bg: #f5f3f0;
         --card: #fff;
         --ink: #222;
@@ -318,18 +313,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
            when the user deliberately increases corner roundness. Both tiers share one near-round
            continuous profile. True circles/capsules remain semantic exceptions. */
         --radius-surface: max(0px, var(--radius));
-        --radius-modal: var(--radius-surface);
         --radius-compact: calc(var(--radius) * 0.58);
-        --radius-inset: var(--radius-compact);
-        --radius-inner-card: var(--radius-compact);
-        --radius-compact-surface: var(--radius-compact);
-        --radius-medium-surface: var(--radius-compact);
-        --radius-control: var(--radius-compact);
-        --radius-icon: var(--radius-compact);
-        --radius-badge: var(--radius-compact);
         --corner-shape-continuous: superellipse(1.15);
-        --corner-shape-surface: var(--corner-shape-continuous);
-        --corner-shape-control: var(--corner-shape-continuous);
         /* Derived semantic surfaces follow the user's selected theme automatically. */
         --text-secondary: color-mix(in srgb, var(--muted) 92%, var(--ink));
         --text-tertiary: color-mix(in srgb, var(--muted) 98%, var(--ink));
@@ -339,7 +324,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --control-shadow: 0 1px 2px rgba(20, 20, 24, 0.025), inset 0 1px 0 rgba(255, 255, 255, 0.56);
         --focus-outline: color-mix(in srgb, var(--accent) 72%, var(--ink));
         --focus-ring: color-mix(in srgb, var(--accent) 20%, transparent);
-        --material-surface: color-mix(in srgb, var(--card) 76%, transparent);
         --material-button: color-mix(in srgb, var(--button-bg) 90%, transparent);
         --compact-control-bg: color-mix(in srgb, var(--material-button) 92%, var(--surface-grouped) 8%);
         --compact-control-hover-bg: color-mix(in srgb, var(--accent) 7%, var(--soft));
@@ -350,30 +334,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --button-secondary-color: var(--ink);
         --button-secondary-shadow: 0 1px 2px rgba(20, 20, 24, 0.018), inset 0 1px 0 rgba(255,255,255,.48);
         --button-tertiary-hover-bg: color-mix(in srgb, var(--accent) 6%, var(--surface-grouped));
-        /* Reorder/More are tertiary icon actions. Nested cards use a deliberately stronger contextual surface. */
+        /* Reorder/More are neutral tertiary icon actions at every surface depth. */
         --reorder-control-bg: color-mix(in srgb, var(--surface-grouped) 82%, var(--card) 18%);
         --reorder-control-border: var(--control-border);
         --reorder-control-hover-bg: color-mix(in srgb, var(--accent) 6%, var(--surface-grouped));
         --reorder-control-hover-border: color-mix(in srgb, var(--accent) 16%, var(--control-border));
-        --reorder-control-nested-bg: var(--field-fill-accent2);
-        --reorder-control-nested-border: color-mix(in srgb, var(--accent2) 30%, var(--control-border));
-        --reorder-control-nested-hover-bg: color-mix(in srgb, var(--field-fill-accent2) 92%, var(--accent) 8%);
-        --reorder-control-nested-hover-border: color-mix(in srgb, var(--accent) 18%, var(--reorder-control-nested-border));
         /* Semantic state system — components consume these instead of inventing local tones. */
         --warning: #a8773f;
         --state-selected-bg: color-mix(in srgb, var(--accent) 10%, var(--card));
         --state-selected-border: color-mix(in srgb, var(--accent) 18%, var(--surface-border));
         --state-selected-color: color-mix(in srgb, var(--accent) 74%, var(--ink));
-        /* Plan status controls keep stronger contextual tints so all 3 states remain immediately distinguishable. */
-        --plan-status-pending-bg: color-mix(in srgb, var(--accent2) 30%, var(--field-fill));
-        --plan-status-pending-border: color-mix(in srgb, var(--accent2) 42%, var(--control-border));
-        --plan-status-pending-color: color-mix(in srgb, var(--accent2) 72%, var(--ink));
-        --plan-status-active-bg: color-mix(in srgb, var(--accent) 18%, var(--field-fill));
-        --plan-status-active-border: color-mix(in srgb, var(--accent) 34%, var(--control-border));
-        --plan-status-active-color: var(--accent-ink);
-        --plan-status-complete-bg: color-mix(in srgb, var(--good) 20%, var(--field-fill));
-        --plan-status-complete-border: color-mix(in srgb, var(--good) 38%, var(--control-border));
-        --plan-status-complete-color: var(--good-ink);
         --state-active-bg: color-mix(in srgb, var(--accent) 7%, var(--card));
         --state-active-border: color-mix(in srgb, var(--accent) 16%, var(--control-border));
         --state-active-color: var(--accent-ink);
@@ -394,8 +364,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --state-error-border: color-mix(in srgb, var(--danger) 66%, var(--control-border));
         --state-error-ring: color-mix(in srgb, var(--danger) 16%, transparent);
         --state-error-color: var(--danger);
-        --material-blur: 30px;
-        --material-saturate: 175%;
         --motion-fast: 140ms;
         --motion-feedback: 160ms;
         --motion-standard: 180ms;
@@ -409,9 +377,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --surface-raised: var(--card);
         --card-surface-border: color-mix(in srgb, var(--surface-border) 96%, transparent);
         --card-surface-shadow: var(--shadow);
-        --nested-surface-bg: color-mix(in srgb, var(--surface-grouped) 96%, var(--card) 4%);
-        --nested-surface-border: color-mix(in srgb, var(--surface-border) 72%, transparent);
-        --nested-raised-border: color-mix(in srgb, var(--surface-border) 86%, transparent);
+        /* Inner hierarchy: sections are flat by default; only meaningful groups opt into a soft
+           surface, and independently actionable units may opt into a subtle boundary. */
+        --nested-surface-bg: transparent;
+        --nested-surface-border: transparent;
+        --nested-soft-bg: color-mix(in srgb, var(--surface-grouped) 78%, var(--card) 22%);
+        --nested-soft-tint-bg: color-mix(in srgb, var(--field-fill-accent2) 82%, var(--card) 18%);
+        --nested-interactive-bg: color-mix(in srgb, var(--surface-grouped) 88%, var(--card) 12%);
+        --nested-interactive-border: color-mix(in srgb, var(--surface-border) 70%, transparent);
+        --section-divider: var(--separator);
         --skeleton-base: color-mix(in srgb, var(--surface-grouped) 88%, var(--line) 12%);
         --skeleton-peak: color-mix(in srgb, var(--card) 72%, var(--surface-grouped) 28%);
         /* The theme editor's “내부 카드·보조 영역” color owns grouped auxiliary surfaces directly. */
@@ -423,46 +397,43 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --field-error-border: var(--state-error-border);
         --field-error-ring: var(--state-error-ring);
         --field-select-icon-color: color-mix(in srgb, var(--muted) 94%, var(--ink));
-        /* Contextual controls inside nested cards: same field family with a controlled accent2 tint. */
+        /* Subtle accent2 fill is reserved for content/meta surfaces, not nested controls. */
         --field-fill-accent2: color-mix(in srgb, var(--field-fill) 76%, var(--accent2) 24%);
         --row-hover: color-mix(in srgb, var(--accent) 5%, var(--card));
         --row-pressed: color-mix(in srgb, var(--accent) 9%, var(--card));
-        --nav-selected-bg: var(--state-selected-bg);
-        --nav-selected-ink: var(--state-selected-color);
+        --nav-idle-ink: var(--muted);
+        --nav-selected-bg: color-mix(in srgb, var(--accent) 14%, var(--card));
+        --nav-selected-border: color-mix(in srgb, var(--accent) 24%, var(--surface-border));
+        --nav-selected-ink: color-mix(in srgb, var(--accent) 82%, var(--ink));
         --surface-highlight: rgba(255, 255, 255, 0.74);
         --accent-ink: color-mix(in srgb, var(--accent) 70%, var(--ink));
-        --good-soft: color-mix(in srgb, var(--good) 14%, var(--card));
         --good-ink: color-mix(in srgb, var(--good) 78%, var(--ink));
-        --calendar-muted-bg: color-mix(in srgb, var(--soft) 75%, var(--bg));
         --calendar-selected-bg: var(--state-selected-bg);
-        --calendar-today-bg: var(--state-active-bg);
         --weekend-sat: color-mix(in srgb, var(--weekend-sat-base) 78%, var(--accent));
         --weekend-sun: color-mix(in srgb, var(--weekend-sun-base) 78%, var(--danger));
         --holiday-color: color-mix(in srgb, var(--danger) 86%, var(--accent));
-        --card-padding: var(--card-content-padding);
         --card-padding-compact: 11px 10px;
-        --card-radius: var(--radius-surface);
         --card-title-size: clamp(var(--text-3xl), 1.7vw, var(--text-4xl));
         --card-title-line-height: clamp(21px, 2vw, 23px);
-        --card-title-weight: 680;
+        --card-title-weight: var(--weight-bold);
         --card-title-letter-spacing: -0.02em;
         --card-description-size: clamp(var(--text-md), 1.3vw, var(--text-lg));
         --card-description-line-height: clamp(17px, 1.8vw, 19px);
         --card-header-gap: clamp(8px, 1.2vw, 12px);
-        --card-header-copy-gap: 5px;
-        --card-header-margin-bottom: 14px;
-        --card-action-gap: var(--space-sm);
+        --card-header-copy-gap: var(--space-1);
+        --card-header-margin-bottom: var(--space-3);
+        --card-action-gap: var(--space-2);
         --empty-state-min-height: 112px;
-        --status-state-padding: 20px 14px;
-        --status-state-gap: 9px;
+        --status-state-padding: var(--space-5) var(--space-3);
+        --status-state-gap: var(--space-2);
         --status-state-marker-size: 28px;
         --status-state-title-size: var(--font-small);
         --status-state-message-size: var(--font-small);
         --card-section-gap: var(--page-section-gap);
-        --action-row-gap: 8px;
-        --action-row-margin-top: 8px;
-        --card-footer-gap: 10px;
-        --card-footer-margin-top: 10px;
+        --action-row-gap: var(--space-2);
+        --action-row-margin-top: var(--space-2);
+        --card-footer-gap: var(--space-2);
+        --card-footer-margin-top: var(--space-2);
         --list-divider-width: 1px;
         --list-divider-border: var(--list-divider-width) solid color-mix(in srgb, var(--control-border) 76%, transparent);
         --layer-nav: 10;
@@ -479,13 +450,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --menu-item-gap: 2px;
         --menu-item-min-height: 44px;
         --menu-item-padding: 10px 12px;
-        --ui-control-radius: var(--radius-control);
         /* Component style APIs: geometry/typography are owned by the base component. */
-        --btn-font-weight: 560;
+        --btn-font-weight: var(--weight-semibold);
         --btn-max-width: none;
         --pill-line-height: 1;
         --pill-min-height: 24px;
-        --pill-radius: var(--radius-badge);
         --progress-bg: var(--accent-soft-2);
         --progress-fill: var(--accent);
         --progress-radius: 999px;
@@ -618,9 +587,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         /* Every top-level Card shares one exact surface. Domain emphasis belongs inside the card. */
         background: var(--surface-raised);
         border: 1px solid var(--card-surface-border);
-        border-radius: var(--card-radius);
-        corner-shape: var(--corner-shape-surface);
-        padding: var(--card-padding);
+        border-radius: var(--radius-surface);
+        corner-shape: var(--corner-shape-continuous);
+        padding: var(--card-content-padding);
         box-shadow: var(--card-surface-shadow);
         transition: border-color var(--motion-standard) var(--ease-interaction), box-shadow var(--motion-standard) var(--ease-interaction);
       }
@@ -649,8 +618,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-size: var(--pill-font-size, var(--font-caption));
         font-weight: var(--pill-font-weight, 400);
         padding: var(--pill-padding, 5px 8px);
-        border-radius: var(--pill-radius, 999px);
-        corner-shape: var(--corner-shape-control);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         background: var(--pill-bg, var(--accent-soft));
         color: var(--pill-color, var(--accent-ink));
         min-height: var(--pill-min-height, 24px);
@@ -666,8 +635,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: block;
         width: var(--skeleton-width, 100%);
         height: var(--skeleton-height, 10px);
-        border-radius: var(--radius-badge);
-        corner-shape: var(--corner-shape-control);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         background: linear-gradient(90deg, var(--skeleton-base) 0%, var(--skeleton-peak) 50%, var(--skeleton-base) 100%);
         background-size: 220% 100%;
         animation: planner-skeleton-shift 1.35s var(--ease-interaction) infinite;
@@ -691,12 +660,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         width: var(--btn-width, auto);
         min-width: var(--btn-min-width, 0);
         max-width: var(--btn-max-width, none);
-        height: var(--btn-height, auto);
-        min-height: var(--btn-min-height, var(--ui-control-height-sm));
-        max-height: var(--btn-max-height, none);
+        height: var(--btn-height, var(--control-height));
+        min-height: var(--btn-height, var(--control-height));
+        max-height: var(--btn-height, var(--control-height));
         padding: var(--btn-padding, var(--button-padding));
         border: var(--btn-border, 1px solid var(--button-secondary-border));
-        border-radius: var(--btn-radius, var(--ui-control-radius));
+        border-radius: var(--btn-radius, var(--radius-compact));
         background: var(--btn-bg, var(--button-secondary-bg));
         color: var(--btn-color, var(--button-secondary-color));
         font-size: var(--btn-font-size, var(--button-font-size));
@@ -711,7 +680,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         -webkit-tap-highlight-color: transparent;
       }
       .btn:disabled {
-        opacity: var(--button-disabled-opacity);
+        opacity: var(--state-disabled-opacity);
         cursor: not-allowed;
         box-shadow: none;
       }
@@ -731,15 +700,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: var(--icon-size, var(--action-button-size));
-        min-width: var(--icon-size, var(--action-button-size));
-        max-width: var(--icon-size, var(--action-button-size));
-        height: var(--icon-size, var(--action-button-size));
-        min-height: var(--icon-size, var(--action-button-size));
-        max-height: var(--icon-size, var(--action-button-size));
+        width: var(--icon-size, var(--control-height));
+        min-width: var(--icon-size, var(--control-height));
+        max-width: var(--icon-size, var(--control-height));
+        height: var(--icon-size, var(--control-height));
+        min-height: var(--icon-size, var(--control-height));
+        max-height: var(--icon-size, var(--control-height));
         padding: 0;
         border: 1px solid var(--icon-control-border, var(--control-border));
-        border-radius: var(--radius-icon);
+        border-radius: var(--radius-compact);
         background: var(--icon-control-bg, var(--compact-control-bg));
         color: var(--icon-control-color, var(--muted));
         font-size: var(--icon-font-size, var(--font-small));
@@ -782,7 +751,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         height: 1em;
         font-family: var(--font-family-symbol);
         font-size: var(--icon-glyph-size, var(--icon-glyph-size-md));
-        font-weight: 600;
+        font-weight: var(--weight-semibold);
         line-height: 1;
         letter-spacing: 0;
         pointer-events: none;
@@ -810,8 +779,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
 
       @supports (corner-shape: superellipse(1.15)) {
-        .btn { corner-shape: var(--btn-corner-shape, var(--corner-shape-control)); }
-        .icon-control { corner-shape: var(--corner-shape-control); }
+        .btn { corner-shape: var(--btn-corner-shape, var(--corner-shape-continuous)); }
+        .icon-control { corner-shape: var(--corner-shape-continuous); }
       }
       /* MoreMenu owns its complete visual stack and does not inherit generic control styling. */
       .more-menu {
@@ -825,15 +794,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: var(--action-button-size);
-        min-width: var(--action-button-size);
-        max-width: var(--action-button-size);
-        height: var(--action-button-size);
-        min-height: var(--action-button-size);
-        max-height: var(--action-button-size);
+        width: var(--control-height);
+        min-width: var(--control-height);
+        max-width: var(--control-height);
+        height: var(--control-height);
+        min-height: var(--control-height);
+        max-height: var(--control-height);
         padding: 0;
         border: 1px solid var(--reorder-control-border);
-        border-radius: var(--radius-icon);
+        border-radius: var(--radius-compact);
         background: var(--reorder-control-bg);
         color: var(--muted);
         font: inherit;
@@ -845,7 +814,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         appearance: none;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
-        corner-shape: var(--corner-shape-control);
+        corner-shape: var(--corner-shape-continuous);
         transition: opacity var(--motion-fast) linear, background-color var(--motion-standard) var(--ease-interaction),
           border-color var(--motion-standard) var(--ease-interaction), color var(--motion-standard) var(--ease-interaction),
           box-shadow var(--motion-standard) var(--ease-interaction);
@@ -877,6 +846,26 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         background: transparent;
         box-shadow: none;
       }
+      .more-menu--quiet > .more-menu-trigger {
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+        opacity: 0.52;
+      }
+      .more-menu--quiet.is-open > .more-menu-trigger,
+      .more-menu--quiet > .more-menu-trigger:focus-visible {
+        opacity: 1;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .more-menu--quiet > .more-menu-trigger:hover {
+          opacity: 1;
+        }
+      }
+      @media (hover: none), (pointer: coarse) {
+        .more-menu--quiet > .more-menu-trigger {
+          opacity: 0.72;
+        }
+      }
       @media (any-pointer: coarse) {
         .more-menu-trigger::after {
           content: "";
@@ -903,12 +892,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         overscroll-behavior: contain;
         background: var(--overlay-surface-bg);
         border: 1px solid var(--overlay-border);
-        border-radius: var(--radius-inset);
-        corner-shape: var(--corner-shape-control);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         box-shadow: var(--menu-shadow);
         color: var(--ink);
-        font-size: var(--field-control-font-size);
-        font-weight: 500;
+        font-size: var(--field-font-size);
+        font-weight: var(--weight-medium);
         line-height: 1.35;
         white-space: normal;
       }
@@ -932,7 +921,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-height: var(--menu-item-min-height);
         padding: var(--menu-item-padding);
         border: 0;
-        border-radius: var(--radius-control);
+        border-radius: var(--radius-compact);
         background: transparent;
         color: var(--ink);
         font: inherit;
@@ -943,7 +932,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         appearance: none;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
-        corner-shape: var(--corner-shape-control);
+        corner-shape: var(--corner-shape-continuous);
         transition: background-color var(--motion-fast) var(--ease-interaction),
           color var(--motion-fast) var(--ease-interaction), opacity var(--motion-fast) linear;
       }
@@ -967,13 +956,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .field {
         width: 100%;
         min-width: 0;
-        min-height: var(--field-min-height, var(--field-height));
-        height: var(--field-fixed-height, auto);
-        max-height: var(--field-max-height, none);
+        min-height: var(--control-height);
+        height: auto;
+        max-height: none;
         padding: var(--field-inset, var(--field-padding));
         border: 1px solid color-mix(in srgb, var(--control-border) 58%, transparent);
-        border-radius: var(--field-radius, var(--ui-control-radius));
-        corner-shape: var(--corner-shape-control);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         background-color: var(--field-bg, var(--field-fill));
         color: var(--field-color, var(--ink));
         font-size: var(--field-size, var(--field-font-size));
@@ -984,9 +973,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           box-shadow var(--motion-standard) ease, color var(--motion-standard) ease;
       }
       :where(input.field, select.field) {
-        --field-min-height: var(--field-height);
-        --field-fixed-height: var(--field-height);
-        --field-max-height: var(--field-height);
+        height: var(--control-height);
+        min-height: var(--control-height);
+        max-height: var(--control-height);
         --field-inset: 0 var(--field-padding-x);
       }
       select.field {
@@ -1037,22 +1026,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         resize: vertical;
       }
       .inner-card {
-        --reorder-control-bg: var(--reorder-control-nested-bg);
-        --reorder-control-border: var(--reorder-control-nested-border);
-        --reorder-control-hover-bg: var(--reorder-control-nested-hover-bg);
-        --reorder-control-hover-border: var(--reorder-control-nested-hover-border);
+        --inner-card-bg: var(--nested-surface-bg);
+        --inner-card-border-width: 0px;
+        --inner-card-border-color: var(--nested-surface-border);
         min-width: 0;
-        background: var(--nested-surface-bg);
-        border: 1px solid var(--nested-surface-border);
-        border-radius: var(--radius-inner-card);
-        corner-shape: var(--corner-shape-surface);
+        background: var(--inner-card-bg);
+        border: var(--inner-card-border-width) solid var(--inner-card-border-color);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         box-shadow: none;
         padding: var(--inner-card-padding, 0);
       }
       .callout {
         border: 1px solid var(--line);
-        border-radius: var(--radius-compact-surface);
-        corner-shape: var(--corner-shape-control);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         line-height: 1.5;
       }
       .order-buttons {
@@ -1102,7 +1090,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         color: var(--text-secondary);
         font-size: var(--card-description-size);
         line-height: var(--card-description-line-height);
-        font-weight: 400;
+        font-weight: var(--weight-regular);
         overflow-wrap: anywhere;
       }
       .card-header-action {
@@ -1168,13 +1156,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: block;
         font-size: var(--budget-gauge-value-font-size);
         line-height: 1;
-        font-weight: 800;
+        font-weight: var(--weight-extrabold);
         letter-spacing: -0.03em;
         color: var(--ink);
       }
       .calendar-period-title {
         font-size: var(--text-4xl);
-        font-weight: 720;
+        font-weight: var(--weight-bold);
         letter-spacing: -0.025em;
         white-space: nowrap;
       }
@@ -1192,8 +1180,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         color: var(--ink);
         border: 1px solid transparent;
         background: transparent;
-        border-radius: var(--radius-icon);
-        corner-shape: var(--corner-shape-control);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         text-align: center;
         display: flex;
         flex-direction: column;
@@ -1228,7 +1216,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         align-items: center;
         justify-content: center;
         font-size: var(--calendar-number-size);
-        font-weight: 650;
+        font-weight: var(--weight-semibold);
         line-height: 1;
         text-align: center;
         font-variant-numeric: tabular-nums;
@@ -1236,7 +1224,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .calendar-cell.today .calendar-num {
         background: var(--accent);
         color: var(--accent-contrast);
-        font-weight: 720;
+        font-weight: var(--weight-bold);
         box-shadow: 0 1px 3px color-mix(in srgb, var(--accent) 18%, transparent);
       }
       .calendar-cell.sunday .calendar-num {
@@ -1307,8 +1295,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: 10px;
         padding: 11px 12px;
         border: 1px solid var(--toast-border, var(--surface-border));
-        border-radius: var(--radius-inset);
-        corner-shape: var(--corner-shape-surface);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         background: var(--toast-bg, var(--card));
         color: var(--toast-color, var(--ink));
         box-shadow: var(--toast-shadow);
@@ -1330,13 +1318,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         place-items: center;
         width: 22px;
         height: 22px;
-        border-radius: var(--radius-icon);
+        border-radius: var(--radius-compact);
         background: var(--toast-marker-bg, var(--surface-grouped));
         color: var(--toast-marker-color, var(--accent-ink));
         font-size: var(--font-tiny);
-        font-weight: 800;
+        font-weight: var(--weight-extrabold);
         line-height: 1;
-        corner-shape: var(--corner-shape-control);
+        corner-shape: var(--corner-shape-continuous);
       }
       .toast-message {
         min-width: 0;
@@ -1346,12 +1334,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-height: 30px;
         padding: 0 8px;
         border: 0;
-        border-radius: var(--radius-control);
-        corner-shape: var(--corner-shape-control);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         background: transparent;
         color: var(--accent-ink);
         font: inherit;
-        font-weight: 680;
+        font-weight: var(--weight-bold);
         white-space: nowrap;
         cursor: pointer;
         transition: background-color var(--motion-fast) var(--ease-interaction),
@@ -1386,8 +1374,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         width: min(420px, 100%);
         padding: 18px;
         border: 1px solid var(--overlay-border);
-        border-radius: var(--radius-modal);
-        corner-shape: var(--corner-shape-surface);
+        border-radius: var(--radius-surface);
+        corner-shape: var(--corner-shape-continuous);
         background: var(--overlay-surface-bg);
         box-shadow: var(--confirm-shadow);
       }
@@ -1424,8 +1412,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .sheet {
         background: var(--overlay-surface-bg);
         border: 1px solid var(--overlay-border);
-        border-radius: var(--radius-modal);
-        corner-shape: var(--corner-shape-surface);
+        border-radius: var(--radius-surface);
+        corner-shape: var(--corner-shape-continuous);
         padding: var(--modal-padding);
         box-shadow: var(--confirm-shadow);
         max-width: var(--modal-max-width);
@@ -1476,8 +1464,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .modal-note {
         padding: 10px 12px;
         border: 1px solid var(--state-warning-border);
-        border-radius: var(--radius-compact-surface);
-        corner-shape: var(--corner-shape-control);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         background: var(--state-warning-bg);
         color: var(--state-warning-color);
         font-size: var(--font-small);
@@ -1534,13 +1522,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         height: var(--status-state-marker-size);
         margin-bottom: var(--status-state-gap);
         border: 1px solid var(--surface-border);
-        border-radius: var(--radius-icon);
+        border-radius: var(--radius-compact);
         background: var(--surface-grouped);
         color: var(--muted);
         font-size: var(--font-small);
-        font-weight: 700;
+        font-weight: var(--weight-bold);
         line-height: 1;
-        corner-shape: var(--corner-shape-control);
+        corner-shape: var(--corner-shape-continuous);
       }
       .status-state-copy {
         display: grid;
@@ -1550,14 +1538,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .status-state-title {
         color: var(--ink);
         font-size: var(--status-state-title-size);
-        font-weight: 650;
+        font-weight: var(--weight-semibold);
       }
       .status-state-message {
         font-size: var(--status-state-message-size);
         overflow-wrap: anywhere;
       }
       .status-state-action {
-        margin-top: 12px;
+        margin-top: var(--space-3);
       }
 
       @supports (padding: max(0px)) {
@@ -1596,7 +1584,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           width: min(100%, var(--modal-max-width));
           max-height: calc(100dvh - max(24px, env(safe-area-inset-top)) - max(24px, env(safe-area-inset-bottom)));
           border: 1px solid var(--surface-border);
-          border-radius: var(--radius-modal);
+          border-radius: var(--radius-surface);
           overscroll-behavior: contain;
           -webkit-overflow-scrolling: touch;
         }
@@ -1659,7 +1647,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         transform: translateY(-50%);
         color: var(--text-tertiary);
         font-size: var(--font-caption);
-        font-weight: 600;
+        font-weight: var(--weight-semibold);
         pointer-events: none;
       }
 
@@ -1690,6 +1678,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --field-color: var(--accent-ink);
       }
       .filter-feedback {
+        position: relative;
         min-width: 0;
         display: flex;
         align-items: center;
@@ -1697,6 +1686,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: var(--space-sm);
         min-height: 0;
         margin: 0 0 6px;
+        /* Reserve the reset lane in every state. Showing the button must not reflow the summary. */
+        padding-right: 68px;
       }
       .filter-feedback-summary {
         min-width: 0;
@@ -1706,6 +1697,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
         overflow-wrap: anywhere;
+      }
+      .filter-feedback > .btn {
+        position: absolute;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        --btn-height: 26px;
       }
       .filter-feedback > .btn[hidden] {
         display: none;
@@ -1717,34 +1715,105 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           gap: 4px 8px;
         }
       }
+
+      /* Shared task/event collection row: one geometry, domain variants only change meaning. */
+      .collection-row {
+        display: grid;
+        grid-template-columns: var(--collection-leading-width) minmax(0, 1fr) var(--collection-action-width);
+        align-items: start;
+        column-gap: var(--collection-row-gap);
+        padding: var(--collection-primary-row-padding-y) var(--collection-row-padding-x);
+        min-width: 0;
+      }
+      .collection-row:not(.has-actions) {
+        grid-template-columns: var(--collection-leading-width) minmax(0, 1fr);
+      }
+      .collection-row__leading {
+        width: var(--collection-leading-width);
+        min-width: 0;
+        min-height: var(--task-check-size);
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+      .collection-row__content {
+        min-width: 0;
+        width: 100%;
+      }
+      .collection-row__meta {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        column-gap: 0;
+        row-gap: var(--collection-copy-gap);
+        margin-top: var(--collection-copy-gap);
+        color: var(--muted);
+        font-size: var(--collection-meta-font-size);
+        font-weight: var(--collection-meta-font-weight);
+        line-height: 1.3;
+      }
+      .collection-row__meta-item {
+        min-width: 0;
+      }
+      .collection-row__meta-item + .collection-row__meta-item::before {
+        content: "·";
+        margin: 0 var(--collection-copy-gap);
+        color: color-mix(in srgb, var(--muted) 54%, transparent);
+      }
+      .collection-row__title {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        color: var(--ink);
+        font-size: var(--collection-title-size);
+        font-weight: var(--collection-title-weight);
+        line-height: 1.42;
+      }
+      .collection-row__note {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        margin-top: var(--collection-copy-gap);
+        color: color-mix(in srgb, var(--muted) 82%, transparent);
+        font-size: var(--collection-note-size);
+        font-weight: var(--weight-regular);
+        line-height: 1.5;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .collection-row__actions {
+        display: flex;
+        width: var(--collection-action-width);
+        align-items: flex-start;
+        justify-content: flex-end;
+      }
+
 /* Continuous-corner behavior is owned by each component base/variant.
    This file is intentionally kept as a compatibility slot in the build order;
    compositor-heavy clip/filter fallbacks are forbidden. */
 /* ===== 04 COMPONENT VARIANTS — explicit semantic overrides ===== */
       /* Surface / status variants */
       .pill--badge {
-        --pill-radius: var(--radius-badge);
         --pill-min-height: 0;
         --pill-padding: 4px 7px;
         --pill-font-size: var(--font-micro);
-        --pill-font-weight: 600;
+        --pill-font-weight: var(--weight-semibold);
       }
       .pill--high {
         --pill-bg: var(--priority-high-bg);
         --pill-color: var(--priority-high-color);
-        --pill-font-weight: 800;
+        --pill-font-weight: var(--weight-extrabold);
       }
       .pill--low {
         --pill-bg: var(--priority-low-bg);
         --pill-color: var(--priority-low-color);
-        --pill-font-weight: 400;
+        --pill-font-weight: var(--weight-regular);
       }
       .pill--task {
         --pill-min-height: 0;
         --pill-padding: var(--task-badge-padding);
-        --pill-radius: var(--radius-badge);
         --pill-font-size: var(--task-badge-size);
-        --pill-font-weight: 600;
+        --pill-font-weight: var(--weight-semibold);
         flex: 0 0 auto;
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
@@ -1792,13 +1861,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --btn-width: auto;
         --btn-min-width: 0;
         --btn-max-width: none;
-        --btn-height: var(--unified-button-height);
-        --btn-min-height: var(--unified-button-height);
-        --btn-max-height: var(--unified-button-height);
-        --btn-padding: 0 var(--unified-button-padding-x);
-        --btn-radius: var(--unified-button-radius);
-        --btn-font-size: var(--unified-button-font-size);
-        --btn-font-weight: var(--unified-button-font-weight);
+        --btn-padding: 0 12px;
+        --btn-font-size: var(--font-small);
+        --btn-font-weight: var(--weight-medium);
         --btn-line-height: 1;
         --btn-letter-spacing: inherit;
         --btn-white-space: nowrap;
@@ -1806,23 +1871,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .btn--modal-action,
       .btn--sheet-action {
-        --btn-height: var(--modal-button-min-height);
-        --btn-min-height: var(--modal-button-min-height);
-        --btn-max-height: var(--modal-button-min-height);
-        --btn-padding: var(--modal-button-padding);
-        --btn-font-size: var(--modal-button-font-size);
-        --btn-font-weight: var(--modal-button-font-weight);
+        --btn-height: var(--control-height-large);
+        --btn-padding: var(--button-padding);
+        --btn-font-size: var(--button-font-size);
+        --btn-font-weight: var(--weight-semibold);
       }
       .btn--sheet-action {
         min-width: 88px;
       }
       .btn--status-action {
         --btn-height: 30px;
-        --btn-min-height: 30px;
-        --btn-max-height: 30px;
         --btn-padding: 0 8px;
         --btn-font-size: var(--font-micro);
-        --btn-font-weight: 650;
+        --btn-font-weight: var(--weight-semibold);
         --btn-line-height: 1;
         --btn-white-space: nowrap;
         flex: 0 0 auto;
@@ -1830,15 +1891,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .btn--nav {
         --btn-border: 1px solid transparent;
         --btn-bg: transparent;
-        --btn-color: var(--text-secondary);
-        --btn-height: var(--nav-button-height);
-        --btn-min-height: var(--nav-button-height);
-        --btn-max-height: var(--nav-button-height);
+        --btn-color: var(--nav-idle-ink);
+        --btn-height: var(--control-height-large);
         --btn-padding: var(--nav-padding);
-        --btn-radius: var(--radius-control);
-        --btn-corner-shape: var(--corner-shape-control);
         --btn-white-space: nowrap;
-        --btn-font-weight: 560;
+        /* Keep one weight in every state so selecting a tab never changes its width. */
+        --btn-font-weight: var(--weight-semibold);
         --btn-shadow: none;
         flex: 0 0 auto;
       }
@@ -1852,19 +1910,17 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .btn--nav.active {
         --btn-bg: var(--nav-selected-bg);
-        --btn-border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--surface-border));
+        --btn-border: 1px solid var(--nav-selected-border);
         --btn-color: var(--nav-selected-ink);
-        --btn-font-weight: 680;
-        --btn-shadow: 0 1px 2px rgba(20, 20, 24, 0.028), 0 4px 12px rgba(20, 20, 24, 0.03),
-          inset 0 1px 0 color-mix(in srgb, var(--surface-highlight) 92%, transparent);
+        --btn-font-weight: var(--weight-semibold);
+        --btn-shadow: 0 1px 2px rgba(20, 20, 24, 0.024),
+          inset 0 1px 0 color-mix(in srgb, var(--surface-highlight) 90%, transparent);
         --btn-hover-shadow: var(--btn-shadow);
       }
       .btn--theme-swatch {
         --btn-corner-shape: round;
         --btn-width: 24px;
         --btn-height: 24px;
-        --btn-min-height: 0;
-        --btn-max-height: 24px;
         --btn-padding: 0;
         --btn-radius: 50%;
         --btn-border: 2px solid var(--card);
@@ -1878,7 +1934,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --icon-control-border: var(--reorder-control-border);
         --icon-control-hover-bg: var(--reorder-control-hover-bg);
         --icon-control-hover-border: var(--reorder-control-hover-border);
-        flex: 0 0 var(--action-button-size);
+        flex: 0 0 var(--control-height);
       }
       .icon-control--modal-close {
         --icon-size: var(--modal-close-size);
@@ -1898,7 +1954,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         flex: 0 0 var(--modal-close-size);
       }
       .icon-control--calendar-nav {
-        --icon-size: var(--calendar-nav-size);
+        --icon-size: var(--control-height);
         --icon-font-size: var(--calendar-nav-icon-font-size);
         --icon-control-border: transparent;
         --icon-control-bg: transparent;
@@ -1912,11 +1968,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
       /* Field variants */
       .field--compact-text {
-        --field-min-height: var(--field-compact-height);
-        --field-fixed-height: var(--field-compact-height);
-        --field-max-height: var(--field-compact-height);
         --field-inset: 0 var(--field-padding-x);
-        --field-size: var(--field-search-font-size);
+        --field-size: var(--field-font-size);
       }
       .field--search {
         width: 100%;
@@ -1925,22 +1978,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         margin: 4px 0 10px;
       }
       .field--compact {
-        --field-min-height: var(--field-compact-height);
-        --field-fixed-height: var(--field-compact-height);
-        --field-max-height: var(--field-compact-height);
         --field-inset: 0 10px;
         --field-bg: var(--field-fill);
         --field-color: var(--text-secondary);
-        --field-size: var(--field-small-font);
+        --field-size: var(--field-font-size);
       }
       .field--inline-select {
-        --field-min-height: var(--field-inline-height);
-        --field-fixed-height: var(--field-inline-height);
-        --field-max-height: var(--field-inline-height);
         --field-inset: 0 8px;
         --field-bg: var(--field-fill);
         --field-color: var(--text-secondary);
-        --field-size: var(--field-control-font-size);
+        --field-size: var(--field-font-size);
         width: auto;
         min-width: 0;
         max-width: 100%;
@@ -1948,45 +1995,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         flex: 0 0 auto;
         align-self: flex-start;
       }
-      .field--plan-status {
-        --field-bg: var(--plan-status-pending-bg);
-        --field-color: var(--plan-status-pending-color);
-        border-color: var(--plan-status-pending-border);
-      }
-      .field--plan-status[data-ui-state="pending"] {
-        --field-bg: var(--plan-status-pending-bg);
-        --field-color: var(--plan-status-pending-color);
-        border-color: var(--plan-status-pending-border);
-      }
-      .field--plan-status[data-ui-state="active"] {
-        --field-bg: var(--plan-status-active-bg);
-        --field-color: var(--plan-status-active-color);
-        border-color: var(--plan-status-active-border);
-      }
-      .field--plan-status[data-ui-state="complete"] {
-        --field-bg: var(--plan-status-complete-bg);
-        --field-color: var(--plan-status-complete-color);
-        border-color: var(--plan-status-complete-border);
-      }
-      .field[data-ui-state="active"]:not(.field--plan-status) {
+      .field[data-ui-state="active"] {
         --field-bg: var(--state-active-bg);
         --field-color: var(--state-active-color);
         border-color: var(--state-active-border);
       }
-      .field[data-ui-state="complete"]:not(.field--plan-status) {
+      .field[data-ui-state="complete"] {
         --field-bg: var(--state-complete-bg);
         --field-color: var(--state-complete-color);
         border-color: var(--state-complete-border);
-      }
-      .field--memo-input {
-        --textarea-min-height: var(--field-search-height);
-        --field-size: var(--field-search-font-size);
-        /* 1-line quick memo follows the same control-height rhythm as buttons/search/select. */
-        --field-line-height: 1.45;
-        --field-inset: 7px var(--field-padding-x);
-        height: var(--field-autosize-height, auto);
-        overflow-y: hidden;
-        resize: none;
       }
       .field--modal-textarea {
         resize: none;
@@ -2001,24 +2018,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .field--sync {
         --field-bg: var(--field-fill);
         --field-color: var(--ink);
-        --field-radius: var(--radius-control);
         appearance: none;
       }
       .field--sync-code {
         --field-color: var(--muted);
-        --field-min-height: var(--unified-button-height);
-        --field-fixed-height: var(--unified-button-height);
         --field-inset: 0 8px;
-        --field-size: var(--field-control-font-size);
+        --field-size: var(--field-font-size);
         flex: 1;
         min-width: 0;
         font-family: var(--font-family-mono);
-        font-weight: 800;
+        font-weight: var(--weight-extrabold);
         letter-spacing: 0.08em;
       }
       .field--join-code {
-        --field-min-height: var(--field-search-height);
-        --field-fixed-height: var(--field-search-height);
         --field-inset: 0 8px;
         display: block;
       }
@@ -2046,61 +2058,81 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .card-header--memo {
         --card-header-margin-bottom: 7px;
       }
+      /* Nested hierarchy: section first, soft group second, bounded unit only when independently actionable. */
       .inner-card--tinted {
-        background: var(--field-fill-accent2);
-        border-color: color-mix(in srgb, var(--control-border) 76%, transparent);
-        box-shadow: inset 0 1px 1px rgba(20, 20, 22, 0.015);
+        --inner-card-bg: var(--nested-soft-tint-bg);
       }
       .inner-card--raised {
-        background: var(--surface-raised);
-        border-color: var(--nested-raised-border);
+        --inner-card-bg: var(--nested-soft-bg);
       }
       .inner-card--compact {
-        border-radius: var(--radius-compact-surface);
-        corner-shape: var(--corner-shape-control);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
       }
       .inner-card--status-summary {
         --inner-card-padding: var(--nested-surface-padding);
+        --inner-card-bg: transparent;
         display: flex;
         align-items: center;
         gap: var(--space-sm);
+        border-radius: 0;
       }
-      .inner-card--event-meta {
-        --inner-card-padding: 0 10px;
-        width: 100%;
-        min-width: 0;
-        min-height: calc(var(--action-button-size) + 2px);
-        gap: 0;
+      .plan-status-grid > .inner-card--status-summary + .inner-card--status-summary {
+        border-left: 1px solid var(--section-divider);
+      }
+      .collection-row--task {
+        --collection-leading-color: var(--muted);
+      }
+      .collection-row--event {
+        --collection-leading-color: var(--text-secondary);
       }
       .inner-card--plan-block {
-        --inner-card-padding: var(--nested-surface-padding);
+        --inner-card-padding: var(--space-3) var(--space-4);
       }
       .inner-card--budget-detail {
-        --inner-card-padding: var(--nested-surface-padding);
+        --inner-card-padding: var(--space-3) 0 0;
+        --inner-card-bg: transparent;
+        margin-top: var(--space-1);
+        border-top: 1px solid var(--section-divider);
+        border-radius: 0;
       }
       .inner-card--budget-stats {
-        --inner-card-padding: 2px 10px;
+        --inner-card-padding: 2px 0;
+        --inner-card-bg: transparent;
+        border-radius: 0;
       }
       .inner-card--theme-item {
         --inner-card-padding: var(--nested-surface-padding);
+        --inner-card-bg: var(--nested-soft-bg);
         gap: var(--collection-row-gap);
       }
       .inner-card--category {
         --inner-card-padding: var(--card-padding-compact);
+        --inner-card-bg: var(--nested-interactive-bg);
+        --inner-card-border-width: 1px;
+        --inner-card-border-color: var(--nested-interactive-border);
         --card-title-size: var(--category-card-title-font-size);
         --card-title-line-height: 1.25;
       }
       .inner-card--panel {
         --inner-card-padding: var(--nested-surface-padding);
+        --inner-card-bg: var(--nested-soft-bg);
       }
       .inner-card--recovery {
         --inner-card-padding: var(--nested-surface-padding);
+        --inner-card-bg: var(--nested-interactive-bg);
+        --inner-card-border-width: 1px;
+        --inner-card-border-color: var(--nested-interactive-border);
         gap: var(--collection-row-gap);
       }
       .inner-card--grouped-list {
+        --inner-card-bg: transparent;
         width: 100%;
         min-width: 0;
         overflow: hidden;
+        border-top: 1px solid var(--section-divider);
+        border-bottom: 1px solid var(--section-divider);
+        border-radius: 0;
       }
       .inner-card--stacked-list {
         display: flex;
@@ -2156,9 +2188,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         width: 100%;
         grid-template-columns: minmax(0, 1fr);
       }
-      /* Empty lists are message-only; add actions live in the owning card/page header. */
+      /* Empty/search results stay message-only; owning headers already carry the actions. */
       .status-state--empty .status-state-marker { display: none; }
-      .status-state--search .status-state-marker::before { content: "…"; }
+      .status-state--search .status-state-marker { display: none; }
+      .status-state--empty .status-state-message { color: var(--text-tertiary); }
+      .status-state--search .status-state-message { color: var(--text-secondary); }
       .status-state--complete .status-state-marker {
         border-color: var(--state-complete-border);
         background: var(--state-complete-bg);
@@ -2204,7 +2238,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       /* Variant-specific responsive behavior stays with the variant owner.
          Field typography intentionally does not grow on coarse-pointer environments. */
       @media (max-width: 520px) {
-        .inner-card--budget-stats { --inner-card-padding: 2px 8px; }
+        .inner-card--budget-stats { --inner-card-padding: 2px 0; }
       }
       @media (max-width: 380px) {
         .card-header--fixed-actions {
@@ -2223,7 +2257,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       @media (max-width: 600px) {
         .field--toolbar {
           --field-inset: 0 6px;
-          --field-size: var(--field-control-font-size);
+          --field-size: var(--field-font-size);
         }
         .action-row--sheet-dialog {
           margin-left: calc(max(var(--modal-padding), env(safe-area-inset-left)) * -1);
@@ -2270,19 +2304,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         padding-bottom: var(--layout-bottom-space);
       }
       .top {
-        padding: var(--page-top-space) var(--page-side-space) 14px;
+        padding: var(--page-top-space) var(--page-side-space) var(--space-3);
         min-width: 0;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 14px;
+        gap: var(--space-3);
       }
       .top > :first-child {
         flex: 1 1 auto;
         min-width: 0;
       }
       main {
-        padding: 12px var(--page-side-space);
+        padding: var(--space-3) var(--page-side-space);
         touch-action: pan-y pinch-zoom;
       }
       .grid {
@@ -2295,7 +2329,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .row {
         display: flex;
         align-items: center;
-        gap: var(--row-gap, 10px);
+        gap: var(--row-gap, var(--space-2));
       }
       .between {
         justify-content: space-between;
@@ -2320,7 +2354,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .list {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: var(--space-2);
       }
       .plan-status-grid {
         display: grid;
@@ -2334,7 +2368,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-width: 0;
         margin-left: -6px;
         display: grid;
-        grid-template-columns: var(--calendar-nav-size) max-content var(--calendar-nav-size);
+        grid-template-columns: var(--control-height) max-content var(--control-height);
         grid-template-areas:
           "prev title next"
           ". hint hint";
@@ -2478,7 +2512,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-size: var(--font-caption);
         color: var(--text-tertiary);
         padding: 4px 0 6px;
-        font-weight: 600;
+        font-weight: var(--weight-semibold);
       }
       .calendar-week span:first-child {
         color: var(--weekend-sun);
@@ -2493,12 +2527,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-size: var(--font-caption);
         color: color-mix(in srgb, var(--accent) 72%, var(--text-secondary));
         margin-bottom: 6px;
-        font-weight: 620;
+        font-weight: var(--weight-semibold);
         letter-spacing: 0.07em;
       }
       .title {
         font-size: var(--header-title-size);
-        font-weight: 780;
+        font-weight: var(--weight-extrabold);
         line-height: 1.06;
         letter-spacing: -0.045em;
         white-space: normal;
@@ -2516,8 +2550,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         max-width: min(42vw, 150px);
         background: color-mix(in srgb, var(--card) 92%, var(--accent) 8%);
         border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--surface-border));
-        border-radius: var(--radius-medium-surface);
-        corner-shape: var(--corner-shape-surface);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         text-align: center;
         box-shadow: 0 1px 2px rgba(20,20,24,.025), 0 7px 20px rgba(20,20,24,.03), inset 0 1px 0 rgba(255,255,255,.62);
         color: inherit;
@@ -2549,14 +2583,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: block;
         color: var(--text-secondary);
         font-size: var(--font-caption);
-        font-weight: 500;
+        font-weight: var(--weight-medium);
         letter-spacing: 0.01em;
       }
       .dday strong {
         display: block;
         margin-top: 1px;
         font-size: var(--dday-value-font-size);
-        font-weight: 760;
+        font-weight: var(--weight-extrabold);
         letter-spacing: -0.035em;
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
@@ -2613,13 +2647,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .plan-label {
         font-size: var(--font-caption);
-        color: var(--muted);
-        margin-bottom: var(--collection-copy-gap);
-        font-weight: 700;
+        color: var(--text-secondary);
+        margin-bottom: var(--space-2);
+        font-weight: var(--weight-bold);
+        line-height: 1.35;
       }
       .plan-text {
         font-size: var(--plan-text-font-size);
-        line-height: 1.55;
+        line-height: 1.65;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
       }
@@ -2653,112 +2688,51 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
       }
-      .planner-event-item {
+      .event-date-leading {
         width: 100%;
         min-width: 0;
+        margin-top: 1px;
         display: flex;
         flex-direction: column;
-        gap: var(--collection-copy-gap);
-        padding: var(--collection-row-padding);
+        align-items: flex-start;
+        gap: 2px;
+        color: var(--collection-leading-color);
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
+        line-height: 1.1;
       }
-      .planner-event-item-meta {
-        position: relative;
-        display: flex;
-        align-items: center;
-        color: var(--muted);
-        font-size: var(--event-meta-font-size);
-        font-weight: 500;
-        line-height: 1.25;
+      .event-date-leading-main {
+        font-size: var(--font-small);
+        font-weight: var(--weight-semibold);
+        letter-spacing: -0.015em;
         white-space: nowrap;
       }
-      .planner-event-item-meta > span {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      .event-date-leading-sub {
+        color: var(--muted);
+        font-size: var(--font-micro);
+        font-weight: var(--weight-medium);
       }
-      .planner-event-item-meta > span + span::before {
-        content: "·";
-        margin: 0 var(--collection-meta-gap);
-        color: var(--line);
-      }
-      .planner-event-item-meta-date,
-      .planner-event-item-meta-time {
+      .collection-row--event .event-meta-time {
         flex: 0 0 auto;
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
       }
-      .planner-event-item-meta-location {
-        flex: 1 1 auto;
-      }
-      .planner-event-item-meta-menu {
-        display: flex;
-        flex: 0 0 auto;
-        align-items: center;
-        margin-left: auto;
-        padding-left: var(--card-action-gap);
-      }
-      .planner-event-item-main {
-        width: 100%;
+      .collection-row--event .event-meta-location {
         min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
-      .planner-event-item-header {
-        width: 100%;
-        min-width: 0;
-      }
-      .planner-event-item-title-row {
-        grid-column: 1;
-        min-width: 0;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        flex-wrap: nowrap;
-        gap: var(--collection-meta-gap);
-        overflow: visible;
-      }
-      .planner-event-item-title {
-        flex: 0 1 auto;
-        min-width: 0;
-        max-width: 100%;
-        overflow: visible;
-        text-overflow: clip;
-        white-space: normal;
-        overflow-wrap: anywhere;
-        font-size: var(--event-title-size);
-        font-weight: 700;
-        line-height: 1.4;
-      }
-      .planner-event-item-main > small {
-        display: block;
-        width: 100%;
-        min-width: 0;
-        margin-top: var(--collection-copy-gap);
-        line-height: 1.45;
-        font-size: var(--font-caption);
-        overflow-wrap: anywhere;
-      }
-
-      .planner-event-item-today .planner-event-item-title {
+      .planner-event-item-today .event-date-leading-main {
         color: var(--state-active-color);
-      }
-      .task {
-        display: grid;
-        grid-template-columns: var(--task-check-column) minmax(0, 1fr) var(--action-button-size);
-        align-items: start;
-        column-gap: var(--collection-meta-gap);
-        padding: var(--collection-row-padding);
-        border-radius: 0;
-        transition: background-color var(--motion-fast) ease;
-      }
-      .task:not(.has-actions) {
-        grid-template-columns: var(--task-check-column) minmax(0, 1fr);
       }
       .task-check {
         position: relative;
         width: var(--task-check-size);
         height: var(--task-check-size);
-        margin-top: 3px;
-        border-radius: var(--radius-icon);
-        corner-shape: var(--corner-shape-control);
+        margin-top: 2px;
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         border: 1.5px solid color-mix(in srgb, var(--muted) 38%, var(--line));
         background: var(--card);
         transition: background-color var(--motion-feedback) var(--ease-feedback),
@@ -2784,79 +2758,24 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         align-items: center;
         justify-content: center;
       }
-      .task-body {
+      .collection-row--task .task-category {
         min-width: 0;
-      }
-      .task-main {
-        width: 100%;
-        min-width: 0;
-      }
-      .task-category-row {
-        display: flex;
-        align-items: center;
-        flex-wrap: nowrap;
-        min-width: 0;
-        width: 100%;
-        gap: var(--collection-copy-gap);
-        margin: 0 0 var(--collection-copy-gap);
-      }
-      .task-category {
-        min-width: 0;
-        color: var(--accent-ink);
-        font-size: var(--task-category-size);
-        font-weight: 600;
-        line-height: 1.25;
+        max-width: 100%;
+        color: inherit;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .task-meta {
-        display: flex;
-        align-items: center;
-        flex: 0 0 auto;
-        flex-wrap: nowrap;
-        gap: var(--collection-copy-gap);
-        min-width: 0;
+      .collection-row--task .task-priority--high {
+        color: var(--state-danger-color);
       }
-      .task-title {
-        min-width: 0;
-        overflow-wrap: anywhere;
-        font-size: var(--task-title-size);
-        line-height: 1.42;
-        font-weight: 480;
-        color: var(--ink);
-      }
-      .task.done .task-title {
+      .task.done .collection-row__title {
+        color: var(--state-complete-muted);
         text-decoration: line-through;
         text-decoration-thickness: 1px;
+      }
+      .task.done .collection-row__meta {
         color: var(--state-complete-muted);
-      }
-      .task.done .task-category {
-        color: var(--state-complete-color);
-      }
-      .task-note {
-        display: block;
-        width: 100%;
-        min-width: 0;
-        margin: var(--collection-copy-gap) 0 0;
-        font-size: var(--task-note-size);
-        line-height: 1.5;
-        color: var(--muted);
-        text-align: left;
-        white-space: pre-wrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .task-actions {
-        display: flex;
-        align-items: flex-start;
-        justify-content: flex-end;
-      }
-      /* Task rows keep a stable field-matched surface on hover/press.
-         Interaction feedback stays on the checkbox and action controls instead. */
-
-      @media (max-width: 480px) {
-        .task-category-row { flex-wrap: wrap; }
       }
       .category-progress-meta {
         margin-top: 4px;
@@ -2882,8 +2801,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         flex: 0 0 auto;
         overflow: hidden;
         border: 1px solid var(--line);
-        border-radius: var(--radius-icon);
-        corner-shape: var(--corner-shape-control);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         background: var(--theme-preview-color, transparent);
       }
       .theme-color-preview {
@@ -2956,8 +2875,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         margin: calc(var(--card-header-margin-bottom) * -0.35) 0 12px;
         padding: 8px 10px;
         border: 1px solid color-mix(in srgb, var(--control-border) 70%, transparent);
-        border-radius: var(--radius-compact-surface);
-        corner-shape: var(--corner-shape-control);
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
         background: color-mix(in srgb, var(--surface-grouped) 86%, var(--card) 14%);
       }
       .sync-status-indicator {
@@ -2978,7 +2897,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-width: 0;
         color: var(--ink);
         font-size: var(--font-small);
-        font-weight: 650;
+        font-weight: var(--weight-semibold);
         line-height: 1.35;
       }
       .sync-status-meta {
@@ -3037,7 +2956,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         margin-top: var(--card-footer-margin-top);
       }
       .shared-conflict-title {
-        font-weight: 800;
+        font-weight: var(--weight-extrabold);
         font-size: var(--font-small);
       }
       .shared-conflict-desc {
@@ -3055,7 +2974,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: block;
         margin-bottom: 6px;
         font-size: var(--font-caption);
-        font-weight: 700;
+        font-weight: var(--weight-bold);
         line-height: 1.4;
       }
       .sync-join-code-label {
@@ -3064,7 +2983,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .sync-join-code-note {
         font-size: var(--sync-note-font-size);
-        font-weight: 400;
+        font-weight: var(--weight-regular);
         color: var(--muted);
       }
 
@@ -3104,7 +3023,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: block;
         font-size: var(--budget-home-total-font-size);
         line-height: 1.1;
-        font-weight: 800;
+        font-weight: var(--weight-extrabold);
         white-space: nowrap;
         color: var(--ink);
         font-variant-numeric: tabular-nums;
@@ -3113,7 +3032,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         margin-top: 3px;
         font-size: var(--font-small);
         line-height: 1.1;
-        font-weight: 600;
+        font-weight: var(--weight-semibold);
         color: var(--muted);
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
@@ -3131,7 +3050,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .current-project-title {
         font-size: var(--font-small);
-        font-weight: 700;
+        font-weight: var(--weight-bold);
         color: var(--muted);
       }
       .budget-page-reference {
@@ -3157,14 +3076,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-size: var(--font-caption);
         line-height: 1.2;
         color: var(--text-tertiary);
-        font-weight: 600;
+        font-weight: var(--weight-semibold);
         white-space: nowrap;
       }
       .budget-page-reference-stat b {
         font-size: var(--budget-reference-value-font-size);
         line-height: 1.15;
         color: var(--ink);
-        font-weight: 700;
+        font-weight: var(--weight-bold);
         font-variant-numeric: tabular-nums;
         letter-spacing: -0.02em;
         white-space: nowrap;
@@ -3185,7 +3104,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .recovery-title {
         overflow-wrap: anywhere;
         font-size: var(--font-small);
-        font-weight: 700;
+        font-weight: var(--weight-bold);
         line-height: 1.35;
       }
       .recovery-meta {
@@ -3230,7 +3149,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         margin: 0;
         font-size: var(--home-summary-pct-font-size);
         line-height: 1;
-        font-weight: 800;
+        font-weight: var(--weight-extrabold);
         letter-spacing: -0.04em;
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
@@ -3275,12 +3194,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .budget-detail-group > .label {
         color: var(--text-tertiary);
         font-size: var(--font-caption);
-        font-weight: 600;
+        font-weight: var(--weight-semibold);
       }
       .budget-value-row b {
         color: var(--ink);
         font-size: var(--text-xl);
-        font-weight: 700;
+        font-weight: var(--weight-bold);
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
         letter-spacing: -0.02em;
@@ -3311,9 +3230,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
          Typography stays identical across mouse/touch environments so UI tuning has one source of truth. */
       @media (hover: none) and (pointer: coarse) {
         :root {
-          --action-button-size: 36px;
+          --control-height: 36px;
           --task-check-size: 26px;
-          --task-check-column: 32px;
         }
       }
 
@@ -3329,7 +3247,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
       @media (prefers-reduced-transparency: reduce) {
         :root {
-          --material-surface: var(--card);
           --material-button: var(--button-bg);
         }
       }
@@ -3775,32 +3692,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             <div data-ui-component="Card" class="card col12">
               <div data-ui-component="CardHeader" class="card-header">
                 <div class="card-header-copy">
-                  <h3 class="card-title">빠른 메모</h3>
-                </div>
-              </div>
-              <div data-ui-component="CardBody" class="card-body">
-                <textarea
-                  aria-label="빠른 메모"
-                  class="field field--memo-input"
-                  data-dom="quickMemo"
-                  data-action="autosize-textarea"
-                  rows="1"
-                  placeholder="업체 연락처, 궁금한 점, 계약 전 체크할 것 등"
-                ></textarea>
-                <div data-ui-component="ActionRow" class="action-row">
-                  <button class="btn btn--app-action btn--primary" data-action="save-memo" type="button">
-                    메모 저장
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div data-ui-component="Card" class="card col12">
-              <div data-ui-component="CardHeader" class="card-header">
-                <div class="card-header-copy">
                   <h3 class="card-title">메모 목록</h3>
                   <div class="card-description">
-                    저장한 메모를 확인하고 필요할 때 수정하거나 삭제할 수 있어요.
+                    기억해야 할 내용을 메모할 수 있어요
                   </div>
+                </div>
+                <div class="card-header-action">
+                  <button
+                    class="btn btn--app-action btn--primary"
+                    data-action="open-modal"
+                    data-modal="memo"
+                    type="button"
+                  >
+                    +메모 추가
+                  </button>
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
@@ -4157,7 +4062,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "476",
+          version: "490",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4216,9 +4121,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         const TASK_OWNERS = Object.freeze(["함께", "신랑", "신부", "각자", "양가"]);
         const TASK_PRIORITIES = Object.freeze(["높음", "보통", "낮음"]);
         const PLAN_STATUS_DEFINITIONS = Object.freeze([
-          { label: "논의 전", countKey: "planTodo", dom: "homePlanTodo", dot: "" },
-          { label: "논의 중", countKey: "planProgress", dom: "homePlanProgress", dot: "progress-dot" },
-          { label: "합의 완료", countKey: "planDone", dom: "homePlanDone", dot: "done-dot", complete: true },
+          { label: "논의 전", countKey: "planTodo", dom: "homePlanTodo", dot: "", uiState: "pending" },
+          { label: "논의 중", countKey: "planProgress", dom: "homePlanProgress", dot: "progress-dot", uiState: "active" },
+          { label: "합의 완료", countKey: "planDone", dom: "homePlanDone", dot: "done-dot", uiState: "complete", complete: true },
         ].map(Object.freeze));
         const PLAN_STATUSES = Object.freeze(PLAN_STATUS_DEFINITIONS.map(status => status.label));
         const TASK_STATUS_FILTER = Object.freeze({ ALL: "all", DONE: "done", OPEN: "todo" });
@@ -4546,12 +4451,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         const UI_VARIANTS = Object.freeze({
           Button: ["", "primary", "tertiary", "danger"],
-          Field: ["compact", "compact-text", "inline-select", "search", "search-block", "memo-input", "modal-textarea", "money", "sync", "sync-code", "join-code", "plan-status", "toolbar"],
+          Field: ["compact", "compact-text", "inline-select", "search", "search-block", "modal-textarea", "money", "sync", "sync-code", "join-code", "toolbar"],
           IconControl: ["reorder", "calendar-nav", "modal-close", "field-clear"],
           Card: [""],
           CardBody: ["", "fill-stack", "budget-reference"],
           CardFooter: ["", "baseline"],
-          InnerCard: ["", "tinted", "raised", "compact", "status-summary", "event-meta", "plan-block", "budget-detail", "budget-stats", "theme-item", "category", "panel", "recovery", "grouped-list", "stacked-list"],
+          InnerCard: ["", "tinted", "raised", "compact", "status-summary", "plan-block", "budget-detail", "budget-stats", "theme-item", "category", "panel", "recovery", "grouped-list", "stacked-list"],
+          CollectionRow: ["task", "event"],
           Callout: ["warning", "conflict"],
           CardHeader: ["fixed-actions", "flush", "memo"],
           ActionRow: ["wrap", "flush", "compact", "spaced", "dialog", "sheet-dialog", "item", "footer"],
@@ -4569,20 +4475,29 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           nav: "btn--nav",
           "theme-swatch": "btn--theme-swatch",
         });
-        function assertUiVariant(component, value) {
-          const values = ["ActionRow", "CardHeader", "InnerCard", "Pill"].includes(component) ? String(value).trim().split(/\s+/).filter(Boolean) : [value];
-          if (values.some((entry) => !UI_VARIANTS[component]?.includes(entry)))
+        const MULTI_UI_VARIANT_COMPONENTS = new Set(["ActionRow", "CardHeader", "Field", "InnerCard", "Pill"]);
+        function uiVariantNames(component, value = "") {
+          const allowed = UI_VARIANTS[component];
+          const raw = String(value ?? "").trim();
+          if (!allowed || (!raw && !MULTI_UI_VARIANT_COMPONENTS.has(component) && !allowed.includes("")))
             throw new Error(`${component}: unsupported variant "${value}"`);
+          if (!raw) return [];
+          const names = MULTI_UI_VARIANT_COMPONENTS.has(component) ? raw.split(/\s+/).filter(Boolean) : [raw];
+          if (names.some((name) => !allowed.includes(name)))
+            throw new Error(`${component}: unsupported variant "${value}"`);
+          return names;
+        }
+        function uiVariantClasses(component, prefix, value = "") {
+          return uiVariantNames(component, value).map((name) => `${prefix}--${name}`);
         }
         function UIComponentRoot(component, className, content = "") {
           const classes = String(className || "").trim();
           return `<div data-ui-component="${attr(component)}" class="${attr(classes)}">${content}</div>`;
         }
         function buttonClassName({ variant = "", role = "app-action", selected = false } = {}) {
-          assertUiVariant("Button", variant);
           const roleClass = BUTTON_ROLES[role];
           if (!roleClass) throw new Error(`Button: unsupported role "${role}"`);
-          return ["btn", roleClass, variant ? `btn--${variant}` : "", selected ? "active" : ""].filter(Boolean).join(" ");
+          return ["btn", roleClass, ...uiVariantClasses("Button", "btn", variant), selected ? "active" : ""].filter(Boolean).join(" ");
         }
         function applyButtonPresentation(element, options = {}) {
           if (!(element instanceof HTMLElement)) return null;
@@ -4597,8 +4512,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           })}>${esc(label)}</button>`;
         }
         function Form(content = "", variant = "") {
-          assertUiVariant("Form", variant);
-          const classes = ["form", variant ? `form--${variant}` : ""].filter(Boolean).join(" ");
+          const classes = ["form", ...uiVariantClasses("Form", "form", variant)].join(" ");
           return `<div class="${attr(classes)}">${content}</div>`;
         }
         function FormField(field, value = "") {
@@ -4608,11 +4522,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (money) variants.push("money");
           if (type === "textarea") variants.push("modal-textarea");
           if (field.variant) variants.push(...String(field.variant).trim().split(/\s+/).filter(Boolean));
-          variants.forEach((variant) => assertUiVariant("Field", variant));
+          const fieldVariantClasses = uiVariantClasses("Field", "field", variants.join(" "));
           const controlId = DOM_IDS[id] || id;
           const errorId = `${controlId}Error`;
           const attributes = htmlAttributes({
-            class: ["field", ...variants.map((variant) => `field--${variant}`)].join(" "), id: controlId, placeholder,
+            class: ["field", ...fieldVariantClasses].join(" "), id: controlId, placeholder,
             maxlength: field.maxLength, "aria-required": field.required ? "true" : null,
             "aria-describedby": errorId,
           });
@@ -4638,31 +4552,25 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }).join("");
         }
         function SelectControl(options, selected, { variants = "", attributes = {} } = {}) {
-          const names = String(variants).trim().split(/\s+/).filter(Boolean);
-          names.forEach((variant) => assertUiVariant("Field", variant));
           return `<select${htmlAttributes({
-            class: ["field", ...names.map((variant) => `field--${variant}`)].join(" "),
+            class: ["field", ...uiVariantClasses("Field", "field", variants)].join(" "),
             ...attributes,
           })}>${SelectOptions(options, selected)}</select>`;
         }
         function Card(content = "", variant = "") {
-          assertUiVariant("Card", variant);
-          return UIComponentRoot("Card", ["card", variant ? `card--${variant}` : ""].filter(Boolean).join(" "), content);
+          return UIComponentRoot("Card", ["card", ...uiVariantClasses("Card", "card", variant)].join(" "), content);
         }
         // InnerCard is the only surface factory allowed to carry a domain layout hook on the same node.
         // Visual differences still belong to explicit inner-card--* variants and are enforced by the dev guard.
         function InnerCard(content = "", layoutClassName = "", variant = "") {
-          assertUiVariant("InnerCard", variant);
-          const variantClasses = String(variant).trim().split(/\s+/).filter(Boolean).map((name) => `inner-card--${name}`);
+          const variantClasses = uiVariantClasses("InnerCard", "inner-card", variant);
           return UIComponentRoot("InnerCard", ["inner-card", ...variantClasses, layoutClassName].filter(Boolean).join(" "), content);
         }
         function Callout(content = "", variant = "warning") {
-          assertUiVariant("Callout", variant);
-          return UIComponentRoot("Callout", ["callout", `callout--${variant}`].join(" "), content);
+          return UIComponentRoot("Callout", ["callout", ...uiVariantClasses("Callout", "callout", variant)].join(" "), content);
         }
         function CardHeader(title, description = "", action = "", variant = "") {
-          assertUiVariant("CardHeader", variant);
-          const variantClasses = String(variant).trim().split(/\s+/).filter(Boolean).map((name) => `card-header--${name}`);
+          const variantClasses = uiVariantClasses("CardHeader", "card-header", variant);
           return UIComponentRoot("CardHeader", ["card-header", ...variantClasses].join(" "), `
             <div class="card-header-copy">
               <h3 class="card-title">${esc(title)}</h3>
@@ -4671,22 +4579,17 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             ${action ? `<div class="card-header-action">${action}</div>` : ""}`);
         }
         function CardBody(content = "", variant = "") {
-          assertUiVariant("CardBody", variant);
-          const variantClasses = String(variant).trim().split(/\s+/).filter(Boolean).map((name) => `card-body--${name}`);
+          const variantClasses = uiVariantClasses("CardBody", "card-body", variant);
           return UIComponentRoot("CardBody", ["card-body", ...variantClasses].join(" "), content);
         }
         function CardFooter(content, variant = "") {
-          assertUiVariant("CardFooter", variant);
-          return UIComponentRoot("CardFooter", ["card-footer-row", variant ? `card-footer-row--${variant}` : ""].filter(Boolean).join(" "), content);
+          return UIComponentRoot("CardFooter", ["card-footer-row", ...uiVariantClasses("CardFooter", "card-footer-row", variant)].join(" "), content);
         }
         function Pill(label, variant = "") {
-          assertUiVariant("Pill", variant);
-          const names = String(variant).trim().split(/\s+/).filter(Boolean);
-          return `<span class="${["pill", ...names.map((name) => `pill--${name}`)].join(" ")}">${esc(label)}</span>`;
+          return `<span class="${["pill", ...uiVariantClasses("Pill", "pill", variant)].join(" ")}">${esc(label)}</span>`;
         }
         function Progress(value, variant = "") {
-          assertUiVariant("Progress", variant);
-          return `<div class="${["progress", variant ? `progress--${variant}` : ""].filter(Boolean).join(" ")}"><i data-progress-value="${attr(value)}"></i></div>`;
+          return `<div class="${["progress", ...uiVariantClasses("Progress", "progress", variant)].join(" ")}"><i data-progress-value="${attr(value)}"></i></div>`;
         }
         const BUDGET_GAUGE_GEOMETRY = Object.freeze({
           viewBox: "0 8 100 58",
@@ -4717,15 +4620,28 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             });
           });
         }
+        function CollectionRow({ component, variant, leading = "", meta = "", title = "", note = "", actions = "", classes = [], attributes = {} } = {}) {
+          const variantClasses = uiVariantClasses("CollectionRow", "collection-row", variant);
+          const stateClasses = Array.isArray(classes) ? classes : [classes];
+          const className = ["collection-row", ...variantClasses, "list-divided-item", ...stateClasses.filter(Boolean), actions ? "has-actions" : ""].join(" ");
+          return `<div data-ui-component="${attr(component)}" data-ui-layout="collection-row" data-ui-row-variant="${attr(variant)}"${htmlAttributes(attributes)} class="${attr(className)}">
+            <div class="collection-row__leading">${leading}</div>
+            <div class="collection-row__content">
+              <div class="collection-row__title">${title}</div>
+              ${meta ? `<div class="collection-row__meta">${meta}</div>` : ""}
+              ${note ? `<div class="collection-row__note">${note}</div>` : ""}
+            </div>
+            ${actions ? `<div class="collection-row__actions">${actions}</div>` : ""}
+          </div>`;
+        }
         function ActionRow(content, variant = "") {
-          assertUiVariant("ActionRow", variant);
-          const variantClasses = String(variant).trim().split(/\s+/).filter(Boolean).map((name) => `action-row--${name}`);
+          const variantClasses = uiVariantClasses("ActionRow", "action-row", variant);
           return UIComponentRoot("ActionRow", ["action-row", ...variantClasses].join(" "), content);
         }
         function StatusState(message, { action = "", variant = "empty", title = "" } = {}) {
-          assertUiVariant("StatusState", variant);
           const role = variant === "error" ? "alert" : "status";
-          return `<div data-ui-component="StatusState" data-ui-variant="${attr(variant)}" class="status-state status-state--${attr(variant)}" role="${role}">
+          const classes = ["status-state", ...uiVariantClasses("StatusState", "status-state", variant)].join(" ");
+          return `<div data-ui-component="StatusState" data-ui-variant="${attr(variant)}" class="${classes}" role="${role}">
             <div class="status-state-marker" aria-hidden="true"></div>
             <div class="status-state-copy">
               ${title ? `<div class="status-state-title">${esc(title)}</div>` : ""}
@@ -4733,6 +4649,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             </div>
             ${action ? `<div class="status-state-action">${action}</div>` : ""}
           </div>`;
+        }
+
+        function updateFilterFeedback(owner, { summaryDom, resultCount, controls = [], resetDom = "", resetActive = false } = {}) {
+          let activeCount = 0;
+          for (const [element, active] of controls) {
+            const isActive = !!active;
+            activeCount += Number(isActive);
+            if (element instanceof HTMLElement) element.toggleAttribute("data-filter-active", isActive);
+          }
+          setOwnedText(owner, summaryDom, `${formatCount(resultCount)} 표시 · 활성 조건 ${formatCount(activeCount)}`);
+          if (resetDom) {
+            const reset = ownedElement(owner, resetDom);
+            if (reset) reset.hidden = !resetActive;
+          }
+          return activeCount;
         }
         function EmptyState(message, action = "", variant = "empty") {
           return StatusState(message, { action, variant });
@@ -4744,7 +4675,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return items?.length ? items.map((item, index) => renderer(item, index, items.length)).join("")
             : emptyMessage ? EmptyState(emptyMessage, emptyAction, emptyVariant) : "";
         }
-        const MORE_MENU_VARIANTS = Object.freeze(["default", "bare"]);
+        const MORE_MENU_VARIANTS = Object.freeze(["default", "bare", "quiet"]);
         let moreMenuInstanceSequence = 0;
         function nextMoreMenuPopupId(type, id) {
           moreMenuInstanceSequence = (moreMenuInstanceSequence + 1) % Number.MAX_SAFE_INTEGER;
@@ -4903,7 +4834,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           memo: {
             stateKey: "memos", view: "memos", label: "메모", target: "memoList",
             renderer: MemoCard, empty: "등록된 메모가 없어요.", limit: 500,
-            prepend: true, editOnly: true, saveAction: "save-memo-edit",
+            prepend: true,
             feedback: { saved: "메모를 저장했어요.", deleted: "메모를 삭제했어요." },
             retain: (item) => !!item.text.trim(),
             fields: [
@@ -4915,15 +4846,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         const COLLECTION_KEYS = Object.freeze(Object.fromEntries(
           Object.values(COLLECTION_SCHEMAS).map(({ stateKey }) => [stateKey.toUpperCase(), stateKey])));
         const FORM_SCHEMAS = Object.freeze(Object.fromEntries(
-          Object.entries(COLLECTION_SCHEMAS).map(([name, schema]) => [name, {
-            name, title: schema.title || schema.label, collection: schema.stateKey, view: schema.view,
-            fields: schema.fields.filter((field) => field.id),
-            // INTENTIONAL COMPAT: Planner.Forms.schemas[name].read/validate/createItem remain callable.
-            read: () => readFormFields(name),
-            validate: (data) => validateFields(schema.fields.filter((field) => field.id), data, true),
-            createItem: (data) => normalizeCollectionItem(schema, { id: newId(), ...data }),
-            notFoundMessage: `수정할 ${schema.title || schema.label} 항목을 찾지 못했어요.`,
-          }])));
+          Object.entries(COLLECTION_SCHEMAS).map(([name, schema]) => {
+            const fields = schema.fields.filter((field) => field.id);
+            return [name, {
+              name, title: schema.title || schema.label, collection: schema.stateKey, view: schema.view,
+              fields,
+              // INTENTIONAL COMPAT: Planner.Forms.schemas[name].read/validate/createItem remain callable.
+              read: () => readFormFields(name),
+              validate: (data, validation) => (validation || validateFieldsDetailed(fields, data, true)).error,
+              createItem: (data) => normalizeCollectionItem(schema, { id: newId(), ...data }),
+              notFoundMessage: `수정할 ${schema.title || schema.label} 항목을 찾지 못했어요.`,
+            }];
+          })));
         const PAGE_REGISTRY = {
           home: { label: "홈", render: renderHome,
             dependsOn: ["tasks", "schedule", "budget", "plans", "wedding"],
@@ -4976,7 +4910,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             "close-modal": onClick(() => requestCloseModal()),
             "confirm-accept": onClick(() => settleAppConfirm(true)),
             "confirm-cancel": onClick(() => settleAppConfirm(false)),
-            "autosize-textarea": onInput((el) => autosizeTextarea(el)),
             "clear-search": onClick((el) => clearSearchControl(el)),
           },
           Home: {
@@ -5004,7 +4937,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             "update-plan": onChange((el) => updatePlan(el.dataset.id, el.value)),
           },
           Memos: {
-            "save-memo": onClick(saveMemo),
             "memo-search": onInput(() => requestRenderDebounced("memos")),
           },
           Backup: {
@@ -5074,7 +5006,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             scheduleFilter: "scheduleFilter", scheduleAllSearch: "scheduleAllSearch",
             scheduleFilterSummary: "scheduleFilterSummary", scheduleFilterReset: "scheduleFilterReset",
           },
-          memos: { quickMemo: "quickMemo", memoSearch: "memoSearch", memoSearchSummary: "memoSearchSummary" },
+          memos: { memoSearch: "memoSearch", memoSearchSummary: "memoSearchSummary" },
           history: { undoButton: "undoButton", redoButton: "redoButton", historyStatus: "historyStatus" },
           theme: { themeFields: "themeFields", themePresets: "themePresets", themeRadiusControl: "themeRadiusControl", thRadiusVal: "thRadiusVal" },
           shared: {
@@ -5335,22 +5267,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return [field.key, parsed];
           }));
         }
-        function validateFormData(schema, data) {
-          return schema?.validate?.(data) || "";
+        function validateFormData(schema, data, validation) {
+          // Built-in forms reuse the detailed result; custom validators still run.
+          return schema?.validate?.(data, validation) || "";
         }
         function saveFormBySchema(name, id) {
           const schema = FORM_SCHEMAS[name];
           if (!schema) throw new Error(`알 수 없는 폼 스키마: ${name}`);
-          if (COLLECTION_SCHEMAS[name].editOnly && isNewId(id)) {
-            notifyError(schema.notFoundMessage);
-            return null;
-          }
           const data = schema.read();
           const baseline = modalEditBaseline?.name === name && modalEditBaseline.id === String(id)
             ? modalEditBaseline.item : null;
+          const current = baseline ? findById(getCollection(schema.collection), id) : null;
           let submitted = data;
           if (baseline && !isNewId(id)) {
-            const current = findById(getCollection(COLLECTION_SCHEMAS[name].stateKey), id);
             if (!current) {
               notifyError("수정하는 동안 이 항목이 삭제됐어요. 창을 닫고 목록을 확인해주세요.");
               return null;
@@ -5366,11 +5295,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             submitted = Object.fromEntries(changed.map(field => [field.key, data[field.key]]));
           }
           const validationData = baseline
-            ? { ...findById(getCollection(COLLECTION_SCHEMAS[name].stateKey), id), ...submitted }
+            ? { ...current, ...submitted }
             : submitted;
           clearModalFieldErrors();
           const validation = validateFieldsDetailed(schema.fields, validationData, true);
-          const validationError = validation.error || validateFormData(schema, validationData);
+          const validationError = validation.error || validateFormData(schema, validationData, validation);
           if (validationError) {
             showModalFieldError(validation.field, validationError);
             notifyError(validationError);
@@ -5378,7 +5307,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }
           const changed = !baseline || !!Object.keys(submitted).length;
           const item = baseline && !changed
-            ? cloneValue(findById(getCollection(COLLECTION_SCHEMAS[name].stateKey), id))
+            ? cloneValue(current)
             : Collection.write(name, id, submitted);
           return item ? { item, data, changed } : null;
         }
@@ -5386,8 +5315,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const schema = Collection.schema(name);
           const item = data && typeof data === "object" ? data
             : isNewId(data) ? null : findById(getCollection(schema.stateKey), data);
-          if ((!isNewId(data) || schema.editOnly) && !item) {
-            if (!schema.editOnly) notifyError(FORM_SCHEMAS[name].notFoundMessage);
+          if (!isNewId(data) && !item) {
+            notifyError(FORM_SCHEMAS[name].notFoundMessage);
             return null;
           }
           const form = FORM_SCHEMAS[name];
@@ -5554,6 +5483,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (!page || !dirtyViews.has(id)) return;
           const view = getViewData();
           page.refresh?.(view);
+          renderPageContent(id, view);
+        }
+        function renderPageContent(id, view) {
+          const page = PAGE_REGISTRY[id];
           if (page.render) page.render(view);
           else Collection.render(page.collection, view[Collection.schema(page.collection).stateKey]);
           dirtyViews.delete(id);
@@ -5653,11 +5586,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           for (const id of dirtyViews) {
             const page = PAGE_REGISTRY[id];
             page.refresh?.(view);
-            if (id === active) {
-              if (page.render) page.render(view);
-              else Collection.render(page.collection, view[Collection.schema(page.collection).stateKey]);
-              dirtyViews.delete(id);
-            }
+            if (id === active) renderPageContent(id, view);
           }
         }
         function requestRenderDebounced(view, delay = APP_CONFIG.renderDebounceMs) {
@@ -6152,8 +6081,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function toastClassName(tone = "info") {
           if (!TOAST_TONES.includes(tone)) throw new Error(`Toast: unsupported tone "${tone}"`);
           const variant = tone === "info" ? "" : tone;
-          assertUiVariant("Toast", variant);
-          return ["toast", variant ? `toast--${variant}` : ""].filter(Boolean).join(" ");
+          return ["toast", ...uiVariantClasses("Toast", "toast", variant)].join(" ");
         }
         const TOAST_MARKERS = Object.freeze({ info: "i", success: "✓", error: "!" });
         function dismissToast(toast) {
@@ -6335,9 +6263,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             ),
           ];
         }
-        function getCats() {
-          return getCatsFrom(state);
-        }
         function getOrderedCatsFrom(source) {
           const cats = getCatsFrom(source);
           const order = Array.isArray(source?.categoryOrder) ? source.categoryOrder : [];
@@ -6379,26 +6304,24 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function buildTaskViewData(tasks, cats) {
           const priorityRank = Object.fromEntries(TASK_PRIORITIES.map((priority, index) => [priority, index + 1]));
-          const taskCategorySet = new Set();
           const categoryStats = new Map();
           let doneTasks = 0;
 
           for (const task of tasks) {
             const cat = String(task.cat || "기타");
-            taskCategorySet.add(cat);
             const stats = categoryStats.get(cat) || { total: 0, done: 0, progress: 0 };
             stats.total++;
             if (task.status === "done") {
               doneTasks++;
               stats.done++;
             }
-            stats.progress = Math.round((stats.done / stats.total) * 100);
             categoryStats.set(cat, stats);
           }
+          for (const stats of categoryStats.values())
+            stats.progress = Math.round((stats.done / stats.total) * 100);
 
           const upcomingTasks = tasks
             .filter((task) => task.status !== "done")
-            .slice()
             .sort((a, b) => {
               const aHasDue = Boolean(a.due),
                 bHasDue = Boolean(b.due);
@@ -6412,7 +6335,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return {
             cats,
             categoryStats,
-            taskCategorySet,
+            taskCategorySet: new Set(categoryStats.keys()),
             upcomingTasks,
             taskTotal: tasks.length,
             taskDone: doneTasks,
@@ -6475,21 +6398,23 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function TaskItem(item, { showActions = true } = {}) {
           const done = item.status === "done";
           const priorityVariant = item.priority === "높음" ? "high" : item.priority === "낮음" ? "low" : "";
-          return UIComponentRoot("TaskItem", ["task", "list-divided-item", done ? "done" : "", showActions ? "has-actions" : ""].filter(Boolean).join(" "), `
-            <button type="button" class="task-check ${done ? "on" : ""}" aria-label="${done ? "할 일 완료 취소" : "할 일 완료"}"
-              aria-pressed="${done ? "true" : "false"}" data-action="toggle-task" data-id="${attr(item.id)}">${done ? "✓" : ""}</button>
-            <div class="task-body"><div class="task-main">
-              <div class="task-category-row">
-                <div class="task-category">${esc(item.cat)}</div>
-                <div class="task-meta">
-                  ${item.due ? Pill(formatDateCompact(item.due), "task") : ""}
-                  ${Pill(item.priority, ["task", priorityVariant].filter(Boolean).join(" "))}
-                </div>
-              </div>
-              <div class="task-title">${esc(item.title)}</div>
-              ${item.memo ? `<div class="task-note">${esc(item.memo)}</div>` : ""}
-            </div></div>
-            ${showActions ? `<div class="task-actions">${MoreMenu(COLLECTION_SCHEMAS.task.label, item.id, "task")}</div>` : ""}`);
+          const leading = `<button type="button" class="task-check ${done ? "on" : ""}" aria-label="${done ? "할 일 완료 취소" : "할 일 완료"}"
+              aria-pressed="${done ? "true" : "false"}" data-action="toggle-task" data-id="${attr(item.id)}">${done ? "✓" : ""}</button>`;
+          const meta = [
+            item.cat ? `<span class="collection-row__meta-item task-category">${esc(item.cat)}</span>` : "",
+            item.due ? `<span class="collection-row__meta-item task-due">${esc(formatDateCompact(item.due))}</span>` : "",
+            item.priority ? `<span class="collection-row__meta-item task-priority${priorityVariant ? ` task-priority--${priorityVariant}` : ""}">${esc(item.priority)}</span>` : "",
+          ].filter(Boolean).join("");
+          return CollectionRow({
+            component: "TaskItem",
+            variant: "task",
+            leading,
+            meta,
+            title: esc(item.title),
+            note: item.memo ? esc(item.memo) : "",
+            actions: showActions ? MoreMenu(COLLECTION_SCHEMAS.task.label, item.id, "task", { variant: "quiet" }) : "",
+            classes: ["task", done ? "done" : ""],
+          });
         }
         function TaskListHost(items, options = {}) {
           return Collection.html("task", items, options);
@@ -6498,20 +6423,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const filters = getTaskFilters();
           filters.category = syncTaskCategoryOptions([...view.taskCategorySet]);
           const items = filterAndSortTasks(view.tasks, filters, view.priorityRank);
-          const activeParts = [];
-          if (filters.query) activeParts.push("search");
-          if (filters.category !== TASK_STATUS_FILTER.ALL) activeParts.push("category");
-          if (filters.status !== TASK_STATUS_FILTER.ALL) activeParts.push("status");
-          const filterActiveCount = Number(filters.category !== TASK_STATUS_FILTER.ALL) + Number(filters.status !== TASK_STATUS_FILTER.ALL);
-          setOwnedText("tasks", DOM_IDS.taskFilterSummary,
-            `${formatCount(items.length)} 표시 · 활성 조건 ${formatCount(activeParts.length)}`);
-          const reset = ownedElement("tasks", DOM_IDS.taskFilterReset);
-          if (reset) reset.hidden = filterActiveCount === 0;
-          setFilterActiveState($(DOM_IDS.taskSearch), !!filters.query);
-          setFilterActiveState($(DOM_IDS.taskCat), filters.category !== TASK_STATUS_FILTER.ALL);
-          setFilterActiveState($(DOM_IDS.taskStatus), filters.status !== TASK_STATUS_FILTER.ALL);
+          const categoryActive = filters.category !== TASK_STATUS_FILTER.ALL;
+          const statusActive = filters.status !== TASK_STATUS_FILTER.ALL;
+          const activeCount = updateFilterFeedback("tasks", {
+            summaryDom: DOM_IDS.taskFilterSummary,
+            resultCount: items.length,
+            controls: [
+              [$(DOM_IDS.taskSearch), !!filters.query],
+              [$(DOM_IDS.taskCat), categoryActive],
+              [$(DOM_IDS.taskStatus), statusActive],
+            ],
+            resetDom: DOM_IDS.taskFilterReset,
+            resetActive: categoryActive || statusActive,
+          });
           Collection.render("task", items, {
-            emptyMessage: view.tasks.length && activeParts.length ? "현재 검색·필터 조건에 맞는 할 일이 없어요." : undefined,
+            emptyMessage: view.tasks.length && activeCount ? "현재 검색·필터 조건에 맞는 할 일이 없어요." : undefined,
           });
         }
         function resetTaskFilters() {
@@ -6557,53 +6483,41 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 (a.date || "9999").localeCompare(b.date || "9999") ||
                 String(a.time || "").localeCompare(String(b.time || "")),
             );
-          const upcomingEvents = [];
+          const upcomingEvents = sortedEvents.filter(event => event.date && parseLocalDate(event.date) >= today);
           const eventCountByDate = new Map();
           for (const event of events) {
             if (event.date) {
               eventCountByDate.set(event.date, (eventCountByDate.get(event.date) || 0) + 1);
-              if (parseLocalDate(event.date) >= today) upcomingEvents.push(event);
             }
           }
-          upcomingEvents.sort(
-            (a, b) =>
-              (a.date || "9999-12-31").localeCompare(b.date || "9999-12-31") ||
-              String(a.time || "").localeCompare(String(b.time || "")),
-          );
           return { sortedEvents, upcomingEvents, eventCountByDate };
         }
         function EventItem(e, { today = null, showActions = true, showDate = true } = {}) {
           const ed = parseLocalDate(e.date);
           const isToday = today instanceof Date && ed.getTime() === today.getTime();
           const dateLabel = formatDateCompact(e.date);
-
-          const category = e.category
-            ? Pill(e.category, "badge event-category")
+          const leading = showDate && !Number.isNaN(ed.getTime())
+            ? `<time class="event-date-leading" datetime="${attr(e.date)}" aria-label="${attr(dateLabel)}">
+                <span class="event-date-leading-main">${String(ed.getMonth() + 1).padStart(2, "0")}.${String(ed.getDate()).padStart(2, "0")}</span>
+                <span class="event-date-leading-sub">${esc(WEEKDAY_SHORT[ed.getDay()])}</span>
+              </time>`
             : "";
-
-          const heading = `<div class="planner-event-item-header">
-    <div class="planner-event-item-title-row">
-      <span class="planner-event-item-title">${esc(e.title)}</span>
-      ${category}
-    </div>
-  </div>`;
-
-          const metaParts = [
-            showDate ? `<span class="planner-event-item-meta-date">${esc(dateLabel)}</span>` : "",
-            e.time ? `<span class="planner-event-item-meta-time">${esc(e.time)}</span>` : "",
-            e.location ? `<span class="planner-event-item-meta-location">${esc(e.location)}</span>` : "",
-          ].filter(Boolean);
-          const metaMenu = showActions
-            ? `<div class="planner-event-item-meta-menu">${MoreMenu("일정", e.id, "event", { variant: "bare" })}</div>`
-            : "";
-          const metaBar = metaParts.length || metaMenu
-            ? InnerCard(`${metaParts.join("")}${metaMenu}`, "planner-event-item-meta", "tinted compact event-meta")
-            : "";
-
-          return `<div data-ui-component="EventItem" data-ui-actions="${showActions}" data-ui-date="${showDate}" class="planner-event-item list-divided-item${isToday ? " planner-event-item-today" : ""}">
-    ${metaBar}
-    <div class="planner-event-item-main">${heading}<small>${esc(e.note || "메모 없음")}</small></div>
-  </div>`;
+          const meta = [
+            e.category ? `<span class="collection-row__meta-item event-category">${esc(e.category)}</span>` : "",
+            e.time ? `<span class="collection-row__meta-item event-meta-time">${esc(e.time)}</span>` : "",
+            e.location ? `<span class="collection-row__meta-item event-meta-location">${esc(e.location)}</span>` : "",
+          ].filter(Boolean).join("");
+          return CollectionRow({
+            component: "EventItem",
+            variant: "event",
+            leading,
+            meta,
+            title: esc(e.title),
+            note: esc(e.note || "메모 없음"),
+            actions: showActions ? MoreMenu("일정", e.id, "event", { variant: "quiet" }) : "",
+            classes: ["planner-event-item", isToday ? "planner-event-item-today" : ""],
+            attributes: { "data-ui-actions": String(showActions), "data-ui-date": String(showDate) },
+          });
         }
         function CalendarCell({ iso, day, count, holiday, dayClass, muted, selected, today }) {
           const classes = ["calendar-cell", dayClass, muted && "muted", holiday && "holiday", selected && "selected", today && "today"];
@@ -6620,40 +6534,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function renderCalendar(v = getViewData()) {
           const eventCountByDate = v.eventCountByDate;
           const y = calendarCursor.getFullYear(),
-            m = calendarCursor.getMonth(),
-            pad = (n) => String(n).padStart(2, "0");
+            m = calendarCursor.getMonth();
           setOwnedText("schedule", DOM_IDS.calendarTitle, formatMonthLabel(calendarCursor));
           const todayIso = localDateISO();
-          const first = new Date(y, m, 1),
-            start = first.getDay(),
-            days = new Date(y, m + 1, 0).getDate(),
-            prevDays = new Date(y, m, 0).getDate();
+          const start = new Date(y, m, 1).getDay();
           const grid = [];
           for (let i = 0; i < 42; i++) {
-            const offset = i - start + 1;
-            let yy = y,
-              mm = m,
-              dd = offset,
-              muted = false;
-            if (offset < 1) {
-              muted = true;
-              mm = m - 1;
-              if (mm < 0) {
-                mm = 11;
-                yy--;
-              }
-              dd = prevDays + offset;
-            } else if (offset > days) {
-              muted = true;
-              mm = m + 1;
-              if (mm > 11) {
-                mm = 0;
-                yy++;
-              }
-              dd = offset - days;
-            }
-            const iso = `${yy}-${pad(mm + 1)}-${pad(dd)}`;
-            const dateObj = new Date(yy, mm, dd);
+            const dateObj = new Date(y, m, i - start + 1);
+            const dd = dateObj.getDate();
+            const muted = dateObj.getMonth() !== m;
+            const iso = localDateISO(dateObj);
             const day = dateObj.getDay();
             const count = eventCountByDate.get(iso) || 0;
             const holiday = getKoreaHoliday(iso);
@@ -6725,19 +6615,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 .some((x) => String(x).toLowerCase().includes(search)),
             );
           }
-          const activeParts = [];
-          if (search) activeParts.push("search");
-          if (filter !== "all") activeParts.push("range");
-          setOwnedText("schedule", DOM_IDS.scheduleFilterSummary,
-            `${formatCount(allEvents.length)} 표시 · 활성 조건 ${formatCount(activeParts.length)}`);
-          const reset = ownedElement("schedule", DOM_IDS.scheduleFilterReset);
-          if (reset) reset.hidden = filter === "all";
-          setFilterActiveState($(DOM_IDS.scheduleAllSearch), !!search);
-          setFilterActiveState($(DOM_IDS.scheduleFilter), filter !== "all");
+          const filterActive = filter !== "all";
+          const activeCount = updateFilterFeedback("schedule", {
+            summaryDom: DOM_IDS.scheduleFilterSummary,
+            resultCount: allEvents.length,
+            controls: [
+              [$(DOM_IDS.scheduleAllSearch), !!search],
+              [$(DOM_IDS.scheduleFilter), filterActive],
+            ],
+            resetDom: DOM_IDS.scheduleFilterReset,
+            resetActive: filterActive,
+          });
 
           Collection.render("event", allEvents, {
             today: v.today,
-            emptyMessage: v.events.length && activeParts.length ? "현재 검색·필터 조건에 맞는 일정이 없어요." : undefined,
+            emptyMessage: v.events.length && activeCount ? "현재 검색·필터 조건에 맞는 일정이 없어요." : undefined,
           });
         }
         function resetScheduleFilters() {
@@ -6800,23 +6692,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function buildPlanViewData(plans) {
           const counts = Object.fromEntries(PLAN_STATUS_DEFINITIONS.map(status => [status.countKey, 0]));
+          let completed = 0;
           for (const plan of plans) {
             const status = PLAN_STATUS_DEFINITIONS.find(status => status.label === plan.status);
-            if (status) counts[status.countKey]++;
+            if (!status) continue;
+            counts[status.countKey]++;
+            if (status.complete) completed++;
           }
-          const completed = PLAN_STATUS_DEFINITIONS.filter(status => status.complete)
-            .reduce((sum, status) => sum + counts[status.countKey], 0);
           return { ...counts, planTotal: plans.length,
             planDonePct: plans.length ? Math.round((completed / plans.length) * 100) : 0 };
         }
         function PlanCard(item, index, total) {
-          const statusDefinition = PLAN_STATUS_DEFINITIONS.find(status => status.label === item.status);
-          const uiState = statusDefinition?.complete ? "complete" : item.status === "논의 중" ? "active" : "pending";
           const status = SelectControl(PLAN_STATUSES, item.status, {
-            variants: "inline-select plan-status",
+            variants: "inline-select",
             attributes: {
               "aria-label": "부부계획 상태", "data-action": "update-plan", "data-id": item.id,
-              "data-ui-state": uiState,
             },
           });
           const actions = SortableCardActions(item.id, index, total, "plan", COLLECTION_SCHEMAS.plan.label, status);
@@ -6840,35 +6730,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const query = queryLabel.toLowerCase();
           const items = view.memos.filter((item) => !query || item.text.toLowerCase().includes(query));
           const positions = new Map(view.memos.map((item, index) => [String(item.id), index]));
-          setOwnedText("memos", DOM_IDS.memoSearchSummary,
-            `${formatCount(items.length)} 표시 · 활성 조건 ${formatCount(query ? 1 : 0)}`);
-          setFilterActiveState($(DOM_IDS.memoSearch), !!query);
+          updateFilterFeedback("memos", {
+            summaryDom: DOM_IDS.memoSearchSummary,
+            resultCount: items.length,
+            controls: [[$(DOM_IDS.memoSearch), !!query]],
+          });
           setOwnedHTML("memos", COLLECTION_SCHEMAS.memo.target,
             List(items, (item) => MemoCard(item, positions.get(String(item.id)), view.memos.length),
               query ? `“${summarizeSearchQuery(queryLabel)}” 검색 결과가 없어요.` : COLLECTION_SCHEMAS.memo.empty, "", query ? "search" : "empty"));
-          autosizeTextarea($(DOM_IDS.quickMemo));
-        }
-        function autosizeTextarea(element) {
-          if (!(element instanceof HTMLTextAreaElement)) return;
-          const style = getComputedStyle(element);
-          const minHeight = parseFloat(style.minHeight) || 0;
-          const borderY = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
-          element.style.setProperty("--field-autosize-height", `${minHeight}px`);
-          const contentHeight = Math.ceil(element.scrollHeight + borderY);
-          element.style.setProperty("--field-autosize-height", `${Math.max(minHeight, contentHeight)}px`);
-        }
-        function saveMemo() {
-          const data = { text: $("quickMemo")?.value.trim() || "" };
-          const error = validateFormData(FORM_SCHEMAS.memo, data);
-          if (error) {
-            notifyError(error);
-            return false;
-          }
-          if (!Collection.write("memo", null, data)) return false;
-          setOwnedValue("memos", "quickMemo", "");
-          autosizeTextarea($(DOM_IDS.quickMemo));
-          notifySuccess("메모를 저장했어요.");
-          return true;
         }
 
         // ===== 05 DOMAIN / Home and derived view data =====
@@ -6914,12 +6783,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function renderBudgetSummary(view) {
           const { budgetPlan: plan, budgetActual: actual, budgetOver: over, budgetPct: pct } = view;
-          setOwnedText("budgetSummary", DOM_IDS.totalPlan, wonUnit(plan));
-          setOwnedText("budgetSummary", DOM_IDS.totalActual, wonUnit(actual));
-          setOwnedText("budgetSummary", DOM_IDS.overBudget, wonUnit(over));
+          setOwnedText("budgetSummary", DOM_IDS.totalPlan, won(plan));
+          setOwnedText("budgetSummary", DOM_IDS.totalActual, won(actual));
+          setOwnedText("budgetSummary", DOM_IDS.overBudget, won(over));
           setOwnedText("budgetSummary", DOM_IDS.budgetPctBig, formatPercent(pct));
-          setOwnedText("budgetSummary", DOM_IDS.homeTotalPlan, "/ " + wonUnit(plan));
-          setOwnedText("budgetSummary", DOM_IDS.homeTotalActual, wonUnit(actual));
+          setOwnedText("budgetSummary", DOM_IDS.homeTotalPlan, "/ " + won(plan));
+          setOwnedText("budgetSummary", DOM_IDS.homeTotalActual, won(actual));
           setOwnedText("budgetSummary", DOM_IDS.homeBudgetPct, formatPercent(pct));
           [
             ownedElement("budgetSummary", DOM_IDS.budgetGaugeProgress),
@@ -11377,7 +11246,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
           Memos: {
             render: renderMemos,
-            save: saveMemo,
+            save: (id) => { Collection.save("memo", id); },
             saveEdit: (id) => { Collection.save("memo", id); },
             edit: (id) => Collection.edit("memo", id),
             remove: (id) => Collection.remove("memo", id),
@@ -11442,9 +11311,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
         // ===== UTILITIES / dates, numbers and identifiers =====
         function won(n) {
-          return wonUnit(n);
-        }
-        function wonUnit(n) {
           return moneyFmt.format(num(n)) + " 원";
         }
         function num(v) {
@@ -11482,11 +11348,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const query = String(value || "").trim();
           if (!query) return "";
           return query.length > maxLength ? `${query.slice(0, maxLength)}…` : query;
-        }
-        function setFilterActiveState(element, active) {
-          if (!(element instanceof HTMLElement)) return;
-          if (active) element.setAttribute("data-filter-active", "true");
-          else element.removeAttribute("data-filter-active");
         }
         function clearSearchControl(button) {
           const named = button?.dataset?.searchDom;
