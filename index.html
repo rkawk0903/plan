@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v492
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v501
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -118,7 +118,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-p+cJbkBvIyiNOGuqyJVHkTclbs8dx7VA4qXO7QxznRI=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-NXMvCykHbPE4V+Wj30Fp8y27h5h4nQ/jLxUcfAPpAdI='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-1pno9bJWutSggU7MIina1J0A5f+tbJ/p56E0T+TWIpc=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-ScEoVJKPwmZzIVIScXkVsaX7QRzxxLMGiDTGFnIKHTU='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -1776,21 +1776,29 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-weight: var(--collection-meta-font-weight);
         line-height: 1.3;
       }
-      .collection-row__meta-item {
+      .collection-meta-item {
         min-width: 0;
       }
-      .collection-row__meta-item + .collection-row__meta-item::before {
+      .collection-meta-item + .collection-meta-item::before {
         content: "·";
         margin: 0 var(--collection-copy-gap);
         color: color-mix(in srgb, var(--muted) 54%, transparent);
       }
       .collection-row__title {
         min-width: 0;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: var(--collection-copy-gap);
         overflow-wrap: anywhere;
         color: var(--ink);
         font-size: var(--collection-title-size);
         font-weight: var(--collection-title-weight);
         line-height: 1.42;
+      }
+      .collection-row__title-text {
+        min-width: 0;
+        overflow-wrap: anywhere;
       }
       .collection-row__note {
         display: block;
@@ -1809,6 +1817,76 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         width: var(--collection-action-width);
         align-items: flex-start;
         justify-content: flex-end;
+      }
+
+      /* Shared budget/plan/memo collection item: content hierarchy + top-right actions. */
+      .collection-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        column-gap: var(--collection-row-gap);
+        padding: var(--collection-row-padding);
+        min-width: 0;
+      }
+      .collection-item:not(.has-actions) {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .collection-item__content,
+      .collection-item__heading,
+      .collection-item__body {
+        min-width: 0;
+      }
+      .collection-item__heading {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .collection-item__title {
+        min-width: 0;
+        color: var(--ink);
+        font-size: var(--collection-title-size);
+        font-weight: var(--collection-title-weight);
+        line-height: 1.42;
+        overflow-wrap: anywhere;
+      }
+      .collection-item__meta {
+        display: flex;
+        min-width: 0;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2) var(--space-3);
+        margin-top: var(--collection-copy-gap);
+        color: var(--muted);
+        font-size: var(--collection-meta-font-size);
+        font-weight: var(--collection-meta-font-weight);
+        line-height: 1.35;
+      }
+      .collection-item__body {
+        margin-top: var(--collection-row-gap);
+      }
+      .collection-item__body-label {
+        display: block;
+        margin-bottom: var(--collection-copy-gap);
+        color: var(--text-tertiary);
+        font-size: var(--font-caption);
+        font-weight: var(--weight-semibold);
+        line-height: 1.35;
+      }
+      .collection-item__note {
+        color: color-mix(in srgb, var(--muted) 86%, transparent);
+        font-size: var(--collection-note-size);
+        font-weight: var(--weight-regular);
+        line-height: 1.55;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .collection-item__actions {
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        gap: var(--card-action-gap);
+        min-width: 0;
       }
 
 /* Continuous-corner behavior is owned by each component base/variant.
@@ -2110,6 +2188,36 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .collection-row--event {
         --collection-leading-color: var(--text-secondary);
       }
+      .collection-meta-item--key {
+        display: inline-flex;
+        align-items: center;
+        max-width: min(100%, 150px);
+        padding: 2px 6px;
+        border-radius: var(--radius-compact);
+        corner-shape: var(--corner-shape-continuous);
+        background: color-mix(in srgb, var(--surface-grouped) 94%, var(--accent) 6%);
+        color: var(--muted);
+        font-size: var(--collection-meta-font-size);
+        font-weight: var(--weight-medium);
+        line-height: 1.1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .collection-meta-item--numeric {
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
+        white-space: nowrap;
+      }
+      .collection-meta-item--truncate {
+        max-width: min(100%, 320px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .collection-meta-item--danger {
+        color: var(--state-danger-color);
+      }
       .inner-card--plan-block {
         --inner-card-padding: var(--space-3) var(--space-4);
       }
@@ -2119,6 +2227,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         margin-top: var(--space-1);
         border-top: 1px solid var(--section-divider);
         border-radius: 0;
+      }
+      .collection-item--memo {
+        --collection-item-accent: var(--text-secondary);
+      }
+      .collection-item--memo .collection-item__meta {
+        order: -1;
+        margin-top: 0;
+        margin-bottom: var(--collection-copy-gap);
+      }
+      .collection-item--memo .collection-item__title {
+        font-size: var(--memo-text-font-size);
+        font-weight: var(--weight-regular);
+        line-height: 1.55;
+        white-space: pre-wrap;
       }
       .inner-card--budget-stats {
         --inner-card-padding: 2px 0;
@@ -2661,19 +2783,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .settings-status-note {
         font-size: var(--settings-status-font-size);
       }
-      .memo-item {
-        display: block;
-        padding: var(--collection-row-padding);
-      }
-      .memo-text {
-        margin-top: var(--collection-copy-gap);
-        font-size: var(--memo-text-font-size);
-        line-height: 1.55;
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
-      .memo-content {
-        min-width: 0;
+      .memo-index {
+        color: var(--text-tertiary);
+        font-size: var(--font-caption);
+        font-weight: var(--weight-semibold);
+        letter-spacing: 0.01em;
       }
       .budget-line {
         display: grid;
@@ -2738,42 +2852,49 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
       }
-      .event-date-leading {
+      .event-leading {
         width: 100%;
         min-width: 0;
-        margin-top: 1px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
+        margin-top: 4px;
         color: var(--collection-leading-color);
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
         line-height: 1.1;
       }
-      .event-date-leading-main {
+      .event-leading--date {
+        display: flex;
+        width: max-content;
+        max-width: 100%;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+      }
+      .event-leading-main {
         font-size: var(--font-small);
         font-weight: var(--weight-semibold);
         letter-spacing: -0.015em;
         white-space: nowrap;
       }
-      .event-date-leading-sub {
+      .event-leading-sub {
         color: var(--muted);
         font-size: var(--font-micro);
         font-weight: var(--weight-medium);
       }
-      .collection-row--event .event-meta-time {
-        flex: 0 0 auto;
-        font-variant-numeric: tabular-nums;
-        font-feature-settings: "tnum" 1;
-      }
-      .collection-row--event .event-meta-location {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      .event-leading--time {
+        display: block;
+        padding-top: 1px;
+        color: var(--state-selected-color);
+        font-size: var(--font-small);
+        font-weight: var(--weight-semibold);
+        letter-spacing: -0.015em;
         white-space: nowrap;
       }
-      .planner-event-item-today .event-date-leading-main {
+      .event-leading--empty {
+        color: var(--text-tertiary);
+        font-size: var(--font-micro);
+        font-weight: var(--weight-medium);
+      }
+      .planner-event-item-today .event-leading-main {
         color: var(--state-active-color);
       }
       .task-check {
@@ -2808,19 +2929,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         align-items: center;
         justify-content: center;
       }
-      .collection-row--task .task-category {
-        min-width: 0;
-        max-width: 100%;
-        color: inherit;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .collection-row--task .task-priority--high {
-        color: var(--state-danger-color);
-      }
       .task.done .collection-row__title {
         color: var(--state-complete-muted);
+      }
+      .task.done .collection-row__title-text {
         text-decoration: line-through;
         text-decoration-thickness: 1px;
       }
@@ -3651,7 +3763,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                       class="field field--compact-text field--search"
                       data-dom="scheduleAllSearch"
                       data-action="schedule-search"
-                      placeholder="일정 검색 (제목, 장소, 분류, 메모)"
+                      placeholder="일정 검색 (제목, 장소, 분야, 메모)"
                       type="search"
                     />
                     <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>
@@ -4116,7 +4228,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "492",
+          version: "501",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4512,6 +4624,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           CardFooter: ["", "baseline"],
           InnerCard: ["", "tinted", "raised", "compact", "status-summary", "plan-block", "budget-detail", "budget-stats", "theme-item", "category", "panel", "recovery", "grouped-list", "stacked-list"],
           CollectionRow: ["task", "event"],
+          CollectionMetaItem: ["", "key", "numeric", "truncate", "danger"],
+          CollectionItem: ["memo"],
           Callout: ["warning", "conflict"],
           CardHeader: ["fixed-actions", "flush", "memo"],
           ActionRow: ["wrap", "flush", "compact", "spaced", "dialog", "sheet-dialog", "item", "footer"],
@@ -4674,18 +4788,43 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             });
           });
         }
-        function CollectionRow({ component, variant, leading = "", meta = "", title = "", note = "", actions = "", classes = [], attributes = {} } = {}) {
+        function CollectionMetaItem(label, variant = "") {
+          const classes = ["collection-meta-item", ...uiVariantClasses("CollectionMetaItem", "collection-meta-item", variant)];
+          return `<span data-ui-component="CollectionMetaItem" class="${attr(classes.join(" "))}">${esc(label)}</span>`;
+        }
+        function CollectionRow({ component, variant, leading = "", titleMetaItems = [], metaItems = [], title = "", note = "", actions = "", classes = [], attributes = {} } = {}) {
           const variantClasses = uiVariantClasses("CollectionRow", "collection-row", variant);
           const stateClasses = Array.isArray(classes) ? classes : [classes];
           const className = ["collection-row", ...variantClasses, "list-divided-item", ...stateClasses.filter(Boolean), actions ? "has-actions" : ""].join(" ");
+          const renderMetaItems = (items) => (Array.isArray(items) ? items : [])
+            .filter((item) => item && item.label != null && String(item.label) !== "")
+            .map((item) => CollectionMetaItem(item.label, item.variant || ""))
+            .join("");
+          const titleMeta = renderMetaItems(titleMetaItems);
+          const meta = renderMetaItems(metaItems);
           return `<div data-ui-component="${attr(component)}" data-ui-layout="collection-row" data-ui-row-variant="${attr(variant)}"${htmlAttributes(attributes)} class="${attr(className)}">
             <div class="collection-row__leading">${leading}</div>
             <div class="collection-row__content">
-              <div class="collection-row__title">${title}</div>
+              <div class="collection-row__title"><span class="collection-row__title-text">${title}</span>${titleMeta}</div>
               ${meta ? `<div class="collection-row__meta">${meta}</div>` : ""}
               ${note ? `<div class="collection-row__note">${note}</div>` : ""}
             </div>
             ${actions ? `<div class="collection-row__actions">${actions}</div>` : ""}
+          </div>`;
+        }
+        function CollectionItem({ component, variant, title = "", meta = "", body = "", actions = "", classes = [], attributes = {} } = {}) {
+          const variantClasses = uiVariantClasses("CollectionItem", "collection-item", variant);
+          const stateClasses = Array.isArray(classes) ? classes : [classes];
+          const className = ["collection-item", ...variantClasses, "list-divided-item", ...stateClasses.filter(Boolean), actions ? "has-actions" : ""].join(" ");
+          return `<div data-ui-component="${attr(component)}" data-ui-layout="collection-item" data-ui-item-variant="${attr(variant)}"${htmlAttributes(attributes)} class="${attr(className)}">
+            <div class="collection-item__content">
+              <div class="collection-item__heading">
+                <div class="collection-item__title">${title}</div>
+                ${meta ? `<div class="collection-item__meta">${meta}</div>` : ""}
+              </div>
+              ${body ? `<div class="collection-item__body">${body}</div>` : ""}
+            </div>
+            ${actions ? `<div class="collection-item__actions">${actions}</div>` : ""}
           </div>`;
         }
         function ActionRow(content, variant = "") {
@@ -4863,7 +5002,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 required: "일정 제목을 입력해주세요.", repairEmpty: "(제목 없음)", placeholder: "예: 상견례 장소 예약" },
               { key: "time", id: "eTime", label: "시간", type: "time" },
               { key: "location", id: "eLocation", label: "장소", maxLength: 500, placeholder: "예: 강남 ○○식당" },
-              { key: "category", id: "eCategory", label: "분류", maxLength: 200, placeholder: "예: 상견례 / 웨딩촬영 / 본식" },
+              { key: "category", id: "eCategory", label: "분야", maxLength: 200, placeholder: "예: 상견례 / 웨딩촬영 / 본식" },
               { key: "note", id: "eNote", label: "메모", type: "textarea", maxLength: 2000,
                 placeholder: "준비물, 예약번호, 주차 등" },
             ],
@@ -6448,19 +6587,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function TaskItem(item, { showActions = true } = {}) {
           const done = item.status === "done";
-          const priorityVariant = item.priority === "높음" ? "high" : item.priority === "낮음" ? "low" : "";
           const leading = `<button type="button" class="task-check ${done ? "on" : ""}" aria-label="${done ? "할 일 완료 취소" : "할 일 완료"}"
               aria-pressed="${done ? "true" : "false"}" data-action="toggle-task" data-id="${attr(item.id)}">${done ? "✓" : ""}</button>`;
-          const meta = [
-            item.cat ? `<span class="collection-row__meta-item task-category">${esc(item.cat)}</span>` : "",
-            item.due ? `<span class="collection-row__meta-item task-due">${esc(formatDateCompact(item.due))}</span>` : "",
-            item.priority ? `<span class="collection-row__meta-item task-priority${priorityVariant ? ` task-priority--${priorityVariant}` : ""}">${esc(item.priority)}</span>` : "",
-          ].filter(Boolean).join("");
+          const titleMetaItems = [item.cat ? { label: item.cat, variant: "key" } : null].filter(Boolean);
+          const metaItems = [
+            item.due ? { label: formatDateCompact(item.due), variant: "numeric" } : null,
+            item.priority ? { label: item.priority, variant: item.priority === "높음" ? "danger" : "" } : null,
+          ].filter(Boolean);
           return CollectionRow({
             component: "TaskItem",
             variant: "task",
             leading,
-            meta,
+            titleMetaItems,
+            metaItems,
             title: esc(item.title),
             note: item.memo ? esc(item.memo) : "",
             actions: showActions ? MoreMenu(COLLECTION_SCHEMAS.task.label, item.id, "task", { variant: "quiet" }) : "",
@@ -6543,31 +6682,44 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }
           return { sortedEvents, upcomingEvents, eventCountByDate };
         }
-        function EventItem(e, { today = null, showActions = true, showDate = true } = {}) {
+        const EVENT_LEADING_MODES = Object.freeze(["date", "time"]);
+        function EventLeading(e, mode = "date") {
+          if (!EVENT_LEADING_MODES.includes(mode)) throw new Error(`EventLeading: unsupported mode "${mode}"`);
           const ed = parseLocalDate(e.date);
-          const isToday = today instanceof Date && ed.getTime() === today.getTime();
           const dateLabel = formatDateCompact(e.date);
-          const leading = showDate && !Number.isNaN(ed.getTime())
-            ? `<time class="event-date-leading" datetime="${attr(e.date)}" aria-label="${attr(dateLabel)}">
-                <span class="event-date-leading-main">${String(ed.getMonth() + 1).padStart(2, "0")}.${String(ed.getDate()).padStart(2, "0")}</span>
-                <span class="event-date-leading-sub">${esc(WEEKDAY_SHORT[ed.getDay()])}</span>
+          if (mode === "time") {
+            const timeLabel = String(e.time || "").trim();
+            return timeLabel
+              ? `<time class="event-leading event-leading--time" datetime="${attr(timeLabel)}" aria-label="${attr(`시간 ${timeLabel}`)}">${esc(timeLabel)}</time>`
+              : '<span class="event-leading event-leading--time event-leading--empty" aria-label="시간 미정">미정</span>';
+          }
+          return !Number.isNaN(ed.getTime())
+            ? `<time class="event-leading event-leading--date" datetime="${attr(e.date)}" aria-label="${attr(dateLabel)}">
+                <span class="event-leading-main">${String(ed.getMonth() + 1).padStart(2, "0")}.${String(ed.getDate()).padStart(2, "0")}</span>
+                <span class="event-leading-sub">${esc(`${WEEKDAY_SHORT[ed.getDay()]}요일`)}</span>
               </time>`
             : "";
-          const meta = [
-            e.category ? `<span class="collection-row__meta-item event-category">${esc(e.category)}</span>` : "",
-            e.time ? `<span class="collection-row__meta-item event-meta-time">${esc(e.time)}</span>` : "",
-            e.location ? `<span class="collection-row__meta-item event-meta-location">${esc(e.location)}</span>` : "",
-          ].filter(Boolean).join("");
+        }
+        function EventItem(e, { today = null, showActions = true, leadingMode = "date" } = {}) {
+          const ed = parseLocalDate(e.date);
+          const isToday = today instanceof Date && ed.getTime() === today.getTime();
+          const leading = EventLeading(e, leadingMode);
+          const titleMetaItems = [e.category ? { label: e.category, variant: "key" } : null].filter(Boolean);
+          const metaItems = [
+            e.time && leadingMode !== "time" ? { label: e.time, variant: "numeric" } : null,
+            e.location ? { label: e.location, variant: "truncate" } : null,
+          ].filter(Boolean);
           return CollectionRow({
             component: "EventItem",
             variant: "event",
             leading,
-            meta,
+            titleMetaItems,
+            metaItems,
             title: esc(e.title),
-            note: esc(e.note || "메모 없음"),
+            note: e.note ? esc(e.note) : "",
             actions: showActions ? MoreMenu("일정", e.id, "event", { variant: "quiet" }) : "",
             classes: ["planner-event-item", isToday ? "planner-event-item-today" : ""],
-            attributes: { "data-ui-actions": String(showActions), "data-ui-date": String(showDate) },
+            attributes: { "data-ui-actions": String(showActions), "data-ui-leading": leadingMode },
           });
         }
         function CalendarCell({ iso, day, count, holiday, dayClass, muted, selected, today }) {
@@ -6648,7 +6800,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             "schedule",
             "scheduleList",
             Collection.html("event", selectedEvents, {
-              today: v.today, showDate: false, emptyMessage: "선택한 날짜에 일정이 없어요.",
+              today: v.today, leadingMode: "time", emptyMessage: "선택한 날짜에 일정이 없어요.",
               hostVariant: "stacked-list",
             }),
           );
@@ -6769,12 +6921,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
         // ===== 05 DOMAIN / Memos =====
         function MemoCard(m, index, total) {
-          const heading = CardHeader(`메모 ${total - index}`, "", MoreMenu("메모", "" + m.id, "memo"), "memo");
-          return UIComponentRoot(
-            "MemoCard",
-            "memo-item list-divided-item",
-            `<div class="memo-content">${heading}<div class="memo-text">${esc(m.text || "")}</div></div>`,
-          );
+          return CollectionItem({
+            component: "MemoCard",
+            variant: "memo",
+            title: esc(m.text || ""),
+            meta: `<span class="memo-index">메모 ${total - index}</span>`,
+            actions: MoreMenu("메모", "" + m.id, "memo"),
+            classes: ["memo-item"],
+          });
         }
         function renderMemos(view = getViewData()) {
           const queryLabel = selectedValue("memoSearch").trim();
