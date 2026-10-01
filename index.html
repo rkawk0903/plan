@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v490
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v492
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -118,7 +118,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-7yXw6JDBzsBn2deAJZ3OEKXxiqRqzFjxkxQg/xWMIHo=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-AutzCbWRDcD/hXjMFoeiJQn+kKOGmdkC7AfJyd7mckY='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-p+cJbkBvIyiNOGuqyJVHkTclbs8dx7VA4qXO7QxznRI=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-NXMvCykHbPE4V+Wj30Fp8y27h5h4nQ/jLxUcfAPpAdI='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -230,7 +230,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --modal-padding: var(--space-5);
         --modal-max-height: 88dvh;
         --modal-section-gap: var(--space-5);
-        --modal-content-gap: var(--space-3);
+        --modal-content-gap: var(--space-2);
+        --modal-field-label-gap: 6px;
+        --modal-field-error-gap: var(--space-1);
+        --modal-textarea-min-height: 112px;
         --modal-footer-gap: var(--space-3);
         --modal-divider: 1px solid color-mix(in srgb, var(--surface-border) 72%, transparent);
         --modal-close-size: 36px;
@@ -1241,6 +1244,26 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .calendar-cell.today.holiday .calendar-num {
         color: var(--accent-contrast);
       }
+      .calendar-cell.selected:not(.today) .calendar-num {
+        color: var(--state-selected-color);
+        font-weight: var(--weight-bold);
+      }
+      .selected-date-title {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        color: var(--state-selected-color);
+        font-weight: var(--weight-bold);
+      }
+      .selected-date-title::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        flex: 0 0 7px;
+        border-radius: 50%;
+        background: var(--state-selected-color);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--state-selected-color) 10%, transparent);
+      }
       .calendar-holiday {
         max-width: 100%;
         overflow: hidden;
@@ -1662,7 +1685,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         padding-right: 42px;
       }
       .field-shell--search-block {
-        margin: 4px 0 8px;
+        margin: 0;
       }
       .field-shell--search input[type="search"]::-webkit-search-cancel-button {
         -webkit-appearance: none;
@@ -1685,7 +1708,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         justify-content: space-between;
         gap: var(--space-sm);
         min-height: 0;
-        margin: 0 0 6px;
+        margin: 0;
         /* Reserve the reset lane in every state. Showing the button must not reflow the summary. */
         padding-right: 68px;
       }
@@ -2006,6 +2029,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         border-color: var(--state-complete-border);
       }
       .field--modal-textarea {
+        min-height: var(--modal-textarea-min-height);
         resize: none;
       }
       .field--money {
@@ -2188,6 +2212,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         width: 100%;
         grid-template-columns: minmax(0, 1fr);
       }
+      .form--modal .form-field {
+        gap: 0;
+      }
+      .form--modal .form-field > label {
+        margin-bottom: var(--modal-field-label-gap);
+      }
+      .form--modal .field-error {
+        min-height: calc(var(--field-error-font-size) * 1.35);
+        margin-top: var(--modal-field-error-gap);
+      }
+      .form--modal .field-error:empty {
+        visibility: hidden;
+      }
       /* Empty/search results stay message-only; owning headers already carry the actions. */
       .status-state--empty .status-state-marker { display: none; }
       .status-state--search .status-state-marker { display: none; }
@@ -2237,6 +2274,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
       /* Variant-specific responsive behavior stays with the variant owner.
          Field typography intentionally does not grow on coarse-pointer environments. */
+      @media (min-width: 601px) {
+        .action-row--sheet-dialog > .btn--danger:first-child {
+          margin-right: auto;
+        }
+      }
       @media (max-width: 520px) {
         .inner-card--budget-stats { --inner-card-padding: 2px 0; }
       }
@@ -2334,22 +2376,30 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .between {
         justify-content: space-between;
       }
-      .task-toolbar {
+      .collection-toolbar {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: var(--space-sm);
-        margin: 0;
+        margin: 0 0 6px;
+        min-width: 0;
       }
-      .task-toolbar-controls {
+      .collection-toolbar__controls {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: var(--space-sm);
         align-items: center;
         min-width: 0;
       }
-      .task-toolbar-controls > * {
+      .collection-toolbar__controls--tasks {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .collection-toolbar__controls > * {
         min-width: 0;
         width: 100%;
+      }
+      /* Compatibility aliases remain on the task markup while the shared toolbar owns layout. */
+      .task-toolbar,
+      .task-toolbar-controls {
+        min-width: 0;
       }
       .list {
         display: flex;
@@ -2482,7 +2532,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
       @media (max-width: 380px) {
         .top { gap: 10px; }
-        .task-toolbar-controls,
+        .collection-toolbar__controls,
         .plan-status-grid { gap: 6px; }
         .theme-grid { grid-template-columns: minmax(0, 1fr); }
       }
@@ -3456,8 +3506,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               </div>
             </div>
             <div data-ui-component="CardBody" class="card-body">
-              <div class="task-toolbar">
-                <div class="task-toolbar-controls">
+              <div class="collection-toolbar task-toolbar">
+                <div class="collection-toolbar__controls collection-toolbar__controls--tasks task-toolbar-controls">
                   <select
                     class="field field--compact field--toolbar"
                     aria-label="할 일 분야 필터"
@@ -3560,10 +3610,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 </div>
               </div>
               <div class="schedule-main-item">
-                <div data-ui-component="Card" class="card">
+                <div data-ui-component="Card" class="card selected-date-card">
                   <div data-ui-component="CardHeader" class="card-header">
                     <div class="card-header-copy">
-                      <h3 class="card-title" data-dom="selectedDateTitle">선택한 날짜의 일정</h3>
+                      <h3 class="card-title selected-date-title" data-dom="selectedDateTitle">선택한 날짜의 일정</h3>
                       <div class="card-description">날짜를 누르면 해당 날짜의 일정이 보여요.</div>
                     </div>
                   </div>
@@ -3594,20 +3644,22 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="field-shell field-shell--search field-shell--search-block">
-                  <input
-                    aria-label="전체 일정 검색"
-                    class="field field--compact-text field--search"
-                    data-dom="scheduleAllSearch"
-                    data-action="schedule-search"
-                    placeholder="일정 검색 (제목, 장소, 분류, 메모)"
-                    type="search"
-                  />
-                  <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>
-                </div>
-                <div class="filter-feedback" aria-live="polite">
-                  <span class="filter-feedback-summary" data-dom="scheduleFilterSummary">0개 표시 · 활성 조건 0개</span>
-                  <button class="btn btn--status-action btn--tertiary" data-action="reset-schedule-filters" data-dom="scheduleFilterReset" type="button" hidden>필터 초기화</button>
+                <div class="collection-toolbar">
+                  <div class="field-shell field-shell--search">
+                    <input
+                      aria-label="전체 일정 검색"
+                      class="field field--compact-text field--search"
+                      data-dom="scheduleAllSearch"
+                      data-action="schedule-search"
+                      placeholder="일정 검색 (제목, 장소, 분류, 메모)"
+                      type="search"
+                    />
+                    <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>
+                  </div>
+                  <div class="filter-feedback" aria-live="polite">
+                    <span class="filter-feedback-summary" data-dom="scheduleFilterSummary">0개 표시 · 활성 조건 0개</span>
+                    <button class="btn btn--status-action btn--tertiary" data-action="reset-schedule-filters" data-dom="scheduleFilterReset" type="button" hidden>필터 초기화</button>
+                  </div>
                 </div>
                 <div data-collection="event"></div>
               </div>
@@ -3652,7 +3704,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     data-modal="budget"
                     type="button"
                   >
-                    + 항목 추가
+                    + 예산 항목 추가
                   </button>
                 </div>
               </div>
@@ -3677,7 +3729,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                   data-modal="plan"
                   type="button"
                 >
-                  + 항목 추가
+                  + 계획 추가
                 </button>
               </div>
             </div>
@@ -3704,24 +3756,26 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     data-modal="memo"
                     type="button"
                   >
-                    +메모 추가
+                    + 메모 추가
                   </button>
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div class="field-shell field-shell--search field-shell--search-block">
-                  <input
-                    aria-label="메모 검색"
-                    class="field field--compact-text field--search"
-                    data-dom="memoSearch"
-                    data-action="memo-search"
-                    placeholder="메모 검색"
-                    type="search"
-                  />
-                  <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>
-                </div>
-                <div class="filter-feedback" aria-live="polite">
-                  <span class="filter-feedback-summary" data-dom="memoSearchSummary">0개 표시 · 활성 조건 0개</span>
+                <div class="collection-toolbar">
+                  <div class="field-shell field-shell--search">
+                    <input
+                      aria-label="메모 검색"
+                      class="field field--compact-text field--search"
+                      data-dom="memoSearch"
+                      data-action="memo-search"
+                      placeholder="메모 검색"
+                      type="search"
+                    />
+                    <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>
+                  </div>
+                  <div class="filter-feedback" aria-live="polite">
+                    <span class="filter-feedback-summary" data-dom="memoSearchSummary">0개 표시 · 활성 조건 0개</span>
+                  </div>
                 </div>
                 <div data-ui-component="InnerCard" class="inner-card inner-card--grouped-list" data-collection="memo"></div>
               </div>
@@ -4062,7 +4116,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "490",
+          version: "492",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4541,7 +4595,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const shell = money
             ? `<div class="field-shell field-shell--money">${control}<span class="field-unit" aria-hidden="true">원</span></div>`
             : control;
-          return `<div class="form-field"><label for="${attr(controlId)}">${esc(label)}</label>${shell}<div class="field-error" id="${attr(errorId)}" role="alert" hidden></div></div>`;
+          return `<div class="form-field"><label for="${attr(controlId)}">${esc(label)}</label>${shell}<div class="field-error" id="${attr(errorId)}" role="alert" aria-live="polite"></div></div>`;
         }
         function SelectOptions(options, selected) {
           return options.map((option) => {
@@ -5228,7 +5282,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           body.querySelectorAll('.field[aria-invalid="true"]').forEach((field) => field.removeAttribute("aria-invalid"));
           body.querySelectorAll(".field-error").forEach((message) => {
             message.textContent = "";
-            message.hidden = true;
           });
         }
         function showModalFieldError(field, error) {
@@ -5240,13 +5293,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           control.setAttribute("aria-invalid", "true");
           if (message instanceof HTMLElement) {
             message.textContent = error;
-            message.hidden = false;
           }
           const clear = () => {
             control.removeAttribute("aria-invalid");
             if (message instanceof HTMLElement) {
               message.textContent = "";
-              message.hidden = true;
             }
             control.removeEventListener("input", clear);
             control.removeEventListener("change", clear);
