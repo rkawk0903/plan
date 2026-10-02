@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v501
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v514
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -55,7 +55,7 @@ EDIT MAP — 검색할 이름 / 수정할 곳 / 직접 수정하지 않을 곳
 SOURCE / BUILD
   app/VERSION 파일이 앱 버전의 단일 원천입니다. CSS/JS 결합 순서는 developer/internal/core_build.py의 명시적 manifest가 소유합니다.
   python3 developer/internal/core_build.py                 # 운영: output/index.html + PWA 파일, 테스트 하네스 제외
-  python3 developer/internal/core_build.py --dev           # 개발: output/index.dev.html, 테스트 하네스 포함
+  python3 developer/internal/core_build.py --dev           # 개발: developer/artifacts/dev/index.html, 테스트 하네스 포함
   python3 developer/internal/core_build.py --check         # 운영 결과 재현성 검사
   python3 developer/internal/core_build.py --dev --check   # 개발 결과 재현성 검사
   python3 developer/internal/core_build.py --release       # index.html + manifest + sw.js 배포 zip 생성
@@ -118,7 +118,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-1pno9bJWutSggU7MIina1J0A5f+tbJ/p56E0T+TWIpc=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-ScEoVJKPwmZzIVIScXkVsaX7QRzxxLMGiDTGFnIKHTU='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-ixhmZi/KVcwPOtYyGXfoJiXx/+qHNufwBYMfN/wIq3Y=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-7OLR4Ya7cVGVUXTOWyTkz3xiYxXpEX0hZsBCjb80iQ0='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -158,7 +158,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --text-5xl: 20px;
         --text-6xl: 20px;
         --text-7xl: 22px;
-        --text-8xl: 24px;
 
         /* Semantic typography aliases — components/domains consume these, not literal sizes. */
         --font-body: var(--text-3xl);
@@ -240,10 +239,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --modal-close-offset: -8px;
         --overlay-surface-bg: color-mix(in srgb, var(--card) 99%, var(--bg) 1%);
         --overlay-border: color-mix(in srgb, var(--surface-border) 88%, transparent);
-        --priority-high-bg: color-mix(in srgb, var(--danger) 12%, var(--card));
-        --priority-high-color: color-mix(in srgb, var(--danger) 88%, var(--ink));
-        --priority-low-bg: var(--soft);
-        --priority-low-color: var(--muted);
 
         --layout-max-width: 1040px;
         --layout-bottom-space: 88px;
@@ -260,9 +255,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --space-xs: var(--space-1);
         --space-sm: var(--space-2);
         --space-md: var(--space-3);
-        --space-lg: var(--space-4);
-        --space-xl: var(--space-5);
-        --space-2xl: var(--space-6);
         /* Collection density: repeated rows and nested surfaces share one vertical rhythm. */
         --collection-row-padding-x: var(--space-3);
         --collection-row-padding-y: var(--space-3);
@@ -270,7 +262,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --collection-primary-row-padding-y: var(--space-4);
         --collection-row-gap: var(--space-2);
         --collection-copy-gap: var(--space-1);
-        --collection-meta-gap: var(--space-1);
         --collection-stat-row-min-height: 40px;
         --nested-surface-padding-x: var(--space-3);
         --nested-surface-padding-y: var(--space-2);
@@ -456,8 +447,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         /* Component style APIs: geometry/typography are owned by the base component. */
         --btn-font-weight: var(--weight-semibold);
         --btn-max-width: none;
-        --pill-line-height: 1;
-        --pill-min-height: 24px;
         --progress-bg: var(--accent-soft-2);
         --progress-fill: var(--accent);
         --progress-radius: 999px;
@@ -612,21 +601,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         background: var(--progress-fill, var(--accent));
         border-radius: inherit;
         transition: width var(--motion-enter) var(--ease-settle);
-      }
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        line-height: var(--pill-line-height, 1);
-        font-size: var(--pill-font-size, var(--font-caption));
-        font-weight: var(--pill-font-weight, 400);
-        padding: var(--pill-padding, 5px 8px);
-        border-radius: var(--radius-compact);
-        corner-shape: var(--corner-shape-continuous);
-        background: var(--pill-bg, var(--accent-soft));
-        color: var(--pill-color, var(--accent-ink));
-        min-height: var(--pill-min-height, 24px);
-        box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 6%, transparent), inset 0 1px 0 rgba(255,255,255,.28);
       }
       /* Reusable loading skeletons preserve layout without introducing a spinner-only state. */
       .skeleton-stack {
@@ -1523,11 +1497,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         padding-top: 0;
         border-top: 0;
       }
-      .card-footer-status {
-        min-width: 0;
-        flex: 1 1 0;
-        overflow-wrap: anywhere;
-      }
       .status-state {
         display: grid;
         justify-items: center;
@@ -1684,9 +1653,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .field-shell--search > input[type="search"] {
         padding-right: 42px;
       }
-      .field-shell--search-block {
-        margin: 0;
-      }
       .field-shell--search input[type="search"]::-webkit-search-cancel-button {
         -webkit-appearance: none;
         appearance: none;
@@ -1696,7 +1662,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         opacity: 0;
         pointer-events: none;
       }
-      .field[data-filter-active="true"] {
+      .field[data-filter-active] {
         --field-bg: color-mix(in srgb, var(--accent) 7%, var(--field-fill));
         --field-color: var(--accent-ink);
       }
@@ -1864,22 +1830,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .collection-item__body {
         margin-top: var(--collection-row-gap);
       }
-      .collection-item__body-label {
-        display: block;
-        margin-bottom: var(--collection-copy-gap);
-        color: var(--text-tertiary);
-        font-size: var(--font-caption);
-        font-weight: var(--weight-semibold);
-        line-height: 1.35;
-      }
-      .collection-item__note {
-        color: color-mix(in srgb, var(--muted) 86%, transparent);
-        font-size: var(--collection-note-size);
-        font-weight: var(--weight-regular);
-        line-height: 1.55;
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
-      }
       .collection-item__actions {
         display: flex;
         align-items: flex-start;
@@ -1888,46 +1838,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: var(--card-action-gap);
         min-width: 0;
       }
-
 /* Continuous-corner behavior is owned by each component base/variant.
    This file is intentionally kept as a compatibility slot in the build order;
    compositor-heavy clip/filter fallbacks are forbidden. */
 /* ===== 04 COMPONENT VARIANTS — explicit semantic overrides ===== */
       /* Surface / status variants */
-      .pill--badge {
-        --pill-min-height: 0;
-        --pill-padding: 4px 7px;
-        --pill-font-size: var(--font-micro);
-        --pill-font-weight: var(--weight-semibold);
-      }
-      .pill--high {
-        --pill-bg: var(--priority-high-bg);
-        --pill-color: var(--priority-high-color);
-        --pill-font-weight: var(--weight-extrabold);
-      }
-      .pill--low {
-        --pill-bg: var(--priority-low-bg);
-        --pill-color: var(--priority-low-color);
-        --pill-font-weight: var(--weight-regular);
-      }
-      .pill--task {
-        --pill-min-height: 0;
-        --pill-padding: var(--task-badge-padding);
-        --pill-font-size: var(--task-badge-size);
-        --pill-font-weight: var(--weight-semibold);
-        flex: 0 0 auto;
-        white-space: nowrap;
-        font-variant-numeric: tabular-nums;
-        font-feature-settings: "tnum" 1;
-      }
-      .pill--event-category {
-        flex: 0 0 auto;
-        min-width: 0;
-        max-width: 110px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
 
       /* Button tones. Geometry/placement roles stay orthogonal to tone. */
       .btn--primary {
@@ -2072,11 +1987,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --field-inset: 0 var(--field-padding-x);
         --field-size: var(--field-font-size);
       }
+      .field--clearable {
+        padding-right: 42px;
+      }
       .field--search {
         width: 100%;
-      }
-      .field--search-block {
-        margin: 4px 0 10px;
       }
       .field--compact {
         --field-inset: 0 10px;
@@ -2227,9 +2142,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         margin-top: var(--space-1);
         border-top: 1px solid var(--section-divider);
         border-radius: 0;
-      }
-      .collection-item--memo {
-        --collection-item-accent: var(--text-secondary);
       }
       .collection-item--memo .collection-item__meta {
         order: -1;
@@ -2402,7 +2314,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
       @media (max-width: 520px) {
-        .inner-card--budget-stats { --inner-card-padding: 2px 0; }
       }
       @media (max-width: 380px) {
         .card-header--fixed-actions {
@@ -2889,8 +2800,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         letter-spacing: -0.015em;
         white-space: nowrap;
       }
-      .event-leading--empty {
-        color: var(--text-tertiary);
+      .event-leading--stack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: max-content;
+        max-width: 100%;
+        gap: 2px;
+      }
+      .event-leading-separator {
+        color: var(--muted);
         font-size: var(--font-micro);
         font-weight: var(--weight-medium);
       }
@@ -3283,9 +3202,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
 
       @media (max-width: 520px) {
-        .budget-page-reference {
-          grid-template-columns: minmax(0, 1fr) auto;
-        }
         .budget-page-reference-stat {
           grid-template-columns: 52px minmax(0, 1fr);
           column-gap: 6px;
@@ -4228,7 +4144,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "501",
+          version: "514",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4617,7 +4533,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         const UI_VARIANTS = Object.freeze({
           Button: ["", "primary", "tertiary", "danger"],
-          Field: ["compact", "compact-text", "inline-select", "search", "search-block", "modal-textarea", "money", "sync", "sync-code", "join-code", "toolbar"],
+          Field: ["compact", "compact-text", "inline-select", "search", "modal-textarea", "money", "sync", "sync-code", "join-code", "toolbar", "clearable"],
           IconControl: ["reorder", "calendar-nav", "modal-close", "field-clear"],
           Card: [""],
           CardBody: ["", "fill-stack", "budget-reference"],
@@ -4630,7 +4546,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           CardHeader: ["fixed-actions", "flush", "memo"],
           ActionRow: ["wrap", "flush", "compact", "spaced", "dialog", "sheet-dialog", "item", "footer"],
           Toast: ["", "success", "error"],
-          Pill: ["badge", "high", "low", "task", "event-category"],
           Progress: ["summary", "category"],
           Form: ["settings-stack", "modal"],
           StatusState: ["empty", "search", "complete", "error", "loading"],
@@ -4643,7 +4558,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           nav: "btn--nav",
           "theme-swatch": "btn--theme-swatch",
         });
-        const MULTI_UI_VARIANT_COMPONENTS = new Set(["ActionRow", "CardHeader", "Field", "InnerCard", "Pill"]);
+        const MULTI_UI_VARIANT_COMPONENTS = new Set(["ActionRow", "CardHeader", "Field", "InnerCard"]);
         function uiVariantNames(component, value = "") {
           const allowed = UI_VARIANTS[component];
           const raw = String(value ?? "").trim();
@@ -4688,6 +4603,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const money = type === "money";
           const variants = [];
           if (money) variants.push("money");
+          if (field.clearable) variants.push("clearable");
           if (type === "textarea") variants.push("modal-textarea");
           if (field.variant) variants.push(...String(field.variant).trim().split(/\s+/).filter(Boolean));
           const fieldVariantClasses = uiVariantClasses("Field", "field", variants.join(" "));
@@ -4708,7 +4624,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           })}>`;
           const shell = money
             ? `<div class="field-shell field-shell--money">${control}<span class="field-unit" aria-hidden="true">원</span></div>`
-            : control;
+            : field.clearable
+              ? `<div class="field-shell">${control}<button type="button" class="icon-control icon-control--field-clear" data-action="clear-field" data-field-dom="${attr(id)}" aria-label="${attr(`${label} 지우기`)}" title="${attr(`${label} 지우기`)}"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button></div>`
+              : control;
           return `<div class="form-field"><label for="${attr(controlId)}">${esc(label)}</label>${shell}<div class="field-error" id="${attr(errorId)}" role="alert" aria-live="polite"></div></div>`;
         }
         function SelectOptions(options, selected) {
@@ -4752,9 +4670,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function CardFooter(content, variant = "") {
           return UIComponentRoot("CardFooter", ["card-footer-row", ...uiVariantClasses("CardFooter", "card-footer-row", variant)].join(" "), content);
-        }
-        function Pill(label, variant = "") {
-          return `<span class="${["pill", ...uiVariantClasses("Pill", "pill", variant)].join(" ")}">${esc(label)}</span>`;
         }
         function Progress(value, variant = "") {
           return `<div class="${["progress", ...uiVariantClasses("Progress", "progress", variant)].join(" ")}"><i data-progress-value="${attr(value)}"></i></div>`;
@@ -5000,7 +4915,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 invalid: "날짜가 올바른 날짜인지 확인해주세요." },
               { key: "title", id: "eTitle", label: "일정", maxLength: 500,
                 required: "일정 제목을 입력해주세요.", repairEmpty: "(제목 없음)", placeholder: "예: 상견례 장소 예약" },
-              { key: "time", id: "eTime", label: "시간", type: "time" },
+              { key: "time", id: "eTime", label: "시작 시간", type: "time", clearable: true },
+              { key: "endTime", id: "eEndTime", label: "종료 시간 (선택)", type: "time", clearable: true,
+                validate: (value, item) => value && !item.time ? "종료 시간을 지정하려면 시작 시간도 입력해주세요." : "" },
               { key: "location", id: "eLocation", label: "장소", maxLength: 500, placeholder: "예: 강남 ○○식당" },
               { key: "category", id: "eCategory", label: "분야", maxLength: 200, placeholder: "예: 상견례 / 웨딩촬영 / 본식" },
               { key: "note", id: "eNote", label: "메모", type: "textarea", maxLength: 2000,
@@ -5103,7 +5020,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             "close-modal": onClick(() => requestCloseModal()),
             "confirm-accept": onClick(() => settleAppConfirm(true)),
             "confirm-cancel": onClick(() => settleAppConfirm(false)),
-            "clear-search": onClick((el) => clearSearchControl(el)),
+            "clear-search": onClick((el) => clearFieldControl(el)),
+            "clear-field": onClick((el) => clearFieldControl(el)),
           },
           Home: {
             "move-category": onClick((el) =>
@@ -5280,7 +5198,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const result = saveFormBySchema(name, id);
             if (!result) return null;
             const schema = this.schema(name);
-            closeModal({ force: true });
+            closeModal();
             schema.afterSave?.(result.item);
             if (result.changed) notifySuccess(schema.feedback?.saved || `${schema.label} 저장을 완료했어요.`);
             else notifyInfo("변경된 내용이 없어요.");
@@ -5294,6 +5212,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           },
           async remove(name, id) {
             const schema = this.schema(name);
+            const generation = modalGeneration;
             if (!(await appConfirm(UI_CONFIG.text.confirmDelete, {
               title: "삭제 확인", confirmText: "삭제", danger: true,
             }))) return false;
@@ -5301,7 +5220,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               draft[schema.stateKey] = removeById(getCollectionFrom(draft, schema.stateKey), id);
             }, schema.view, `${schema.label} 삭제`);
             if (committed) {
-              if (schema.closeOnDelete) closeModal({ force: true });
+              if (schema.closeOnDelete) closeModal({ generation });
               schema.afterRemove?.();
               const deletionState = state;
               notifySuccess(schema.feedback?.deleted || `${schema.label} 삭제를 완료했어요.`, {
@@ -5390,7 +5309,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             ...Object.fromEntries(schema.fields.map((field) => [field.key, normalizeField(field, source[field.key])])),
           };
         }
-        function validateField(field, value, forForm = false) {
+        function validateField(field, value, forForm = false, data = {}) {
           if (forForm && field.required && !String(value ?? "").trim()) return field.required;
           if (field.maxLength && String(value || "").length > field.maxLength)
             return `${field.label || field.key}: ${field.maxLength}자 이하로 입력해주세요.`;
@@ -5403,17 +5322,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         if (field.type === "money" && Number(value) > APP_CONFIG.maxMoneyValue)
           return `${field.label || field.key}: ${moneyFmt.format(APP_CONFIG.maxMoneyValue)}원 이하로 입력해주세요.`;
           if (field.options && !field.options.includes(value)) return `${field.label || field.key} 값이 올바르지 않습니다.`;
-          return field.validate?.(value) || "";
+          return field.validate?.(value, data) || "";
         }
         function validateFieldsDetailed(fields, data, forForm = false) {
           for (const field of fields) {
-            const error = validateField(field, data[field.key], forForm);
+            const error = validateField(field, data[field.key], forForm, data);
             if (error) return { field, error };
           }
           return { field: null, error: "" };
-        }
-        function validateFields(fields, data, forForm = false) {
-          return validateFieldsDetailed(fields, data, forForm).error;
         }
         function clearModalFieldErrors() {
           const body = document.getElementById(DOM_IDS.modalBody);
@@ -5799,7 +5715,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return false;
           });
         }
-        function releaseModalAction(el) {
+        function releaseModalAction(el, token) {
+          // An old Promise must not release a newly opened dialog's action.
+          if (modalActionToken !== token) return;
+          modalActionToken = null;
           modalActionBusy = false;
           const modal = $(DOM_IDS.modal);
           if (modal?.classList.contains("open") && el?.isConnected) el.disabled = false;
@@ -5807,6 +5726,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function runModalAction(el, handler, action) {
           const modal = $(DOM_IDS.modal);
           if (!modal?.classList.contains("open") || modalActionBusy) return false;
+          const token = {};
+          modalActionToken = token;
           modalActionBusy = true;
           el.disabled = true;
           let result;
@@ -5814,14 +5735,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             result = handler(el);
           } catch (error) {
             reportActionError(error, action);
-            releaseModalAction(el);
+            releaseModalAction(el, token);
             return true;
           }
           const reported = reportActionResult(result, action);
           if (reported && typeof reported.then === "function") {
-            void Promise.resolve(reported).finally(() => releaseModalAction(el));
+            void Promise.resolve(reported).finally(() => releaseModalAction(el, token));
           } else {
-            queueMicrotask(() => releaseModalAction(el));
+            queueMicrotask(() => releaseModalAction(el, token));
           }
           return true;
         }
@@ -6112,6 +6033,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
         // ===== 04 ENGINES / modal, confirmation and notification =====
         let modalActionBusy = false;
+        let modalActionToken = null;
+        let modalGeneration = 0;
         let modalPreviousFocus = null;
         let modalInitialSnapshot = "";
         let modalEditBaseline = null;
@@ -6199,6 +6122,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const body = MODAL_RENDERERS[type]?.(data) ?? null;
           if (body === null) return;
           const alreadyOpen = $(DOM_IDS.modal)?.classList.contains("open");
+          const generation = ++modalGeneration;
           FloatingMenu.close({ restoreFocus: true });
           modalPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
           setOwnedHTML("modal", DOM_IDS.modalBody, body);
@@ -6208,14 +6132,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (original) modalEditBaseline = { name: type, id: String(id), item: cloneValue(original) };
           }
           modalActionBusy = false;
+          modalActionToken = null;
           renderModalShell({ open: true, labelledBy: null });
           if (!alreadyOpen) pushModalHistoryEntry();
           requestAnimationFrame(() => {
+            if (generation !== modalGeneration) return;
             modalInitialSnapshot = modalFormSnapshot();
             focusModalInitial();
           });
         }
-        function closeModal() {
+        function closeModal({ generation = modalGeneration } = {}) {
+          if (generation !== modalGeneration) return false;
+          modalGeneration += 1;
           if (modalHistoryToken) {
             const token = modalHistoryToken;
             modalHistoryToken = null;
@@ -6223,6 +6151,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }
           renderModalShell({ open: false, labelledBy: null });
           modalActionBusy = false;
+          modalActionToken = null;
           const previous = modalPreviousFocus;
           modalPreviousFocus = null;
           modalInitialSnapshot = "";
@@ -6232,10 +6161,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function requestCloseModal() {
           if (!modalHasUnsavedChanges()) return closeModal();
+          const generation = modalGeneration;
           void appConfirm(
             "작성 중인 내용이 있어요. 저장하지 않고 닫을까요?",
             { title: "작성 내용 버리기", confirmText: "닫기", danger: true },
-          ).then((accepted) => { if (accepted) closeModal(); });
+          ).then((accepted) => { if (accepted) closeModal({ generation }); });
           return false;
         }
         function handleModalKeydown(event) {
@@ -6682,17 +6612,31 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }
           return { sortedEvents, upcomingEvents, eventCountByDate };
         }
+        function eventTimeLabel(event) {
+          const start = String(event.time || "").trim();
+          const end = String(event.endTime || "").trim();
+          return start ? (end ? `${start}~${end}` : start) : "하루 종일";
+        }
         const EVENT_LEADING_MODES = Object.freeze(["date", "time"]);
         function EventLeading(e, mode = "date") {
           if (!EVENT_LEADING_MODES.includes(mode)) throw new Error(`EventLeading: unsupported mode "${mode}"`);
+          if (mode === "time") {
+            const start = String(e.time || "").trim();
+            const end = String(e.endTime || "").trim();
+            if (start && !end) {
+              return `<time class="event-leading event-leading--time" datetime="${attr(start)}" aria-label="${attr(`시간 ${start}`)}">${esc(start)}</time>`;
+            }
+            const label = start ? `시간 ${start}부터 ${end}까지` : "하루 종일";
+            const first = start ? `<time datetime="${attr(start)}">${esc(start)}</time>` : "<span>하루</span>";
+            const last = start ? `<time datetime="${attr(end)}">${esc(end)}</time>` : "<span>종일</span>";
+            return `<span class="event-leading event-leading--time event-leading--stack" aria-label="${attr(label)}">
+              ${first}
+              ${start ? '<span class="event-leading-separator" aria-hidden="true">-</span>' : ""}
+              ${last}
+            </span>`;
+          }
           const ed = parseLocalDate(e.date);
           const dateLabel = formatDateCompact(e.date);
-          if (mode === "time") {
-            const timeLabel = String(e.time || "").trim();
-            return timeLabel
-              ? `<time class="event-leading event-leading--time" datetime="${attr(timeLabel)}" aria-label="${attr(`시간 ${timeLabel}`)}">${esc(timeLabel)}</time>`
-              : '<span class="event-leading event-leading--time event-leading--empty" aria-label="시간 미정">미정</span>';
-          }
           return !Number.isNaN(ed.getTime())
             ? `<time class="event-leading event-leading--date" datetime="${attr(e.date)}" aria-label="${attr(dateLabel)}">
                 <span class="event-leading-main">${String(ed.getMonth() + 1).padStart(2, "0")}.${String(ed.getDate()).padStart(2, "0")}</span>
@@ -6706,7 +6650,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const leading = EventLeading(e, leadingMode);
           const titleMetaItems = [e.category ? { label: e.category, variant: "key" } : null].filter(Boolean);
           const metaItems = [
-            e.time && leadingMode !== "time" ? { label: e.time, variant: "numeric" } : null,
+            leadingMode !== "time" ? { label: eventTimeLabel(e), variant: e.time ? "numeric" : "" } : null,
             e.location ? { label: e.location, variant: "truncate" } : null,
           ].filter(Boolean);
           return CollectionRow({
@@ -6813,7 +6757,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           else if (filter === "past") allEvents = allEvents.filter((e) => parseLocalDate(e.date) < v.today);
           if (search) {
             allEvents = allEvents.filter((e) =>
-              [e.title, e.date, e.time, e.location, e.category, e.note]
+              [e.title, e.date, eventTimeLabel(e), e.location, e.category, e.note]
                 .filter(Boolean)
                 .some((x) => String(x).toLowerCase().includes(search)),
             );
@@ -7118,13 +7062,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             "결혼식 날짜 저장",
           );
           if (committed) {
-            closeModal({ force: true });
+            closeModal();
             if (changed) notifySuccess("결혼식 날짜를 저장했어요.");
             else notifyInfo("변경된 날짜가 없어요.");
           }
           return committed;
         }
-
         // ===== 05 DOMAIN / Theme and Settings =====
         function themeData() {
           return { ...THEME_DEFAULTS, ...state.theme };
@@ -8749,11 +8692,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }
         }
         async function sharedUpdatePassword() {
+          const generation = modalGeneration;
           try {
             if (!(await ensureSharedClient()) || !sharedSync.user) {
               notifyError("먼저 로그인해주세요.");
               return false;
             }
+            if (generation !== modalGeneration) return false;
             const password = modalValue(DOM_IDS.syncNewPasswordModal);
             const passwordConfirm = modalValue(DOM_IDS.syncNewPasswordConfirmModal);
             if (password.length < 8) {
@@ -8766,7 +8711,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             }
             const { error } = await sharedSync.client.auth.updateUser({ password });
             if (error) throw error;
-            closeModal();
+            closeModal({ generation });
             notifySuccess("비밀번호를 변경했어요.");
             return true;
           } catch (e) {
@@ -8788,6 +8733,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return true;
         }
         async function sharedConfirmDeleteAccount() {
+          const generation = modalGeneration;
           if (!sharedSync.client || !sharedSync.user) {
             notifyError("먼저 로그인해주세요.");
             return false;
@@ -8809,7 +8755,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             });
             if (error) throw error;
             if (data && data.ok === false) throw new Error(data.error || "계정 삭제에 실패했어요.");
-            closeModal();
+            closeModal({ generation });
             const localCleared = clearLocalPlannerUserData();
             const lastUserCleared = storageRemove(APP_CONFIG.sharedLastUserKey);
             const sharedConfigCleared = storageRemove(APP_CONFIG.sharedKey);
@@ -9244,6 +9190,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return true;
         }
         async function sharedConfirmLeaveProject() {
+          const generation = modalGeneration;
           if (!sharedSync.client || !sharedSync.user || !sharedSync.projectId) {
             notifyError("먼저 공동 프로젝트 연결 상태를 확인해주세요.");
             return false;
@@ -9260,7 +9207,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             });
             if (error) throw error;
             if (data && data.ok === false) throw new Error(data.error || "프로젝트에서 나가지 못했어요.");
-            closeModal();
+            closeModal({ generation });
             await sharedRemoveChannel();
             const localCleared = clearLocalPlannerUserData();
             const pendingCleared = clearSharedPendingSave();
@@ -10520,7 +10467,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               else seen.add(idKey);
 
               for (const field of lenient ? [] : rule.fields) {
-                const error = validateField(field, item[field.key]);
+                const error = validateField(field, item[field.key], false, item);
                 if (error) addIssue(`${key}[${index}].${field.key}: ${error}`);
               }
             }
@@ -11554,12 +11501,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (!query) return "";
           return query.length > maxLength ? `${query.slice(0, maxLength)}…` : query;
         }
-        function clearSearchControl(button) {
-          const named = button?.dataset?.searchDom;
-          const input = named ? $(DOM_IDS[named] || named) : button?.closest(".field-shell--search")?.querySelector('input[type="search"]');
+        function clearFieldControl(button) {
+          const named = button?.dataset?.fieldDom || button?.dataset?.searchDom;
+          const input = named ? $(DOM_IDS[named] || named) : button?.closest(".field-shell")?.querySelector("input");
           if (!(input instanceof HTMLInputElement)) return false;
           input.value = "";
           input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.dispatchEvent(new Event("change", { bubbles: true }));
           input.focus({ preventScroll: true });
           return true;
         }
