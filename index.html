@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v514
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v515
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -118,7 +118,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-ixhmZi/KVcwPOtYyGXfoJiXx/+qHNufwBYMfN/wIq3Y=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-7OLR4Ya7cVGVUXTOWyTkz3xiYxXpEX0hZsBCjb80iQ0='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-FBpMxoyFIuZ8ZBpvuf3vR74Os0uTBzBTc/StrdXZ73w=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-7OLR4Ya7cVGVUXTOWyTkz3xiYxXpEX0hZsBCjb80iQ0='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -4144,7 +4144,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "514",
+          version: "515",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -6623,16 +6623,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (mode === "time") {
             const start = String(e.time || "").trim();
             const end = String(e.endTime || "").trim();
-            if (start && !end) {
+            if (!start) return '<span class="event-leading event-leading--time" aria-label="하루 종일">종일</span>';
+            if (!end) {
               return `<time class="event-leading event-leading--time" datetime="${attr(start)}" aria-label="${attr(`시간 ${start}`)}">${esc(start)}</time>`;
             }
-            const label = start ? `시간 ${start}부터 ${end}까지` : "하루 종일";
-            const first = start ? `<time datetime="${attr(start)}">${esc(start)}</time>` : "<span>하루</span>";
-            const last = start ? `<time datetime="${attr(end)}">${esc(end)}</time>` : "<span>종일</span>";
-            return `<span class="event-leading event-leading--time event-leading--stack" aria-label="${attr(label)}">
-              ${first}
-              ${start ? '<span class="event-leading-separator" aria-hidden="true">-</span>' : ""}
-              ${last}
+            return `<span class="event-leading event-leading--time event-leading--stack" aria-label="${attr(`시간 ${start}부터 ${end}까지`)}">
+              <time datetime="${attr(start)}">${esc(start)}</time>
+              <span class="event-leading-separator" aria-hidden="true">-</span>
+              <time datetime="${attr(end)}">${esc(end)}</time>
             </span>`;
           }
           const ed = parseLocalDate(e.date);
