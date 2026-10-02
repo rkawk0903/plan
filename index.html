@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v515
+우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v519
 
 CURRENT ARCHITECTURE
   CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
@@ -118,7 +118,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-FBpMxoyFIuZ8ZBpvuf3vR74Os0uTBzBTc/StrdXZ73w=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-7OLR4Ya7cVGVUXTOWyTkz3xiYxXpEX0hZsBCjb80iQ0='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-TPkCvvRv/8uW4t3u6F2sPV7wpL4o23/LYwKh6gkUNVA=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-sHSttIZ7be0mdk+hmJcXJv6WZDL4I5T4rGhc/YPcYAs='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -194,9 +194,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --collection-leading-width: 36px;
         --collection-title-size: var(--text-2xl);
         --collection-title-weight: var(--weight-semibold);
-        --collection-meta-font-size: var(--font-caption);
-        --collection-meta-font-weight: var(--weight-medium);
-        --collection-note-size: var(--font-small);
+        --collection-meta-font-size: var(--text-md);
+        --collection-meta-font-weight: var(--weight-regular);
+        --collection-note-size: 13px;
         --collection-action-width: var(--control-height);
         --task-badge-size: var(--font-micro);
         --task-badge-padding: var(--space-1) var(--space-2);
@@ -269,7 +269,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --card-content-padding: var(--space-5);
         /* CONTROL GEOMETRY — one normal height and one deliberate large-action height. */
         --control-height: clamp(34px, 3.4vw, 38px);
-        --control-height-large: 40px;
+        --control-height-large: 44px;
         --touch-hit-slop: 2px;
         --touch-icon-hit-slop: 4px;
         --icon-glyph-size-sm: var(--text-lg);
@@ -346,6 +346,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --state-complete-color: var(--good-ink);
         --state-complete-muted: color-mix(in srgb, var(--good) 22%, var(--muted));
         --state-disabled-opacity: 0.58;
+        --state-pressed-opacity: 0.84;
         --state-disabled-bg: color-mix(in srgb, var(--field-fill) 82%, var(--bg) 18%);
         --state-disabled-color: color-mix(in srgb, var(--muted) 94%, var(--ink));
         --state-warning-bg: color-mix(in srgb, var(--warning) 10%, var(--card));
@@ -421,7 +422,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --status-state-padding: var(--space-5) var(--space-3);
         --status-state-gap: var(--space-2);
         --status-state-marker-size: 28px;
-        --status-state-title-size: var(--font-small);
+        --status-state-title-size: var(--text-xl);
         --status-state-message-size: var(--font-small);
         --card-section-gap: var(--page-section-gap);
         --action-row-gap: var(--space-2);
@@ -508,6 +509,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           :focus-visible
         ) {
         outline: none;
+      }
+      @keyframes ui-enter {
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
 /* ===== 03 COMPONENTS — navigation control layer ===== */
       .nav-sticky-shield {
@@ -661,6 +666,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         cursor: not-allowed;
         box-shadow: none;
       }
+      .btn[aria-busy="true"] {
+        cursor: progress;
+        opacity: 0.72;
+      }
       @media (hover: hover) and (pointer: fine) {
         .btn:not(:disabled):hover {
           background: var(--btn-hover-bg, var(--btn-bg, color-mix(in srgb, var(--accent) 4%, var(--button-secondary-bg))));
@@ -669,7 +678,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
       .btn:not(:disabled):active {
-        opacity: 0.86;
+        opacity: var(--state-pressed-opacity);
+        background: var(--btn-active-bg, var(--row-pressed));
         box-shadow: var(--btn-active-shadow, 0 1px 2px rgba(20, 20, 22, 0.018));
       }
       .icon-control {
@@ -711,7 +721,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
       .icon-control:not(:disabled):active {
-        opacity: 0.82;
+        opacity: var(--state-pressed-opacity);
         background: var(--icon-control-active-bg, var(--icon-control-bg, var(--compact-control-bg)));
         box-shadow: var(--icon-control-active-shadow, 0 1px 2px rgba(20, 20, 22, 0.018));
       }
@@ -803,14 +813,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         background: var(--reorder-control-hover-bg);
       }
       @media (hover: hover) and (pointer: fine) {
-        .more-menu-trigger:hover {
+        .more-menu-trigger:not(:disabled):hover {
           color: var(--ink);
           border-color: var(--reorder-control-hover-border);
           background: var(--reorder-control-hover-bg);
         }
       }
-      .more-menu-trigger:active {
-        opacity: 0.82;
+      .more-menu-trigger:not(:disabled):active {
+        opacity: var(--state-pressed-opacity);
         background: var(--reorder-control-hover-bg);
         border-color: var(--reorder-control-hover-border);
       }
@@ -827,21 +837,26 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         border-color: transparent;
         background: transparent;
         box-shadow: none;
-        opacity: 0.52;
+        color: var(--text-secondary);
       }
       .more-menu--quiet.is-open > .more-menu-trigger,
       .more-menu--quiet > .more-menu-trigger:focus-visible {
-        opacity: 1;
+        background: var(--row-hover);
+        color: var(--ink);
       }
       @media (hover: hover) and (pointer: fine) {
-        .more-menu--quiet > .more-menu-trigger:hover {
-          opacity: 1;
+        .more-menu--quiet > .more-menu-trigger:not(:disabled):hover {
+          background: var(--row-hover);
+          color: var(--ink);
         }
       }
-      @media (hover: none), (pointer: coarse) {
-        .more-menu--quiet > .more-menu-trigger {
-          opacity: 0.72;
-        }
+      .more-menu--quiet > .more-menu-trigger:not(:disabled):active {
+        background: var(--row-pressed);
+      }
+      .more-menu-trigger:disabled,
+      .more-menu-item:disabled {
+        opacity: var(--state-disabled-opacity);
+        cursor: not-allowed;
       }
       @media (any-pointer: coarse) {
         .more-menu-trigger::after {
@@ -873,7 +888,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         corner-shape: var(--corner-shape-continuous);
         box-shadow: var(--menu-shadow);
         color: var(--ink);
-        font-size: var(--field-font-size);
+        font-size: var(--font-small);
         font-weight: var(--weight-medium);
         line-height: 1.35;
         white-space: normal;
@@ -889,6 +904,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .more-menu-pop.is-open {
         display: grid;
+        animation: ui-enter var(--motion-fast) var(--ease-interaction);
       }
       .more-menu-item {
         display: flex;
@@ -917,12 +933,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         color: var(--state-danger-color);
       }
       @media (hover: hover) and (pointer: fine) {
-        .more-menu-item:hover {
+        .more-menu-item:not(:disabled):hover {
           background: color-mix(in srgb, var(--accent) 6%, var(--surface-grouped));
         }
       }
-      .more-menu-item:active {
-        background: color-mix(in srgb, var(--accent) 10%, var(--surface-grouped));
+      .more-menu-item:not(:disabled):active {
+        background: var(--row-pressed);
+        opacity: var(--state-pressed-opacity);
       }
       .more-menu-item:focus-visible,
       .more-menu-trigger:focus-visible {
@@ -946,6 +963,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         line-height: var(--field-line-height, 1.45);
         box-shadow: inset 0 1px 0 rgba(255,255,255,.42), inset 0 -1px 0 rgba(20,20,24,.01);
         caret-color: var(--accent);
+        scroll-margin-block: var(--space-4);
         transition: border-color var(--motion-standard) ease, background-color var(--motion-standard) ease,
           box-shadow var(--motion-standard) ease, color var(--motion-standard) ease;
       }
@@ -1406,6 +1424,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .modal.open {
         display: flex;
       }
+      .modal.open .sheet,
+      .confirm-overlay.open .confirm-card {
+        animation: ui-enter var(--motion-enter) var(--ease-settle);
+      }
       .sheet {
         background: var(--overlay-surface-bg);
         border: 1px solid var(--overlay-border);
@@ -1753,7 +1775,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .collection-row__title {
         min-width: 0;
         display: flex;
-        align-items: center;
+        align-items: baseline;
         flex-wrap: wrap;
         gap: var(--collection-copy-gap);
         overflow-wrap: anywhere;
@@ -1764,6 +1786,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .collection-row__title-text {
         min-width: 0;
+        word-break: keep-all;
         overflow-wrap: anywhere;
       }
       .collection-row__note {
@@ -1771,7 +1794,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         width: 100%;
         min-width: 0;
         margin-top: var(--collection-copy-gap);
-        color: color-mix(in srgb, var(--muted) 82%, transparent);
+        color: var(--text-secondary);
         font-size: var(--collection-note-size);
         font-weight: var(--weight-regular);
         line-height: 1.5;
@@ -1846,6 +1869,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
       /* Button tones. Geometry/placement roles stay orthogonal to tone. */
       .btn--primary {
+        --btn-active-bg: var(--btn-bg);
         --btn-bg: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white 8%), var(--accent));
         --btn-border: 1px solid color-mix(in srgb, var(--accent) 88%, var(--ink));
         --btn-color: var(--accent-contrast, var(--button-text));
@@ -1865,6 +1889,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --btn-active-shadow: none;
       }
       .btn--danger {
+        --btn-active-bg: var(--btn-hover-bg);
         --btn-bg: var(--state-danger-bg);
         --btn-border: 1px solid var(--state-danger-bg);
         --btn-color: var(--contrast-on-strong);
@@ -1925,6 +1950,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
       }
       .btn--nav.active {
+        --btn-active-bg: var(--nav-selected-bg);
         --btn-bg: var(--nav-selected-bg);
         --btn-border: 1px solid var(--nav-selected-border);
         --btn-color: var(--nav-selected-ink);
@@ -1934,6 +1960,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --btn-hover-shadow: var(--btn-shadow);
       }
       .btn--theme-swatch {
+        --btn-active-bg: var(--swatch-color);
         --btn-corner-shape: round;
         --btn-width: 24px;
         --btn-height: 24px;
@@ -2179,8 +2206,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .inner-card--recovery {
         --inner-card-padding: var(--nested-surface-padding);
         --inner-card-bg: var(--nested-interactive-bg);
-        --inner-card-border-width: 1px;
-        --inner-card-border-color: var(--nested-interactive-border);
         gap: var(--collection-row-gap);
       }
       .inner-card--grouped-list {
@@ -2240,6 +2265,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .card-footer-row--baseline { align-items: baseline; }
       .form--settings-stack { --form-gap: 14px; }
       .form--modal {
+        --field-font-size: var(--font-body);
+        --field-label-font-size: var(--font-small);
+        --field-error-font-size: var(--font-small);
+        --control-height: var(--control-height-large);
         margin-top: 0;
         gap: var(--modal-content-gap);
         min-width: 0;
@@ -2307,13 +2336,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
 
       /* Variant-specific responsive behavior stays with the variant owner.
-         Field typography intentionally does not grow on coarse-pointer environments. */
+         Field typography follows its editing/toolbar role on every device. */
       @media (min-width: 601px) {
         .action-row--sheet-dialog > .btn--danger:first-child {
           margin-right: auto;
         }
-      }
-      @media (max-width: 520px) {
       }
       @media (max-width: 380px) {
         .card-header--fixed-actions {
@@ -2829,7 +2856,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           border-color var(--motion-feedback) var(--ease-feedback), color var(--motion-feedback) var(--ease-feedback),
           box-shadow var(--motion-feedback) var(--ease-feedback), opacity var(--motion-fast) linear;
       }
-      .task-check:not(:disabled):active { opacity: 0.78; }
+      .task-check:disabled {
+        opacity: var(--state-disabled-opacity);
+        cursor: not-allowed;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .task-check:not(.on):not(:disabled):hover {
+          background: var(--row-hover);
+          border-color: var(--accent);
+        }
+      }
+      .task-check:not(:disabled):active { opacity: var(--state-pressed-opacity); }
+      .task-check:not(.on):not(:disabled):active { background: var(--row-pressed); }
       .task-check.is-feedback {
         box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
       }
@@ -4144,7 +4182,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "515",
+          version: "519",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -5721,15 +5759,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           modalActionToken = null;
           modalActionBusy = false;
           const modal = $(DOM_IDS.modal);
-          if (modal?.classList.contains("open") && el?.isConnected) el.disabled = false;
+          if (el?.isConnected) {
+            el.setAttribute("aria-busy", "false");
+            el.textContent = token.label;
+            if (modal?.classList.contains("open")) el.disabled = false;
+          }
         }
         function runModalAction(el, handler, action) {
           const modal = $(DOM_IDS.modal);
           if (!modal?.classList.contains("open") || modalActionBusy) return false;
-          const token = {};
+          const token = { label: el.textContent };
           modalActionToken = token;
           modalActionBusy = true;
           el.disabled = true;
+          el.setAttribute("aria-busy", "true");
+          el.textContent = "저장 중";
           let result;
           try {
             result = handler(el);
