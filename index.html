@@ -1,115 +1,20 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 — 분리 소스 / 단일 HTML 빌드 아키텍처 v519
-
-CURRENT ARCHITECTURE
-  CSS: 01 tokens → 02 base → 03 components → 04 variants → 05 layout
-       → 06 domain views → 07 responsive → 08 state utilities.
-  JS: 01 config → 02 UI components → 03 schemas/registries → 04 engines
-      → 05 domain views → 06 state/shared lifecycle → 07 testing → 08 public API → 09 bootstrap.
-  Component는 DOM·외형·variant·state 계약을 소유합니다. Layout은 배치만 소유합니다.
-  Domain View는 데이터와 컴포넌트를 조합합니다. CSS 위치보다 아래 책임 경계를 우선하세요.
-
-EDIT MAP — 검색할 이름 / 수정할 곳 / 직접 수정하지 않을 곳
-  컨트롤 geometry: --control-height (일반), --control-height-large (모달/상단 탭).
-    상단 탭은 --control-height-large로 모달 액션과 같은 큰 세로 높이를 공유합니다.
-    .btn/.icon-control이 적용합니다. 개별 화면에 height/padding/font patch를 추가하지 않습니다.
-  CardHeader 간격: --card-header-gap / --card-header-margin-bottom / --card-action-gap.
-    부모 gap이 간격을 소유하면 card-header--flush, 우측 고정 액션은 --fixed-actions를 조합합니다.
-    .plan > .card-header 같은 화면별 외형 override를 만들지 않습니다.
-  Card variant: UI_VARIANTS.Card + CSS 명시적 .card--* 규칙. DOM 검사 목록은 자동 파생됩니다.
-  MoreMenu: MoreMenu(renderer) + COMPONENT .more-menu* (외형) + FloatingMenu(lifecycle).
-    기본 trigger/popup 모양은 모든 화면에서 통일합니다. bare는 호환용 독립 variant이며 새 화면에는 기본 variant를 우선합니다.
-    새 variant는 MORE_MENU_VARIANTS + CSS에 정의하며 DOM variant 계약은 자동 파생됩니다.
-  EventItem: EventItem renderer + .planner-event-item* domain layout.
-    meta action lane은 flex 배치만 소유합니다. metadata 추가는 metaParts와 필요시 layout에서 처리합니다.
-    메뉴 자체 크기·popup·z-index·open 처리를 EventItem으로 옮기지 않습니다.
-  Plan field: COLLECTION_SCHEMAS.plan.fields. display:"block"이면 목록 라벨/본문도 파생됩니다.
-    FORM_SCHEMAS/DOM_IDS/정규화/CRUD action을 별도로 복제하지 않습니다.
-  Plan 상태: PLAN_STATUS_DEFINITIONS. 폼 옵션·홈 라벨·count·DOM ID가 파생됩니다.
-    저장된 label을 변경/삭제할 때에는 기존 데이터 migration을 따로 설계합니다.
-  새 CRUD collection: COLLECTION_SCHEMAS + domain renderer + PAGE_REGISTRY + HTML page/collection host.
-    Collection engine/Forms/Actions/DOM registration/merge collection keys는 자동 파생됩니다.
-    홈 요약·특수 필터·기존 공개 API alias가 필요하면 해당 명시적 경계에 추가합니다.
-  Spacing: --space-1..6 = 4/8/12/16/20/24px. 일반 card/collection/layout 간격은 이 scale을 우선합니다.
-    날짜 정렬·광학 보정처럼 의도된 예외만 literal 값을 유지합니다.
-  Typography: --font-family / --font-family-mono / --font-family-symbol + --text-* primitive scale.
-    가까운 primitive size는 같은 실제 크기로 합칠 수 있으며, 굵기는 --weight-* 400/500/600/700/800만 사용합니다.
-    입력/검색/select 글자 크기는 --field-font-size 하나를 기준으로 하며 할 일 toolbar select와 동일합니다.
-    할 일/일정 반복 행은 --collection-title-* / --collection-meta-* / --collection-note-size를 함께 사용합니다.
-    실제 UI 역할은 semantic font-size token을 사용합니다. :root 밖에서 literal font-size/font-family/font-weight를 직접 쓰지 않습니다.
-    assertTypographyArchitecture와 source contract가 이 규칙을 강제합니다.
-  Theme color: THEME_FIELDS + CSS에서 사용할 의미적 binding. 프리셋 색상을 별도로 고르면 THEME_PRESETS.
-    :root 색상은 JS 실행 전 fallback이며 저장된 값은 THEME_FIELDS 정규화 이후 우선합니다.
-  Radius: --radius에서 큰 surface와 compact UI 두 단계만 파생합니다.
-    compact는 더 낮은 optical ratio로 전역 radius를 끝까지 따라가며 하드캡을 사용하지 않습니다.
-    모든 사각형 컴포넌트는 같은 superellipse(1.15) near-round continuous-corner family를 사용합니다.
-    progress/calendar date capsule, 원형 dot/swatch, gauge는 의미상 형태를 유지하는 예외입니다.
-  목록 구분선: --list-divider-width / --list-divider-border + .list-divided-item.
-  새 action: 반복 CRUD는 schema에서 파생. 특수 동작만 ACTION_REGISTRY에 등록합니다.
-  페이지: PAGE_REGISTRY가 navigation/render/dependencies, DOM_AREAS가 비파생 DOM 소유권을 소유합니다.
-  State: mutateState(draft), 외부 입력은 prepareIncomingState. View에서 live state를 직접 바꾸지 않습니다.
-
-
-SOURCE / BUILD
-  app/VERSION 파일이 앱 버전의 단일 원천입니다. CSS/JS 결합 순서는 developer/internal/core_build.py의 명시적 manifest가 소유합니다.
-  python3 developer/internal/core_build.py                 # 운영: output/index.html + PWA 파일, 테스트 하네스 제외
-  python3 developer/internal/core_build.py --dev           # 개발: developer/artifacts/dev/index.html, 테스트 하네스 포함
-  python3 developer/internal/core_build.py --check         # 운영 결과 재현성 검사
-  python3 developer/internal/core_build.py --dev --check   # 개발 결과 재현성 검사
-  python3 developer/internal/core_build.py --release       # index.html + manifest + sw.js 배포 zip 생성
-  앱 본체는 계속 단일 index.html이며, PWA 사용 시 manifest.webmanifest / sw.js를 함께 배포합니다.
-
-CURRENT CONTRACTS
-  MoreMenu는 button trigger + popup 구조만 사용하고 native details/Popover 상태를 섞지 않습니다.
-  FloatingMenu가 열린 동안 동일 popup DOM을 body로 잠시 이동해 모든 기기에서 하나의 fixed-position lifecycle을 사용합니다.
-  단일 열린 메뉴, 화면 경계 반전/clamp, 스크롤·resize 재배치, 외부 클릭·Escape·focus 이동·페이지 전환·모달 진입·DOM 교체 시 닫기를 소유합니다.
-  메뉴는 복제하지 않으므로 action delegation과 데이터 ID는 그대로 유지되며, --layer-menu는 modal보다 아래에 위치합니다.
-  Plan/Budget의 제목 아래 간격은 domain gap 하나가 소유합니다.
-  Button/Field/Search/Select/Textarea는 공통 class API와 UI_CONTRACTS로 검증됩니다.
-  UI_CONTRACTS: DOM 구조·variant·컴포넌트 경계; assertUiStyleOwnership: 화면별 외형 patch 방지.
-  UI_CONTRACTS[].owns는 UI_OWNED_PROPERTY_GROUPS 키 배열입니다(예: ["geometry","surface"]).
-    assertUiStyleOwnership은 이 배열과 각 컴포넌트의 실제 class 어휘(base+variant)에서
-    검사 대상 selector·property를 파생합니다. 소수의 하드코딩된 이름 목록을 검사하지 않습니다.
-    새 컴포넌트를 추가하면 owns 배열만 채우면 guard가 자동으로 해당 property를 보호합니다.
-  UI_GUARD_FIXTURES는 실제 renderer 또는 실제 정적 DOM clone을 사용합니다.
-  Planner live DOM scope는 [data-planner-root] marker가 소유합니다.
-    registry/component live-DOM 검사는 이 marker에서 파생된 동일 scope helper만 사용합니다.
-    preview host·browser extension·artifact shell이 body에 삽입한 DOM은 Planner 계약 검사에서 제외됩니다.
-  UI guard의 token probe는 input/textarea 자식이 아닌 별도 측정 요소를 사용합니다.
-
-TEST ENTRY POINTS (브라우저 console; 실제 viewport 변경 후 실행)
-  Planner.Testing.run()                         self-test
-  await Planner.Testing.runSmoke()              로컬 CRUD/저장/undo/redo; 로그인 시 데이터 보호로 실행 거부
-  await Planner.Testing.runSharedMocks()        CAS transport mock, 실서버 검증 아님
-  await Planner.Testing.runUiGuards({expectedWidth:360})
-  await Planner.Testing.runMutations()          DOM 11종 + CSS 11종 고의 회귀 + baseline 검증
-  viewport 360/390/768/1280을 실제로 변경합니다. 내부 container 축소로 대체하지 않습니다.
-  geometry/mutation 테스트는 fixture DOM을 사용합니다. 운영 action/network를 실행하지 않습니다.
-
-COMPATIBILITY / INTENTIONAL LIMITATIONS
-  기존 localStorage 키, schema v5, legacy memo/owner migration, backup/history/recovery,
-  Planner 공개 함수와 Shared alias를 유지합니다. Shared Sync는 별도 lifecycle입니다.
-  UI/client는 1 account = 1 project입니다. 운영 DB에서도 project_members.user_id 단일 프로젝트 제약을 별도로 보장해야 합니다.
-  :has/checkVisibility 등 현대 브라우저 API를 지원하는 환경이 기준입니다. MoreMenu는 Popover API에 의존하지 않습니다.
-  실제 Supabase 인증/RLS/realtime, 배포 origin Service Worker는 로컬 Chromium 검사와 별개입니다.
-  Shared push 중 추가 변경은 localMutationRevision으로 추적하고, pending에 baseState/baseRevision을 함께 저장해 reload 후에도 3-way merge 기준을 보존합니다.
-  양쪽이 같은 collection 순서를 동시에 서로 다르게 재배열한 경우에는 자동 병합하지 않고 conflict로 남깁니다.
-  삭제↔수정 충돌은 conflictPreference(local/remote)에 따라 선택한 쪽의 삭제/수정을 그대로 적용합니다.
-  사용자/프로젝트 문맥이 바뀌면 undo/redo history를 초기화하며, 프로젝트 전환 실패 rollback은 기존 history snapshot까지 복원합니다.
-  공휴일은 2026–2027 확정 테이블과 2028 잠정 테이블을 사용합니다. screenshot pixel diff 자동 gate는 없습니다.
-  app/VERSION 파일이 APP_CONFIG.version, backup appVersion, sw.js cache 버전을 소유합니다.
-  sw.js는 VERSION에서 주입된 정확한 CACHE_NAME을 사용하며 activate에서 그 이름 외의 wedding-planner-* 캐시만 삭제합니다.
-  app/src/css 또는 app/src/js 를 수정한 뒤 python3 developer/internal/core_build.py 를 실행하면 output/index.html 과 CSP sha256 해시가 함께 갱신됩니다.
-  운영 index.html에는 대형 테스트 하네스가 들어가지 않습니다. 테스트는 --dev 빌드에서 Planner.Testing으로 실행합니다.
+우리 결혼 플래너 v540 — 분리 소스 / 단일 HTML 빌드
+앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
+빌드·검사·설정: README.md
+공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
+화면은 js/features/와 css/features/에서 조합합니다.
+상태 변경은 mutateState, 외부 데이터는 prepareIncomingState를 사용합니다.
+테스트는 앱에 포함하지 않고 developer/tests/에서 별도로 실행합니다.
 -->
 
 
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport" />
+    <meta content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content" name="viewport" />
     <meta content="#f7f5f2" name="theme-color" />
     <meta content="yes" name="mobile-web-app-capable" />
     <meta content="yes" name="apple-mobile-web-app-capable" />
@@ -118,7 +23,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-TPkCvvRv/8uW4t3u6F2sPV7wpL4o23/LYwKh6gkUNVA=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-sHSttIZ7be0mdk+hmJcXJv6WZDL4I5T4rGhc/YPcYAs='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-KB2lQrVoLqz2O5/c9eeMl6mJ4B6akBEEJjPeSQphOVA=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-33SbEL8fMZNArp5mzOEnLdZSU2DdGetrmaolT8Yo4QQ='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -135,7 +40,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
            큰 surface / 작은 UI 둥글기: --radius-surface / --radius-compact
            일반/큰 컨트롤 높이: --control-height / --control-height-large
            본문/작은 글씨/제목: --font-body / --font-small / --header-title-size
-           모달 폭: --modal-max-width (iPad 높이는 07-responsive.css)
+           모달 폭: --modal-max-width (iPad 높이는 components/80-overlays-feedback.css)
            같은 이름의 아래 정의 한 곳을 바꾸면 해당 부품에 반영됩니다. */
         /* UI EDIT MAP — 크기·폰트·배치는 이 구역부터 수정하세요.
      공통값 → 컴포넌트 → 명시적 변형 → 화면 배치 순서.
@@ -143,7 +48,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         /* TYPOGRAPHY SCALE — font family and size edit points live here. */
         --font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
         --font-family-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-        --font-family-symbol: Arial, sans-serif;
         /* Compact primitive scale. Nearby legacy steps intentionally collapse onto the
            same rendered size so hierarchy comes from role, not one-off 1px differences. */
         --text-2xs: 10px;
@@ -157,7 +61,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --text-4xl: 18px;
         --text-5xl: 20px;
         --text-6xl: 20px;
-        --text-7xl: 22px;
 
         /* Semantic typography aliases — components/domains consume these, not literal sizes. */
         --font-body: var(--text-3xl);
@@ -191,15 +94,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --header-title-size-mobile: clamp(25px, 6.55vw, 28px);
         --home-summary-columns: minmax(0, 1.46fr) minmax(0, 1fr);
         --task-check-size: 22px;
-        --collection-leading-width: 36px;
+        --collection-leading-width: max(36px, calc(var(--font-small) * 3));
         --collection-title-size: var(--text-2xl);
         --collection-title-weight: var(--weight-semibold);
         --collection-meta-font-size: var(--text-md);
         --collection-meta-font-weight: var(--weight-regular);
         --collection-note-size: 13px;
         --collection-action-width: var(--control-height);
-        --task-badge-size: var(--font-micro);
-        --task-badge-padding: var(--space-1) var(--space-2);
         --calendar-cell-height: clamp(64px, 9vw, 86px);
         --calendar-cell-padding: 7px 2px;
         --calendar-number-size: var(--text-xl);
@@ -217,7 +118,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --plan-text-font-size: var(--text-xl);
         --plan-summary-value-font-size: var(--text-lg);
         --calendar-more-font-size: var(--font-tiny);
-        --calendar-nav-icon-font-size: var(--text-7xl);
         --category-card-title-font-size: var(--font-small);
         --sync-note-font-size: var(--font-micro);
         --budget-home-total-font-size: var(--font-body);
@@ -251,7 +151,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --space-3: 12px;
         --space-4: 16px;
         --space-5: 20px;
-        --space-6: 24px;
         --space-xs: var(--space-1);
         --space-sm: var(--space-2);
         --space-md: var(--space-3);
@@ -272,22 +171,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --control-height-large: 44px;
         --touch-hit-slop: 2px;
         --touch-icon-hit-slop: 4px;
-        --icon-glyph-size-sm: var(--text-lg);
-        --icon-glyph-size-md: var(--text-4xl);
-        --icon-glyph-size-lg: var(--text-6xl);
-        --bg: #f5f3f0;
-        --card: #fff;
-        --ink: #222;
+        --ui-icon-size: 18px;
+        --ui-icon-stroke-width: 1.6;
+        --bg: #f7f5f2;
+        --card: #ffffff;
+        --ink: #222222;
         --muted: #6f6f6f;
-        --line: #e7e2dc;
+        --line: #e8e3dd;
         --accent: #9b6b52;
         --accent-contrast: #fff;
         --accent2: #d9b8a7;
         --good: #5c8a69;
         --danger: #b55b5b;
-        --soft: #f7f5f2;
-        --button-bg: #fff;
-        --button-text: #222;
+        --soft: #faf8f5;
+        --button-bg: #ffffff;
+        --button-text: #222222;
         /* Quiet, layered elevation: borders define surfaces; shadows only separate depth. */
         --shadow: 0 1px 2px rgba(20, 20, 24, 0.018), 0 12px 32px rgba(20, 20, 24, 0.035), inset 0 1px 0 rgba(255, 255, 255, 0.68);
         --weekend-sat-base: #4a80c1;
@@ -299,7 +197,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --confirm-overlay-bg: rgba(18, 18, 22, 0.22);
         --confirm-shadow: 0 8px 24px rgba(18, 18, 22, 0.09), 0 28px 72px rgba(18, 18, 22, 0.17);
         --modal-overlay-bg: rgba(18, 18, 22, 0.20);
-        --radius: 22px;
+        --radius: 20px;
         /* Unified continuous-corner geometry.
            Rectangular UI keeps two semantic tiers: large surfaces and compact UI.
            Compact UI follows the same user-controlled radius continuously at a lower optical ratio,
@@ -336,7 +234,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         /* Semantic state system — components consume these instead of inventing local tones. */
         --warning: #a8773f;
         --state-selected-bg: color-mix(in srgb, var(--accent) 10%, var(--card));
-        --state-selected-border: color-mix(in srgb, var(--accent) 18%, var(--surface-border));
         --state-selected-color: color-mix(in srgb, var(--accent) 74%, var(--ink));
         --state-active-bg: color-mix(in srgb, var(--accent) 7%, var(--card));
         --state-active-border: color-mix(in srgb, var(--accent) 16%, var(--control-border));
@@ -404,6 +301,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --accent-ink: color-mix(in srgb, var(--accent) 70%, var(--ink));
         --good-ink: color-mix(in srgb, var(--good) 78%, var(--ink));
         --calendar-selected-bg: var(--state-selected-bg);
+        --calendar-selected-border: color-mix(in srgb, var(--accent) 38%, var(--control-border));
         --weekend-sat: color-mix(in srgb, var(--weekend-sat-base) 78%, var(--accent));
         --weekend-sun: color-mix(in srgb, var(--weekend-sun-base) 78%, var(--danger));
         --holiday-color: color-mix(in srgb, var(--danger) 86%, var(--accent));
@@ -731,27 +629,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         outline-offset: 2px;
       }
 
-      .ui-icon-glyph {
-        display: inline-grid;
-        place-items: center;
-        width: 1em;
-        height: 1em;
-        font-family: var(--font-family-symbol);
-        font-size: var(--icon-glyph-size, var(--icon-glyph-size-md));
-        font-weight: var(--weight-semibold);
-        line-height: 1;
-        letter-spacing: 0;
+      .ui-icon {
+        display: block;
+        width: var(--ui-icon-size);
+        height: var(--ui-icon-size);
+        flex: 0 0 auto;
+        stroke-width: var(--ui-icon-stroke-width);
         pointer-events: none;
         user-select: none;
       }
-      .ui-icon-glyph--more {
-        --icon-glyph-size: var(--icon-glyph-size-lg);
-        position: relative;
-        top: -1px;
-      }
-      .ui-icon-glyph--reorder { --icon-glyph-size: var(--icon-glyph-size-sm); }
-      .ui-icon-glyph--close { --icon-glyph-size: var(--icon-glyph-size-lg); }
-      .ui-icon-glyph--calendar { --icon-glyph-size: var(--calendar-nav-icon-font-size); }
 
       @media (any-pointer: coarse) {
         .btn::after,
@@ -793,7 +679,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         background: var(--reorder-control-bg);
         color: var(--muted);
         font: inherit;
-        font-size: inherit;
         line-height: 1;
         cursor: pointer;
         box-shadow: var(--control-shadow);
@@ -1044,9 +929,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: var(--card-action-gap);
         flex: 0 0 auto;
       }
-      .order-arrow {
-        flex: 0 0 auto;
-      }
 
       @media (any-pointer: coarse) {
         @supports (-webkit-touch-callout: none) {
@@ -1172,7 +1054,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-height: var(--calendar-cell-height);
         padding: var(--calendar-cell-padding);
         gap: 3px;
-        color: var(--ink);
+        --calendar-day-color: var(--ink);
+        color: var(--calendar-day-color);
         border: 1px solid transparent;
         background: transparent;
         border-radius: var(--radius-compact);
@@ -1186,23 +1069,21 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           box-shadow var(--motion-fast) ease;
         -webkit-tap-highlight-color: transparent;
       }
-      .calendar-cell.muted {
-        background: transparent;
-        color: var(--text-tertiary);
-        opacity: 0.48;
-      }
+      .calendar-cell.sunday { --calendar-day-color: var(--weekend-sun); }
+      .calendar-cell.saturday { --calendar-day-color: var(--weekend-sat); }
+      .calendar-cell.holiday { --calendar-day-color: var(--holiday-color); }
       .calendar-cell.selected {
-        border-color: var(--state-selected-border);
-        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 4%, transparent);
+        border-color: var(--calendar-selected-border);
         background: var(--calendar-selected-bg);
       }
-      .calendar-cell.today {
-        background: transparent;
+      .calendar-cell.selected:not(.sunday):not(.saturday):not(.holiday) {
+        --calendar-day-color: var(--state-selected-color);
       }
-      .calendar-cell.today.selected {
-        background: var(--calendar-selected-bg);
+      .calendar-cell.muted:not(.selected):not(.today) .calendar-num {
+        color: color-mix(in srgb, var(--calendar-day-color) 55%, var(--text-tertiary));
       }
       .calendar-num {
+        color: var(--calendar-day-color);
         min-width: 28px;
         height: 28px;
         padding: 0 4px;
@@ -1222,22 +1103,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-weight: var(--weight-bold);
         box-shadow: 0 1px 3px color-mix(in srgb, var(--accent) 18%, transparent);
       }
-      .calendar-cell.sunday .calendar-num {
-        color: var(--weekend-sun);
-      }
-      .calendar-cell.saturday .calendar-num {
-        color: var(--weekend-sat);
-      }
-      .calendar-cell.holiday .calendar-num {
-        color: var(--holiday-color);
-      }
-      .calendar-cell.today.sunday .calendar-num,
-      .calendar-cell.today.saturday .calendar-num,
-      .calendar-cell.today.holiday .calendar-num {
-        color: var(--accent-contrast);
-      }
-      .calendar-cell.selected:not(.today) .calendar-num {
-        color: var(--state-selected-color);
+      .calendar-cell.selected .calendar-num {
         font-weight: var(--weight-bold);
       }
       .selected-date-title {
@@ -1266,6 +1132,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         line-height: 1.15;
       }
       .calendar-dots {
+        margin-top: auto;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1405,11 +1272,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         line-height: 1.55;
         white-space: pre-line;
       }
-      .confirm-card > .action-row {
-        margin-top: var(--modal-section-gap);
-        padding-top: var(--modal-footer-gap);
-        border-top: var(--modal-divider);
-      }
       .modal {
         position: fixed;
         inset: 0;
@@ -1439,14 +1301,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-width: 0;
         width: 100%;
         max-height: min(var(--modal-max-height), calc(100dvh - 48px));
-        overflow: auto;
-        overscroll-behavior: contain;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
       .modal-frame {
         position: relative;
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
         min-width: 0;
+        min-height: 0;
       }
       .modal-header {
+        flex: 0 0 auto;
         display: grid;
         grid-template-columns: minmax(0, 1fr);
         align-items: start;
@@ -1469,16 +1337,23 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         line-height: 1.5;
       }
       .modal-content {
+        flex: 1 1 auto;
         min-width: 0;
+        min-height: 0;
         margin-top: var(--modal-section-gap);
+        /* Preserve field width while leaving room for the existing 3px focus ring. */
+        margin-inline: -3px;
+        padding-inline: 3px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
       }
       .modal-footer {
+        flex: 0 0 auto;
         margin-top: var(--modal-section-gap);
         padding-top: var(--modal-footer-gap);
         border-top: var(--modal-divider);
-      }
-      .modal-footer > .action-row {
-        margin-top: 0;
       }
       .modal-note {
         padding: 10px 12px;
@@ -1586,38 +1461,26 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       @media (any-pointer: coarse) {
         .modal {
-          inset: 0;
-          top: 0;
           width: 100%;
           padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
             max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
-          box-sizing: border-box;
           overflow: hidden;
         }
         .sheet {
           width: min(100%, var(--modal-max-width));
           max-height: calc(100dvh - max(24px, env(safe-area-inset-top)) - max(24px, env(safe-area-inset-bottom)));
           border: 1px solid var(--surface-border);
-          border-radius: var(--radius-surface);
-          overscroll-behavior: contain;
-          -webkit-overflow-scrolling: touch;
-        }
-        @supports (-webkit-touch-callout: none) {
-          .modal { overflow-x: hidden; overflow-y: auto; }
         }
       }
       @media (any-pointer: coarse) and (max-width: 600px) {
         .modal {
           --modal-touch-top-gap: max(16px, calc(env(safe-area-inset-top) + 8px));
           align-items: flex-start;
-          justify-content: center;
           padding-top: var(--modal-touch-top-gap);
         }
       }
       @media (any-pointer: coarse) and (min-width: 601px) {
         .modal {
-          align-items: center;
-          justify-content: center;
           padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
             max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
         }
@@ -1654,6 +1517,15 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         position: relative;
         min-width: 0;
       }
+      /* Desktop native picker and clear button have separate lanes. */
+      .field-shell--clearable {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 44px;
+        align-items: center;
+      }
+      @media (pointer: coarse) {
+        .field-shell--clearable { grid-template-columns: minmax(0, 1fr); }
+      }
       .field-unit {
         position: absolute;
         top: 50%;
@@ -1672,10 +1544,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         width: 100%;
         min-width: 0;
       }
-      .field-shell--search > input[type="search"] {
-        padding-right: 42px;
+      .field-shell--search > [data-action="clear-search"] {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
       }
       .field-shell--search input[type="search"]::-webkit-search-cancel-button {
+        display: none;
         -webkit-appearance: none;
         appearance: none;
       }
@@ -1766,6 +1642,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .collection-meta-item {
         min-width: 0;
+        overflow-wrap: anywhere;
       }
       .collection-meta-item + .collection-meta-item::before {
         content: "·";
@@ -1861,9 +1738,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: var(--card-action-gap);
         min-width: 0;
       }
-/* Continuous-corner behavior is owned by each component base/variant.
-   This file is intentionally kept as a compatibility slot in the build order;
-   compositor-heavy clip/filter fallbacks are forbidden. */
 /* ===== 04 COMPONENT VARIANTS — explicit semantic overrides ===== */
       /* Surface / status variants */
 
@@ -1981,7 +1855,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       }
       .icon-control--modal-close {
         --icon-size: var(--modal-close-size);
-        --icon-font-size: var(--text-6xl);
         --icon-control-border: transparent;
         --icon-control-bg: transparent;
         --icon-control-color: var(--text-secondary);
@@ -1997,8 +1870,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         flex: 0 0 var(--modal-close-size);
       }
       .icon-control--calendar-nav {
+        --touch-icon-hit-slop: max(4px, calc((44px - var(--control-height)) / 2));
         --icon-size: var(--control-height);
-        --icon-font-size: var(--calendar-nav-icon-font-size);
         --icon-control-border: transparent;
         --icon-control-bg: transparent;
         --icon-control-color: var(--accent-ink);
@@ -2014,11 +1887,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --field-inset: 0 var(--field-padding-x);
         --field-size: var(--field-font-size);
       }
-      .field--clearable {
-        padding-right: 42px;
-      }
       .field--search {
-        width: 100%;
+        --field-inset: 0 42px 0 var(--field-padding-x);
       }
       .field--compact {
         --field-inset: 0 10px;
@@ -2121,11 +1991,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         gap: var(--space-sm);
         border-radius: 0;
       }
-      .plan-status-grid > .inner-card--status-summary + .inner-card--status-summary {
+      .inner-card--status-summary + .inner-card--status-summary {
         border-left: 1px solid var(--section-divider);
       }
       .collection-row--task {
         --collection-leading-color: var(--muted);
+      }
+      .collection-row--task.done .collection-row__title,
+      .collection-row--task.done .collection-row__meta {
+        color: var(--state-complete-muted);
+      }
+      .collection-row--task.done .collection-row__title-text {
+        text-decoration: line-through;
+        text-decoration-thickness: 1px;
       }
       .collection-row--event {
         --collection-leading-color: var(--text-secondary);
@@ -2149,13 +2027,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .collection-meta-item--numeric {
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
-        white-space: nowrap;
-      }
-      .collection-meta-item--truncate {
-        max-width: min(100%, 320px);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
       }
       .collection-meta-item--danger {
         color: var(--state-danger-color);
@@ -2203,6 +2074,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --inner-card-padding: var(--nested-surface-padding);
         --inner-card-bg: var(--nested-soft-bg);
       }
+      .inner-card--loading {
+        min-height: 78px;
+        align-content: center;
+      }
       .inner-card--recovery {
         --inner-card-padding: var(--nested-surface-padding);
         --inner-card-bg: var(--nested-interactive-bg);
@@ -2244,15 +2119,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .action-row--compact { --action-row-gap: 7px; }
       .action-row--spaced { --action-row-margin-top: var(--space-md); }
       .action-row--dialog {
-        --action-row-margin-top: 0;
-        justify-content: flex-end;
-        gap: var(--action-row-gap);
+        padding-top: var(--modal-footer-gap);
+        border-top: var(--modal-divider);
+        --action-row-margin-top: var(--modal-section-gap);
       }
-      .action-row--sheet-dialog {
-        margin: 0;
-        padding: 0;
-        border-top: 0;
-      }
+      .action-row--sheet-dialog { --action-row-margin-top: 0; }
       .action-row--item {
         --action-row-gap: var(--space-xs);
         --action-row-margin-top: 0;
@@ -2265,6 +2136,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .card-footer-row--baseline { align-items: baseline; }
       .form--settings-stack { --form-gap: 14px; }
       .form--modal {
+        --field-label-gap: 0px;
         --field-font-size: var(--font-body);
         --field-label-font-size: var(--font-small);
         --field-error-font-size: var(--font-small);
@@ -2274,9 +2146,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         min-width: 0;
         width: 100%;
         grid-template-columns: minmax(0, 1fr);
-      }
-      .form--modal .form-field {
-        gap: 0;
       }
       .form--modal .form-field > label {
         margin-bottom: var(--modal-field-label-gap);
@@ -2378,7 +2247,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .icon-control--field-clear {
         --icon-size: 28px;
         --touch-icon-hit-slop: 8px;
-        --icon-font-size: var(--font-small);
         --icon-control-border: transparent;
         --icon-control-bg: transparent;
         --icon-control-color: var(--text-tertiary);
@@ -2387,11 +2255,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         --icon-control-hover-border: transparent;
         --icon-control-hover-shadow: none;
         --icon-control-active-bg: var(--row-pressed);
-        position: absolute;
-        top: 50%;
-        right: 6px;
-        transform: translateY(-50%);
-        z-index: 1;
+        justify-self: center;
+      }
+
+      @media (pointer: coarse) {
+        .field-shell--clearable > .icon-control--field-clear { display: none; }
       }
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
@@ -2476,7 +2344,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
       .calendar-period-block {
         min-width: 0;
-        margin-left: -6px;
         display: grid;
         grid-template-columns: var(--control-height) max-content var(--control-height);
         grid-template-areas:
@@ -2799,14 +2666,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-feature-settings: "tnum" 1;
         line-height: 1.1;
       }
-      .event-leading--date {
-        display: flex;
-        width: max-content;
-        max-width: 100%;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
-      }
       .event-leading-main {
         font-size: var(--font-small);
         font-weight: var(--weight-semibold);
@@ -2827,6 +2686,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         letter-spacing: -0.015em;
         white-space: nowrap;
       }
+      .event-leading--date,
       .event-leading--stack {
         display: flex;
         flex-direction: column;
@@ -2885,16 +2745,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         display: flex;
         align-items: center;
         justify-content: center;
-      }
-      .task.done .collection-row__title {
-        color: var(--state-complete-muted);
-      }
-      .task.done .collection-row__title-text {
-        text-decoration: line-through;
-        text-decoration-thickness: 1px;
-      }
-      .task.done .collection-row__meta {
-        color: var(--state-complete-muted);
       }
       .category-progress-meta {
         margin-top: 4px;
@@ -3071,9 +2921,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           justify-self: start;
         }
       }
-      .sync-data-actions-footer {
-        margin-top: var(--card-footer-margin-top);
-      }
       .shared-conflict-title {
         font-weight: var(--weight-extrabold);
         font-size: var(--font-small);
@@ -3081,10 +2928,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       .shared-conflict-desc {
         margin-top: 5px;
         line-height: 1.45;
-      }
-      .project-panel--loading {
-        min-height: 78px;
-        align-content: center;
       }
       .sync-project-actions {
         margin-top: 12px;
@@ -3296,8 +3139,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         overflow: hidden;
       }
       .budget-value-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 12px;
         min-height: var(--collection-stat-row-min-height);
@@ -3319,7 +3162,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
         letter-spacing: -0.02em;
-        white-space: nowrap;
+        min-width: 0;
+        max-width: 100%;
+        margin-left: auto;
+        overflow-wrap: anywhere;
         text-align: right;
       }
       .budget-detail-group .budget-detail {
@@ -3614,7 +3460,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     placeholder="할 일 검색 (제목·분야·메모)"
                     type="search"
                   />
-                  <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>
+                  <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span data-ui-icon="close"></span></button>
                 </div>
                 <div class="filter-feedback" aria-live="polite">
                   <span class="filter-feedback-summary" data-dom="taskFilterSummary">0개 표시 · 활성 조건 0개</span>
@@ -3641,9 +3487,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                         data-delta="-1"
                         type="button"
                       >
-                        <span class="ui-icon-glyph ui-icon-glyph--calendar" aria-hidden="true">‹</span>
+                        <span data-ui-icon="left"></span>
                       </button>
-                      <h3 class="card-title calendar-period-title" data-dom="calendarTitle"></h3>
+                      <h3 class="card-title calendar-period-title" data-dom="calendarTitle" aria-live="polite" aria-atomic="true"></h3>
                       <button
                         aria-label="다음 달"
                         class="icon-control icon-control--calendar-nav"
@@ -3651,7 +3497,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                         data-delta="1"
                         type="button"
                       >
-                        <span class="ui-icon-glyph ui-icon-glyph--calendar" aria-hidden="true">›</span>
+                        <span data-ui-icon="right"></span>
                       </button>
                       <div class="card-description calendar-period-hint" data-dom="calendarHint"></div>
                     </div>
@@ -3720,7 +3566,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                       placeholder="일정 검색 (제목, 장소, 분야, 메모)"
                       type="search"
                     />
-                    <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>
+                    <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span data-ui-icon="close"></span></button>
                   </div>
                   <div class="filter-feedback" aria-live="polite">
                     <span class="filter-feedback-summary" data-dom="scheduleFilterSummary">0개 표시 · 활성 조건 0개</span>
@@ -3837,7 +3683,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                       placeholder="메모 검색"
                       type="search"
                     />
-                    <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>
+                    <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span data-ui-icon="close"></span></button>
                   </div>
                   <div class="filter-feedback" aria-live="polite">
                     <span class="filter-feedback-summary" data-dom="memoSearchSummary">0개 표시 · 활성 조건 0개</span>
@@ -3865,7 +3711,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     class="more-menu u-hidden"
                     data-dom="syncAccountMenu"
                   >
-                    <button type="button" class="more-menu-trigger" aria-expanded="false" aria-haspopup="menu" aria-controls="sync-account-more-menu" aria-label="공유 계정 메뉴"><span class="ui-icon-glyph ui-icon-glyph--more" aria-hidden="true">⋯</span></button>
+                    <button type="button" class="more-menu-trigger" aria-expanded="false" aria-haspopup="menu" aria-controls="sync-account-more-menu" aria-label="공유 계정 메뉴"><span data-ui-icon="more"></span></button>
                     <div id="sync-account-more-menu" class="more-menu-pop" data-menu-kind="commands" role="menu" aria-label="공유 계정 작업">
                       <button role="menuitem" class="more-menu-item" data-action="shared-sign-out" type="button">로그아웃</button>
                       <button role="menuitem" class="more-menu-item" data-action="shared-update-password" type="button">비밀번호 변경</button>
@@ -3874,20 +3720,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                   </div>
                 </div>
               </div>
-              <div class="sync-status-row u-hidden" data-dom="syncStatusRow" role="status" aria-live="polite">
-                <span class="sync-status-indicator" aria-hidden="true"></span>
-                <div class="sync-status-copy">
-                  <div class="sync-detail-text" data-dom="syncDetailText"></div>
-                  <div class="sync-status-meta u-hidden" data-dom="syncStatusMeta"></div>
-                </div>
-                <button
-                  class="btn btn--status-action btn--tertiary u-hidden"
-                  data-action="shared-refresh-project"
-                  data-dom="syncStatusAction"
-                  type="button"
-                >다시 확인</button>
-              </div>
               <div data-ui-component="CardBody" class="card-body">
+                <div class="sync-status-row u-hidden" data-dom="syncStatusRow" role="status" aria-live="polite">
+                  <span class="sync-status-indicator" aria-hidden="true"></span>
+                  <div class="sync-status-copy">
+                    <div class="sync-detail-text" data-dom="syncDetailText"></div>
+                    <div class="sync-status-meta u-hidden" data-dom="syncStatusMeta"></div>
+                  </div>
+                  <button
+                    class="btn btn--status-action btn--tertiary u-hidden"
+                    data-action="shared-refresh-project"
+                    data-dom="syncStatusAction"
+                    type="button"
+                  >다시 확인</button>
+                </div>
                 <div class="form form--settings-stack u-mt-md">
                   <div
                     data-ui-component="Callout"
@@ -3951,10 +3797,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                   </div>
                 </div>
               </div>
-              <div data-ui-component="ActionRow" class="action-row action-row--flush action-row--footer sync-data-actions-footer u-hidden" data-dom="syncDataActions">
-                <button class="btn btn--app-action btn--primary" data-action="shared-pull" type="button">
-                  데이터 동기화
-                </button>
+              <div data-ui-component="CardFooter" class="card-footer-row u-hidden" data-dom="syncDataActions">
+                <div data-ui-component="ActionRow" class="action-row action-row--flush action-row--footer">
+                  <button class="btn btn--app-action btn--primary" data-action="shared-pull" type="button">
+                    데이터 동기화
+                  </button>
+                </div>
               </div>
             </div>
             <div data-ui-component="Card" class="card col12">
@@ -3973,7 +3821,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                     class="more-menu u-hidden"
                     data-dom="syncProjectMenu"
                   >
-                    <button type="button" class="more-menu-trigger" aria-expanded="false" aria-haspopup="menu" aria-controls="sync-project-more-menu" aria-label="프로젝트 메뉴"><span class="ui-icon-glyph ui-icon-glyph--more" aria-hidden="true">⋯</span></button>
+                    <button type="button" class="more-menu-trigger" aria-expanded="false" aria-haspopup="menu" aria-controls="sync-project-more-menu" aria-label="프로젝트 메뉴"><span data-ui-icon="more"></span></button>
                     <div id="sync-project-more-menu" class="more-menu-pop" data-menu-kind="commands" role="menu" aria-label="공유 프로젝트 작업">
                       <button role="menuitem" class="more-menu-item" data-action="shared-rotate-code" type="button">초대 코드 재발급</button>
                       <button role="menuitem" class="more-menu-item more-menu-item--danger" data-action="shared-leave-project" type="button">프로젝트 나가기</button>
@@ -3982,7 +3830,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
-                <div data-ui-component="InnerCard" class="inner-card inner-card--panel project-panel project-panel--loading u-hidden" data-dom="syncProjectLoading" aria-hidden="true">
+                <div data-ui-component="InnerCard" class="inner-card inner-card--panel inner-card--loading project-panel u-hidden" data-dom="syncProjectLoading" aria-hidden="true">
                   <div class="skeleton-stack">
                     <span class="skeleton-line skeleton-line--title"></span>
                     <span class="skeleton-line skeleton-line--meta"></span>
@@ -4152,9 +4000,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
       data-planner-root
       role="dialog"
     >
-      <div class="sheet">
-        <div data-dom="modalBody"></div>
-      </div>
+      <div class="sheet" data-dom="modalBody"></div>
     </div>
     <div aria-live="polite" aria-relevant="additions" class="toast-stack" data-dom="toastStack" data-planner-root></div>
     <div aria-hidden="true" class="confirm-overlay" data-dom="confirmDialog" data-planner-root>
@@ -4182,7 +4028,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "519",
+          version: "540",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4218,6 +4064,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           maxCategoryCount: 500,
           maxIdLength: 128,
           maxValidationNodes: 50000,
+          maxValidationDepth: 64,
           maxValidationIssues: 8,
           toastMs: { info: 3200, success: 3200, error: 5200, action: 6000, min: 800 },
         });
@@ -4257,22 +4104,23 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         const numberFmt = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 });
         const moneyFmt = numberFmt;
         const WEEKDAY_SHORT = Object.freeze(["일", "월", "화", "수", "목", "금", "토"]);
+        const THEME_VALUES = Object.freeze({"bg":"#f7f5f2","card":"#ffffff","soft":"#faf8f5","ink":"#222222","muted":"#6f6f6f","line":"#e8e3dd","accent":"#9b6b52","accent2":"#d9b8a7","button":"#ffffff","buttonText":"#222222","danger":"#b55b5b","good":"#5c8a69","weekendSat":"#4a80c1","weekendSun":"#d15454","radius":20});
         const THEME_FIELDS = {
-          bg: { type: "color", value: "#f7f5f2", css: "--bg", id: "thBg", label: "페이지 배경" },
-          card: { type: "color", value: "#ffffff", css: "--card", id: "thCard", label: "기본 카드 배경" },
-          soft: { type: "color", value: "#faf8f5", css: "--soft", id: "thSoft", label: "내부 카드·보조 영역" },
-          ink: { type: "color", value: "#222222", css: "--ink", id: "thInk", label: "기본 글자" },
-          muted: { type: "color", value: "#6f6f6f", css: "--muted", id: "thMuted", label: "보조 글자" },
-          line: { type: "color", value: "#e8e3dd", css: "--line", id: "thLine", label: "공통 테두리" },
-          accent: { type: "color", value: "#9b6b52", css: "--accent", id: "thAccent", label: "주요 포인트" },
-          accent2: { type: "color", value: "#d9b8a7", css: "--accent2", id: "thAccent2", label: "보조 진행·상태" },
-          button: { type: "color", value: "#ffffff", css: "--button-bg", id: "thButton", label: "기본 버튼 배경" },
-          buttonText: { type: "color", value: "#222222", css: "--button-text", id: "thButtonText", label: "버튼 글자" },
-          danger: { type: "color", value: "#b55b5b", css: "--danger", id: "thDanger", label: "삭제·경고" },
-          good: { type: "color", value: "#5c8a69", css: "--good", id: "thGood", label: "완료·성공" },
-          weekendSat: { type: "color", value: "#4a80c1", css: "--weekend-sat-base", id: "thWeekendSat", label: "토요일 날짜" },
-          weekendSun: { type: "color", value: "#d15454", css: "--weekend-sun-base", id: "thWeekendSun", label: "일요일 날짜" },
-          radius: { type: "range", value: 20, css: "--radius", id: "thRadius", min: 4, max: 40, format: (value) => `${value}px` },
+          bg: { type: "color", value: THEME_VALUES.bg, css: "--bg", id: "thBg", label: "페이지 배경" },
+          card: { type: "color", value: THEME_VALUES.card, css: "--card", id: "thCard", label: "기본 카드 배경" },
+          soft: { type: "color", value: THEME_VALUES.soft, css: "--soft", id: "thSoft", label: "내부 카드·보조 영역" },
+          ink: { type: "color", value: THEME_VALUES.ink, css: "--ink", id: "thInk", label: "기본 글자" },
+          muted: { type: "color", value: THEME_VALUES.muted, css: "--muted", id: "thMuted", label: "보조 글자" },
+          line: { type: "color", value: THEME_VALUES.line, css: "--line", id: "thLine", label: "공통 테두리" },
+          accent: { type: "color", value: THEME_VALUES.accent, css: "--accent", id: "thAccent", label: "주요 포인트" },
+          accent2: { type: "color", value: THEME_VALUES.accent2, css: "--accent2", id: "thAccent2", label: "보조 진행·상태" },
+          button: { type: "color", value: THEME_VALUES.button, css: "--button-bg", id: "thButton", label: "기본 버튼 배경" },
+          buttonText: { type: "color", value: THEME_VALUES.buttonText, css: "--button-text", id: "thButtonText", label: "버튼 글자" },
+          danger: { type: "color", value: THEME_VALUES.danger, css: "--danger", id: "thDanger", label: "삭제·경고" },
+          good: { type: "color", value: THEME_VALUES.good, css: "--good", id: "thGood", label: "완료·성공" },
+          weekendSat: { type: "color", value: THEME_VALUES.weekendSat, css: "--weekend-sat-base", id: "thWeekendSat", label: "토요일 날짜" },
+          weekendSun: { type: "color", value: THEME_VALUES.weekendSun, css: "--weekend-sun-base", id: "thWeekendSun", label: "일요일 날짜" },
+          radius: { type: "range", value: THEME_VALUES.radius, css: "--radius", id: "thRadius", min: 4, max: 40, format: (value) => `${value}px` },
         };
         const THEME_DEFAULTS = Object.freeze(Object.fromEntries(
           Object.entries(THEME_FIELDS).map(([key, field]) => [key, field.value])));
@@ -4554,6 +4402,121 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           ["주택 구입 목표", "논의 전"],
           ["부부 장기목표", "논의 전"],
         ];
+        // ===== UTILITIES / dates, numbers and identifiers =====
+        function won(n) {
+          return moneyFmt.format(num(n)) + " 원";
+        }
+        function num(v) {
+          const raw = String(v ?? "")
+            .replace(/,/g, "")
+            .replace(/[^0-9.-]/g, "");
+          return Number(raw) || 0;
+        }
+        function formatNumber(value) {
+          return numberFmt.format(num(value));
+        }
+        function formatPercent(value) {
+          return `${formatNumber(Math.round(num(value)))}%`;
+        }
+        function formatRatio(current, total) {
+          return `${formatNumber(current)}/${formatNumber(total)}`;
+        }
+        function formatCount(value, unit = "개") {
+          return `${formatNumber(value)}${unit}`;
+        }
+        function formatDateCompact(iso) {
+          const date = parseLocalDate(iso);
+          if (Number.isNaN(date.getTime())) return "날짜 없음";
+          return `${String(date.getFullYear()).slice(-2)}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")} (${WEEKDAY_SHORT[date.getDay()]})`;
+        }
+        function formatDateLong(iso) {
+          const date = parseLocalDate(iso);
+          if (Number.isNaN(date.getTime())) return "날짜 없음";
+          return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+        }
+        function formatMonthLabel(date) {
+          return date instanceof Date && !Number.isNaN(date.getTime()) ? `${date.getFullYear()}년 ${date.getMonth() + 1}월` : "";
+        }
+        function summarizeSearchQuery(value, maxLength = 24) {
+          const query = String(value || "").trim();
+          if (!query) return "";
+          return query.length > maxLength ? `${query.slice(0, maxLength)}…` : query;
+        }
+        function newId() {
+          if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
+          if (!globalThis.crypto?.getRandomValues)
+            throw new Error("보안 난수 생성기를 사용할 수 없는 브라우저입니다.");
+          const bytes = new Uint8Array(16);
+          crypto.getRandomValues(bytes);
+          bytes[6] = (bytes[6] & 0x0f) | 0x40;
+          bytes[8] = (bytes[8] & 0x3f) | 0x80;
+          const hex = [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
+          return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+        }
+        function parseLocalDate(iso) {
+          return new Date(String(iso || "") + "T00:00:00");
+        }
+        function isValidISODate(value, { allowEmpty = false } = {}) {
+          const raw = String(value ?? "").trim();
+          if (!raw) return !!allowEmpty;
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return false;
+          const [year, month, day] = raw.split("-").map(Number);
+          if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
+          if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+          const parsed = new Date(year, month - 1, day);
+          return parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day;
+        }
+        function normalizeISODate(value, { allowEmpty = false } = {}) {
+          const raw = String(value ?? "").trim();
+          return isValidISODate(raw, { allowEmpty }) ? raw : "";
+        }
+        function localDateISO(date = new Date()) {
+          const y = date.getFullYear(),
+            m = String(date.getMonth() + 1).padStart(2, "0"),
+            d = String(date.getDate()).padStart(2, "0");
+          return `${y}-${m}-${d}`;
+        }
+
+        function optionValue(option) {
+          return option && typeof option === "object" ? option.value : option;
+        }
+// Pure cloning, equality and immutable value graph helpers.
+        function cloneValue(value) {
+          return typeof structuredClone === "function"
+            ? structuredClone(value)
+            : JSON.parse(JSON.stringify(value));
+        }
+        function valuesEqual(a, b, seen = new WeakMap()) {
+          if (Object.is(a, b)) return true;
+          if (!a || !b || typeof a !== "object" || typeof b !== "object") return false;
+          if (Array.isArray(a) !== Array.isArray(b)) return false;
+          const known = seen.get(a);
+          if (known) return known === b;
+          seen.set(a, b);
+          if (Array.isArray(a)) {
+            if (a.length !== b.length) return false;
+            for (let index = 0; index < a.length; index++) {
+              if (!valuesEqual(a[index], b[index], seen)) return false;
+            }
+            return true;
+          }
+          const aKeys = Object.keys(a).sort();
+          const bKeys = Object.keys(b).sort();
+          if (aKeys.length !== bKeys.length) return false;
+          for (let index = 0; index < aKeys.length; index++) {
+            const key = aKeys[index];
+            if (key !== bKeys[index] || !valuesEqual(a[key], b[key], seen)) return false;
+          }
+          return true;
+        }
+        function deepFreeze(value, seen = new WeakSet()) {
+          const isFreezable = value && ["object", "function"].includes(typeof value);
+          if (!isFreezable || seen.has(value)) return value;
+          seen.add(value);
+          Object.getOwnPropertyNames(value).forEach((key) => deepFreeze(value[key], seen));
+          Object.freeze(value);
+          return value;
+        }
 // ===== 02 UI COMPONENTS =====
         // Text/attributes are escaped here. HTML content parameters accept only trusted component output.
         function htmlAttributes(attributes = {}) {
@@ -4571,14 +4534,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         const UI_VARIANTS = Object.freeze({
           Button: ["", "primary", "tertiary", "danger"],
-          Field: ["compact", "compact-text", "inline-select", "search", "modal-textarea", "money", "sync", "sync-code", "join-code", "toolbar", "clearable"],
+          Field: ["compact", "compact-text", "inline-select", "search", "modal-textarea", "money", "sync", "sync-code", "join-code", "toolbar"],
           IconControl: ["reorder", "calendar-nav", "modal-close", "field-clear"],
           Card: [""],
           CardBody: ["", "fill-stack", "budget-reference"],
           CardFooter: ["", "baseline"],
-          InnerCard: ["", "tinted", "raised", "compact", "status-summary", "plan-block", "budget-detail", "budget-stats", "theme-item", "category", "panel", "recovery", "grouped-list", "stacked-list"],
+          InnerCard: ["", "tinted", "raised", "compact", "status-summary", "plan-block", "budget-detail", "budget-stats", "theme-item", "category", "panel", "loading", "recovery", "grouped-list", "stacked-list"],
           CollectionRow: ["task", "event"],
-          CollectionMetaItem: ["", "key", "numeric", "truncate", "danger"],
+          CollectionMetaItem: ["", "key", "numeric", "danger"],
           CollectionItem: ["memo"],
           Callout: ["warning", "conflict"],
           CardHeader: ["fixed-actions", "flush", "memo"],
@@ -4615,6 +4578,29 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const classes = String(className || "").trim();
           return `<div data-ui-component="${attr(component)}" class="${attr(classes)}">${content}</div>`;
         }
+        function clearFieldControl(button) {
+          const named = button?.dataset?.fieldDom || button?.dataset?.searchDom;
+          const input = named ? $(DOM_IDS[named] || named) : button?.closest(".field-shell")?.querySelector("input");
+          if (!(input instanceof HTMLInputElement)) return false;
+          input.value = "";
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+          input.focus({ preventScroll: true });
+          return true;
+        }
+        // Shared vector geometry: every icon uses the same viewport, stroke and size.
+        const UI_ICON_SHAPES = Object.freeze({
+          more: '<circle cx="4" cy="10" r="1.25" fill="currentColor" stroke="none"/><circle cx="10" cy="10" r="1.25" fill="currentColor" stroke="none"/><circle cx="16" cy="10" r="1.25" fill="currentColor" stroke="none"/>',
+          close: '<path d="M5 5l10 10M15 5L5 15"/>',
+          left: '<path d="M12 4.5L6.5 10l5.5 5.5"/>',
+          right: '<path d="M8 4.5l5.5 5.5L8 15.5"/>',
+          up: '<path d="M4.5 9L10 3.5 15.5 9M10 3.5v13"/>',
+          down: '<path d="M4.5 11l5.5 5.5 5.5-5.5M10 3.5v13"/>',
+        });
+        function Icon(name) {
+          if (!Object.hasOwn(UI_ICON_SHAPES, name)) throw new Error(`Icon: unsupported name "${name}"`);
+          return `<svg class="ui-icon" data-ui-icon="${attr(name)}" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${UI_ICON_SHAPES[name]}</svg>`;
+        }
         function buttonClassName({ variant = "", role = "app-action", selected = false } = {}) {
           const roleClass = BUTTON_ROLES[role];
           if (!roleClass) throw new Error(`Button: unsupported role "${role}"`);
@@ -4641,7 +4627,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const money = type === "money";
           const variants = [];
           if (money) variants.push("money");
-          if (field.clearable) variants.push("clearable");
           if (type === "textarea") variants.push("modal-textarea");
           if (field.variant) variants.push(...String(field.variant).trim().split(/\s+/).filter(Boolean));
           const fieldVariantClasses = uiVariantClasses("Field", "field", variants.join(" "));
@@ -4657,20 +4642,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           else if (type === "textarea") control = `<textarea${attributes}>${esc(value)}</textarea>`;
           else control = `<input${attributes}${htmlAttributes({
             type: money ? "text" : type, value: money ? formatMoneyInputValue(value) : value,
-            inputmode: money ? "numeric" : null, autocomplete: money ? "off" : null,
+            inputmode: money ? "decimal" : null, autocomplete: money ? "off" : null,
             "data-action": money ? "format-money" : null,
           })}>`;
           const shell = money
             ? `<div class="field-shell field-shell--money">${control}<span class="field-unit" aria-hidden="true">원</span></div>`
             : field.clearable
-              ? `<div class="field-shell">${control}<button type="button" class="icon-control icon-control--field-clear" data-action="clear-field" data-field-dom="${attr(id)}" aria-label="${attr(`${label} 지우기`)}" title="${attr(`${label} 지우기`)}"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button></div>`
+              ? `<div class="field-shell field-shell--clearable">${control}<button type="button" class="icon-control icon-control--field-clear" data-action="clear-field" data-field-dom="${attr(id)}" aria-label="${attr(`${label} 지우기`)}" title="${attr(`${label} 지우기`)}">${Icon("close")}</button></div>`
               : control;
           return `<div class="form-field"><label for="${attr(controlId)}">${esc(label)}</label>${shell}<div class="field-error" id="${attr(errorId)}" role="alert" aria-live="polite"></div></div>`;
         }
         function SelectOptions(options, selected) {
           return options.map((option) => {
             const isObject = option && typeof option === "object";
-            const value = isObject ? option.value : option;
+            const value = optionValue(option);
             const label = isObject ? (option.label ?? option.value) : option;
             return `<option value="${attr(value)}" ${value === selected ? "selected" : ""}>${esc(label)}</option>`;
           }).join("");
@@ -4685,7 +4670,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return UIComponentRoot("Card", ["card", ...uiVariantClasses("Card", "card", variant)].join(" "), content);
         }
         // InnerCard is the only surface factory allowed to carry a domain layout hook on the same node.
-        // Visual differences still belong to explicit inner-card--* variants and are enforced by the dev guard.
+        // Visual differences still belong to explicit inner-card--* variants and are checked by the source ownership contract.
         function InnerCard(content = "", layoutClassName = "", variant = "") {
           const variantClasses = uiVariantClasses("InnerCard", "inner-card", variant);
           return UIComponentRoot("InnerCard", ["inner-card", ...variantClasses, layoutClassName].filter(Boolean).join(" "), content);
@@ -4731,6 +4716,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               <div><b data-dom="${attr(status.dom)}">0</b><span>${esc(status.label)}</span></div>`, "", "compact status-summary")).join("")}</div>`;
         }
         function mountStaticUiComponents() {
+          document.querySelectorAll('span[data-ui-icon]').forEach(host => {
+            host.outerHTML = Icon(host.dataset.uiIcon);
+          });
           document.querySelectorAll('[data-ui-static="PlanStatusSummary"]').forEach(host => {
             host.outerHTML = PlanStatusSummary();
           });
@@ -4844,8 +4832,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             throw new Error(`MoreMenu: unsupported variant "${variant}"`);
           const variantClass = variant === "default" ? "" : ` more-menu--${variant}`;
           const popupId = nextMoreMenuPopupId(type, id);
-          return `<div data-ui-component="MoreMenu" data-ui-variant="${attr(variant)}" data-ui-menu-kind="entity" class="more-menu${variantClass}">
-            <button type="button" class="more-menu-trigger" aria-expanded="false" aria-haspopup="menu" aria-controls="${attr(popupId)}" aria-label="${attr(label)} 메뉴"><span class="ui-icon-glyph ui-icon-glyph--more" aria-hidden="true">⋯</span></button>
+          return `<div data-ui-component="MoreMenu" data-ui-variant="${attr(variant)}" data-ui-menu-kind="entity" data-item-collection="${attr(type)}" data-item-id="${attr(id)}" class="more-menu${variantClass}">
+            <button type="button" class="more-menu-trigger" aria-expanded="false" aria-haspopup="menu" aria-controls="${attr(popupId)}" aria-label="${attr(label)} 메뉴">${Icon("more")}</button>
             <div id="${attr(popupId)}" class="more-menu-pop" data-menu-kind="entity" role="menu" aria-label="${attr(label)} 작업">
               ${MenuAction("수정", { action: `edit-${type}`, id, ariaLabel: `${label} 수정` })}
               ${MenuAction("삭제", { action: `delete-${type}`, id, danger: true, ariaLabel: `${label} 삭제` })}
@@ -4854,25 +4842,25 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function OrderButtons(id, index, length, type) {
           return `<div data-ui-component="OrderButtons" class="order-buttons" data-order-type="${attr(type)}" data-order-id="${attr(id)}">
-            ${[[-1, "위로", "↑", index <= 0], [1, "아래로", "↓", index >= length - 1]].map(
-              ([delta, label, arrow, disabled]) => `<button${htmlAttributes({
+            ${[[-1, "위로", "up", index <= 0], [1, "아래로", "down", index >= length - 1]].map(
+              ([delta, label, icon, disabled]) => `<button${htmlAttributes({
                 type: "button", class: "icon-control icon-control--reorder order-button", "aria-label": `${label} 이동`,
                 "data-action": `move-${type}`, "data-id": id, "data-delta": delta,
                 disabled, "aria-disabled": disabled ? "true" : null, tabindex: disabled ? -1 : null, title: label,
-              })}><span class="ui-icon-glyph ui-icon-glyph--reorder order-arrow" aria-hidden="true">${arrow}</span></button>`).join("")}
+              })}>${Icon(icon)}</button>`).join("")}
           </div>`;
         }
         function SortableCardActions(id, index, length, type, label, extra = "") {
           return OrderButtons(id, index, length, type) + MoreMenu(label, String(id), type) + extra;
         }
         function ModalCloseButton() {
-          return `<button type="button" class="icon-control icon-control--modal-close" data-action="close-modal" aria-label="닫기" title="닫기"><span class="ui-icon-glyph ui-icon-glyph--close" aria-hidden="true">×</span></button>`;
+          return `<button type="button" class="icon-control icon-control--modal-close" data-action="close-modal" aria-label="닫기" title="닫기">${Icon("close")}</button>`;
         }
         function ModalFrame(title, content, actions = "", description = "") {
           return `<div class="modal-frame">
             <div class="modal-header">
               <div class="modal-copy">
-                <h2 class="modal-title">${esc(title)}</h2>
+                <h2 id="${attr(DOM_IDS.modalTitle)}" tabindex="-1" class="modal-title">${esc(title)}</h2>
                 ${description ? `<div class="modal-description">${esc(description)}</div>` : ""}
               </div>
               ${ModalCloseButton()}
@@ -4886,7 +4874,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             deleteAction ? Button("삭제", { action: deleteAction, id: deleteId, variant: "danger", role: "sheet-action" }) : "",
             Button("취소", { action: "close-modal", variant: "tertiary", role: "sheet-action" }),
             Button("저장", { action: saveAction, id: saveId, variant: "primary", role: "sheet-action" }),
-          ].join(""), "dialog sheet-dialog");
+          ].join(""), "sheet-dialog");
         }
         function FormModal(title, fields, item, actions) {
           const controls = fields.map((field) => {
@@ -5068,12 +5056,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           },
           Tasks: {
             "tasks-search": onInput(() => requestRenderDebounced("tasks")),
-            "tasks-filter": onChange(() => requestRender("tasks")),
+            "tasks-filter": onChange(() => renderFilteredPage("tasks")),
             "reset-task-filters": onClick(() => resetTaskFilters()),
             "toggle-task": onClick((el) => toggleTask(el.dataset.id)),
           },
           Schedule: {
-            "schedule-filter": onChange(() => requestRender("schedule")),
+            "schedule-filter": onChange(() => renderFilteredPage("schedule")),
             "schedule-search": onInput(() => requestRenderDebounced("schedule")),
             "reset-schedule-filters": onClick(() => resetScheduleFilters()),
             "calendar-month": onClick((el) => changeCalendarMonth(Number(el.dataset.delta || 0))),
@@ -5204,6 +5192,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           Object.entries(DOM_REGISTRY).map(([owner, ids]) => [owner, Object.freeze(Object.values(ids))])));
         const UI_OWNER_BY_ID = Object.freeze(Object.fromEntries(
           Object.entries(UI_OWNERSHIP).flatMap(([owner, ids]) => ids.map((id) => [id, owner]))));
+        // Schema forms and rendering read immutable state; DOM writes go through registered owners.
 // ===== 04 ENGINES / collection and forms =====
         // No domain-name switches. Special behavior is declared in schema hooks.
         const Collection = {
@@ -5236,10 +5225,36 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const result = saveFormBySchema(name, id);
             if (!result) return null;
             const schema = this.schema(name);
-            closeModal();
+            const previous = modalPreviousFocus;
+            const hostName = previous?.matches?.(".more-menu-trigger")
+              ? previous.closest("[data-dom], [data-collection]")?.id : null;
+            closeModal({ restoreFocus: false });
             schema.afterSave?.(result.item);
-            if (result.changed) notifySuccess(schema.feedback?.saved || `${schema.label} 저장을 완료했어요.`);
-            else notifyInfo("변경된 내용이 없어요.");
+            const generation = modalGeneration, pageId = getActivePageId();
+            requestAnimationFrame(() => {
+              if (modalGeneration !== generation || getActivePageId() !== pageId) return;
+              const root = ownedElement("pages", pageId);
+              const list = $(hostName || schema.target);
+              const selector = `.more-menu[data-item-collection="${CSS.escape(name)}"][data-item-id="${CSS.escape(String(result.item.id))}"] > .more-menu-trigger`;
+              const isShown = element => !!element?.getClientRects().length;
+              const inList = list?.querySelector(selector);
+              const target = isShown(inList) ? inList : [...(root?.querySelectorAll(selector) || [])].find(isShown);
+              const active = document.activeElement;
+              if (!active || active === document.body || $(DOM_IDS.modal)?.contains(active)) {
+                if (target) {
+                  target.focus({ preventScroll: true });
+                  target.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" });
+                } else {
+                  const fallback = isShown(previous) ? previous : root?.querySelector('input[type="search"]');
+                  fallback?.focus({ preventScroll: true });
+                }
+              }
+              const hidden = pageId === schema.view && list && !isShown(inList);
+              const message = result.changed ? schema.feedback?.saved || `${schema.label} 저장을 완료했어요.` : "변경된 내용이 없어요.";
+              const feedback = hidden ? `${message} 현재 검색·필터가 적용된 목록에는 표시되지 않아요.` : message;
+              if (result.changed) notifySuccess(feedback);
+              else notifyInfo(feedback);
+            });
             return result;
           },
           edit(name, id) {
@@ -5260,17 +5275,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (committed) {
               if (schema.closeOnDelete) closeModal({ generation });
               schema.afterRemove?.();
-              const deletionState = state;
-              notifySuccess(schema.feedback?.deleted || `${schema.label} 삭제를 완료했어요.`, {
-                actionLabel: "실행 취소",
-                onAction: () => {
-                  if (state !== deletionState) {
-                    notifyInfo("이후 변경이 있어 이 삭제는 바로 되돌릴 수 없어요. 설정의 실행 취소를 확인해주세요.");
-                    return false;
-                  }
-                  return undoLastChange();
-                },
-              });
+              notifyUndoableChange(schema.feedback?.deleted || `${schema.label} 삭제를 완료했어요.`);
             }
             return committed;
           },
@@ -5317,7 +5322,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           else if (field.type === "time") {
             const time = String(value ?? "").trim();
             result = /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time) ? time : "";
-          } else if (field.options) result = field.options.includes(value) ? value : field.default ?? field.options[0];
+          } else if (field.options) result = field.options.some((option) => optionValue(option) === value) ? value : field.default ?? optionValue(field.options[0]);
           else result = String(value ?? field.default ?? "");
           if (field.repairEmpty && typeof result === "string" && !result.trim()) result = field.repairEmpty;
           // 길이 초과 값은 잘라서 보존합니다(검증 실패로 전체 데이터가 거부되는 것보다 안전).
@@ -5355,11 +5360,14 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return field.invalid || `${field.label || field.key}가 올바른 날짜인지 확인해주세요.`;
           if (field.type === "time" && String(value ?? "") && !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(value)))
             return field.invalid || `${field.label || field.key}가 올바른 시간인지 확인해주세요.`;
-          if (field.type === "money" && (!Number.isFinite(Number(value)) || Number(value) < 0))
-          return `${field.label || field.key}: 0 이상의 금액을 입력해주세요.`;
-        if (field.type === "money" && Number(value) > APP_CONFIG.maxMoneyValue)
-          return `${field.label || field.key}: ${moneyFmt.format(APP_CONFIG.maxMoneyValue)}원 이하로 입력해주세요.`;
-          if (field.options && !field.options.includes(value)) return `${field.label || field.key} 값이 올바르지 않습니다.`;
+          if (field.type === "money") {
+            const amount = Number(value);
+            if (!Number.isFinite(amount)) return `${field.label || field.key}: 숫자로 금액을 입력해주세요.`;
+            if (amount < 0) return `${field.label || field.key}: 0 이상의 금액을 입력해주세요.`;
+            if (amount > APP_CONFIG.maxMoneyValue)
+              return `${field.label || field.key}: ${moneyFmt.format(APP_CONFIG.maxMoneyValue)}원 이하로 입력해주세요.`;
+          }
+          if (field.options && !field.options.some((option) => optionValue(option) === value)) return `${field.label || field.key} 값이 올바르지 않습니다.`;
           return field.validate?.(value, data) || "";
         }
         function validateFieldsDetailed(fields, data, forForm = false) {
@@ -5398,7 +5406,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           control.addEventListener("input", clear, { once: true });
           control.addEventListener("change", clear, { once: true });
           control.focus({ preventScroll: true });
-          control.scrollIntoView({ block: "nearest" });
+          (control.closest(".form-field") || control).scrollIntoView({ block: "nearest" });
           return true;
         }
         function readFormFields(name) {
@@ -5406,7 +5414,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const value = modalValue(field.id);
             let parsed = value;
             if (field.read) parsed = field.read(value);
-            else if (field.type === "money") parsed = num(value);
+            else if (field.type === "money") parsed = parseMoneyInput(value);
             else if (!["date", "time"].includes(field.type)) parsed = value.trim();
             return [field.key, parsed];
           }));
@@ -5595,8 +5603,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             Button(page.label, { action: "show-page", role: "nav", selected: index === 0,
               attributes: { "data-page": id, "aria-current": index ? null : "page" } })).join(""));
         }
-        function showPage(id, { scrollToTop = true, navBehavior = "smooth" } = {}) {
+        const pageScrollPositions = new Map();
+        function showPage(id, { scrollToTop, navBehavior = "smooth" } = {}) {
           if (!Object.hasOwn(PAGE_REGISTRY, id)) return false;
+          const previousPage = getActivePageId();
+          pageScrollPositions.set(previousPage, window.scrollY);
           FloatingMenu.close();
           // Render a dirty destination while it is still hidden, then expose it atomically.
           // Navigation itself does not invalidate data, so never schedule a second render just for switching tabs.
@@ -5618,8 +5629,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               activeNavButton.offsetLeft - (nav.clientWidth - activeNavButton.offsetWidth) / 2);
             nav.scrollTo({ left: targetLeft, behavior: reducedMotion ? "auto" : navBehavior });
           }
-          // A tab switch should not animate an unrelated page from the previous scroll position.
-          if (scrollToTop) window.scrollTo({ top: 0, behavior: "auto" });
+          // Restore after the destination's layout is visible; the browser clamps shorter pages.
+          // Explicit false preserves the current position for flows such as saving an event.
+          if (scrollToTop === true || (scrollToTop !== false && id !== previousPage))
+            window.scrollTo({ top: scrollToTop === true ? 0 : pageScrollPositions.get(id) ?? 0, behavior: "instant" });
           return true;
         }
         function renderPageImmediately(id) {
@@ -5710,11 +5723,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const targetId = dx < 0 ? snapshot.nextId : snapshot.prevId;
             const horizontalEnough = distance > Math.abs(dy) * 1.2;
             if (targetId && horizontalEnough && (distance >= threshold || (distance >= 34 && velocity >= 0.5)))
-              showPage(targetId, { scrollToTop: false, navBehavior: "auto" });
+              showPage(targetId, { navBehavior: "auto" });
           }, { passive: true });
         }
         function requestRender(...changes) {
-          invalidateViewData();
           Object.entries(PAGE_REGISTRY).forEach(([id, page]) => {
             if (changes.some((change) => change === "all" || change === id || page.dependsOn?.includes(change)))
               dirtyViews.add(id);
@@ -5733,23 +5745,31 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (id === active) renderPageContent(id, view);
           }
         }
+        function renderFilteredPage(id) {
+          const page = PAGE_REGISTRY[id];
+          if (getActivePageId() !== id) { dirtyViews.add(id); return; }
+          if (id === "schedule") renderScheduleAllList();
+          else if (page.render) page.render(getViewData());
+          else Collection.render(page.collection, getViewData()[Collection.schema(page.collection).stateKey]);
+        }
         function requestRenderDebounced(view, delay = APP_CONFIG.renderDebounceMs) {
           const prior = renderDebounceTimers.get(view);
           if (prior) clearTimeout(prior);
           const timer = setTimeout(() => {
             renderDebounceTimers.delete(view);
-            requestRender(view);
+            renderFilteredPage(view);
           }, delay);
           renderDebounceTimers.set(view, timer);
         }
-        function reportActionError(error, action) {
+        function reportActionError(error, action, { modal = false } = {}) {
           console.error(`action ${action} 실패`, error);
-          notifyError(error?.message || "작업 처리 중 오류가 발생했어요.");
+          const message = error?.message || "작업 처리 중 오류가 발생했어요.";
+          notifyError(modal ? `${message} 입력 내용은 유지돼요. 다시 시도해주세요.` : message);
         }
-        function reportActionResult(result, action) {
+        function reportActionResult(result, action, options) {
           if (!result || typeof result.then !== "function") return result;
           return Promise.resolve(result).catch((error) => {
-            reportActionError(error, action);
+            reportActionError(error, action, options);
             return false;
           });
         }
@@ -5759,6 +5779,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           modalActionToken = null;
           modalActionBusy = false;
           const modal = $(DOM_IDS.modal);
+          modal?.setAttribute("aria-busy", "false");
+          for (const button of token.closeButtons) {
+            if (button.isConnected) button.disabled = false;
+          }
           if (el?.isConnected) {
             el.setAttribute("aria-busy", "false");
             el.textContent = token.label;
@@ -5768,9 +5792,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function runModalAction(el, handler, action) {
           const modal = $(DOM_IDS.modal);
           if (!modal?.classList.contains("open") || modalActionBusy) return false;
-          const token = { label: el.textContent };
+          const token = { label: el.textContent,
+            closeButtons: [...modal.querySelectorAll('[data-action="close-modal"]:not([disabled])')] };
           modalActionToken = token;
           modalActionBusy = true;
+          modal.setAttribute("aria-busy", "true");
+          for (const button of token.closeButtons) button.disabled = true;
           el.disabled = true;
           el.setAttribute("aria-busy", "true");
           el.textContent = "저장 중";
@@ -5778,11 +5805,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           try {
             result = handler(el);
           } catch (error) {
-            reportActionError(error, action);
+            reportActionError(error, action, { modal: true });
             releaseModalAction(el, token);
             return true;
           }
-          const reported = reportActionResult(result, action);
+          const reported = reportActionResult(result, action, { modal: true });
           if (reported && typeof reported.then === "function") {
             void Promise.resolve(reported).finally(() => releaseModalAction(el, token));
           } else {
@@ -6100,7 +6127,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             modalHistoryToken = null;
             return;
           }
-          if (modalHasUnsavedChanges()) {
+          if (modalActionBusy || modalHasUnsavedChanges()) {
             // Back consumed the modal entry; keep the app here until the discard prompt is answered.
             history.pushState({ ...(history.state || {}), [MODAL_HISTORY_KEY]: modalHistoryToken }, "", location.href);
             requestCloseModal();
@@ -6144,6 +6171,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (typeof open === "boolean") {
             modal.classList.toggle("open", open);
             modal.setAttribute("aria-hidden", String(!open));
+            modal.setAttribute("aria-busy", String(open && modalActionBusy));
             const app = $(DOM_IDS.appRoot);
             if (app) app.inert = open;
             document.body.classList.toggle("modal-open", open);
@@ -6153,13 +6181,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function focusModalInitial() {
           const title = $("modalBody")?.querySelector("h2");
-          if (title) {
-            title.id = DOM_IDS.modalTitle;
-            title.setAttribute("tabindex", "-1");
-            renderModalShell({ labelledBy: DOM_IDS.modalTitle });
-            // Read the dialog title without opening the mobile keyboard.
-            title.focus({ preventScroll: true });
-          }
+          // Read the dialog title without opening the mobile keyboard.
+          title?.focus({ preventScroll: true });
         }
         function openModal(type, data) {
           modalEditBaseline = null;
@@ -6167,8 +6190,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (body === null) return;
           const alreadyOpen = $(DOM_IDS.modal)?.classList.contains("open");
           const generation = ++modalGeneration;
-          FloatingMenu.close({ restoreFocus: true });
-          modalPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          modalPreviousFocus = document.querySelector(".more-menu.is-open > .more-menu-trigger")
+            || (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+          FloatingMenu.close();
           setOwnedHTML("modal", DOM_IDS.modalBody, body);
           if (COLLECTION_SCHEMAS[type] && !isNewId(data)) {
             const id = typeof data === "object" ? data.id : data;
@@ -6177,15 +6201,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }
           modalActionBusy = false;
           modalActionToken = null;
-          renderModalShell({ open: true, labelledBy: null });
+          modalInitialSnapshot = modalFormSnapshot();
+          renderModalShell({ open: true, labelledBy: DOM_IDS.modalTitle });
           if (!alreadyOpen) pushModalHistoryEntry();
           requestAnimationFrame(() => {
             if (generation !== modalGeneration) return;
-            modalInitialSnapshot = modalFormSnapshot();
+            const active = document.activeElement;
+            if ($(DOM_IDS.modal)?.contains?.(active) && active?.matches?.("input,textarea,select,button")) return;
             focusModalInitial();
           });
         }
-        function closeModal({ generation = modalGeneration } = {}) {
+        function clearSensitiveModalInputs() {
+          $("modalBody")?.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; });
+        }
+        function closeModal({ generation = modalGeneration, restoreFocus = true } = {}) {
           if (generation !== modalGeneration) return false;
           modalGeneration += 1;
           if (modalHistoryToken) {
@@ -6194,21 +6223,26 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (history.state?.[MODAL_HISTORY_KEY] === token) history.back();
           }
           renderModalShell({ open: false, labelledBy: null });
+          clearSensitiveModalInputs();
           modalActionBusy = false;
           modalActionToken = null;
           const previous = modalPreviousFocus;
           modalPreviousFocus = null;
           modalInitialSnapshot = "";
           modalEditBaseline = null;
-          if (previous?.isConnected) requestAnimationFrame(() => previous.focus());
+          const closedGeneration = modalGeneration;
+          if (restoreFocus && previous?.isConnected) requestAnimationFrame(() => {
+            if (modalGeneration === closedGeneration) previous.focus({ preventScroll: true });
+          });
           return true;
         }
         function requestCloseModal() {
+          if (modalActionBusy || confirmPending) return false;
           if (!modalHasUnsavedChanges()) return closeModal();
           const generation = modalGeneration;
           void appConfirm(
-            "작성 중인 내용이 있어요. 저장하지 않고 닫을까요?",
-            { title: "작성 내용 버리기", confirmText: "닫기", danger: true },
+            "저장하지 않은 변경 내용이 있어요. 닫으면 이 내용은 사라져요.",
+            { title: "변경 내용을 버릴까요?", confirmText: "버리기", cancelText: "계속 작성", danger: true },
           ).then((accepted) => { if (accepted) closeModal({ generation }); });
           return false;
         }
@@ -6314,7 +6348,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (!stack) return null;
           const duplicate = [...stack.children].find((node) =>
             node.dataset.toastMessage === text && node.dataset.toastTone === resolvedTone);
-          if (duplicate) return duplicate;
+          if (duplicate) {
+            if (typeof onAction !== "function") return duplicate;
+            // An action carries a state snapshot: repeated messages must use the latest callback.
+            duplicate.remove();
+          }
           while (stack.children.length >= 4) stack.firstElementChild.remove();
           const toast = Toast(text, resolvedTone, { actionLabel, onAction });
           stack.appendChild(toast);
@@ -6384,7 +6422,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const previous = confirmPreviousFocus;
           confirmPreviousFocus = null;
           resolve(!!result);
-          if (previous?.isConnected) requestAnimationFrame(() => previous.focus());
+          const closedGeneration = modalGeneration;
+          if (previous?.isConnected) requestAnimationFrame(() => {
+            if (modalGeneration === closedGeneration) previous.focus({ preventScroll: true });
+          });
           return true;
         }
         function handleConfirmKeydown(event) {
@@ -6455,15 +6496,31 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function flashTaskToggleFeedback(id) {
           if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
           queueMicrotask(() => requestAnimationFrame(() => {
-            const control = document.querySelector(`.task-check[data-id="${CSS.escape(String(id))}"]`);
+            const control = [...document.querySelectorAll(`.task-check[data-id="${CSS.escape(String(id))}"]`)]
+              .find((element) => element.getClientRects().length);
             if (!(control instanceof HTMLElement)) return;
             control.classList.add("is-feedback");
             setTimeout(() => control.classList.remove("is-feedback"), 180);
           }));
         }
         function toggleTask(id) {
+          const root = ownedElement("pages", getActivePageId());
+          const selector = `.task-check[data-id="${CSS.escape(String(id))}"]`;
+          const hasVisibleControl = () => [...(root?.querySelectorAll(selector) || [])]
+            .some((element) => element.getClientRects().length);
+          const wasVisible = hasVisibleControl();
           const updated = Collection.update("task", id, (item) => ({ status: item.status === "done" ? "todo" : "done" }));
-          if (updated) flashTaskToggleFeedback(id);
+          if (updated) {
+            const changedState = state;
+            // The render microtask queued by update runs first, so check the resulting list.
+            queueMicrotask(() => {
+              if (state !== changedState || !root?.getClientRects().length) return;
+              if (wasVisible && !hasVisibleControl()) {
+                const done = findById(state.tasks, id)?.status === "done";
+                notifyUndoableChange(done ? "할 일을 완료했어요." : "할 일 완료를 취소했어요.");
+              } else flashTaskToggleFeedback(id);
+            });
+          }
           return updated;
         }
         function buildTaskViewData(tasks, cats) {
@@ -6570,6 +6627,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           ].filter(Boolean);
           return CollectionRow({
             component: "TaskItem",
+            attributes: { "data-task-id": String(item.id) },
             variant: "task",
             leading,
             titleMetaItems,
@@ -6582,6 +6640,56 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function TaskListHost(items, options = {}) {
           return Collection.html("task", items, options);
+        }
+        const taskListRenderCache = new WeakMap();
+        function renderTaskList(items, options = {}) {
+          const target = ownedElement("tasks", DOM_IDS.taskList);
+          const host = target?.querySelector(".task-list-host");
+          const cached = target && taskListRenderCache.get(target);
+          if (!items.length || !host || !cached || cached.host !== host) {
+            Collection.render("task", items, options);
+            const currentHost = target?.querySelector(".task-list-host");
+            if (currentHost && items.length) {
+              const rows = new Map([...currentHost.children].map(row => [row.dataset.taskId, row]));
+              taskListRenderCache.set(target, { host: currentHost, rows: new Map(items.map(item =>
+                [String(item.id), { row: rows.get(String(item.id)), fingerprint: JSON.stringify(item) }])) });
+            } else if (target) taskListRenderCache.delete(target);
+            return;
+          }
+          const keys = new Set(items.map(item => String(item.id)));
+          const changed = items.some((item, index) =>
+            host.children[index]?.dataset.taskId !== String(item.id) ||
+            cached.rows.get(String(item.id))?.fingerprint !== JSON.stringify(item)) ||
+            [...cached.rows.keys()].some(key => !keys.has(key));
+          if (changed) FloatingMenu.closeWithin(target);
+          for (const [key, entry] of cached.rows) {
+            if (!keys.has(key)) { entry.row?.remove(); cached.rows.delete(key); }
+          }
+          let cursor = host.firstElementChild;
+          for (const item of items) {
+            const key = String(item.id), fingerprint = JSON.stringify(item);
+            let entry = cached.rows.get(key);
+            if (!entry || entry.fingerprint !== fingerprint || entry.row?.parentNode !== host) {
+              const previousFocus = entry?.row?.contains(document.activeElement) ? document.activeElement : null;
+              const template = document.createElement("template");
+              template.innerHTML = TaskItem(item);
+              const row = template.content.firstElementChild;
+              if (entry?.row?.parentNode === host) {
+                if (cursor === entry.row) cursor = row;
+                entry.row.replaceWith(row);
+              }
+              entry = { row, fingerprint };
+              cached.rows.set(key, entry);
+              if (previousFocus) {
+                const button = [...row.querySelectorAll("button")].find(candidate =>
+                  previousFocus.dataset.action ? candidate.dataset.action === previousFocus.dataset.action :
+                    previousFocus.classList.contains("more-menu-trigger") && candidate.classList.contains("more-menu-trigger"));
+                button?.focus({ preventScroll: true });
+              }
+            }
+            if (entry.row !== cursor) host.insertBefore(entry.row, cursor);
+            cursor = entry.row.nextElementSibling;
+          }
         }
         function renderTasks(view = getViewData()) {
           const filters = getTaskFilters();
@@ -6600,7 +6708,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             resetDom: DOM_IDS.taskFilterReset,
             resetActive: categoryActive || statusActive,
           });
-          Collection.render("task", items, {
+          renderTaskList(items, {
             emptyMessage: view.tasks.length && activeCount ? "현재 검색·필터 조건에 맞는 할 일이 없어요." : undefined,
           });
         }
@@ -6693,7 +6801,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const titleMetaItems = [e.category ? { label: e.category, variant: "key" } : null].filter(Boolean);
           const metaItems = [
             leadingMode !== "time" ? { label: eventTimeLabel(e), variant: e.time ? "numeric" : "" } : null,
-            e.location ? { label: e.location, variant: "truncate" } : null,
+            e.location ? { label: e.location } : null,
           ].filter(Boolean);
           return CollectionRow({
             component: "EventItem",
@@ -6771,7 +6879,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function navigateToSavedEvent(item) {
           selectScheduleDate(item.date);
-          showPage("schedule");
+          showPage("schedule", { scrollToTop: false });
         }
         function renderSchedule(v = getViewData()) {
           renderCalendar(v);
@@ -6791,6 +6899,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             }),
           );
 
+          renderScheduleAllList(v);
+        }
+        function renderScheduleAllList(v = getViewData()) {
           const filter = selectedValue("scheduleFilter", "all");
           const searchLabel = selectedValue("scheduleAllSearch").trim();
           const search = searchLabel.toLowerCase();
@@ -6823,7 +6934,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function resetScheduleFilters() {
           setOwnedValue("schedule", DOM_IDS.scheduleFilter, "all");
-          requestRender("schedule");
+          renderFilteredPage("schedule");
           return true;
         }
 
@@ -6851,27 +6962,39 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             ${InnerCard(amounts, "budget-value-group", "raised")}
             ${item.details ? InnerCard(`<div class="label">세부 내용</div><div class="budget-detail">${esc(item.details)}</div>`, "budget-detail-group", "raised budget-detail") : ""}`);
         }
+        function cleanMoneyInput(value) {
+          return String(value ?? "").replace(/[,\s₩￦]/g, "").replace(/원$/, "");
+        }
+        function parseMoneyInput(value) {
+          if (!String(value ?? "").trim()) return 0;
+          const cleaned = cleanMoneyInput(value);
+          return /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(cleaned) ? Number(cleaned) : NaN;
+        }
         function formatMoneyInputValue(value) {
+          if (value == null || !String(value).trim()) return "";
           const n = num(value);
-          if (!n) return "";
           const [whole, fraction] = String(n).split(".");
           return numberFmt.format(Number(whole)) + (fraction ? `.${fraction}` : "");
         }
         function formatMoneyInput(el) {
           if (!el) return;
           const raw = String(el.value || "");
+          const cleaned = cleanMoneyInput(raw);
+          // Keep invalid input visible for validation; never silently change its amount.
+          if (!/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(cleaned)) return;
           const caret = el.selectionStart ?? raw.length;
-          const digitsBeforeCaret = raw.slice(0, caret).replace(/[^\d.]/g, "").length;
-          const cleaned = raw.replace(/[^\d.]/g, "");
-          const dot = cleaned.indexOf(".");
-          const whole = (dot < 0 ? cleaned : cleaned.slice(0, dot)).slice(0, String(APP_CONFIG.maxMoneyValue).length);
-          const fraction = dot < 0 ? "" : `.${cleaned.slice(dot + 1).replace(/\./g, "")}`;
-          const next = whole ? numberFmt.format(Number(whole)) + fraction : "";
+          let charactersBeforeCaret = cleanMoneyInput(raw.slice(0, caret)).length;
+          const negative = cleaned.startsWith("-");
+          const unsigned = negative ? cleaned.slice(1) : cleaned;
+          const [whole, fraction] = unsigned.split(".");
+          if (!whole && raw.slice(0, caret).includes(".")) charactersBeforeCaret += 1;
+          const digits = (whole || "0").replace(/^0+(?=\d)/, "");
+          const next = (negative ? "-" : "") + digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            + (fraction === undefined ? "" : `.${fraction}`);
           el.value = next;
-          let position = 0;
-          let seen = 0;
-          while (position < next.length && seen < Math.min(digitsBeforeCaret, cleaned.length)) {
-            if (/[\d.]/.test(next[position])) seen++;
+          let position = 0, seen = 0;
+          while (position < next.length && seen < charactersBeforeCaret) {
+            if (/[\d.-]/.test(next[position])) seen++;
             position++;
           }
           el.setSelectionRange(position, position);
@@ -6931,6 +7054,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               query ? `“${summarizeSearchQuery(queryLabel)}” 검색 결과가 없어요.` : COLLECTION_SCHEMAS.memo.empty, "", query ? "search" : "empty"));
         }
 
+        // Derived views read immutable state and collection schemas; the home renderer consumes those views.
         // ===== 05 DOMAIN / Home and derived view data =====
         function getTodayStart() {
           const today = new Date();
@@ -6963,7 +7087,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           };
         }
         function getViewData() {
-          return derivedViewCache || (derivedViewCache = buildViewData());
+          const date = localDateISO();
+          if (!derivedViewCache || derivedViewCache.state !== state || derivedViewCache.date !== date)
+            derivedViewCache = { state, date, view: buildViewData() };
+          return derivedViewCache.view;
         }
         function renderTaskProgressSummary(view) {
           const pct = view.taskTotal ? Math.round((view.taskDone / view.taskTotal) * 100) : 0;
@@ -7061,33 +7188,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return FormModal("본식 날짜", [
             { key: "weddingDate", id: "weddingDate", label: "결혼식 날짜", type: "date" },
           ], state, { saveAction: "save-wedding-date" });
-        }
-        function renderSharedPasswordModal() {
-          return ModalFrame("비밀번호 변경", Form(`
-            ${FormField({ key: "password", id: "syncNewPasswordModal", label: "새 비밀번호", type: "password", placeholder: "8자 이상" }, "")}
-            ${FormField({ key: "passwordConfirm", id: "syncNewPasswordConfirmModal", label: "새 비밀번호 확인", type: "password", placeholder: "새 비밀번호를 한 번 더 입력" }, "")}
-          `, "modal"), ActionRow([
-            Button("취소", { action: "close-modal", variant: "tertiary", role: "sheet-action" }),
-            Button("비밀번호 변경", { action: "shared-submit-password-change", variant: "primary", role: "sheet-action" }),
-          ].join(""), "dialog sheet-dialog"));
-        }
-        function renderSharedDeleteAccountModal() {
-          return ModalFrame("계정 삭제", Form(`
-            <div class="modal-note">계정 삭제를 계속하려면 현재 비밀번호를 입력해주세요. 삭제 후에는 계정과 공동 프로젝트 연결을 복구할 수 없습니다.</div>
-            ${FormField({ key: "password", id: "syncDeletePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "현재 비밀번호" }, "")}
-          `, "modal"), ActionRow([
-            Button("취소", { action: "close-modal", variant: "tertiary", role: "sheet-action" }),
-            Button("계정 삭제", { action: "shared-confirm-delete-account", variant: "danger", role: "sheet-action" }),
-          ].join(""), "dialog sheet-dialog"));
-        }
-        function renderSharedLeaveProjectModal() {
-          return ModalFrame("프로젝트 나가기", Form(`
-            <div class="modal-note">프로젝트 나가기를 계속하려면 현재 계정 비밀번호를 입력해주세요. 확인되면 이 계정의 프로젝트 연결과 이 기기의 공동 프로젝트 데이터가 제거됩니다.</div>
-            ${FormField({ key: "password", id: "syncLeavePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "현재 비밀번호" }, "")}
-          `, "modal"), ActionRow([
-            Button("취소", { action: "close-modal", variant: "tertiary", role: "sheet-action" }),
-            Button("프로젝트 나가기", { action: "shared-confirm-leave-project", variant: "danger", role: "sheet-action" }),
-          ].join(""), "dialog sheet-dialog"));
         }
         function saveWeddingDate() {
           const nextDate = $(DOM_IDS.weddingDate).value;
@@ -7323,6 +7423,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           // PostgreSQL RPCs intentionally reuse P0001 for several domain errors. Inspect the
           // server message first so a useful instruction is not hidden by a generic code label.
           if (/rate|too many|attempt/i.test(message)) return "요청이 너무 많아요. 잠시 후 다시 시도해주세요.";
+          if (sharedErrorNeedsSessionRecovery(error)) return "로그인 세션을 다시 확인해주세요.";
           if (/expired/i.test(message)) return "초대 코드가 만료됐어요. 새 코드를 발급받아주세요.";
           if (/member limit|project full/i.test(message)) return "이 프로젝트는 두 명이 모두 참여한 상태예요.";
           if (/minimum client|client version|upgrade/i.test(message)) return "공동 데이터가 더 최신 앱 버전을 요구해요. 앱을 새로고침해 업데이트해주세요.";
@@ -7428,7 +7529,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function applySharedUser(nextUser, { explicitLogin = false } = {}) {
           const previousId = String(sharedSync.user?.id || "");
           const nextId = String(nextUser?.id || "");
-          if (previousId !== nextId) clearHistory();
+          if (previousId !== nextId) {
+            clearHistory();
+            const body = $("modalBody");
+            body?.querySelectorAll?.('input[type="password"]').forEach(input => { input.value = ""; });
+          }
           if (nextId) {
             const lastUserId = String(storageGet(APP_CONFIG.sharedLastUserKey, "") || "");
             if (lastUserId && lastUserId !== nextId && typeof state !== "undefined" && state) {
@@ -7754,7 +7859,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           delete src[APP_CONFIG.sharedStateMetaKey];
           return { state: src, meta };
         }
-// ===== 06 SHARED SYNC / Merge, UI, Projects, Auth and Transport =====
+// Pure three-way merge. No DOM, storage, network or mutable runtime access.
+function createSharedMergeEngine({ cloneValue, valuesEqual, normalizeState, collectionKeys, schemaVersion }) {
         function mergePlainObjectsDetailed(
           base,
           local,
@@ -7886,7 +7992,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             conflicts,
           };
         }
-        const SHARED_COLLECTION_KEYS = Object.freeze(Object.values(COLLECTION_KEYS));
+        const SHARED_COLLECTION_KEYS = Object.freeze(collectionKeys);
         function mergeSharedStatesDetailed(
           base,
           local,
@@ -7917,12 +8023,18 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             ).value;
           }
           root.schemaVersion = Math.max(
-            APP_CONFIG.stateSchemaVersion,
+            schemaVersion,
             Number(remote?.schemaVersion) || 0,
             Number(local?.schemaVersion) || 0,
           );
           return { state: normalizeState(root), conflicts: [...new Set(conflicts)] };
         }
+  return Object.freeze({ mergePlainObjectsDetailed, mergeSharedCollectionDetailed, mergeSharedStatesDetailed });
+}
+const { mergePlainObjectsDetailed, mergeSharedCollectionDetailed, mergeSharedStatesDetailed } = createSharedMergeEngine({
+  cloneValue, valuesEqual, normalizeState, collectionKeys: Object.values(COLLECTION_KEYS), schemaVersion: APP_CONFIG.stateSchemaVersion,
+});
+// Shared settings, status and conflict UI. Pure merge lives in 06-shared-merge.js.
         function saveSharedConfig(config) {
           const saved = setSharedConfig(config);
           if (saved) {
@@ -8271,6 +8383,35 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const joinCodeEl = ownedElement("shared", DOM_IDS.syncJoinCode);
           if (showKnownProject && joinCodeEl) joinCodeEl.value = "";
         }
+
+        function renderSharedPasswordModal() {
+          return ModalFrame("비밀번호 변경", Form(`
+            ${FormField({ key: "password", id: "syncNewPasswordModal", label: "새 비밀번호", type: "password", placeholder: "8자 이상" }, "")}
+            ${FormField({ key: "passwordConfirm", id: "syncNewPasswordConfirmModal", label: "새 비밀번호 확인", type: "password", placeholder: "새 비밀번호를 한 번 더 입력" }, "")}
+          `, "modal"), ActionRow([
+            Button("취소", { action: "close-modal", variant: "tertiary", role: "sheet-action" }),
+            Button("비밀번호 변경", { action: "shared-submit-password-change", variant: "primary", role: "sheet-action" }),
+          ].join(""), "sheet-dialog"));
+        }
+        function renderSharedDeleteAccountModal() {
+          return ModalFrame("계정 삭제", Form(`
+            <div class="modal-note">계정 삭제를 계속하려면 현재 비밀번호를 입력해주세요. 삭제 후에는 계정과 공동 프로젝트 연결을 복구할 수 없습니다.</div>
+            ${FormField({ key: "password", id: "syncDeletePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "현재 비밀번호" }, "")}
+          `, "modal"), ActionRow([
+            Button("취소", { action: "close-modal", variant: "tertiary", role: "sheet-action" }),
+            Button("계정 삭제", { action: "shared-confirm-delete-account", variant: "danger", role: "sheet-action" }),
+          ].join(""), "sheet-dialog"));
+        }
+        function renderSharedLeaveProjectModal() {
+          return ModalFrame("프로젝트 나가기", Form(`
+            <div class="modal-note">프로젝트 나가기를 계속하려면 현재 계정 비밀번호를 입력해주세요. 확인되면 이 계정의 프로젝트 연결과 이 기기의 공동 프로젝트 데이터가 제거됩니다.</div>
+            ${FormField({ key: "password", id: "syncLeavePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "현재 비밀번호" }, "")}
+          `, "modal"), ActionRow([
+            Button("취소", { action: "close-modal", variant: "tertiary", role: "sheet-action" }),
+            Button("프로젝트 나가기", { action: "shared-confirm-leave-project", variant: "danger", role: "sheet-action" }),
+          ].join(""), "sheet-dialog"));
+        }
+        // Account/project actions own sharedSync context; snapshots contain data, never client/channel/timer resources.
         async function sharedRemoveChannel() {
           const client = sharedSync.client;
           const channel = sharedSync.channel;
@@ -8337,7 +8478,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           Object.assign(sharedSync, {
             syncRevision: Number(previous.sync?.syncRevision) || 0,
             localMutationRevision: Number(previous.sync?.localMutationRevision) || 0,
-            lastSyncedState: cloneValue(previous.sync?.lastSyncedState),
+            lastSyncedState: cloneValue(previous.sync?.lastSyncedState ?? null),
+            lastSyncedHash: previous.sync?.lastSyncedHash || "",
+            baselineWithoutSnapshot: !!previous.sync?.baselineWithoutSnapshot,
+            minClientVersion: Math.max(0, Number(previous.sync?.minClientVersion) || 0),
             lastSyncAt: previous.sync?.lastSyncAt || null,
             lastRemoteAt: previous.sync?.lastRemoteAt || null,
             remoteChangeCount: Number(previous.sync?.remoteChangeCount) || 0,
@@ -8396,6 +8540,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function sharedContextSnapshot() {
           return {
+            runtime: sharedSync,
             lifecycle: sharedSync.lifecycle,
             client: sharedSync.client,
             userId: sharedSync.user?.id || null,
@@ -8403,31 +8548,39 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           };
         }
         function sharedContextIsCurrent(snapshot, { allowProjectChange = false } = {}) {
-          if (!snapshot || snapshot.lifecycle !== sharedSync.lifecycle) return false;
+          if (!snapshot || snapshot.runtime !== sharedSync || snapshot.lifecycle !== sharedSync.lifecycle) return false;
           if (snapshot.client !== sharedSync.client) return false;
           if (String(snapshot.userId || "") !== String(sharedSync.user?.id || "")) return false;
           if (!allowProjectChange && String(snapshot.projectId || "") !== String(sharedSync.projectId || ""))
             return false;
           return true;
         }
+// Authentication/session/account workflows. Project actions are separate.
         let sharedSessionRecoveryInFlight = null;
         async function sharedRecoverSession(snapshot = sharedContextSnapshot()) {
           const client = snapshot?.client || sharedSync.client;
           if (!client?.auth?.refreshSession || localWriteLocked) return false;
-          if (sharedSessionRecoveryInFlight) return sharedSessionRecoveryInFlight;
+          if (!sharedContextIsCurrent(snapshot)) return false;
+          if (sharedSessionRecoveryInFlight && sharedContextIsCurrent(sharedSessionRecoveryInFlight.snapshot))
+            return sharedSessionRecoveryInFlight.promise;
           const expectedUserId = String(snapshot?.userId || sharedSync.user?.id || "");
+          const recoveryIsCurrent = () => snapshot.runtime === sharedSync &&
+            snapshot.lifecycle === sharedSync.lifecycle && client === sharedSync.client &&
+            String(snapshot.projectId || "") === String(sharedSync.projectId || "") &&
+            (!expectedUserId || expectedUserId === String(sharedSync.user?.id || ""));
           const run = (async () => {
             try {
               setSharedIssue("auth", "로그인 세션을 다시 확인하는 중이에요.");
               renderSharedStatusUI();
               const { data, error } = await client.auth.refreshSession();
               if (error) throw error;
-              if (snapshot && (snapshot.lifecycle !== sharedSync.lifecycle || client !== sharedSync.client))
+              if (!recoveryIsCurrent())
                 return false;
               const user = data?.session?.user || data?.user || null;
               if (!user) throw new Error("Auth session missing after refresh");
               if (expectedUserId && String(user.id || "") !== expectedUserId)
                 throw new Error("세션 갱신 결과가 현재 로그인 계정과 일치하지 않아요.");
+              if (sharedSync.user && String(sharedSync.user.id) !== String(user.id)) return false;
               applySharedUser(user);
               clearSharedIssue("auth");
               renderSharedStatusUI();
@@ -8435,6 +8588,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               return true;
             } catch (error) {
               console.warn("shared session recovery failed", error);
+              if (!recoveryIsCurrent()) return false;
               setSharedIssue(
                 "auth",
                 "로그인 세션을 자동으로 복구하지 못했어요. 다시 로그인하면 공동 프로젝트를 다시 연결합니다.",
@@ -8443,13 +8597,319 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               return false;
             }
           })();
-          sharedSessionRecoveryInFlight = run;
+          const recovery = { snapshot, promise: run };
+          sharedSessionRecoveryInFlight = recovery;
           try {
             return await run;
           } finally {
-            if (sharedSessionRecoveryInFlight === run) sharedSessionRecoveryInFlight = null;
+            if (sharedSessionRecoveryInFlight === recovery) sharedSessionRecoveryInFlight = null;
           }
         }
+        function renderSharedControls({ clearSensitive = false } = {}) {
+          const c = sharedConfig();
+          const logged = !!sharedSync.user;
+          const emailEl = ownedElement("shared", DOM_IDS.syncEmail);
+          const passwordEl = ownedElement("shared", DOM_IDS.syncPassword);
+          const confirmEl = ownedElement("shared", DOM_IDS.syncPasswordConfirm);
+          const codeEl = ownedElement("shared", DOM_IDS.syncCode);
+          const confirmWrap = ownedElement("shared", DOM_IDS.syncPasswordConfirmWrap);
+
+          setOwnedDisplay("shared", DOM_IDS.syncLoginBox, !logged);
+          setOwnedDisplay("shared", DOM_IDS.syncLoggedInBox, logged);
+          setOwnedDisplay("shared", DOM_IDS.syncAccountMenu, logged);
+
+          const dataActions = ownedElement("shared", DOM_IDS.syncDataActions);
+          if (dataActions) dataActions.classList.toggle("u-hidden", !(logged && sharedSync.projectId));
+          if (confirmWrap) confirmWrap.classList.toggle("u-hidden", logged);
+
+          const savedEmail = sharedSync.user?.email || c.email || "";
+          if (emailEl && (logged || savedEmail)) emailEl.value = savedEmail;
+
+          const inviteCode = c.inviteCode || "";
+          if (codeEl && (logged || inviteCode)) codeEl.value = inviteCode;
+
+          if (clearSensitive || logged) {
+            if (passwordEl) passwordEl.value = "";
+            if (confirmEl) confirmEl.value = "";
+          }
+        }
+        function sharedRemoveAuthSubscription() {
+          try {
+            sharedSync.authSubscription?.unsubscribe?.();
+          } catch (e) {
+            console.warn("auth listener cleanup failed", e);
+          }
+          sharedSync.authSubscription = null;
+        }
+        let sharedSignOutInFlight = false;
+        async function handleSharedAuthStateChange(event, session, client) {
+          if (sharedSync.client !== client) return;
+          if (event === "SIGNED_OUT" && sharedSignOutInFlight) return;
+          const nextUser = session?.user || null;
+          if (event === "SIGNED_OUT") {
+            // Auth sessions can disappear for reasons other than the in-app logout button (remote
+            // revocation, token expiry, another tab, etc.). Never interpret that event as consent to
+            // destroy local edits, pending sync data, baselines, recovery points, or undo history.
+            sharedSync.lifecycle += 1;
+            sharedAfterLoginInFlight = null;
+            const snapshot = sharedContextSnapshot();
+            await sharedRemoveChannel();
+            if (!sharedContextIsCurrent(snapshot)) return;
+            clearTimeout(sharedSync.pushTimer);
+            sharedSync.pushTimer = null;
+            sharedClearRetry();
+            sharedSync.user = null;
+            if (sharedSync.projectId) setSharedPhase("offline");
+            renderSharedStatusUI();
+            renderSharedControls({ clearSensitive: true });
+            clearSensitiveModalInputs();
+            renderSharedProject();
+            return;
+          }
+          if (localWriteLocked) return;
+          applySharedUser(nextUser);
+          if (!nextUser) {
+            renderSharedStatusUI();
+            renderSharedProject();
+            return;
+          }
+          renderSharedStatusUI();
+          renderSharedProject();
+          if (event === "PASSWORD_RECOVERY") {
+            notifyInfo("비밀번호 재설정 링크로 들어왔어요. 새 비밀번호를 설정해주세요.");
+            const recoveryContext = sharedContextSnapshot();
+            setTimeout(() => { if (sharedContextIsCurrent(recoveryContext)) openModal("shared-password-change"); }, 0);
+          }
+          if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && !sharedSync.projectId && !localWriteLocked) void sharedAfterLogin();
+        }
+        async function sharedConnect({ silent = false } = {}) {
+          const runtime = sharedSync;
+          const lifecycle = sharedSync.lifecycle + 1;
+          sharedSync.lifecycle = lifecycle;
+          try {
+            if (!(await loadSupabaseLibrary({ silent }))) return false;
+            if (runtime !== sharedSync || lifecycle !== sharedSync.lifecycle) return false;
+
+            const cfg = sharedConfig();
+            const url = (cfg.url || DEFAULT_SUPABASE_URL).replace(/\/$/, "");
+            const key = cfg.key || DEFAULT_SUPABASE_KEY;
+            sharedAssertClientSafeKey(key);
+            const email = $(DOM_IDS.syncEmail)?.value.trim() || cfg.email || "";
+
+            setSharedConfig({ ...cfg, url, key, email });
+            await sharedRemoveChannel();
+            if (runtime !== sharedSync || lifecycle !== sharedSync.lifecycle) return false;
+            sharedRemoveAuthSubscription();
+
+            sharedSync.client = window.supabase.createClient(url, key, {
+              auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+            });
+
+            const client = sharedSync.client;
+            const authState = client.auth.onAuthStateChange((event, session) => {
+              void handleSharedAuthStateChange(event, session, client);
+            });
+            sharedSync.authSubscription = authState?.data?.subscription || authState?.subscription || null;
+
+            const { data, error } = await client.auth.getSession();
+            if (error) throw error;
+            if (runtime !== sharedSync || lifecycle !== sharedSync.lifecycle || sharedSync.client !== client) return false;
+
+            if (!localWriteLocked) applySharedUser(data.session?.user || null);
+            if (sharedSync.user && !localWriteLocked) {
+              await sharedAfterLogin();
+            } else {
+              renderSharedStatusUI();
+              renderSharedProject();
+            }
+            return true;
+          } catch (e) {
+            console.error(e);
+            if (runtime !== sharedSync || lifecycle !== sharedSync.lifecycle) return false;
+            renderSharedStatusUI();
+            if (!silent) notifyError(sharedFriendlyError(e, "연결에 실패했어요. 공유 서버 연결 상태를 확인해주세요."));
+            else console.warn("initial shared connection failed", e);
+            return false;
+          }
+        }
+        async function ensureSharedClient() {
+          if (sharedSync.client) return true;
+          return await sharedConnect();
+        }
+        let sharedAuthActionInFlight = null;
+        function runSharedAuthAction(action) {
+          if (sharedAuthActionInFlight) return sharedAuthActionInFlight;
+          const current = Promise.resolve().then(action);
+          sharedAuthActionInFlight = current;
+          const release = () => { if (sharedAuthActionInFlight === current) sharedAuthActionInFlight = null; };
+          void current.then(release, release);
+          return current;
+        }
+        function authRequestIsCurrent(snapshot, user = null) {
+          if (snapshot.runtime !== sharedSync || snapshot.lifecycle !== sharedSync.lifecycle ||
+              snapshot.client !== sharedSync.client) return false;
+          // The SDK's own SIGNED_IN callback can precede the request result.
+          const currentId = String(sharedSync.user?.id || "");
+          return currentId === String(snapshot.userId || "") || (!!user && currentId === String(user.id || ""));
+        }
+        function sharedSignUp() { return runSharedAuthAction(() => sharedAuthenticate("signUp")); }
+        function sharedSignIn() { return runSharedAuthAction(() => sharedAuthenticate("signInWithPassword")); }
+        async function sharedAuthenticate(method) {
+          const runtime = sharedSync, lifecycle = sharedSync.lifecycle, hadClient = !!sharedSync.client;
+          let snapshot = null;
+          try {
+            if (!(await ensureSharedClient()) || runtime !== sharedSync || (hadClient && lifecycle !== sharedSync.lifecycle)) return false;
+            snapshot = sharedContextSnapshot();
+            const email = $(DOM_IDS.syncEmail).value.trim(), password = $(DOM_IDS.syncPassword).value;
+            const signingUp = method === "signUp";
+            const confirm = signingUp ? $(DOM_IDS.syncPasswordConfirm).value : password;
+            if (!email || !password || !confirm) {
+              notifyError(signingUp ? "이메일과 비밀번호, 비밀번호 확인을 모두 입력해주세요." : "이메일과 비밀번호를 입력해주세요.");
+              return false;
+            }
+            if (password !== confirm) {
+              notifyError("비밀번호가 일치하지 않습니다. 다시 확인해주세요.");
+              $(DOM_IDS.syncPasswordConfirm).focus();
+              return false;
+            }
+            const credentials = signingUp ? { email, password, options: { data: { app_name: "우리 결혼 플래너" } } } : { email, password };
+            const { data, error } = await snapshot.client.auth[method](credentials);
+            if (!authRequestIsCurrent(snapshot, data?.user)) return false;
+            if (error) throw error;
+            if (signingUp && !data.session) {
+              notifySuccess("회원가입이 완료됐어요. 이메일 인증이 켜져 있다면 인증 후 로그인해주세요.");
+              return true;
+            }
+            applySharedUser(data.user, { explicitLogin: true });
+            await sharedAfterLogin();
+            if (!authRequestIsCurrent(snapshot, data.user)) return false;
+            notifySuccess(signingUp ? "회원가입과 로그인이 완료됐어요." : "로그인했어요.");
+            return true;
+          } catch (error) {
+            if (!snapshot || !authRequestIsCurrent(snapshot)) return false;
+            console.error(error);
+            notifyError(sharedFriendlyError(error, method === "signUp" ? "회원가입에 실패했어요." : "로그인에 실패했어요."));
+            return false;
+          }
+        }
+        async function sharedResetPassword() {
+          let snapshot = null;
+          try {
+            if (!(await ensureSharedClient())) return false;
+            snapshot = sharedContextSnapshot();
+            const email = (ownedElement("shared", DOM_IDS.syncEmail)?.value || sharedSync.user?.email || sharedConfig().email || "").trim();
+            if (!email) {
+              notifyError("비밀번호를 재설정할 이메일을 입력해주세요.");
+              return false;
+            }
+            const redirectTo = new URL("./", location.href).href;
+            const { error } = await snapshot.client.auth.resetPasswordForEmail(email, { redirectTo });
+            if (!sharedContextIsCurrent(snapshot)) return false;
+            if (error) throw error;
+            notifySuccess("비밀번호 재설정 메일을 보냈어요. 메일의 링크로 다시 들어와 새 비밀번호를 설정해주세요.");
+            return true;
+          } catch (e) {
+            if (!snapshot || !sharedContextIsCurrent(snapshot)) return false;
+            console.error(e);
+            notifyError(sharedFriendlyError(e, "비밀번호 재설정 메일을 보내지 못했어요."));
+            return false;
+          }
+        }
+        async function sharedUpdatePassword() {
+          const generation = modalGeneration;
+          let snapshot = null;
+          try {
+            if (!(await ensureSharedClient()) || !sharedSync.user) {
+              notifyError("먼저 로그인해주세요.");
+              return false;
+            }
+            if (generation !== modalGeneration) return false;
+            snapshot = sharedContextSnapshot();
+            const password = modalValue(DOM_IDS.syncNewPasswordModal);
+            const passwordConfirm = modalValue(DOM_IDS.syncNewPasswordConfirmModal);
+            if (password.length < 8) {
+              notifyError("새 비밀번호는 8자 이상 입력해주세요.");
+              return false;
+            }
+            if (password !== passwordConfirm) {
+              notifyError("새 비밀번호가 일치하지 않습니다. 다시 확인해주세요.");
+              return false;
+            }
+            const { error } = await snapshot.client.auth.updateUser({ password });
+            if (!sharedContextIsCurrent(snapshot)) return false;
+            if (error) throw error;
+            closeModal({ generation });
+            notifySuccess("비밀번호를 변경했어요.");
+            return true;
+          } catch (e) {
+            if (!snapshot || !sharedContextIsCurrent(snapshot)) return false;
+            console.error(e);
+            notifyError(sharedFriendlyError(e, "비밀번호를 변경하지 못했어요."));
+            return false;
+          }
+        }
+        async function sharedDeleteAccount() {
+          if (!sharedSync.client || !sharedSync.user) {
+            notifyError("먼저 로그인해주세요.");
+            return false;
+          }
+          if (!(await appConfirm(
+            "정말 계정을 삭제하시겠습니까? 계정을 삭제하면 공동 프로젝트 연결과 서버 계정을 복구할 수 없어요. 필요한 데이터는 먼저 백업해주세요.",
+            { title: "계정 삭제", confirmText: "계속", danger: true },
+          ))) return false;
+          openModal("shared-account-delete");
+          return true;
+        }
+        async function sharedConfirmDeleteAccount() {
+          const snapshot = sharedContextSnapshot();
+          const generation = modalGeneration;
+          if (!sharedSync.client || !sharedSync.user) {
+            notifyError("먼저 로그인해주세요.");
+            return false;
+          }
+          const password = modalValue(DOM_IDS.syncDeletePasswordModal);
+          if (!password) {
+            notifyError("계정 삭제를 계속하려면 현재 비밀번호를 입력해주세요.");
+            return false;
+          }
+          try {
+            if (!(await flushCurrentSharedChangesBefore("계정 삭제", { showAlert: false }))) {
+              if (!(await appConfirm(
+                "아직 서버에 저장되지 않은 변경이 있어요. 그래도 계정을 삭제할까요?",
+                { title: "저장되지 않은 변경", confirmText: "삭제 계속", danger: true },
+              ))) return false;
+            }
+            if (!sharedContextIsCurrent(snapshot) || generation !== modalGeneration) return false;
+            const { data, error } = await snapshot.client.functions.invoke("delete-account", {
+              body: { confirm: true, password },
+            });
+            if (!sharedContextIsCurrent(snapshot)) return false;
+            if (error) throw error;
+            if (data && data.ok === false) throw new Error(data.error || "계정 삭제에 실패했어요.");
+            closeModal({ generation });
+            const localCleared = clearLocalPlannerUserData();
+            const lastUserCleared = storageRemove(APP_CONFIG.sharedLastUserKey);
+            const sharedConfigCleared = storageRemove(APP_CONFIG.sharedKey);
+            await sharedRemoveChannel();
+            if (!sharedContextIsCurrent(snapshot)) return false;
+            sharedRemoveAuthSubscription();
+            sharedSync = createSharedSyncState({ lifecycle: sharedSync.lifecycle + 1 });
+            renderSharedStatusUI();
+            renderSharedControls({ clearSensitive: true });
+            renderSharedProject();
+            if (localCleared && lastUserCleared && sharedConfigCleared)
+              notifySuccess("계정과 이 기기의 로컬 데이터를 삭제했어요.");
+            else
+              notifyError("계정은 삭제됐지만 이 기기의 일부 로컬 데이터를 지우지 못했어요. 브라우저 사이트 데이터를 직접 삭제해주세요.");
+            return true;
+          } catch (e) {
+            console.error(e);
+            if (!sharedContextIsCurrent(snapshot)) return false;
+            notifyError(sharedFriendlyError(e, "계정을 삭제하지 못했어요. 비밀번호와 서버의 delete-account Edge Function 배포 상태를 확인해주세요."));
+            return false;
+          }
+        }
+// Project discovery, connection and mutation workflows.
         function sharedProjectMetadataColumnsMissing(error) {
           const code = String(error?.code || "");
           const message = String(error?.message || "");
@@ -8536,289 +8996,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           if (sharedProjectActionInFlight) return sharedProjectActionInFlight;
           const current = Promise.resolve().then(action);
           sharedProjectActionInFlight = current;
-          void current.finally(() => {
+          const release = () => {
             if (sharedProjectActionInFlight === current) sharedProjectActionInFlight = null;
-          });
+          };
+          void current.then(release, release);
           return current;
         }
-        function renderSharedControls({ clearSensitive = false } = {}) {
-          const c = sharedConfig();
-          const logged = !!sharedSync.user;
-          const emailEl = ownedElement("shared", DOM_IDS.syncEmail);
-          const passwordEl = ownedElement("shared", DOM_IDS.syncPassword);
-          const confirmEl = ownedElement("shared", DOM_IDS.syncPasswordConfirm);
-          const codeEl = ownedElement("shared", DOM_IDS.syncCode);
-          const confirmWrap = ownedElement("shared", DOM_IDS.syncPasswordConfirmWrap);
-
-          setOwnedDisplay("shared", DOM_IDS.syncLoginBox, !logged);
-          setOwnedDisplay("shared", DOM_IDS.syncLoggedInBox, logged);
-          setOwnedDisplay("shared", DOM_IDS.syncAccountMenu, logged);
-
-          const dataActions = ownedElement("shared", DOM_IDS.syncDataActions);
-          if (dataActions) dataActions.classList.toggle("u-hidden", !(logged && sharedSync.projectId));
-          if (confirmWrap) confirmWrap.classList.toggle("u-hidden", logged);
-
-          const savedEmail = sharedSync.user?.email || c.email || "";
-          if (emailEl && (logged || savedEmail)) emailEl.value = savedEmail;
-
-          const inviteCode = c.inviteCode || "";
-          if (codeEl && (logged || inviteCode)) codeEl.value = inviteCode;
-
-          if (clearSensitive || logged) {
-            if (passwordEl) passwordEl.value = "";
-            if (confirmEl) confirmEl.value = "";
-          }
-        }
-        function sharedRemoveAuthSubscription() {
-          try {
-            sharedSync.authSubscription?.unsubscribe?.();
-          } catch (e) {
-            console.warn("auth listener cleanup failed", e);
-          }
-          sharedSync.authSubscription = null;
-        }
-        let sharedSignOutInFlight = false;
-        async function handleSharedAuthStateChange(event, session, client) {
-          if (sharedSync.client !== client) return;
-          if (event === "SIGNED_OUT" && sharedSignOutInFlight) return;
-          const nextUser = session?.user || null;
-          if (event === "SIGNED_OUT") {
-            // Auth sessions can disappear for reasons other than the in-app logout button (remote
-            // revocation, token expiry, another tab, etc.). Never interpret that event as consent to
-            // destroy local edits, pending sync data, baselines, recovery points, or undo history.
-            sharedSync.lifecycle += 1;
-            sharedAfterLoginInFlight = null;
-            await sharedRemoveChannel();
-            clearTimeout(sharedSync.pushTimer);
-            sharedSync.pushTimer = null;
-            sharedClearRetry();
-            sharedSync.user = null;
-            if (sharedSync.projectId) setSharedPhase("offline");
-            renderSharedStatusUI();
-            renderSharedControls({ clearSensitive: true });
-            renderSharedProject();
-            return;
-          }
-          if (localWriteLocked) return;
-          applySharedUser(nextUser);
-          if (!nextUser) {
-            renderSharedStatusUI();
-            renderSharedProject();
-            return;
-          }
-          renderSharedStatusUI();
-          renderSharedProject();
-          if (event === "PASSWORD_RECOVERY") {
-            notifyInfo("비밀번호 재설정 링크로 들어왔어요. 새 비밀번호를 설정해주세요.");
-            setTimeout(() => openModal("shared-password-change"), 0);
-          }
-          if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && !sharedSync.projectId && !localWriteLocked) void sharedAfterLogin();
-        }
-        async function sharedConnect({ silent = false } = {}) {
-          const lifecycle = sharedSync.lifecycle + 1;
-          sharedSync.lifecycle = lifecycle;
-          try {
-            if (!(await loadSupabaseLibrary({ silent }))) return false;
-
-            const cfg = sharedConfig();
-            const url = (cfg.url || DEFAULT_SUPABASE_URL).replace(/\/$/, "");
-            const key = cfg.key || DEFAULT_SUPABASE_KEY;
-            sharedAssertClientSafeKey(key);
-            const email = $(DOM_IDS.syncEmail)?.value.trim() || cfg.email || "";
-
-            setSharedConfig({ ...cfg, url, key, email });
-            await sharedRemoveChannel();
-            sharedRemoveAuthSubscription();
-
-            sharedSync.client = window.supabase.createClient(url, key, {
-              auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
-            });
-
-            const client = sharedSync.client;
-            const authState = client.auth.onAuthStateChange((event, session) => {
-              void handleSharedAuthStateChange(event, session, client);
-            });
-            sharedSync.authSubscription = authState?.data?.subscription || authState?.subscription || null;
-
-            const { data, error } = await client.auth.getSession();
-            if (error) throw error;
-            if (lifecycle !== sharedSync.lifecycle || sharedSync.client !== client) return false;
-
-            if (!localWriteLocked) applySharedUser(data.session?.user || null);
-            if (sharedSync.user && !localWriteLocked) {
-              await sharedAfterLogin();
-            } else {
-              renderSharedStatusUI();
-              renderSharedProject();
-            }
-            return true;
-          } catch (e) {
-            console.error(e);
-            renderSharedStatusUI();
-            if (!silent) notifyError(sharedFriendlyError(e, "연결에 실패했어요. 공유 서버 연결 상태를 확인해주세요."));
-            else console.warn("initial shared connection failed", e);
-            return false;
-          }
-        }
-        async function ensureSharedClient() {
-          if (sharedSync.client) return true;
-          return await sharedConnect();
-        }
-        async function sharedSignUp() {
-          try {
-            if (!(await ensureSharedClient())) return;
-            const email = $(DOM_IDS.syncEmail).value.trim(),
-              password = $(DOM_IDS.syncPassword).value,
-              confirm = $(DOM_IDS.syncPasswordConfirm).value;
-            if (!email || !password || !confirm) {
-              notifyError("이메일과 비밀번호, 비밀번호 확인을 모두 입력해주세요.");
-              return;
-            }
-            if (password !== confirm) {
-              notifyError("비밀번호가 일치하지 않습니다. 다시 확인해주세요.");
-              $(DOM_IDS.syncPasswordConfirm).focus();
-              return;
-            }
-            const { data, error } = await sharedSync.client.auth.signUp({
-              email,
-              password,
-              options: { data: { app_name: "우리 결혼 플래너" } },
-            });
-            if (error) throw error;
-            if (data.session) {
-              applySharedUser(data.user, { explicitLogin: true });
-              await sharedAfterLogin();
-              notifySuccess("회원가입과 로그인이 완료됐어요.");
-            } else notifySuccess("회원가입이 완료됐어요. 이메일 인증이 켜져 있다면 인증 후 로그인해주세요.");
-          } catch (e) {
-            console.error(e);
-            notifyError(sharedFriendlyError(e, "회원가입에 실패했어요."));
-          }
-        }
-        async function sharedSignIn() {
-          try {
-            if (!(await ensureSharedClient())) return;
-            const email = $(DOM_IDS.syncEmail).value.trim(),
-              password = $(DOM_IDS.syncPassword).value;
-            if (!email || !password) {
-              notifyError("이메일과 비밀번호를 입력해주세요.");
-              return;
-            }
-            const { data, error } = await sharedSync.client.auth.signInWithPassword({ email, password });
-            if (error) throw error;
-            applySharedUser(data.user, { explicitLogin: true });
-            await sharedAfterLogin();
-            notifySuccess("로그인했어요.");
-          } catch (e) {
-            console.error(e);
-            notifyError(sharedFriendlyError(e, "로그인에 실패했어요."));
-          }
-        }
-        async function sharedResetPassword() {
-          try {
-            if (!(await ensureSharedClient())) return false;
-            const email = (ownedElement("shared", DOM_IDS.syncEmail)?.value || sharedSync.user?.email || sharedConfig().email || "").trim();
-            if (!email) {
-              notifyError("비밀번호를 재설정할 이메일을 입력해주세요.");
-              return false;
-            }
-            const redirectTo = new URL("./", location.href).href;
-            const { error } = await sharedSync.client.auth.resetPasswordForEmail(email, { redirectTo });
-            if (error) throw error;
-            notifySuccess("비밀번호 재설정 메일을 보냈어요. 메일의 링크로 다시 들어와 새 비밀번호를 설정해주세요.");
-            return true;
-          } catch (e) {
-            console.error(e);
-            notifyError(sharedFriendlyError(e, "비밀번호 재설정 메일을 보내지 못했어요."));
-            return false;
-          }
-        }
-        async function sharedUpdatePassword() {
-          const generation = modalGeneration;
-          try {
-            if (!(await ensureSharedClient()) || !sharedSync.user) {
-              notifyError("먼저 로그인해주세요.");
-              return false;
-            }
-            if (generation !== modalGeneration) return false;
-            const password = modalValue(DOM_IDS.syncNewPasswordModal);
-            const passwordConfirm = modalValue(DOM_IDS.syncNewPasswordConfirmModal);
-            if (password.length < 8) {
-              notifyError("새 비밀번호는 8자 이상 입력해주세요.");
-              return false;
-            }
-            if (password !== passwordConfirm) {
-              notifyError("새 비밀번호가 일치하지 않습니다. 다시 확인해주세요.");
-              return false;
-            }
-            const { error } = await sharedSync.client.auth.updateUser({ password });
-            if (error) throw error;
-            closeModal({ generation });
-            notifySuccess("비밀번호를 변경했어요.");
-            return true;
-          } catch (e) {
-            console.error(e);
-            notifyError(sharedFriendlyError(e, "비밀번호를 변경하지 못했어요."));
-            return false;
-          }
-        }
-        async function sharedDeleteAccount() {
-          if (!sharedSync.client || !sharedSync.user) {
-            notifyError("먼저 로그인해주세요.");
-            return false;
-          }
-          if (!(await appConfirm(
-            "정말 계정을 삭제하시겠습니까? 계정을 삭제하면 공동 프로젝트 연결과 서버 계정을 복구할 수 없어요. 필요한 데이터는 먼저 백업해주세요.",
-            { title: "계정 삭제", confirmText: "계속", danger: true },
-          ))) return false;
-          openModal("shared-account-delete");
-          return true;
-        }
-        async function sharedConfirmDeleteAccount() {
-          const generation = modalGeneration;
-          if (!sharedSync.client || !sharedSync.user) {
-            notifyError("먼저 로그인해주세요.");
-            return false;
-          }
-          const password = modalValue(DOM_IDS.syncDeletePasswordModal);
-          if (!password) {
-            notifyError("계정 삭제를 계속하려면 현재 비밀번호를 입력해주세요.");
-            return false;
-          }
-          try {
-            if (!(await flushCurrentSharedChangesBefore("계정 삭제", { showAlert: false }))) {
-              if (!(await appConfirm(
-                "아직 서버에 저장되지 않은 변경이 있어요. 그래도 계정을 삭제할까요?",
-                { title: "저장되지 않은 변경", confirmText: "삭제 계속", danger: true },
-              ))) return false;
-            }
-            const { data, error } = await sharedSync.client.functions.invoke("delete-account", {
-              body: { confirm: true, password },
-            });
-            if (error) throw error;
-            if (data && data.ok === false) throw new Error(data.error || "계정 삭제에 실패했어요.");
-            closeModal({ generation });
-            const localCleared = clearLocalPlannerUserData();
-            const lastUserCleared = storageRemove(APP_CONFIG.sharedLastUserKey);
-            const sharedConfigCleared = storageRemove(APP_CONFIG.sharedKey);
-            await sharedRemoveChannel();
-            sharedRemoveAuthSubscription();
-            sharedSync = createSharedSyncState({ lifecycle: sharedSync.lifecycle + 1 });
-            renderSharedStatusUI();
-            renderSharedControls({ clearSensitive: true });
-            renderSharedProject();
-            if (localCleared && lastUserCleared && sharedConfigCleared)
-              notifySuccess("계정과 이 기기의 로컬 데이터를 삭제했어요.");
-            else
-              notifyError("계정은 삭제됐지만 이 기기의 일부 로컬 데이터를 지우지 못했어요. 브라우저 사이트 데이터를 직접 삭제해주세요.");
-            return true;
-          } catch (e) {
-            console.error(e);
-            notifyError(sharedFriendlyError(e, "계정을 삭제하지 못했어요. 비밀번호와 서버의 delete-account Edge Function 배포 상태를 확인해주세요."));
-            return false;
-          }
-        }
-
         let sharedAfterLoginInFlight = null;
         async function sharedAfterLoginAttempt(snapshot) {
           const target = await sharedRefreshProject();
@@ -8946,14 +9129,17 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             && /invite code collision/i.test(String(error?.message || ""));
         }
         async function createProjectRpcWithInviteRetry(name, maxAttempts = 3) {
+          const snapshot = sharedContextSnapshot();
           let lastError = null;
           for (let attempt = 0; attempt < maxAttempts; attempt++) {
             const code = generateInviteCode();
-            const { data, error } = await sharedSync.client.rpc("create_wedding_project", {
+            const { data, error } = await snapshot.client.rpc("create_wedding_project", {
               p_name: name,
               p_invite_code: code,
               p_client_version: Number(APP_CONFIG.version) || 0,
             });
+            if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true }))
+              throw new Error("공유 연결이 변경되어 이전 요청을 중단했어요.");
             if (!error) return { data, code };
             lastError = error;
             if (!isInviteCodeCollisionError(error) || attempt === maxAttempts - 1) break;
@@ -8962,13 +9148,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           throw lastError || new Error("프로젝트를 생성하지 못했어요.");
         }
         async function rotateInviteRpcWithRetry(maxAttempts = 3) {
+          const snapshot = sharedContextSnapshot();
           let lastError = null;
           for (let attempt = 0; attempt < maxAttempts; attempt++) {
             const code = generateInviteCode();
-            const { data, error } = await sharedSync.client.rpc("rotate_wedding_invite", {
+            const { data, error } = await snapshot.client.rpc("rotate_wedding_invite", {
               p_invite_code: code,
               p_client_version: Number(APP_CONFIG.version) || 0,
             });
+            if (!sharedContextIsCurrent(snapshot, { allowProjectChange: true }))
+              throw new Error("공유 연결이 변경되어 이전 요청을 중단했어요.");
             if (!error) return { data, code };
             lastError = error;
             if (!isInviteCodeCollisionError(error) || attempt === maxAttempts - 1) break;
@@ -9187,13 +9376,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return runSharedProjectAction(() => sharedJoinProjectCore());
         }
         async function sharedRotateInviteCode() {
+          const snapshot = sharedContextSnapshot();
           if (!sharedSync.client || !sharedSync.user || !sharedSync.projectId) return false;
           if (!(await appConfirm(
             "초대 코드를 재발급하면 기존 초대 코드는 즉시 사용할 수 없게 됩니다. 이미 프로젝트에 참여한 상대방과의 연결은 끊어지지 않습니다. 정말 새 초대 코드를 발급할까요?",
             { title: "초대 코드 재발급", confirmText: "재발급" },
           ))) return false;
+          if (!sharedContextIsCurrent(snapshot)) return false;
           try {
             const { data, code: nextCode } = await rotateInviteRpcWithRetry();
+            if (!sharedContextIsCurrent(snapshot)) return false;
             const row = Array.isArray(data) ? data[0] : data;
             const code = row?.invite_code || nextCode;
             const cfg = sharedConfig();
@@ -9203,11 +9395,13 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return true;
           } catch (e) {
             console.error(e);
+            if (!sharedContextIsCurrent(snapshot)) return false;
             notifyError(sharedFriendlyError(e, "초대 코드를 재발급하지 못했어요."));
             return false;
           }
         }
         async function sharedLeaveProject() {
+          const snapshot = sharedContextSnapshot();
           if (!sharedSync.client || !sharedSync.user || !sharedSync.projectId) return false;
           let leaveMessage =
             "프로젝트에서 나가면 이 계정은 더 이상 공동 데이터를 볼 수 없고, 이 기기의 프로젝트 데이터도 지워집니다. 필요한 내용은 먼저 백업해주세요.";
@@ -9224,14 +9418,17 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           } catch (e) {
             console.warn("프로젝트 멤버 수 확인 실패", e);
           }
+          if (!sharedContextIsCurrent(snapshot)) return false;
           if (!(await appConfirm(
             `${leaveMessage}\n\n정말 프로젝트에서 나가시겠습니까?`,
             { title: "프로젝트 나가기", confirmText: "계속", danger: true },
           ))) return false;
+          if (!sharedContextIsCurrent(snapshot)) return false;
           openModal("shared-project-leave");
           return true;
         }
         async function sharedConfirmLeaveProject() {
+          const snapshot = sharedContextSnapshot();
           const generation = modalGeneration;
           if (!sharedSync.client || !sharedSync.user || !sharedSync.projectId) {
             notifyError("먼저 공동 프로젝트 연결 상태를 확인해주세요.");
@@ -9244,13 +9441,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           }
           try {
             if (!(await flushCurrentSharedChangesBefore("프로젝트 나가기"))) return false;
-            const { data, error } = await sharedSync.client.functions.invoke("leave-project", {
+            if (!sharedContextIsCurrent(snapshot) || generation !== modalGeneration) return false;
+            const { data, error } = await snapshot.client.functions.invoke("leave-project", {
               body: { password },
             });
+            if (!sharedContextIsCurrent(snapshot)) return false;
             if (error) throw error;
             if (data && data.ok === false) throw new Error(data.error || "프로젝트에서 나가지 못했어요.");
             closeModal({ generation });
             await sharedRemoveChannel();
+            if (!sharedContextIsCurrent(snapshot)) return false;
             const localCleared = clearLocalPlannerUserData();
             const pendingCleared = clearSharedPendingSave();
             const baselineCleared = storageRemove(APP_CONFIG.sharedBaselineKey);
@@ -9267,6 +9467,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return true;
           } catch (e) {
             console.error(e);
+            if (!sharedContextIsCurrent(snapshot)) return false;
             const message = /invalid login credentials|invalid credentials|wrong password/i.test(String(e?.message || ""))
               ? "비밀번호가 올바르지 않아요. 현재 계정 비밀번호를 다시 확인해주세요."
               : sharedFriendlyError(e, "프로젝트에서 나가지 못했어요.");
@@ -9303,6 +9504,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             }
           }
         }
+        // Shared transport reads state and sharedSync; callers guard async results with a context snapshot.
+        // Incoming normalization and baseline bookkeeping are shared; merge/conflict decisions stay at each entry point.
+        function prepareSharedRemoteState(raw, source = "공유 데이터") {
+          const parsed = parseSharedState(raw || {});
+          return { ...prepareIncomingState(parsed.state, { source }), meta: parsed.meta };
+        }
+        function applySharedRemoteState(next) {
+          return replaceState(next, { persist: true, render: true, sync: false, views: "all", theme: true });
+        }
+        function recordSharedBaseline(remoteState, revision) {
+          sharedSync.syncRevision = Math.max(0, Number(revision) || 0);
+          sharedSync.lastSyncedState = cloneValue(remoteState);
+          persistSharedBaseline(remoteState, sharedSync.syncRevision);
+        }
         function acceptRemoteBaseline(before, after, previousRevision, nextRevision) {
           // A newly accepted remote baseline invalidates undo snapshots created against the old baseline,
           // even when both sides independently converged on the same visible values.
@@ -9316,24 +9531,23 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             String(payload.new.project_id) !== String(sharedSync.projectId)
           )
             return;
-          const parsed = parseSharedState(payload.new.state);
           if (guardFutureSchemaWrite("실시간 데이터 반영")) {
             setSharedPhase("error");
             return;
           }
-          const prepared = prepareIncomingState(parsed.state, { source: "공유 데이터" });
+          const prepared = prepareSharedRemoteState(payload.new.state);
           if (!prepared.ok) {
             setSharedPhase("error");
             return;
           }
-          const incomingRevision = Number(payload.new.revision ?? parsed.meta.revision) || 0;
-          const remoteMinimumVersion = Math.max(0, Number(parsed.meta.minClientVersion) || 0);
+          const incomingRevision = Number(payload.new.revision ?? prepared.meta.revision) || 0;
+          const remoteMinimumVersion = Math.max(0, Number(prepared.meta.minClientVersion) || 0);
           try { sharedAssertClientVersion(remoteMinimumVersion); } catch (e) {
             notifyError(sharedFriendlyError(e, "공동 데이터가 더 최신 앱을 요구해 실시간 반영을 중단했어요."));
             return;
           }
           const knownRevision = Number(sharedSync.syncRevision) || 0;
-          const incoming = Date.parse(payload.new.updated_at || parsed.meta.updatedAt || "");
+          const incoming = Date.parse(payload.new.updated_at || prepared.meta.updatedAt || "");
           const known = Date.parse(sharedSync.lastSyncAt || "");
           if (incomingRevision && knownRevision && incomingRevision <= knownRevision) return;
           if (!incomingRevision && knownRevision > 0) return;
@@ -9346,8 +9560,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           )
             return;
           if (
-            parsed.meta.deviceId && parsed.meta.deviceId === SHARED_DEVICE_ID &&
-            parsed.meta.tabId && parsed.meta.tabId === getLocalTabId()
+            prepared.meta.deviceId && prepared.meta.deviceId === SHARED_DEVICE_ID &&
+            prepared.meta.tabId && prepared.meta.tabId === getLocalTabId()
           ) return;
           const previousBusy = sharedSync.busy;
           sharedSync.busy = true;
@@ -9357,9 +9571,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (sharedSync.baselineWithoutSnapshot && !valuesEqual(localState, remoteState)) {
               createRecoveryPoint("동기화 기준 복구 불가 - 실시간 반영 전", { silent: true });
               sharedSync.conflictCount += 1;
-              sharedSync.syncRevision = Math.max(knownRevision, incomingRevision);
-              sharedSync.lastSyncedState = cloneValue(remoteState);
-              persistSharedBaseline(remoteState, sharedSync.syncRevision);
+              recordSharedBaseline(remoteState, Math.max(knownRevision, incomingRevision));
               setSharedConflictContext({
                 base: null,
                 local: localState,
@@ -9372,6 +9584,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               return;
             }
             const pending = currentSharedPendingSave();
+            if (pending?.invalid) {
+              setSharedIssue("storage", "공유 대기 정보가 손상되어 실시간 자동 반영을 멈췄어요. 로컬 데이터를 백업한 뒤 연결을 다시 확인해주세요.");
+              setSharedPhase("error");
+              return;
+            }
             const hasUnbasedLocalWork = !sharedSync.lastSyncedState && (
               !!sharedSync.needsPush || !!sharedSync.pushQueued || Number(sharedSync.pendingChangeCount || 0) > 0 ||
               (!!pending && !pending.invalid)
@@ -9392,13 +9609,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             }
             const base = sharedSync.lastSyncedState || localState;
             const merged = mergeSharedStatesDetailed(base, localState, remoteState);
-            const replaced = replaceState(merged.state, {
-              persist: true,
-              render: true,
-              sync: false,
-              views: "all",
-              theme: true,
-            });
+            const replaced = applySharedRemoteState(merged.state);
             if (!replaced) {
               setSharedPhase("error");
               return;
@@ -9408,7 +9619,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             acceptRemoteBaseline(localState, merged.state, knownRevision, Math.max(incomingRevision, knownRevision + 1));
             sharedSync.remoteChangeCount = Math.min(999, Number(sharedSync.remoteChangeCount || 0) + 1);
             sharedSync.lastRemoteAt =
-              payload.new.updated_at || parsed.meta.updatedAt || new Date().toISOString();
+              payload.new.updated_at || prepared.meta.updatedAt || new Date().toISOString();
             if (merged.conflicts.length) {
               sharedSync.conflictCount += merged.conflicts.length;
               const unresolved = sharedSync.lastConflictContext;
@@ -9427,9 +9638,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               sharedSync.lastConflictContext.remoteRevision = incomingRevision;
               setSharedPhase("conflict");
             }
-            sharedSync.syncRevision = incomingRevision;
-            sharedSync.lastSyncedState = cloneValue(remoteState);
-            persistSharedBaseline(remoteState, sharedSync.syncRevision);
+            recordSharedBaseline(remoteState, incomingRevision);
             if (!merged.conflicts.length && !sharedSync.lastConflictContext) {
               sharedSync.lastConflictContext = null;
               sharedSync.lastConflictPaths = [];
@@ -9437,7 +9646,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               renderSharedConflictBox();
             }
             sharedSync.lastSyncAt =
-              payload.new.updated_at || parsed.meta.updatedAt || new Date().toISOString();
+              payload.new.updated_at || prepared.meta.updatedAt || new Date().toISOString();
             renderSharedStatusUI();
           } finally {
             sharedSync.busy = previousBusy;
@@ -9549,6 +9758,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             if (pullResult.error && String(pullResult.error.code || "") === "42703") {
               pullResult = await client.from("project_state").select("state,updated_at").eq("project_id", projectId).maybeSingle();
             }
+            if (!sharedContextIsCurrent(snapshot)) return false;
             const { data, error } = pullResult;
             if (error) throw error;
             if (!sharedContextIsCurrent(snapshot)) return false;
@@ -9559,8 +9769,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               if (showAlert) notifyInfo("공동 데이터가 아직 없어요.");
               return false;
             }
-            const parsed = parseSharedState(data.state || {});
-            const prepared = prepareIncomingState(parsed.state, { source: "공유 데이터" });
+            const prepared = prepareSharedRemoteState(data.state);
             if (!prepared.ok)
               throw new Error(
                 prepared.futureVersion
@@ -9570,7 +9779,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const firstSyncOnThisDevice = !sharedSyncedMarkerMatches(projectId, snapshot.userId);
             const localDiffersFromRemote = !valuesEqual(state, prepared.state);
             if (showAlert) {
-              if (!(await ensureRecoveryPoint("데이터 동기화 전", state, "데이터 동기화"))) {
+              const recovered = await ensureRecoveryPoint("데이터 동기화 전", state, "데이터 동기화");
+              if (!sharedContextIsCurrent(snapshot)) return false;
+              if (!recovered) {
                 setSharedPhase("idle");
                 return false;
               }
@@ -9589,18 +9800,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               notifyInfo("이 기기의 데이터를 자동 복구 지점에 보관한 뒤 공동 데이터를 불러왔어요.");
             }
             const remoteState = prepared.state;
-            const remoteMinimumVersion = Math.max(0, Number(parsed.meta.minClientVersion) || 0);
+            const remoteMinimumVersion = Math.max(0, Number(prepared.meta.minClientVersion) || 0);
             sharedAssertClientVersion(remoteMinimumVersion);
             const pullBase = pullBaseBeforeRequest;
             const pullMutationRevision = pullMutationRevisionBeforeRequest;
-            const remoteRevision = Number(data.revision ?? parsed.meta.revision) || 0;
+            const remoteRevision = Number(data.revision ?? prepared.meta.revision) || 0;
             if (remoteRevision && remoteRevision < (Number(sharedSync.syncRevision) || 0)) return true;
             const localState = cloneValue(state);
             if (sharedSync.baselineWithoutSnapshot && !valuesEqual(localState, remoteState)) {
               if (!showAlert) createRecoveryPoint("연결 전 편집 자동 병합 중단 전", { silent: true });
-              sharedSync.syncRevision = Math.max(sharedSync.syncRevision, remoteRevision);
-              sharedSync.lastSyncedState = cloneValue(remoteState);
-              persistSharedBaseline(remoteState, sharedSync.syncRevision);
+              recordSharedBaseline(remoteState, Math.max(sharedSync.syncRevision, remoteRevision));
               sharedSync.conflictCount += 1;
               setSharedConflictContext({
                 base: null,
@@ -9619,19 +9828,12 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             const mergeResult = hasLocalPending
               ? mergeSharedStatesDetailed(pullBase, localState, remoteState)
               : { state: remoteState, conflicts: [] };
-            const replaced = replaceState(mergeResult.state, {
-              persist: true,
-              render: true,
-              sync: false,
-              views: "all",
-              theme: true,
-            });
+            const replaced = applySharedRemoteState(mergeResult.state);
             if (!replaced)
               throw new Error(
                 "공동 데이터를 불러왔지만 이 브라우저에 저장하지 못했어요. 기존 데이터는 유지됩니다.",
               );
-            sharedSync.syncRevision = remoteRevision;
-            sharedSync.lastSyncedState = cloneValue(remoteState);
+            recordSharedBaseline(remoteState, remoteRevision);
             acceptRemoteBaseline(
               localState,
               mergeResult.state,
@@ -9639,9 +9841,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               remoteRevision || (!valuesEqual(remoteState, pullBase) ? pullKnownRevisionBeforeRequest + 1 : 0),
             );
             sharedSync.remoteChangeCount = 0;
-            sharedSync.lastRemoteAt = data.updated_at || parsed.meta.updatedAt || new Date().toISOString();
-            sharedSync.lastSyncAt = data.updated_at || parsed.meta.updatedAt || new Date().toISOString();
-            persistSharedBaseline(remoteState, sharedSync.syncRevision);
+            sharedSync.lastRemoteAt = data.updated_at || prepared.meta.updatedAt || new Date().toISOString();
+            sharedSync.lastSyncAt = data.updated_at || prepared.meta.updatedAt || new Date().toISOString();
             markSharedEverSynced();
             const stateMatchesRemote = valuesEqual(state, remoteState);
             const mutationUnchanged = Number(sharedSync.localMutationRevision) === pullMutationRevision;
@@ -9685,6 +9886,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return true;
           } catch (e) {
             console.error(e);
+            if (!sharedContextIsCurrent(snapshot)) return false;
             if (
               recoverSession &&
               sharedErrorNeedsSessionRecovery(e) &&
@@ -9693,6 +9895,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             ) {
               return await sharedPull(showAlert, { flushPending: false, recoverSession: false });
             }
+            if (!sharedContextIsCurrent(snapshot)) return false;
             if (sharedContextIsCurrent(snapshot)) {
               if (sharedErrorNeedsSessionRecovery(e))
                 setSharedIssue("auth", "로그인 세션을 자동으로 복구하지 못했어요.");
@@ -9709,8 +9912,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             }
             return false;
           } finally {
-            sharedSync.busy = previousBusy;
-            renderSharedActionStates();
+            if (sharedContextIsCurrent(snapshot)) {
+              sharedSync.busy = previousBusy;
+              renderSharedActionStates();
+            }
           }
         }
         async function sharedPullWithRecovery(showAlert = true) {
@@ -9777,9 +9982,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const { data, error } = result;
           if (error) throw error;
           if (!data) return null;
-          const parsed = parseSharedState(data.state || {});
-          sharedAssertClientVersion(parsed.meta.minClientVersion || 0);
-          const prepared = prepareIncomingState(parsed.state, { source: "공유 원격 데이터" });
+          const prepared = prepareSharedRemoteState(data.state, "공유 원격 데이터");
           if (!prepared.ok)
             throw new Error(
               prepared.futureVersion
@@ -9788,9 +9991,9 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             );
           return {
             state: prepared.state,
-            meta: parsed.meta,
-            revision: Math.max(0, Number(data.revision ?? parsed.meta.revision) || 0),
-            updatedAt: data.updated_at || parsed.meta.updatedAt || "",
+            meta: prepared.meta,
+            revision: Math.max(0, Number(data.revision ?? prepared.meta.revision) || 0),
+            updatedAt: data.updated_at || prepared.meta.updatedAt || "",
           };
         }
         function sharedCasRpcUnavailable(error) {
@@ -9821,10 +10024,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         function completeSharedPushSuccess(payloadState, payloadMutationRevision, revision, payload, cas) {
           const acceptedRevision = Math.max(0, Number(cas?.revision) || Number(revision) || 0);
-          sharedSync.syncRevision = acceptedRevision;
-          sharedSync.lastSyncedState = cloneValue(payloadState);
+          recordSharedBaseline(payloadState, acceptedRevision);
           sharedSync.lastSyncAt = cas?.updatedAt || payload.updated_at || new Date().toISOString();
-          persistSharedBaseline(payloadState, acceptedRevision);
           markSharedEverSynced();
           const mutationUnchanged = Number(sharedSync.localMutationRevision) === payloadMutationRevision;
           const stateUnchanged = valuesEqual(state, payloadState);
@@ -9847,6 +10048,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           return false;
         }
         async function sharedPushNow(silent = false) {
+          const operation = sharedContextSnapshot();
           if (guardFutureSchemaWrite("공유 저장")) return false;
           if (sharedSync.phase === "conflict") return false;
           if (sharedSync.pushInFlight) return sharedSync.pushInFlight;
@@ -9902,6 +10104,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
                 const remote = await fetchSharedRemote(client, projectId);
                 if (!sharedContextIsCurrent(snapshot)) return false;
+                sharedAssertClientVersion(remote?.meta?.minClientVersion || 0);
                 // A CAS and the subsequent fetch can both wait while the user keeps editing.
                 // Merge against the state at response time, never the snapshot sent to CAS.
                 const localState = cloneValue(state);
@@ -9913,10 +10116,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 }
                 if (pending && !sharedSync.lastSyncedState && !pendingBaseState && remote) {
                   if (valuesEqual(localState, remote.state)) {
-                    sharedSync.syncRevision = remoteRevision;
-                    sharedSync.lastSyncedState = cloneValue(remote.state);
+                    recordSharedBaseline(remote.state, remoteRevision);
                     sharedSync.lastSyncAt = remote.updatedAt || sharedSync.lastSyncAt;
-                    persistSharedBaseline(remote.state, remoteRevision);
                     sharedMarkSynced();
                     clearSharedPendingSave();
                     setSharedPhase("idle");
@@ -9957,29 +10158,20 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
 
                     sharedSync.needsPush = false;
                     sharedSync.pushQueued = false;
-                    sharedSync.syncRevision = remoteRevision;
-                    sharedSync.lastSyncedState = cloneValue(remote.state);
+                    recordSharedBaseline(remote.state, remoteRevision);
                     setSharedPhase("conflict");
                     if (!silent)
                       notifyError("동시 수정 충돌이 있어 저장을 멈췄어요. 충돌을 확인한 뒤 선택해주세요.");
                     return false;
                   }
                   if (!valuesEqual(mergedResult.state, localState)) {
-                    const replaced = replaceState(mergedResult.state, {
-                      persist: true,
-                      render: true,
-                      sync: false,
-                      views: "all",
-                      theme: true,
-                    });
+                    const replaced = applySharedRemoteState(mergedResult.state);
                     if (!replaced)
                       throw new Error(
                         "공유 데이터 병합 결과를 이 브라우저에 저장하지 못했어요. 기존 데이터를 유지합니다.",
                       );
                   }
-                  sharedSync.syncRevision = remoteRevision;
-                  sharedSync.lastSyncedState = cloneValue(remote.state);
-                  persistSharedBaseline(remote.state, remoteRevision);
+                  recordSharedBaseline(remote.state, remoteRevision);
                   if (!persistSharedPendingOrFail({
                     baseState: remote.state,
                     baseRevision: remoteRevision,
@@ -10009,13 +10201,16 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
                 throw new Error("공유 데이터가 계속 변경되어 저장을 완료하지 못했어요. 다시 시도해주세요.");
               } catch (e) {
                 console.error(e);
+                if (!sharedContextIsCurrent(operation)) return false;
                 if (!recoveredSession && sharedErrorNeedsSessionRecovery(e)) {
                   recoveredSession = true;
                   const snapshot = sharedContextSnapshot();
                   if (await sharedRecoverSession(snapshot)) {
+                    if (!sharedContextIsCurrent(operation)) return false;
                     setSharedPhase("pushing");
                     continue;
                   }
+                  if (!sharedContextIsCurrent(operation)) return false;
                   setSharedIssue("auth", "로그인 세션을 자동으로 복구하지 못했어요.");
                 } else if (!sharedSync.lastIssueKind) {
                   setSharedIssue(sharedIsOnline() ? "connection" : "offline", String(e?.message || ""));
@@ -10040,7 +10235,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return await current;
           } finally {
             if (sharedSync.pushInFlight === current) sharedSync.pushInFlight = null;
-            if (sharedSync.pushQueued && !sharedSync.busy) queueSharedSave();
+            if (sharedContextIsCurrent(operation) && sharedSync.pushQueued && !sharedSync.busy) queueSharedSave();
           }
         }
         async function flushPendingSharedSave(reason = "lifecycle") {
@@ -10076,6 +10271,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         }
         async function sharedSignOut() {
           if (sharedSignOutInFlight) return false;
+          const before = sharedContextSnapshot();
           let discardUnsynced = false;
           if (!(await flushCurrentSharedChangesBefore("로그아웃"))) {
             discardUnsynced = await appConfirm(
@@ -10084,20 +10280,24 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             );
             if (!discardUnsynced) return false;
           }
+          if (!sharedContextIsCurrent(before)) return false;
           const lifecycle = sharedSync.lifecycle + 1;
           sharedSync.lifecycle = lifecycle;
           sharedAfterLoginInFlight = null;
           sharedSignOutInFlight = true;
+          const snapshot = sharedContextSnapshot();
           let signedOut = false;
           try {
             if (sharedSync.client) {
               // Logging out on this device must not revoke sessions on another device where an
               // offline edit may still be waiting to sync.
               const { error } = await sharedSync.client.auth.signOut({ scope: "local" });
+              if (!sharedContextIsCurrent(snapshot)) return false;
               if (error) throw error;
             }
             signedOut = true;
             await sharedRemoveChannel();
+            if (!sharedContextIsCurrent(snapshot)) return false;
             sharedRemoveAuthSubscription();
             clearTimeout(sharedSync.pushTimer);
             sharedClearRetry();
@@ -10109,6 +10309,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             sharedSync = createSharedSyncState({ lifecycle });
             renderSharedStatusUI();
             renderSharedControls({ clearSensitive: true });
+            clearSensitiveModalInputs();
             renderSharedProject();
             if (localCleared && lastUserCleared)
               notifySuccess(
@@ -10118,6 +10319,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               notifyError("로그아웃은 완료됐지만 이 기기의 일부 로컬 데이터를 지우지 못했어요. 브라우저 사이트 데이터를 직접 삭제해주세요.");
           } catch (e) {
             console.error(e);
+            if (!sharedContextIsCurrent(snapshot)) return false;
             notifyError(sharedFriendlyError(e, "로그아웃에 실패했어요."));
           } finally {
             sharedSignOutInFlight = false;
@@ -10205,42 +10407,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         let localClearGeneration = null;
         let localWriteLocked = false;
         let LOCAL_TAB_ID = "";
-        function cloneValue(value) {
-          return typeof structuredClone === "function"
-            ? structuredClone(value)
-            : JSON.parse(JSON.stringify(value));
-        }
-        function valuesEqual(a, b, seen = new WeakMap()) {
-          if (Object.is(a, b)) return true;
-          if (!a || !b || typeof a !== "object" || typeof b !== "object") return false;
-          if (Array.isArray(a) !== Array.isArray(b)) return false;
-          const known = seen.get(a);
-          if (known) return known === b;
-          seen.set(a, b);
-          if (Array.isArray(a)) {
-            if (a.length !== b.length) return false;
-            for (let index = 0; index < a.length; index++) {
-              if (!valuesEqual(a[index], b[index], seen)) return false;
-            }
-            return true;
-          }
-          const aKeys = Object.keys(a).sort();
-          const bKeys = Object.keys(b).sort();
-          if (aKeys.length !== bKeys.length) return false;
-          for (let index = 0; index < aKeys.length; index++) {
-            const key = aKeys[index];
-            if (key !== bKeys[index] || !valuesEqual(a[key], b[key], seen)) return false;
-          }
-          return true;
-        }
-        function deepFreeze(value, seen = new WeakSet()) {
-          const isFreezable = value && ["object", "function"].includes(typeof value);
-          if (!isFreezable || seen.has(value)) return value;
-          seen.add(value);
-          Object.getOwnPropertyNames(value).forEach((key) => deepFreeze(value[key], seen));
-          Object.freeze(value);
-          return value;
-        }
         function defaultState() {
           return {
             schemaVersion: APP_CONFIG.stateSchemaVersion,
@@ -10446,10 +10612,11 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         function objectGraphSafetyIssue(value) {
           if (!value || typeof value !== "object") return "";
           const seen = new WeakSet();
-          const stack = [value];
+          const stack = [{ value, depth: 0 }];
           let visited = 0;
           while (stack.length) {
-            const current = stack.pop();
+            const { value: current, depth } = stack.pop();
+            if (depth > APP_CONFIG.maxValidationDepth) return "객체 중첩이 너무 깊습니다.";
             if (!current || typeof current !== "object" || seen.has(current)) continue;
             seen.add(current);
             visited += 1;
@@ -10464,7 +10631,7 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               if (key === "__proto__" || key === "prototype" || key === "constructor")
                 return `안전하지 않은 객체 키(${key})가 포함되어 있습니다.`;
               const child = current[key];
-              if (child && typeof child === "object") stack.push(child);
+              if (child && typeof child === "object") stack.push({ value: child, depth: depth + 1 });
             }
           }
           return "";
@@ -10935,7 +11102,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             renderThemeControls();
             requestRender("all");
             console.warn("변경 사항을 저장하지 못해 마지막 저장 상태로 되돌렸습니다.");
-            notifyError("저장하지 못해 변경을 되돌렸어요. 브라우저 저장 공간이 부족하거나 저장이 차단되어 있을 수 있어요.");
+            notifyError("저장하지 못해 변경을 되돌렸어요. 브라우저 저장 공간이 부족하거나 저장이 차단되어 있을 수 있어요."
+              + ($(DOM_IDS.modal)?.classList.contains("open") ? " 입력 내용은 유지돼요. 저장 공간과 브라우저 설정을 확인한 뒤 다시 저장해주세요." : ""));
             return false;
           }
           pushUndoCheckpoint(previous);
@@ -11023,6 +11191,19 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             trimHistoryStack(redoStack);
             updateHistoryUI();
           }
+        }
+        function notifyUndoableChange(message) {
+          const changedState = state;
+          return notifySuccess(message, {
+            actionLabel: "실행 취소",
+            onAction: () => {
+              if (state !== changedState) {
+                notifyInfo("이후 변경이 있어 이 작업은 바로 되돌릴 수 없어요. 설정의 실행 취소를 확인해주세요.");
+                return false;
+              }
+              return undoLastChange();
+            },
+          });
         }
         function undoLastChange() {
           if (!undoStack.length || historyRestoring) return false;
@@ -11165,7 +11346,17 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           const html = List(points, RecoveryItem);
           setOwnedHTML("recovery", DOM_IDS.recoveryList, html);
         }
+        function recoveryOperationSnapshot() {
+          return { context: sharedContextSnapshot(), state, clearGeneration: localClearGeneration };
+        }
+        function recoveryOperationIsCurrent(operation) {
+          const current = sharedContextIsCurrent(operation.context) && operation.state === state &&
+            operation.clearGeneration === localClearGeneration && !localWriteLocked;
+          if (!current) notifyInfo("확인하는 동안 계정·프로젝트 또는 데이터가 바뀌었어요. 최신 상태를 확인한 뒤 다시 복구해주세요.");
+          return current;
+        }
         async function restoreRecoveryPoint(id) {
+          const operation = recoveryOperationSnapshot();
           const point = readRecoveryPoints().find((item) => String(item.id) === String(id));
           if (!point) {
             notifyError("복구 지점을 찾지 못했어요.");
@@ -11182,8 +11373,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             ))
           )
             return false;
+          if (!recoveryOperationIsCurrent(operation) || !recoveryScopeMatches(point)) return false;
           const before = cloneValue(state);
           if (!(await ensureRecoveryPoint("복구 지점 복원 전", before, "복원"))) return false;
+          if (!recoveryOperationIsCurrent(operation) || !recoveryScopeMatches(point)) return false;
           const replaced = replaceState(point.state, {
             persist: true,
             render: true,
@@ -11291,9 +11484,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             return false;
           }
           try {
-            const beforeImport = cloneValue(lastPersistedState);
+            const operation = recoveryOperationSnapshot();
             const parsed = await parseBackupFile(file),
               raw = parsed.state;
+            if (!recoveryOperationIsCurrent(operation)) return false;
             const prepared = prepareIncomingState(raw, { source: "백업 데이터" });
             if (!prepared.ok) {
               if (prepared.futureVersion) {
@@ -11319,7 +11513,10 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
               ))
             )
               return false;
+            if (!recoveryOperationIsCurrent(operation)) return false;
+            const beforeImport = cloneValue(state);
             if (!(await ensureRecoveryPoint("백업 복구 전", beforeImport, "복구"))) return false;
+            if (!recoveryOperationIsCurrent(operation)) return false;
             const replaced = replaceState(normalized, {
               persist: true,
               render: true,
@@ -11359,29 +11556,8 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           Calendar: Object.freeze({ holidays: KOREA_HOLIDAYS_BY_YEAR, getHoliday: getKoreaHoliday }),
           Rendering: Object.freeze({
             ownership: UI_OWNERSHIP,
-            assertOwnership: typeof assertUiOwnershipMap === "function"
-              ? assertUiOwnershipMap
-              : () => ({ ok: false, unavailable: true, duplicates: [] }),
-            assertComponents: typeof assertUiComponentContracts === "function"
-              ? assertUiComponentContracts
-              : () => ({ ok: false, unavailable: true, issues: ["개발 빌드(--dev)에서만 UI 진단을 실행할 수 있습니다."] }),
           }),
           Shared: SharedDomains,
-          Testing: typeof runPlannerSelfTests === "function"
-            ? Object.freeze({
-                available: true,
-                run: runPlannerSelfTests,
-                runSmoke: runPlannerSmokeTests,
-                runSharedMocks: runSharedMockTests,
-                runUiGuards: runUiArchitectureGuards,
-                runMutations: runUiMutationTests,
-                runPwaDiagnostics,
-                assertRegistries: assertRegistryContracts,
-                assertStyles: assertUiStyleOwnership,
-                assertTypography: assertTypographyArchitecture,
-                pure: PureFunctions,
-              })
-            : Object.freeze({ available: false }),
         });
         const Planner = {
           Meta: {
@@ -11398,7 +11574,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
           Forms: AppDomains.Forms,
           Calendar: AppDomains.Calendar,
           Rendering: AppDomains.Rendering,
-          Testing: AppDomains.Testing,
 
           // INTENTIONAL COMPAT: v324 public domain adapters; internal code uses Collection.
           Tasks: {
@@ -11502,91 +11677,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
             joinProject: sharedJoinProject,
           },
         };
-
-        // ===== UTILITIES / dates, numbers and identifiers =====
-        function won(n) {
-          return moneyFmt.format(num(n)) + " 원";
-        }
-        function num(v) {
-          const raw = String(v ?? "")
-            .replace(/,/g, "")
-            .replace(/[^0-9.-]/g, "");
-          return Number(raw) || 0;
-        }
-        function formatNumber(value) {
-          return numberFmt.format(num(value));
-        }
-        function formatPercent(value) {
-          return `${formatNumber(Math.round(num(value)))}%`;
-        }
-        function formatRatio(current, total) {
-          return `${formatNumber(current)}/${formatNumber(total)}`;
-        }
-        function formatCount(value, unit = "개") {
-          return `${formatNumber(value)}${unit}`;
-        }
-        function formatDateCompact(iso) {
-          const date = parseLocalDate(iso);
-          if (Number.isNaN(date.getTime())) return "날짜 없음";
-          return `${String(date.getFullYear()).slice(-2)}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")} (${WEEKDAY_SHORT[date.getDay()]})`;
-        }
-        function formatDateLong(iso) {
-          const date = parseLocalDate(iso);
-          if (Number.isNaN(date.getTime())) return "날짜 없음";
-          return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
-        }
-        function formatMonthLabel(date) {
-          return date instanceof Date && !Number.isNaN(date.getTime()) ? `${date.getFullYear()}년 ${date.getMonth() + 1}월` : "";
-        }
-        function summarizeSearchQuery(value, maxLength = 24) {
-          const query = String(value || "").trim();
-          if (!query) return "";
-          return query.length > maxLength ? `${query.slice(0, maxLength)}…` : query;
-        }
-        function clearFieldControl(button) {
-          const named = button?.dataset?.fieldDom || button?.dataset?.searchDom;
-          const input = named ? $(DOM_IDS[named] || named) : button?.closest(".field-shell")?.querySelector("input");
-          if (!(input instanceof HTMLInputElement)) return false;
-          input.value = "";
-          input.dispatchEvent(new Event("input", { bubbles: true }));
-          input.dispatchEvent(new Event("change", { bubbles: true }));
-          input.focus({ preventScroll: true });
-          return true;
-        }
-        function newId() {
-          if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
-          if (!globalThis.crypto?.getRandomValues)
-            throw new Error("보안 난수 생성기를 사용할 수 없는 브라우저입니다.");
-          const bytes = new Uint8Array(16);
-          crypto.getRandomValues(bytes);
-          bytes[6] = (bytes[6] & 0x0f) | 0x40;
-          bytes[8] = (bytes[8] & 0x3f) | 0x80;
-          const hex = [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
-          return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-        }
-        function parseLocalDate(iso) {
-          return new Date(String(iso || "") + "T00:00:00");
-        }
-        function isValidISODate(value, { allowEmpty = false } = {}) {
-          const raw = String(value ?? "").trim();
-          if (!raw) return !!allowEmpty;
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return false;
-          const [year, month, day] = raw.split("-").map(Number);
-          if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
-          if (month < 1 || month > 12 || day < 1 || day > 31) return false;
-          const parsed = new Date(year, month - 1, day);
-          return parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day;
-        }
-        function normalizeISODate(value, { allowEmpty = false } = {}) {
-          const raw = String(value ?? "").trim();
-          return isValidISODate(raw, { allowEmpty }) ? raw : "";
-        }
-        function localDateISO(date = new Date()) {
-          const y = date.getFullYear(),
-            m = String(date.getMonth() + 1).padStart(2, "0"),
-            d = String(date.getDate()).padStart(2, "0");
-          return `${y}-${m}-${d}`;
-        }
 // ===== 09 BOOTSTRAP / activate state, UI, listeners and the existing PWA lifecycle =====
         window.addEventListener("pagehide", () => {
           void SharedDomains.Transport.flush("pagehide");
@@ -11645,15 +11735,6 @@ COMPATIBILITY / INTENTIONAL LIMITATIONS
         initLocalTabCoordination();
         mountThemeEditor();
         bindAppEvents();
-        // 자체 검사는 --dev 빌드에서만 포함됩니다. 운영 빌드는 URL에 ?selftest가 있어도 테스트 코드를 싣지 않습니다.
-        if (new URLSearchParams(location.search).has("selftest") && Planner.Testing.available) {
-          const startupSelfTest = Planner.Testing.run();
-          if (!startupSelfTest.ok) {
-            const summary = startupSelfTest.results.filter((result) => !result.ok)
-              .map((result) => `${result.name} (${result.error})`).join("; ");
-            console.warn(`일부 내부 자가검사가 실패했습니다: ${summary}`);
-          }
-        }
         applyTheme();
         renderThemeControls();
         navInit();
