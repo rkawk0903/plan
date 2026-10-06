@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v556 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v560 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-1RANWPmcqLDwhRlRPqmCnm7nWdGI4MvuvcI5Vj8lVVM=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-mSIOaObayl0NecWSjPmJ05kFWixIROBy28yRBA0t5tc='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-5RspZVtHr2++rrb+lYt7HM4Ktty4j6qhdJy9fmdeaGo=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-h9RyL6iobdsglLi2gSFdvtsPguuZgA+ywYgwafsGXIw='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -31,6 +31,7 @@
     <link href="manifest.webmanifest" rel="manifest" />
     <link href="icons/icon-180.png" rel="apple-touch-icon" />
     <title>우리 결혼 플래너</title>
+    <link rel="preload" href="fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin />
     <style>/* ===== 01 TOKENS — semantic geometry, palette, radius and layer scale ===== */
       :root {
         /* 자주 수정하는 디자인 설정 — 오른쪽 값의 실제 정의는 이 파일 아래에 있습니다.
@@ -46,7 +47,7 @@
      공통값 → 컴포넌트 → 명시적 변형 → 화면 배치 순서.
      색상/전체 둥글기는 설정 화면의 저장된 테마가 우선합니다. */
         /* TYPOGRAPHY SCALE — font family and size edit points live here. */
-        --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "맑은 고딕", sans-serif;
+        --font-family: "Pretendard Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "맑은 고딕", sans-serif;
         --font-family-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
         /* Compact primitive scale. Nearby legacy steps intentionally collapse onto the
            same rendered size so hierarchy comes from role, not one-off 1px differences. */
@@ -63,7 +64,7 @@
         --text-6xl: 20px;
 
         /* Semantic typography aliases — components/domains consume these, not literal sizes. */
-        --font-body: var(--text-3xl);
+        --font-body: var(--text-xl);
         --font-small: var(--text-md);
         --font-caption: var(--text-sm);
         --font-micro: var(--text-xs);
@@ -82,11 +83,11 @@
         --field-line-height: 1.45;
         --field-select-arrow-space: 30px;
         --field-label-gap: var(--space-1);
-        --field-label-font-size: var(--font-caption);
-        --field-label-font-weight: var(--weight-semibold);
+        --field-label-font-size: var(--font-small);
+        --field-label-font-weight: var(--weight-medium);
         --field-error-font-size: var(--font-caption);
         /* Text input stays at 16px to avoid focus zoom on iOS; compact selects use an explicit variant. */
-        --field-font-size: var(--font-body);
+        --field-font-size: var(--text-3xl);
         --textarea-height: 100px;
 
 
@@ -96,14 +97,14 @@
         --task-check-size: 24px;
         --collection-leading-width: max(36px, calc(var(--font-small) * 3));
         --collection-title-size: var(--text-xl);
-        --collection-title-weight: var(--weight-semibold);
+        --collection-title-weight: var(--weight-medium);
         --collection-meta-font-size: var(--text-sm);
         --collection-meta-font-weight: var(--weight-regular);
         --collection-note-size: var(--text-lg);
         --collection-action-width: var(--control-height);
-        --calendar-cell-height: clamp(64px, 9vw, 86px);
-        --calendar-cell-padding: 7px 2px;
-        --calendar-number-size: var(--text-xl);
+        --calendar-cell-height: clamp(48px, 6vw, 60px);
+        --calendar-cell-padding: 3px 2px;
+        --calendar-number-size: var(--text-lg);
         --calendar-holiday-size: var(--font-tiny);
         --calendar-dot-size: 4px;
 
@@ -112,31 +113,32 @@
         --confirm-message-font-size: var(--text-lg);
 
 
-        --settings-status-font-size: var(--font-micro);
-        --memo-text-font-size: var(--text-xl);
+        --settings-status-font-size: var(--font-small);
+        --memo-text-font-size: var(--text-lg);
         --plan-text-font-size: var(--text-xl);
 
         --calendar-more-font-size: var(--font-tiny);
         --category-card-title-font-size: var(--font-small);
-        --sync-note-font-size: var(--font-micro);
+        --sync-note-font-size: var(--font-caption);
 
-        --recovery-meta-font-size: var(--font-micro);
-        --metric-value-size: clamp(30px, 3vw, 34px);
+        --recovery-meta-font-size: var(--font-caption);
+        --metric-value-size: clamp(26px, 2.6vw, 30px);
         --metric-money-size: var(--metric-value-size);
-        --page-heading-size: calc(var(--card-title-size) + 2px);
+        --page-heading-size: 17px;
+        --app-header-content-height: 50px;
 
         --modal-max-width: 560px;
         --modal-padding: var(--space-6);
         --modal-max-height: 88dvh;
-        --modal-section-gap: var(--space-5);
+        --modal-section-gap: var(--space-4);
         --modal-content-gap: var(--space-4);
         --modal-field-label-gap: 6px;
-        --modal-textarea-min-height: 112px;
+        --modal-textarea-min-height: 88px;
         --modal-footer-gap: var(--space-3);
         --modal-divider: 1px solid color-mix(in srgb, var(--surface-border) 72%, transparent);
         --modal-close-size: 36px;
         --modal-close-offset: -6px;
-        --modal-title-size: var(--text-5xl);
+        --modal-title-size: var(--text-4xl);
         --overlay-surface-bg: color-mix(in srgb, var(--card) 99%, var(--bg) 1%);
 
         --layout-max-width: 1240px;
@@ -310,10 +312,10 @@
         --weekend-sun: color-mix(in srgb, var(--weekend-sun-base) 78%, var(--danger));
         --holiday-color: color-mix(in srgb, var(--danger) 86%, var(--accent));
         --card-padding-compact: var(--space-3);
-        --card-title-size: var(--text-4xl);
+        --card-title-size: var(--text-lg);
         --card-title-line-height: 1.4;
         --card-title-weight: var(--weight-semibold);
-        --card-title-letter-spacing: -0.02em;
+        --card-title-letter-spacing: -0.015em;
         --card-description-size: clamp(var(--text-md), 1.3vw, var(--text-lg));
         --card-description-line-height: clamp(17px, 1.8vw, 19px);
         --card-header-gap: clamp(8px, 1.2vw, 12px);
@@ -355,6 +357,13 @@
         --progress-radius: 999px;
         --progress-value: 0%;
       }
+@font-face {
+  font-family: 'Pretendard Variable';
+  src: url('fonts/PretendardVariable.woff2') format('woff2');
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+}
 /* ===== 02 BASE — element defaults and focus ===== */
       * {
         box-sizing: border-box;
@@ -932,9 +941,9 @@ body.modal-open .tab-bar { pointer-events: none; }
         gap: var(--card-action-gap);
       }
 
-      .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 var(--space-6); }
+      .page-heading { min-height: var(--control-height-large); display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 var(--space-4); }
       .page-heading-copy { min-width: 0; }
-      .page-heading h2 { margin: 0; font-size: var(--page-heading-size); line-height: 1.3; letter-spacing: -.045em; font-weight: var(--weight-bold); }
+      .page-heading h2 { margin: 0; font-size: var(--page-heading-size); line-height: 1.3; letter-spacing: -.025em; font-weight: var(--weight-semibold); }
       .page-heading p { display: none; margin: 7px 0 0; font-size: var(--font-small); color: var(--muted); line-height: 1.6; word-break: keep-all; }
       .page-heading > .btn { flex: 0 0 auto; }
       .disclosure { margin-top: 16px; }
@@ -964,27 +973,29 @@ body.modal-open .tab-bar { pointer-events: none; }
 .settings-row > summary > .ui-icon, .settings-link > .ui-icon:last-child { width: 16px; height: 16px; color: var(--muted); }
 .settings-row[open] > summary > .ui-icon { transform: rotate(90deg); }
 .settings-row-panel { padding: 0 var(--space-5) var(--space-5); }
+.settings-content { display: grid; gap: var(--space-4); min-width: 0; }
 .settings-link { background: transparent; border: 0; font: inherit; }
 .settings-link > .ui-icon:first-child { padding: 6px; box-sizing: content-box; width: 20px; height: 20px; border-radius: 8px; background: var(--inner-surface-bg); color: var(--accent-ink); }
 
 .settings-stack:has([data-dom="syncLoginBox"].u-hidden) .settings-signin-note { display: none; }
 .settings-signin-note p { margin: 0 0 var(--space-3); line-height: 1.6; }
 
-.settings-actions { display: grid; margin-bottom: var(--space-4); }
+.settings-actions { display: grid; border-top: 1px solid var(--separator); padding-top: var(--space-1); }
 .settings-actions > .btn + .btn { border-top: 1px solid var(--separator); }
 /* MetricSummary: shared overview typography and progress rhythm. */
 .metric-summary { min-width: 0; display: flex; flex-direction: column; flex: 1 1 auto; }
 .metric-values { display: grid; gap: var(--space-1); min-width: 0; }
-.metric-value { font-size: var(--metric-value-size); font-weight: var(--weight-bold); letter-spacing: -.04em; line-height: 1.25; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.metric-value { font-size: var(--metric-value-size); font-weight: var(--weight-bold); letter-spacing: -.025em; line-height: 1.25; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .metric-detail { font-size: var(--font-caption); color: var(--muted); line-height: 1.5; }
 .metric-footer { display: grid; gap: var(--space-2); margin-top: auto; padding-top: var(--space-4); }
 .metric-summary > .plan-status-grid { margin-top: var(--space-3); }
-.budget-overview-values { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; margin: 0 0 18px; }
-.budget-overview-values dt { font-size: var(--font-small); color: var(--muted); margin-bottom: 8px; }
-.budget-overview-values dd { margin: 0; font-size: var(--metric-money-size); font-weight: var(--weight-bold); letter-spacing: -.035em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.budget-overview-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: var(--font-caption); color: var(--muted); }
+.metric-footer-copy { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-1) var(--space-2); }
+
+.plan-status-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: var(--space-1); font-size: var(--font-caption); color: var(--muted); }
+.plan-status-grid > span { display: flex; justify-content: space-between; gap: var(--space-1); }
+.plan-status-grid b { font-weight: var(--weight-semibold); color: var(--ink); font-variant-numeric: tabular-nums; }
       .calendar-period-title {
-        font-size: var(--text-4xl);
+        font-size: var(--text-3xl);
         font-weight: var(--weight-bold);
         letter-spacing: -0.025em;
         white-space: nowrap;
@@ -1875,7 +1886,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         flex: 1;
         min-width: 0;
         font-family: var(--font-family-mono);
-        font-weight: var(--weight-extrabold);
+        font-weight: var(--weight-semibold);
         letter-spacing: 0.08em;
       }
       .field--join-code {
@@ -1917,8 +1928,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         color: var(--state-complete-muted);
       }
       .collection-row--task.done .collection-row__title-text {
-        text-decoration: line-through;
-        text-decoration-thickness: 1px;
+        text-decoration: none;
       }
       .collection-row--event {
         --collection-leading-color: var(--text-secondary);
@@ -1946,14 +1956,9 @@ body.modal-open .tab-bar { pointer-events: none; }
       .collection-meta-item--danger {
         color: var(--state-danger-color);
       }
-      .collection-item--memo .collection-item__meta {
-        order: -1;
-        margin-top: 0;
-        margin-bottom: var(--collection-copy-gap);
-      }
       .collection-item--memo .collection-item__title {
-        font-size: var(--memo-text-font-size);
-        font-weight: var(--weight-regular);
+        font-size: var(--card-title-size);
+        font-weight: var(--weight-semibold);
         line-height: 1.55;
         white-space: pre-wrap;
       }
@@ -2036,12 +2041,19 @@ body.modal-open .tab-bar { pointer-events: none; }
         margin-left: auto;
       }
       .card-footer-row--baseline { align-items: baseline; }
-      .form--settings-stack { --form-gap: 14px; }
+      .form--settings-stack { --form-gap: var(--space-4); }
+      .segmented-control--auth { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .action-row--auth { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; --action-row-gap: var(--space-2); --action-row-margin-top: var(--space-1); }
+      .action-row--auth > .btn { width: 100%; white-space: normal; min-height: var(--control-height-large); }
+      .action-row--auth > .btn--primary { grid-column: 1 / -1; }
+      .filter-feedback--actions-only { padding: 0; justify-content: flex-end; }
+      .filter-feedback--actions-only:not(:has(.btn:not([hidden]))) { display: none; }
+      .filter-feedback--actions-only > .btn { position: static; transform: none; --btn-height: 32px; }
       .form--modal {
         --field-label-gap: var(--modal-field-label-gap);
         --field-label-font-size: var(--font-small);
         --field-error-font-size: var(--font-small);
-        --field-font-size: var(--font-body);
+        --field-font-size: var(--text-3xl);
         --control-height: var(--control-height-large);
         margin-top: 0;
         gap: var(--modal-content-gap);
@@ -2150,7 +2162,6 @@ body.modal-open .tab-bar { pointer-events: none; }
         --collection-row-gap: 12px;
         --collection-row-padding-x: 0px;
         --collection-primary-row-padding-y: var(--space-4);
-        --collection-title-size: var(--text-xl);
         --collection-note-size: var(--text-lg);
         --collection-copy-gap: 6px;
         --list-divider-border: 1px solid color-mix(in srgb, var(--separator) 65%, transparent);
@@ -2175,6 +2186,9 @@ body.modal-open .tab-bar { pointer-events: none; }
         white-space: normal;
         overflow-wrap: anywhere;
       }
+      .collection-row--task .collection-row__title .collection-meta-item--danger {
+        flex-shrink: 0; padding: 2px 7px; border-radius: 6px; background: var(--state-danger-soft-bg); font-size: var(--font-micro); line-height: 1.4;
+      }
       .collection-row--task .collection-meta-item--danger {
         color: var(--state-danger-color);
         font-weight: var(--weight-medium);
@@ -2189,7 +2203,6 @@ body.modal-open .tab-bar { pointer-events: none; }
         --collection-row-gap: 14px;
         --collection-row-padding-x: 0px;
         --collection-primary-row-padding-y: var(--space-4);
-        --collection-title-size: var(--text-xl);
         --collection-copy-gap: 6px;
         --list-divider-border: 1px solid color-mix(in srgb, var(--separator) 65%, transparent);
       }
@@ -2217,6 +2230,8 @@ body.modal-open .tab-bar { pointer-events: none; }
       .collection-row--event .collection-meta-item + .collection-meta-item::before { content: none; }
 
       .field--plan-status { min-height: 36px; height: 36px; max-height: 36px; border-color: transparent; border-radius: var(--radius-compact); --field-size: var(--font-small); }
+      .field--plan-status[data-ui-state] { border-color: transparent; }
+      @media (pointer: coarse) { .field--plan-status { min-height: 44px; height: 44px; max-height: 44px; } }
 
       .card--item {
         --card-content-padding: 20px;
@@ -2249,20 +2264,25 @@ body.modal-open .tab-bar { pointer-events: none; }
       .settings-row--account { background: var(--card); border-radius: var(--radius-surface); box-shadow: var(--card-surface-shadow); }
       .settings-row--account > summary { grid-template-columns: 48px minmax(0,1fr); padding: var(--space-5); gap: var(--space-3); }
       .settings-row--account .settings-row-icon { width: 48px; height: 48px; border-radius: 50%; font-size: var(--font-small); }
+      .settings-row--account > summary > .ui-icon { display: none; }
+      .settings-row--account[open] > summary { grid-template-columns: 48px minmax(0,1fr) 18px; }
+      .settings-row--account[open] > summary > .ui-icon { display: block; }
+      .settings-row--account[open] .settings-row-action { display: none; }
       .settings-row--account .settings-row-title { font-size: var(--card-title-size); font-weight: var(--weight-semibold); }
       .settings-row--account .settings-row-action { grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; min-height: 44px; margin-top: 4px; border-radius: var(--radius-compact); background: var(--accent); color: var(--accent-contrast); font-size: var(--font-small); font-weight: var(--weight-semibold); }
-      .collection-row--task { --collection-title-weight: var(--weight-medium); --collection-title-size: var(--font-body); }
 
-      .card--widget { border-radius: var(--widget-radius); box-shadow: var(--widget-shadow); min-height: 216px; }
+      .card--widget { border-radius: var(--widget-radius); box-shadow: var(--widget-shadow); min-height: 206px; }
       @media (max-width:699px) {
         .card--widget { --card-content-padding: var(--space-4); --card-header-margin-bottom: var(--space-2); }
-        .card--widget[data-widget="progress"], .card--widget[data-widget="plans"] { min-height: 242px; }
-        .card--widget[data-widget="budget"] { min-height: 184px; }
-        .card--widget[data-widget="plans"] .plan-status-grid { display: grid; grid-template-columns: minmax(0,1fr); justify-content: stretch; gap: 4px; margin-top: 8px; }
-        .card--widget[data-widget="plans"] .plan-status-grid > span { display: flex; justify-content: space-between; gap: 4px; }
+        .card--widget[data-widget="progress"], .card--widget[data-widget="plans"] { min-height: 206px; }
+        .card--widget[data-widget="budget"] { min-height: 164px; }
+        .card--widget[data-widget="plans"] .plan-status-grid { margin-top: var(--space-2); }
       }
 
       .btn--settings-action { --btn-width: 100%; --btn-height: auto; --btn-padding: 12px 0; --btn-font-size: var(--text-lg); --btn-font-weight: var(--weight-medium); min-height: 44px; justify-content: flex-start; border-radius: 0; }
+
+      .settings-row--account .settings-row-panel, .settings-row--filled .settings-row-panel { display: grid; gap: var(--space-4); margin: 0 var(--space-4) var(--space-4); padding: var(--space-4); background: var(--inner-surface-bg); border-radius: var(--radius-compact); }
+      .settings-row--account .action-row, .settings-row--filled .action-row { justify-content: flex-start; }
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
       .calendar-grid {
@@ -2277,12 +2297,13 @@ body.modal-open .tab-bar { pointer-events: none; }
       }
       .top {
         background: transparent;
-        padding: var(--space-6) var(--page-side-space) var(--space-5);
+        padding: var(--space-5) var(--page-side-space) var(--space-3);
         min-width: 0;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         gap: var(--space-3);
+        min-height: calc(var(--app-header-content-height) + var(--space-5) + var(--space-3));
       }
       .top > :first-child {
         flex: 1 1 auto;
@@ -2340,10 +2361,10 @@ body.modal-open .tab-bar { pointer-events: none; }
       .calendar-period-block {
         min-width: 0;
         display: grid;
-        grid-template-columns: var(--control-height) max-content var(--control-height);
+        grid-template-columns: var(--control-height) minmax(0,1fr) var(--control-height);
         grid-template-areas:
           "prev title next"
-          ". hint hint";
+          "hint hint hint";
         justify-content: start;
         align-items: center;
         column-gap: 2px;
@@ -2354,13 +2375,13 @@ body.modal-open .tab-bar { pointer-events: none; }
       .calendar-period-block > .calendar-period-title {
         grid-area: title;
         min-width: 0;
-        text-align: left;
+        text-align: center;
       }
       .calendar-period-block > .calendar-period-hint {
         grid-area: hint;
         min-width: 0;
         max-width: 100%;
-        text-align: left;
+        text-align: center;
       }
       .calendar-week {
         margin-bottom: 3px;
@@ -2402,7 +2423,7 @@ body.modal-open .tab-bar { pointer-events: none; }
       }
       .home-secondary-grid {
         grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-        align-items: stretch;
+        align-items: start;
       }
       .home-secondary-item {
         min-width: 0;
@@ -2469,8 +2490,6 @@ body.modal-open .tab-bar { pointer-events: none; }
       .home-top-grid > [data-widget="plans"] { grid-area: plans; }
       @media (max-width:699px) { .home-top-grid { grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-areas: "progress plans" "budget budget"; } }
 /* ===== 06 DOMAIN VIEWS — composition and domain-specific typography ===== */
-      .plan-status-grid { display: flex; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; font-size: var(--font-caption); color: var(--muted); }
-      .plan-status-grid b { font-weight: var(--weight-semibold); color: var(--ink); margin-left: 4px; font-variant-numeric: tabular-nums; }
       .calendar-week span {
         text-align: center;
         font-size: var(--font-caption);
@@ -2488,10 +2507,10 @@ body.modal-open .tab-bar { pointer-events: none; }
         margin: 0;
       }
       .eyebrow { font-size: var(--font-micro); color: var(--accent-ink); letter-spacing: .07em; font-weight: var(--weight-medium); margin-bottom: 6px; }
-      .title { margin: 0; font-size: var(--header-title-size); color: var(--ink); font-weight: var(--weight-bold); letter-spacing: -.04em; line-height: 1.25; }
-      .dday { display: grid; align-content: center; justify-items: center; gap: 5px; min-width: 86px; max-width: 35%; min-height: 66px; padding: 10px 12px; border: 0; border-radius: var(--radius-compact); background: var(--inner-surface-bg); color: var(--accent-ink); }
-      .dday small { font-size: var(--font-micro); font-weight: var(--weight-medium); color: var(--muted); }
-      .dday strong { font-size: var(--text-4xl); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .title { margin: 0; font-size: var(--header-title-size); color: var(--ink); font-weight: var(--weight-semibold); letter-spacing: -.025em; line-height: 1.25; }
+      .dday { display: grid; align-content: center; justify-items: center; gap: 2px; min-width: 86px; max-width: 35%; height: var(--app-header-content-height); padding: 6px 12px; border: 0; border-radius: var(--radius-compact); background: var(--inner-surface-bg); color: var(--accent-ink); }
+      .dday small { line-height: 1.3; font-size: var(--font-micro); font-weight: var(--weight-medium); color: var(--muted); }
+      .dday strong { line-height: 1.25; font-size: var(--text-4xl); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; white-space: nowrap; }
       .app:has(.page.active:not([data-page-root="home"])) .dday { display: none; }
       .dday:active { opacity: var(--state-pressed-opacity); }
       @media (max-width:360px) { .dday { min-width: 78px; padding-inline: 8px; } }
@@ -2511,12 +2530,7 @@ body.modal-open .tab-bar { pointer-events: none; }
       .settings-status-note {
         font-size: var(--settings-status-font-size);
       }
-      .memo-index {
-        color: var(--text-tertiary);
-        font-size: var(--font-caption);
-        font-weight: var(--weight-semibold);
-        letter-spacing: 0.01em;
-      }
+      .memo-item .collection-item__body { font-size: var(--memo-text-font-size); line-height: 1.65; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
       .budget-card-list, .plan-card-list, .memo-card-list { gap: var(--space-4); }
 
       .budget-line .card-header-action, .plan .card-header-action { margin-top: -4px; }
@@ -2539,7 +2553,7 @@ body.modal-open .tab-bar { pointer-events: none; }
       }
       .budget-value-row dd {
         margin: 6px 0 0;
-        font-size: var(--text-4xl);
+        font-size: var(--text-3xl);
         font-weight: var(--weight-semibold);
         color: var(--ink);
         line-height: 1.45;
@@ -2553,7 +2567,7 @@ body.modal-open .tab-bar { pointer-events: none; }
       .budget-over-badge { padding: 3px 8px; border-radius: 6px; color: var(--state-danger-color); background: var(--state-danger-soft-bg); font-weight: var(--weight-semibold); }
       .budget-detail { margin-top: var(--space-4); padding-top: 14px; border-top: 1px solid var(--separator); }
       .collection-section-label, .plan-label { margin-bottom: 6px; font-weight: var(--weight-semibold); }
-      .budget-detail > div:last-child, .plan-text { font-size: var(--collection-note-size); line-height: 1.8; color: var(--text-secondary); white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }
+      .budget-detail > div:last-child, .plan-text { font-size: var(--collection-note-size); line-height: 1.65; color: var(--text-secondary); white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }
       .plan-status-control { display: flex; margin-top: var(--space-3); }
       .plan-discussion { display: grid; gap: 16px; min-width: 0; margin-top: var(--space-4); }
       .plan-block { min-width: 0; }
@@ -2746,7 +2760,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         align-items: start;
         gap: 8px;
         min-width: 0;
-        margin: calc(var(--card-header-margin-bottom) * -0.35) 0 12px;
+        margin: 0;
         padding: 8px 10px;
         border: 1px solid color-mix(in srgb, var(--control-border) 70%, transparent);
         border-radius: var(--radius-compact);
@@ -2824,7 +2838,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         }
       }
       .shared-conflict-title {
-        font-weight: var(--weight-extrabold);
+        font-weight: var(--weight-semibold);
         font-size: var(--font-small);
       }
       .shared-conflict-desc {
@@ -2838,7 +2852,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         display: block;
         margin-bottom: 6px;
         font-size: var(--font-caption);
-        font-weight: var(--weight-bold);
+        font-weight: var(--weight-medium);
         line-height: 1.4;
       }
       .sync-join-code-label {
@@ -3012,7 +3026,7 @@ body.modal-open .tab-bar { pointer-events: none; }
               </div>
               <div data-ui-component="Card" data-ui-layout="body-only" class="card card--summary card--widget" data-widget="budget">
                 <div data-ui-component="CardBody" class="card-body card-body--fill-stack">
-                  <div data-ui-static="MetricSummary" data-title="예산 사용 현황" data-value-dom="homeTotalActual" data-detail-dom="homeTotalPlan" data-footer-dom="homeBudgetPct" data-bar-dom="homeBudgetBar" data-money="true"></div>
+                  <div data-ui-static="MetricSummary" data-title="예산 사용 현황" data-value-dom="homeTotalActual" data-detail-dom="homeTotalPlan" data-footer-dom="homeBudgetPct" data-balance-dom="homeBudgetBalance" data-bar-dom="homeBudgetBar" data-money="true"></div>
                 </div>
               </div>
               <div data-ui-component="Card" data-ui-layout="body-only" class="card card--summary card--widget" data-widget="plans">
@@ -3133,8 +3147,7 @@ body.modal-open .tab-bar { pointer-events: none; }
                     <option value="custom">기본순</option>
                   </select>
                 </div>
-                <div class="filter-feedback" aria-live="polite">
-                  <span class="filter-feedback-summary" data-dom="taskFilterSummary">0개 표시 · 활성 조건 0개</span>
+                <div class="filter-feedback filter-feedback--actions-only">
                   <button class="btn btn--status-action btn--tertiary" data-action="reset-task-filters" data-dom="taskFilterReset" type="button" hidden>필터 초기화</button>
                 </div>
               </div>
@@ -3186,7 +3199,6 @@ body.modal-open .tab-bar { pointer-events: none; }
                   <div data-ui-component="CardHeader" class="card-header">
                     <div class="card-header-copy">
                       <h3 class="card-title selected-date-title" data-dom="selectedDateTitle">선택한 날짜의 일정</h3>
-                      <div class="card-description">날짜를 누르면 해당 날짜의 일정이 보여요.</div>
                     </div>
                   </div>
                   <div data-ui-component="CardBody" class="card-body">
@@ -3200,7 +3212,6 @@ body.modal-open .tab-bar { pointer-events: none; }
               <div data-ui-component="CardHeader" class="card-header">
                 <div class="card-header-copy">
                   <h3 class="card-title">전체 일정 목록</h3>
-                  <div class="card-description">등록된 일정을 날짜순으로 모아봤어요.</div>
                 </div>
                 <div class="card-header-action">
                   <select
@@ -3244,15 +3255,8 @@ body.modal-open .tab-bar { pointer-events: none; }
           <div data-ui-static="PageHeading"></div>
           <!-- ===== BUDGET: SUMMARY ===== -->
           <div class="card-stack">
-            <div data-ui-component="Card" data-ui-layout="body-only" class="card">
-              <div data-ui-component="CardBody" class="card-body">
-                <dl class="budget-overview-values">
-                  <div><dt>총 예상금액</dt><dd data-dom="totalPlan">0 원</dd></div>
-                  <div><dt>총 실제금액</dt><dd data-dom="totalActual">0 원</dd></div>
-                </dl>
-                <div class="progress progress--summary"><i data-dom="budgetBar"></i></div>
-                <div class="budget-overview-meta"><span><b data-dom="budgetPctBig">0%</b> 사용</span><span>초과 지출 <b data-dom="overBudget">0 원</b></span></div>
-              </div>
+            <div data-ui-component="Card" class="card card--summary">
+              <div data-ui-static="MetricSummary" data-title="총 실제금액" data-value-dom="totalActual" data-detail-dom="totalPlan" data-bar-dom="budgetBar" data-footer-dom="budgetPctBig" data-money="true" data-balance-dom="overBudget"></div>
             </div>
             <!-- ===== BUDGET: ITEMS ===== -->
             <div class="collection-section">
@@ -3300,227 +3304,340 @@ body.modal-open .tab-bar { pointer-events: none; }
           </div>
         </section>
         <!-- ===== PAGE: SETTINGS · 설정 ===== -->
-<section class="page settings-page" data-page-root="settings"><div data-ui-static="PageHeading"></div><div class="settings-stack">
-<div data-ui-static="SettingsRow" data-key="account" data-title="함께 준비하는 공간" data-description="로그인하고 결혼 준비를 공유해요." data-icon="heart" data-variant="account" data-description-dom="syncCardDescription">
-              <div data-ui-static="SettingsActions" data-kind="account" data-dom="syncAccountMenu"></div>
-              <div data-ui-component="CardBody" class="card-body">
-                <div class="sync-status-row u-hidden" data-dom="syncStatusRow" role="status" aria-live="polite">
-                  <span class="sync-status-indicator" aria-hidden="true"></span>
-                  <div class="sync-status-copy">
-                    <div class="sync-detail-text" data-dom="syncDetailText"></div>
-                    <div class="sync-status-meta u-hidden" data-dom="syncStatusMeta"></div>
-                  </div>
-                  <button
-                    class="btn btn--status-action btn--tertiary u-hidden"
-                    data-action="shared-refresh-project"
-                    data-dom="syncStatusAction"
-                    type="button"
-                  >다시 확인</button>
-                </div>
-                <div class="form form--settings-stack u-mt-md">
-                  <div
-                    data-ui-component="Callout"
-                    data-ui-variant="warning"
-                    class="callout callout--warning u-hidden"
-                    data-dom="futureSchemaBox"
-                    role="status"
-                    aria-live="polite"
-                  ></div>
-                  <form class="form shared-auth-form" data-dom="syncLoginBox" novalidate>
-                    <div class="form-field"><label for="syncEmail">이메일</label
-                      ><input
-                        class="field field--compact-text"
-                        aria-label="공유 동기화 이메일"
-                        autocomplete="username"
-                        data-dom="syncEmail"
-                        placeholder="본인 이메일"
-                        type="email"
-                      /></div>
-                    <div class="form-field"><label for="syncPassword">비밀번호</label
-                      ><input
-                        class="field field--compact-text"
-                        aria-label="공유 동기화 비밀번호"
-                        autocomplete="current-password"
-                        data-dom="syncPassword"
-                        placeholder="로그인할 때 입력"
-                        type="password"
-                      /></div>
-                    <div class="form-field" data-dom="syncPasswordConfirmWrap">
-                      <label for="syncPasswordConfirm">비밀번호 확인 <span class="small">(회원가입 시)</span></label
-                      ><input
-                        class="field field--compact-text"
-                        aria-label="공유 동기화 비밀번호 확인"
-                        autocomplete="new-password"
-                        data-dom="syncPasswordConfirm"
-                        placeholder="비밀번호를 한 번 더 입력"
-                        type="password"
-                      />
-                    </div>
-                    <div data-ui-component="ActionRow" class="action-row action-row--wrap">
-                      <button class="btn btn--app-action" data-action="shared-reset-password" type="button">비밀번호 재설정 메일</button
-                      ><button class="btn btn--app-action" data-action="shared-sign-up" type="button">회원가입</button
-                      ><button class="btn btn--app-action btn--primary" data-action="shared-sign-in" type="submit">로그인</button>
-                    </div>
-                  </form>
-                  <div data-ui-component="InnerCard" class="inner-card inner-card--panel shared-account-panel u-hidden" data-dom="syncLoggedInBox">
-                    <div class="shared-account-row">
-                      <div class="small shared-account-text" data-dom="syncUserText">로그인 계정</div>
-                    </div>
-                  </div>
-                  <div data-ui-component="Callout" data-ui-variant="conflict" class="callout callout--conflict u-hidden" data-dom="syncConflictBox">
-                    <div class="shared-conflict-title">동시 수정 충돌</div>
-                    <div class="small shared-conflict-desc" data-dom="syncConflictText"></div>
-                    <div data-ui-component="ActionRow" class="action-row action-row--compact">
-                      <button class="btn btn--app-action" data-action="resolve-conflict-local" type="button">
-                        내 변경 유지</button
-                      ><button class="btn btn--app-action btn--primary" data-action="resolve-conflict-remote" type="button">
-                        상대방 변경 사용
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div data-ui-component="CardFooter" class="card-footer-row u-hidden" data-dom="syncDataActions">
-                <div data-ui-component="ActionRow" class="action-row action-row--flush action-row--footer">
-                  <button class="btn btn--app-action btn--primary" data-action="shared-pull" type="button">
-                    데이터 동기화
-                  </button>
+<section class="page settings-page" data-page-root="settings">
+  <div data-ui-static="PageHeading">
+  </div>
+  <div class="settings-stack">
+    <div data-ui-static="SettingsRow" data-key="account" data-title="함께 준비하는 공간" data-description="로그인하고 결혼 준비를 공유해요." data-icon="heart" data-variant="account" data-description-dom="syncCardDescription">
+      <div class="sync-status-row u-hidden" data-dom="syncStatusRow" role="status" aria-live="polite">
+        <span class="sync-status-indicator" aria-hidden="true">
+        </span>
+        <div class="sync-status-copy">
+          <div class="sync-detail-text" data-dom="syncDetailText">
+          </div>
+          <div class="sync-status-meta u-hidden" data-dom="syncStatusMeta">
+          </div>
+        </div>
+        <button class="btn btn--status-action btn--tertiary u-hidden" data-action="shared-refresh-project" data-dom="syncStatusAction" type="button" >
+          다시 확인
+        </button>
+      </div>
+      <div class="settings-content">
+        <div data-ui-component="Callout" data-ui-variant="warning" class="callout callout--warning u-hidden" data-dom="futureSchemaBox" role="status" aria-live="polite" >
+        </div>
+        <form class="form form--settings-stack shared-auth-form" data-dom="syncLoginBox" data-auth-mode="login" novalidate>
+          <div data-ui-component="SegmentedControl" class="segmented-control segmented-control--auth" role="group" aria-label="계정 시작 방식">
+            <button type="button" data-action="shared-auth-mode" data-mode="login" aria-pressed="true">로그인</button>
+            <button type="button" data-action="shared-auth-mode" data-mode="signup" aria-pressed="false">회원가입</button>
+          </div>
+          <div class="form-field">
+            <label for="syncEmail">
+              이메일
+            </label >
+            <input class="field field--compact-text" aria-label="공유 동기화 이메일" autocomplete="username" data-dom="syncEmail" placeholder="본인 이메일" type="email" />
+          </div>
+          <div class="form-field">
+            <label for="syncPassword">
+              비밀번호
+            </label >
+            <input class="field field--compact-text" aria-label="공유 동기화 비밀번호" autocomplete="current-password" data-dom="syncPassword" placeholder="로그인할 때 입력" type="password" />
+          </div>
+          <div class="form-field u-hidden" data-dom="syncPasswordConfirmWrap">
+            <label for="syncPasswordConfirm">
+              비밀번호 확인
+              <span class="small">
+                (회원가입 시)
+              </span>
+            </label >
+            <input class="field field--compact-text" aria-label="공유 동기화 비밀번호 확인" autocomplete="new-password" data-dom="syncPasswordConfirm" placeholder="비밀번호를 한 번 더 입력" type="password" />
+          </div>
+          <div data-ui-component="ActionRow" class="action-row action-row--auth">
+            <button class="btn btn--app-action btn--primary" data-action="shared-sign-in" type="submit">
+              로그인
+            </button>
+            <button class="btn btn--app-action btn--primary u-hidden" data-action="shared-sign-up" type="button">
+              회원가입
+            </button>
+            <button class="btn btn--app-action btn--tertiary" data-action="shared-reset-password" type="button">
+              비밀번호 재설정
+            </button>
+          </div>
+        </form>
+        <div class="shared-account-panel u-hidden" data-dom="syncLoggedInBox">
+          <div class="shared-account-row">
+            <div class="small shared-account-text" data-dom="syncUserText">
+              로그인 계정
+            </div>
+          </div>
+        </div>
+        <div data-ui-component="Callout" data-ui-variant="conflict" class="callout callout--conflict u-hidden" data-dom="syncConflictBox">
+          <div class="shared-conflict-title">
+            동시 수정 충돌
+          </div>
+          <div class="small shared-conflict-desc" data-dom="syncConflictText">
+          </div>
+          <div data-ui-component="ActionRow" class="action-row action-row--compact">
+            <button class="btn btn--app-action" data-action="resolve-conflict-local" type="button">
+              내 변경 유지
+            </button >
+            <button class="btn btn--app-action btn--primary" data-action="resolve-conflict-remote" type="button">
+              상대방 변경 사용
+            </button>
+          </div>
+        </div>
+      </div>
+      <div data-ui-component="CardFooter" class="card-footer-row u-hidden" data-dom="syncDataActions">
+        <div data-ui-component="ActionRow" class="action-row action-row--flush action-row--footer">
+          <button class="btn btn--app-action btn--primary" data-action="shared-pull" type="button">
+            데이터 동기화
+          </button>
+        </div>
+      </div>
+      <div data-ui-static="SettingsActions" data-kind="account" data-dom="syncAccountMenu">
+      </div>
+    </div>
+    <section data-ui-component="SettingsGroup" class="settings-group" aria-labelledby="settings-shared">
+      <h3 id="settings-shared" class="settings-group-title">
+        공유와 프로젝트
+      </h3>
+      <div class="card settings-group-surface">
+        <div data-ui-static="SettingsRow" data-key="project" data-variant="filled" data-title="프로젝트 관리" data-description="초대 코드와 공동 준비 공간" data-icon="home">
+          <div class="settings-signin-note">
+            <p class="small">
+              계정에 로그인한 뒤 프로젝트를 만들거나 참여할 수 있어요.
+            </p>
+            <button class="btn btn--app-action" data-action="open-settings-account" type="button">
+              로그인 입력 열기
+            </button>
+          </div>
+          <div data-ui-component="InnerCard" class="inner-card inner-card--panel inner-card--loading project-panel u-hidden" data-dom="syncProjectLoading" aria-hidden="true">
+            <div class="skeleton-stack">
+              <span class="skeleton-line skeleton-line--title">
+              </span>
+              <span class="skeleton-line skeleton-line--meta">
+              </span>
+              <span class="skeleton-line skeleton-line--short">
+              </span>
+            </div>
+          </div>
+          <div class="project-panel u-hidden" data-dom="currentProjectBox">
+            <div class="row between u-gap-sm">
+              <div class="u-minw-0">
+                <div class="current-project-title">
+                  내 프로젝트 코드
                 </div>
               </div>
             </div>
-<section data-ui-component="SettingsGroup" class="settings-group" aria-labelledby="settings-shared"><h3 id="settings-shared" class="settings-group-title">공유와 프로젝트</h3><div class="card settings-group-surface"><div data-ui-static="SettingsRow" data-key="project" data-title="프로젝트 관리" data-description="초대 코드와 공동 준비 공간" data-icon="home">
-<div class="settings-signin-note"><p class="small">계정에 로그인한 뒤 프로젝트를 만들거나 참여할 수 있어요.</p><button class="btn btn--app-action" data-action="open-settings-account" type="button">로그인 입력 열기</button></div>
-              <div data-ui-static="SettingsActions" data-kind="project" data-dom="syncProjectMenu"></div>
-              <div data-ui-component="CardBody" class="card-body">
-                <div data-ui-component="InnerCard" class="inner-card inner-card--panel inner-card--loading project-panel u-hidden" data-dom="syncProjectLoading" aria-hidden="true">
-                  <div class="skeleton-stack">
-                    <span class="skeleton-line skeleton-line--title"></span>
-                    <span class="skeleton-line skeleton-line--meta"></span>
-                    <span class="skeleton-line skeleton-line--short"></span>
-                  </div>
-                </div>
-                <div data-ui-component="InnerCard" class="inner-card inner-card--panel project-panel u-hidden" data-dom="currentProjectBox">
-                  <div class="row between u-gap-sm">
-                    <div class="u-minw-0">
-                      <div class="current-project-title">내 프로젝트 코드</div>
-                    </div>
-                  </div>
-                  <div class="row u-mt-sm u-gap-xs">
-                    <input
-                      aria-label="현재 프로젝트 코드"
-                      class="field field--sync field--sync-code"
-                      data-dom="syncCode"
-                      readonly=""
-                    /><button
-                      class="btn btn--app-action"
-                      data-action="shared-copy-code"
-                      type="button"
-                    >
-                      복사하기
-                    </button>
-                  </div>
-                  <div class="small settings-status-note u-mt-xs">상대방을 초대할 때 이 코드를 사용하면 됩니다.</div>
-                </div>
-                <div data-ui-component="InnerCard" data-dom="syncProjectDiscoveryError" class="inner-card inner-card--panel project-panel u-hidden">
-                  <div class="small settings-status-note">기존 프로젝트 연결을 확인하지 못했어요. 네트워크 또는 Supabase 권한을 확인한 뒤 다시 시도해주세요.</div>
-                  <div data-ui-component="ActionRow" class="action-row action-row--compact u-mt-sm">
-                    <button class="btn btn--app-action" data-action="shared-refresh-project" type="button">연결 다시 확인</button>
-                  </div>
-                </div>
-                <div data-dom="syncProjectActions" class="sync-project-actions u-hidden">
-                  <label for="syncJoinCode" class="sync-join-code-label"
-                    >프로젝트 초대 코드
-                    <span class="sync-join-code-note">(기존 프로젝트에 참여할 때만)</span></label
-                  ><input
-                    aria-label="프로젝트 초대 코드"
-                    autocomplete="off"
-                    class="field field--sync field--join-code"
-                    data-dom="syncJoinCode"
-                    maxlength="8"
-                    placeholder="8자리 코드"
-                    value=""
-                  />
-                  <div data-ui-component="ActionRow" class="action-row action-row--compact">
-                    <button class="btn btn--app-action" data-action="shared-create-project" type="button">
-                      새 프로젝트 만들기</button
-                    ><button class="btn btn--app-action" data-action="shared-join-project" type="button">
-                      코드로 참여
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div></div></section>
-<section data-ui-component="SettingsGroup" class="settings-group" aria-labelledby="settings-appearance"><h3 id="settings-appearance" class="settings-group-title">화면과 테마</h3><div class="card settings-group-surface"><div data-ui-static="SettingsRow" data-key="theme" data-title="테마" data-description="색상과 모서리" data-icon="settings">
+            <div class="row u-mt-sm u-gap-xs">
+              <input aria-label="현재 프로젝트 코드" class="field field--sync field--sync-code" data-dom="syncCode" readonly="" />
+              <button class="btn btn--app-action" data-action="shared-copy-code" type="button" >
+                복사하기
+              </button>
+            </div>
+            <div class="small settings-status-note u-mt-xs">
+              상대방을 초대할 때 이 코드를 사용하면 됩니다.
+            </div>
+          </div>
+          <div data-ui-component="InnerCard" data-dom="syncProjectDiscoveryError" class="inner-card inner-card--panel project-panel u-hidden">
+            <div class="small settings-status-note">
+              기존 프로젝트 연결을 확인하지 못했어요. 네트워크 또는 Supabase 권한을 확인한 뒤 다시 시도해주세요.
+            </div>
+            <div data-ui-component="ActionRow" class="action-row action-row--compact u-mt-sm">
+              <button class="btn btn--app-action" data-action="shared-refresh-project" type="button">
+                연결 다시 확인
+              </button>
+            </div>
+          </div>
+          <div data-dom="syncProjectActions" class="sync-project-actions u-hidden">
+            <label for="syncJoinCode" class="sync-join-code-label" >
+              프로젝트 초대 코드
+              <span class="sync-join-code-note">
+                (기존 프로젝트에 참여할 때만)
+              </span>
+            </label >
+            <input aria-label="프로젝트 초대 코드" autocomplete="off" class="field field--sync field--join-code" data-dom="syncJoinCode" maxlength="8" placeholder="8자리 코드" value="" />
+            <div data-ui-component="ActionRow" class="action-row action-row--compact">
+              <button class="btn btn--app-action" data-action="shared-create-project" type="button">
+                새 프로젝트 만들기
+              </button >
+              <button class="btn btn--app-action" data-action="shared-join-project" type="button">
+                코드로 참여
+              </button>
+            </div>
+          </div>
+          <div data-ui-static="SettingsActions" data-kind="project" data-dom="syncProjectMenu">
+          </div>
+        </div>
+      </div>
+    </section>
+    <section data-ui-component="SettingsGroup" class="settings-group" aria-labelledby="settings-appearance">
+      <h3 id="settings-appearance" class="settings-group-title">
+        화면과 테마
+      </h3>
+      <div class="card settings-group-surface">
+        <div data-ui-static="SettingsRow" data-key="theme" data-title="테마" data-description="색상과 모서리" data-icon="settings">
+
               
+
               <div data-ui-component="CardBody" class="card-body">
+
                 <div class="theme-presets" data-dom="themePresets"></div>
+
                 <details data-ui-component="Disclosure" class="disclosure">
+
                   <summary>색상·모서리 편집</summary>
+
                 <div class="theme-grid u-mt-md" data-dom="themeFields"></div>
+
                 <div class="theme-controls u-mt-md" data-dom="themeRadiusControl">
+
                   <label data-theme-label="radius" for="themeRadiusControl">모서리 둥글기</label
+
                   ><input
+
                     class="theme-range"
+
                     data-action="preview-theme"
+
                     data-theme-control="radius"
+
                     max="40"
+
                     min="4"
+
                     type="range"
+
                     value="20"
+
                   /><span class="theme-radius-value" data-dom="thRadiusVal">20px</span>
+
                 </div>
+
                 <div data-ui-component="ActionRow" class="action-row action-row--spaced">
+
                   <button class="btn btn--app-action btn--tertiary" data-action="theme-reset" type="button">
+
                     기본 테마</button
+
                   ><button class="btn btn--app-action btn--primary" data-action="theme-save" type="button">
+
                     테마 적용
+
                   </button>
+
                 </div>
+
                 </details>
+
               </div>
-            </div><button type="button" class="settings-link" data-action="open-modal" data-modal="settings"><span data-ui-icon="calendar"></span><span class="settings-row-copy"><span class="settings-row-title">결혼식 날짜</span><span class="settings-row-description">일정과 디데이의 기준</span></span><span data-ui-icon="right"></span></button></div></section>
-<section data-ui-component="SettingsGroup" class="settings-group" aria-labelledby="settings-data"><h3 id="settings-data" class="settings-group-title">기록과 데이터</h3><div class="card settings-group-surface"><div data-ui-static="SettingsRow" data-key="history" data-title="변경 복구" data-description="최근 변경 되돌리기" data-icon="checklist">
+
+            </div>
+        <button type="button" class="settings-link" data-action="open-modal" data-modal="settings">
+          <span data-ui-icon="calendar">
+          </span>
+          <span class="settings-row-copy">
+            <span class="settings-row-title">
+              결혼식 날짜
+            </span>
+            <span class="settings-row-description">
+              일정과 디데이의 기준
+            </span>
+          </span>
+          <span data-ui-icon="right">
+          </span>
+        </button>
+      </div>
+    </section>
+    <section data-ui-component="SettingsGroup" class="settings-group" aria-labelledby="settings-data">
+      <h3 id="settings-data" class="settings-group-title">
+        기록과 데이터
+      </h3>
+      <div class="card settings-group-surface">
+        <div data-ui-static="SettingsRow" data-key="history" data-title="변경 복구" data-description="최근 변경 되돌리기" data-icon="checklist">
+
               
+
               <div data-ui-component="CardBody" class="card-body">
+
                 <div class="small settings-status-note" data-dom="historyStatus">변경 복구 기록 없음</div>
+
                 <div data-ui-component="ActionRow" class="action-row action-row--spaced action-row--wrap">
+
                   <button class="btn btn--app-action" data-action="undo" data-dom="undoButton" type="button">실행 취소</button
+
                   ><button class="btn btn--app-action" data-action="redo" data-dom="redoButton" type="button">다시 실행</button>
+
                 </div>
+
               </div>
+
             </div>
-<div data-ui-static="SettingsRow" data-key="recovery" data-title="자동 복구 지점" data-description="저장된 상태 확인" data-icon="memo">
+        <div data-ui-static="SettingsRow" data-key="recovery" data-title="자동 복구 지점" data-description="저장된 상태 확인" data-icon="memo">
+
               
+
               <div data-ui-component="CardBody" class="card-body">
+
                 <div class="small settings-status-note" data-dom="recoveryStatus">복구 지점 없음</div>
+
                 <div class="recovery-list u-mt-sm" data-dom="recoveryList"></div>
+
                 <div data-ui-component="ActionRow" class="action-row action-row--spaced">
+
                   <button class="btn btn--app-action" data-action="create-recovery" type="button">
+
                     지금 저장
+
                   </button>
+
                 </div>
+
               </div>
+
             </div>
-<div data-ui-static="SettingsRow" data-key="backup" data-title="데이터 백업" data-description="백업 파일 저장 및 복구" data-icon="wallet">
+        <div data-ui-static="SettingsRow" data-key="backup" data-title="데이터 백업" data-description="백업 파일 저장 및 복구" data-icon="wallet">
+
               
+
               <div data-ui-component="CardBody" class="card-body">
+
                 <div data-ui-component="ActionRow" class="action-row action-row--spaced">
+
                   <button class="btn btn--app-action" data-action="export-data" type="button">
+
                     백업하기</button
+
                   ><button class="btn btn--app-action" data-action="import-file" type="button">
+
                     복구하기
+
                   </button>
+
                 </div>
+
                 <input
+
                   accept="application/json"
+
                   aria-label="백업 파일 선택"
+
                   data-action="import-data"
+
                   hidden=""
+
                   data-dom="importFile"
+
                   type="file"
+
                 />
+
               </div>
-            </div></div></section></div></section>
+
+            </div>
+      </div>
+    </section>
+  </div>
+</section>
 </main>
 <!-- ===== APP FOOTER / STATUS TEXT ===== -->
       <div class="footer" data-dom="footerText">
@@ -3565,7 +3682,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "556",
+          version: "560",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4075,7 +4192,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           IconControl: [ "calendar-nav", "modal-close", "field-clear"],
           Card: ["", "item", "summary", "widget"],
           MetricSummary: ["", "money"],
-          SettingsRow: ["", "account"],
+          SettingsRow: ["", "account", "filled"],
           CardBody: ["", "fill-stack"],
           CardFooter: ["", "baseline"],
           InnerCard: ["", "compact", "theme-item", "category", "panel", "loading", "recovery", "grouped-list", "stacked-list"],
@@ -4084,7 +4201,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           CollectionItem: ["memo"],
           Callout: ["warning", "conflict"],
           CardHeader: ["fixed-actions", "flush", "memo"],
-          ActionRow: ["wrap", "flush", "compact", "spaced", "dialog", "sheet-dialog", "item", "footer"],
+          ActionRow: ["wrap", "flush", "compact", "spaced", "dialog", "sheet-dialog", "item", "footer", "auth"],
           Toast: ["", "success", "error"],
           Progress: ["summary", "category"],
           Form: ["settings-stack", "modal"],
@@ -4262,7 +4379,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         function Progress(value, variant = "") {
           return `<div class="${["progress", ...uiVariantClasses("Progress", "progress", variant)].join(" ")}"><i data-progress-value="${attr(value)}"></i></div>`;
         }
-        function MetricSummary({ title, valueDom, detailDom = "", barDom, footerDom, footerLabel = "", money = "false", planStatus = "false" }) {
+        function MetricSummary({ title, valueDom, detailDom = "", barDom, footerDom, footerLabel = "", money = "false", planStatus = "false", balanceDom = "" }) {
           const classes = ["metric-summary", ...uiVariantClasses("MetricSummary", "metric-summary", money === "true" ? "money" : "")];
           const detail = detailDom ? `<div class="metric-detail" data-dom="${attr(detailDom)}">0</div>` : "";
           return UIComponentRoot("MetricSummary", classes.join(" "), `
@@ -4273,7 +4390,7 @@ body.modal-open .tab-bar { pointer-events: none; }
             ${planStatus === "true" ? PlanStatusSummary() : ""}
             <div class="metric-footer">
               <div class="progress progress--summary"><i data-dom="${attr(barDom)}"></i></div>
-              <div class="metric-detail"><span data-dom="${attr(footerDom)}">0</span>${footerLabel ? ` ${esc(footerLabel)}` : ""}</div>
+              <div class="metric-detail metric-footer-copy"><span><span data-dom="${attr(footerDom)}">0</span>${footerLabel ? ` ${esc(footerLabel)}` : ""}</span>${balanceDom ? `<span data-dom="${attr(balanceDom)}">남은 예산 0 원</span>` : ""}</div>
             </div>`);
         }
         function PlanStatusSummary() {
@@ -4295,7 +4412,7 @@ body.modal-open .tab-bar { pointer-events: none; }
             <summary><span class="settings-row-icon">${account ? "우리" : Icon(icon)}</span>
               <span class="settings-row-copy"><span class="settings-row-title">${esc(title)}</span>
                 <span class="settings-row-description"${descriptionDom ? ` data-dom="${attr(descriptionDom)}"` : ""}>${esc(description)}</span></span>
-              ${account ? '<span class="settings-row-action" data-dom="syncAccountEntry">로그인</span>' : Icon("right")}
+              ${account ? '<span class="settings-row-action" data-dom="syncAccountEntry">로그인</span>' : ''}${Icon("right")}
             </summary><div class="settings-row-panel">${content}</div></details>`;
         }
         function openSettingsRow(key) {
@@ -4385,14 +4502,14 @@ body.modal-open .tab-bar { pointer-events: none; }
           </div>`;
         }
 
-        function updateFilterFeedback(owner, { summaryDom, resultCount, controls = [], resetDom = "", resetActive = false } = {}) {
+        function updateFilterFeedback(owner, { summaryDom = "", resultCount, controls = [], resetDom = "", resetActive = false } = {}) {
           let activeCount = 0;
           for (const [element, active] of controls) {
             const isActive = !!active;
             activeCount += Number(isActive);
             if (element instanceof HTMLElement) element.toggleAttribute("data-filter-active", isActive);
           }
-          setOwnedText(owner, summaryDom, `${formatCount(resultCount)} 표시 · 활성 조건 ${formatCount(activeCount)}`);
+          if (summaryDom) setOwnedText(owner, summaryDom, `${formatCount(resultCount)} 표시 · 활성 조건 ${formatCount(activeCount)}`);
           if (resetDom) {
             const reset = ownedElement(owner, resetDom);
             if (reset) reset.hidden = !resetActive;
@@ -4477,7 +4594,7 @@ body.modal-open .tab-bar { pointer-events: none; }
             const initial = typeof field.initial === "function" ? field.initial() : field.initial ?? field.default;
             return FormField(field, item ? item[field.key] ?? "" : initial ?? "");
           }).join("");
-          return ModalFrame(title, Form(controls, "modal"), ModalActions(actions), item ? "내용을 수정하고 저장해요." : "내용을 입력하고 저장해요.");
+          return ModalFrame(title, Form(controls, "modal"), ModalActions(actions), actions.description || (item ? "내용을 수정하고 저장해요." : "내용을 입력하고 저장해요."));
         }
 // ===== 03 COLLECTION / FORM / PAGE / ACTION / DOM REGISTRIES =====
         // Edit COLLECTION_SCHEMAS, not its derived FORM_SCHEMAS/CRUD actions. Fields own storage + form rules.
@@ -4699,6 +4816,7 @@ body.modal-open .tab-bar { pointer-events: none; }
             "preview-theme": onInput(() => previewTheme()),
           },
           Shared: {
+            "shared-auth-mode": onClick((el) => selectSharedAuthMode(el.dataset.mode)),
             "shared-sign-up": onClick(() => SharedDomains.Auth.signUp()),
             "shared-sign-in": onClick(() => SharedDomains.Auth.signIn()),
             "shared-sign-out": onClick(() => SharedDomains.Auth.signOut()),
@@ -4734,7 +4852,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           budgetSummary: {
             totalPlan: "totalPlan", totalActual: "totalActual", overBudget: "overBudget", budgetPctBig: "budgetPctBig",
             homeTotalPlan: "homeTotalPlan", homeTotalActual: "homeTotalActual", homeBudgetPct: "homeBudgetPct",
-            budgetBar: "budgetBar", homeBudgetBar: "homeBudgetBar",
+            budgetBar: "budgetBar", homeBudgetBar: "homeBudgetBar", homeBudgetBalance: "homeBudgetBalance",
           },
           dday: { ddayValue: "ddayValue" },
           home: {
@@ -4742,7 +4860,7 @@ body.modal-open .tab-bar { pointer-events: none; }
             homePlanRatio: "homePlanRatio", homePlanBar: "homePlanBar", categoryProgressList: "categoryProgressList", homePlanDonePct: "homePlanDonePct",
           },
           tasks: { taskCat: "taskCat", taskSearch: "taskSearch", taskStatus: "taskStatus", taskStatusControl: "taskStatusControl", taskSort: "taskSort",
-            taskFilterSummary: "taskFilterSummary", taskFilterReset: "taskFilterReset" },
+            taskFilterReset: "taskFilterReset" },
           schedule: {
             calendarTitle: "calendarTitle", calendarGrid: "calendarGrid", calendarHint: "calendarHint",
             selectedDateTitle: "selectedDateTitle", scheduleList: "scheduleList",
@@ -5219,6 +5337,7 @@ function createCollectionService({
           }
           const form = FORM_SCHEMAS[name];
           return FormModal(`${form.title} ${item ? "수정" : "추가"}`, form.fields, item, {
+            description: PAGE_REGISTRY[schema.view]?.description || "",
             saveAction: schema.saveAction || `save-${name}`, saveId: item ? item.id : "null",
             deleteAction: item && schema.deleteInModal ? `delete-${name}` : null, deleteId: item?.id,
           });
@@ -6429,11 +6548,10 @@ function createDerivedViewService({
           const done = item.status === "done";
           const leading = `<button type="button" class="task-check ${done ? "on" : ""}" aria-label="${done ? "할 일 완료 취소" : "할 일 완료"}"
               aria-pressed="${done ? "true" : "false"}" data-action="toggle-task" data-id="${attr(item.id)}">${done ? "✓" : ""}</button>`;
-          const titleMetaItems = [];
+          const titleMetaItems = item.priority === "높음" && !done ? [{ label: "높음", variant: "danger" }] : [];
           const metaItems = [
             item.cat ? { label: item.cat, variant: "key" } : null,
             item.due ? { label: formatDateCompact(item.due), variant: "numeric" } : null,
-            item.priority ? { label: `우선순위 ${item.priority}`, variant: item.priority === "높음" && !done ? "danger" : "" } : null,
           ].filter(Boolean);
           return CollectionRow({
             component: "TaskItem",
@@ -6535,8 +6653,6 @@ function createDerivedViewService({
           const categoryActive = filters.category !== TASK_STATUS_FILTER.ALL;
           const statusActive = filters.status !== TASK_STATUS_FILTER.ALL;
           const activeCount = updateFilterFeedback("tasks", {
-            summaryDom: DOM_IDS.taskFilterSummary,
-            resultCount: items.length,
             controls: [
               [$(DOM_IDS.taskSearch), !!filters.query],
               [$(DOM_IDS.taskCat), categoryActive],
@@ -6872,13 +6988,14 @@ function createDerivedViewService({
         }
 
         // ===== 05 DOMAIN / Memos =====
-        function MemoCard(m, index, total) {
+        function MemoCard(m) {
+          const [heading, ...lines] = String(m.text || "").split(/\r?\n/);
           return CollectionItem({
             component: "MemoCard",
             variant: "memo",
-            title: esc(m.text || ""),
-            meta: `<span class="memo-index">메모 ${total - index}</span>`,
-            actions: MoreMenu("메모", "" + m.id, "memo"),
+            title: esc(heading),
+            body: esc(lines.join("\n")),
+            actions: MoreMenu("메모", "" + m.id, "memo", { variant: "quiet" }),
             classes: ["memo-item"],
           });
         }
@@ -6886,14 +7003,13 @@ function createDerivedViewService({
           const queryLabel = selectedValue("memoSearch").trim();
           const query = queryLabel.toLowerCase();
           const items = view.memos.filter((item) => !query || item.text.toLowerCase().includes(query));
-          const positions = new Map(view.memos.map((item, index) => [String(item.id), index]));
           updateFilterFeedback("memos", {
             summaryDom: DOM_IDS.memoSearchSummary,
             resultCount: items.length,
             controls: [[$(DOM_IDS.memoSearch), !!query]],
           });
           setOwnedHTML("memos", COLLECTION_SCHEMAS.memo.target,
-            List(items, (item) => MemoCard(item, positions.get(String(item.id)), view.memos.length),
+            List(items, MemoCard,
               query ? `“${summarizeSearchQuery(queryLabel)}” 검색 결과가 없어요.` : COLLECTION_SCHEMAS.memo.empty, "", query ? "search" : "empty"));
         }
 
@@ -6915,9 +7031,10 @@ function createDerivedViewService({
         }
         function renderBudgetSummary(view) {
           const { budgetPlan: plan, budgetActual: actual, budgetOver: over, budgetPct: pct } = view;
-          setOwnedText("budgetSummary", DOM_IDS.totalPlan, won(plan));
+          setOwnedText("budgetSummary", DOM_IDS.totalPlan, "예상 " + won(plan));
           setOwnedText("budgetSummary", DOM_IDS.totalActual, won(actual));
-          setOwnedText("budgetSummary", DOM_IDS.overBudget, won(over));
+          const balance = over > 0 ? "초과 지출 " + won(over) : "남은 예산 " + won(Math.max(0, plan - actual));
+          [DOM_IDS.overBudget, DOM_IDS.homeBudgetBalance].forEach(id => setOwnedText("budgetSummary", id, balance));
           setOwnedText("budgetSummary", DOM_IDS.budgetPctBig, formatPercent(pct));
           setOwnedText("budgetSummary", DOM_IDS.homeTotalPlan, "예상 " + won(plan));
           setOwnedText("budgetSummary", DOM_IDS.homeTotalActual, won(actual));
@@ -8858,6 +8975,28 @@ function createSharedAuthService({
         function sharedDeleteAccount(...args) { return sharedAuthService.sharedDeleteAccount(...args); }
         function sharedConfirmDeleteAccount(...args) { return sharedAuthService.sharedConfirmDeleteAccount(...args); }
         function sharedSignOut(...args) { return sharedAuthService.sharedSignOut(...args); }
+        function renderSharedAuthMode() {
+          const form = ownedElement("shared", DOM_IDS.syncLoginBox);
+          if (!form) return;
+          const signup = form.dataset.authMode === "signup";
+          form.querySelectorAll('[data-action="shared-auth-mode"]').forEach(button => button.setAttribute("aria-pressed", String(button.dataset.mode === (signup ? "signup" : "login"))));
+          ownedElement("shared", DOM_IDS.syncPasswordConfirmWrap)?.classList.toggle("u-hidden", !signup || !!sharedSync.user);
+          for (const [action, visible] of [["shared-sign-in", !signup], ["shared-sign-up", signup]]) {
+            const button = form.querySelector(`[data-action="${action}"]`);
+            button.classList.toggle("u-hidden", !visible);
+            button.type = visible ? "submit" : "button";
+          }
+          ownedElement("shared", DOM_IDS.syncPassword)?.setAttribute("autocomplete", signup ? "new-password" : "current-password");
+        }
+        function selectSharedAuthMode(mode) {
+          if (sharedSync.busy || sharedSync.user || !["login", "signup"].includes(mode)) return false;
+          const form = ownedElement("shared", DOM_IDS.syncLoginBox);
+          if (!form) return false;
+          form.dataset.authMode = mode;
+          ownedElement("shared", DOM_IDS.syncPasswordConfirm).value = "";
+          renderSharedAuthMode();
+          return true;
+        }
         function renderSharedControls({ clearSensitive = false } = {}) {
           const c = sharedConfig();
           const logged = !!sharedSync.user;
@@ -8865,7 +9004,6 @@ function createSharedAuthService({
           const passwordEl = ownedElement("shared", DOM_IDS.syncPassword);
           const confirmEl = ownedElement("shared", DOM_IDS.syncPasswordConfirm);
           const codeEl = ownedElement("shared", DOM_IDS.syncCode);
-          const confirmWrap = ownedElement("shared", DOM_IDS.syncPasswordConfirmWrap);
 
           setOwnedDisplay("shared", DOM_IDS.syncLoginBox, !logged);
           setOwnedDisplay("shared", DOM_IDS.syncLoggedInBox, logged);
@@ -8873,7 +9011,7 @@ function createSharedAuthService({
 
           const dataActions = ownedElement("shared", DOM_IDS.syncDataActions);
           if (dataActions) dataActions.classList.toggle("u-hidden", !(logged && sharedSync.projectId));
-          if (confirmWrap) confirmWrap.classList.toggle("u-hidden", logged);
+          renderSharedAuthMode();
 
           const savedEmail = sharedSync.user?.email || c.email || "";
           if (emailEl && (logged || savedEmail)) emailEl.value = savedEmail;
