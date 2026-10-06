@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v560 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v562 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-5RspZVtHr2++rrb+lYt7HM4Ktty4j6qhdJy9fmdeaGo=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-h9RyL6iobdsglLi2gSFdvtsPguuZgA+ywYgwafsGXIw='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-CyzZap1fB0grFYjb6nd/CqPqyRAj5O3BdO8Zlyy4QK8=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-OSNFS5llg8F5BTiNZyb2oT7e1QeAMxmM5sZTbhj2D78='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -88,6 +88,9 @@
         --field-error-font-size: var(--font-caption);
         /* Text input stays at 16px to avoid focus zoom on iOS; compact selects use an explicit variant. */
         --field-font-size: var(--text-3xl);
+        --search-font-size: var(--text-xl);
+        --select-font-size: var(--text-xl);
+        --filter-font-size: var(--font-caption);
         --textarea-height: 100px;
 
 
@@ -322,6 +325,9 @@
         --card-header-copy-gap: var(--space-1);
         --card-header-margin-bottom: var(--space-3);
         --card-action-gap: var(--space-2);
+        --card-header-control-height: 28px;
+        --card-header-control-font-size: var(--font-caption);
+        --card-header-hit-slop: calc((var(--control-height-large) - var(--card-header-control-height)) / 2);
         --empty-state-min-height: 112px;
         --status-state-padding: var(--space-5) var(--space-3);
         --status-state-gap: var(--space-2);
@@ -357,6 +363,9 @@
         --progress-radius: 999px;
         --progress-value: 0%;
       }
+
+/* All top-level cards use the overview cards' content origin. */
+@media (max-width:699px) { :root { --card-content-padding: var(--space-4); } }
 @font-face {
   font-family: 'Pretendard Variable';
   src: url('fonts/PretendardVariable.woff2') format('woff2');
@@ -622,6 +631,10 @@ body.modal-open .tab-bar { pointer-events: none; }
         align-items: center;
         justify-content: center;
       }
+      .card-header-action > .more-menu {
+        --menu-trigger-size: var(--card-header-control-height);
+        --touch-icon-hit-slop: var(--card-header-hit-slop);
+      }
       .more-menu-trigger {
         position: relative;
         display: inline-flex;
@@ -823,6 +836,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         max-height: var(--control-height);
         --field-inset: 0 var(--field-padding-x);
       }
+      :where(select.field) { --field-size: var(--select-font-size); }
       select.field {
         appearance: none;
         -webkit-appearance: none;
@@ -933,12 +947,13 @@ body.modal-open .tab-bar { pointer-events: none; }
       }
       .card-header-action {
         min-width: 0;
+        height: calc(var(--card-title-size) * var(--card-title-line-height));
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         flex-wrap: nowrap;
         justify-content: flex-end;
         max-width: 100%;
-        gap: var(--card-action-gap);
+        gap: max(var(--card-action-gap), calc(var(--card-header-hit-slop) * 2));
       }
 
       .page-heading { min-height: var(--control-height-large); display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 var(--space-4); }
@@ -953,7 +968,6 @@ body.modal-open .tab-bar { pointer-events: none; }
       .disclosure[open] > summary::after { transform: rotate(90deg); }
       .disclosure > summary:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 3px; border-radius: var(--radius-compact); }
 
-      .card-header:not(:has(.card-description)) { align-items: center; }
       .card-header:not(:has(.card-header-action)) { grid-template-columns: minmax(0, 1fr); }
 
 /* Settings composition: grouped native disclosures keep all existing controls in place. */
@@ -994,12 +1008,6 @@ body.modal-open .tab-bar { pointer-events: none; }
 .plan-status-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: var(--space-1); font-size: var(--font-caption); color: var(--muted); }
 .plan-status-grid > span { display: flex; justify-content: space-between; gap: var(--space-1); }
 .plan-status-grid b { font-weight: var(--weight-semibold); color: var(--ink); font-variant-numeric: tabular-nums; }
-      .calendar-period-title {
-        font-size: var(--text-3xl);
-        font-weight: var(--weight-bold);
-        letter-spacing: -0.025em;
-        white-space: nowrap;
-      }
       .calendar-period-hint {
         margin-top: 2px;
         color: var(--text-tertiary);
@@ -1069,15 +1077,6 @@ body.modal-open .tab-bar { pointer-events: none; }
         gap: var(--space-2);
         color: var(--state-selected-color);
         font-weight: var(--weight-bold);
-      }
-      .selected-date-title::before {
-        content: "";
-        width: 7px;
-        height: 7px;
-        flex: 0 0 7px;
-        border-radius: 50%;
-        background: var(--state-selected-color);
-        box-shadow: 0 0 0 4px color-mix(in srgb, var(--state-selected-color) 10%, transparent);
       }
       .calendar-holiday {
         max-width: 100%;
@@ -1488,6 +1487,8 @@ body.modal-open .tab-bar { pointer-events: none; }
       }
 
 
+      .field-shell--header-select { display: flex; align-items: center; min-height: var(--control-height-large); }
+
       /* Search/filter feedback system */
       .field-shell--search {
         position: relative;
@@ -1639,60 +1640,6 @@ body.modal-open .tab-bar { pointer-events: none; }
         justify-content: flex-end;
       }
 
-      /* Shared budget/plan/memo collection item: content hierarchy + top-right actions. */
-      .collection-item {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: start;
-        column-gap: var(--collection-row-gap);
-        padding: var(--collection-row-padding);
-        min-width: 0;
-      }
-      .collection-item:not(.has-actions) {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .collection-item__content,
-      .collection-item__heading,
-      .collection-item__body {
-        min-width: 0;
-      }
-      .collection-item__heading {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .collection-item__title {
-        min-width: 0;
-        color: var(--ink);
-        font-size: var(--collection-title-size);
-        font-weight: var(--collection-title-weight);
-        line-height: 1.42;
-        overflow-wrap: anywhere;
-      }
-      .collection-item__meta {
-        display: flex;
-        min-width: 0;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--space-2) var(--space-3);
-        margin-top: var(--collection-copy-gap);
-        color: var(--muted);
-        font-size: var(--collection-meta-font-size);
-        font-weight: var(--collection-meta-font-weight);
-        line-height: 1.35;
-      }
-      .collection-item__body {
-        margin-top: var(--collection-row-gap);
-      }
-      .collection-item__actions {
-        display: flex;
-        align-items: flex-start;
-        justify-content: flex-end;
-        flex-wrap: nowrap;
-        gap: var(--card-action-gap);
-        min-width: 0;
-      }
-
       .collection-row.list-divided-item { position: relative; border-bottom: 0; }
       .collection-row.list-divided-item:not(:last-child)::after {
         content: ""; position: absolute; left: calc(var(--collection-leading-width) + var(--collection-row-gap)); right: 0; bottom: 0;
@@ -1701,7 +1648,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 
 /* Visible status choices are one reusable pressed-button group. */
 .segmented-control { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 3px; padding: 3px; background: color-mix(in srgb,var(--line) 62%,var(--soft)); border-radius: var(--radius-compact); }
-.segmented-control > button { display: flex; justify-content: center; align-items: center; gap: 5px; min-width: 0; min-height: 38px; padding: 4px; border: 0; border-radius: max(0px,calc(var(--radius-compact) - 3px)); background: transparent; color: var(--text-secondary); font: inherit; font-size: var(--font-small); white-space: nowrap; }
+.segmented-control > button { display: flex; justify-content: center; align-items: center; gap: 5px; min-width: 0; min-height: 38px; padding: 4px; border: 0; border-radius: max(0px,calc(var(--radius-compact) - 3px)); background: transparent; color: var(--text-secondary); font: inherit; font-size: var(--segment-font-size, var(--font-small)); white-space: nowrap; }
 .segmented-control > button[aria-pressed="true"] { background: var(--card); color: var(--ink); font-weight: var(--weight-semibold); box-shadow: 0 1px 4px rgba(42,34,26,.08); }
 .segment-count { font-size: var(--font-micro); color: var(--muted); font-weight: var(--weight-regular); font-variant-numeric: tabular-nums; }
 @media (pointer: coarse) { .segmented-control > button { min-height: 44px; } }
@@ -1815,8 +1762,8 @@ body.modal-open .tab-bar { pointer-events: none; }
         flex: 0 0 var(--modal-close-size);
       }
       .icon-control--calendar-nav {
-        --touch-icon-hit-slop: max(4px, calc((44px - var(--control-height)) / 2));
-        --icon-size: var(--control-height);
+        --touch-icon-hit-slop: var(--card-header-hit-slop);
+        --icon-size: var(--card-header-control-height);
         --icon-control-border: transparent;
         --icon-control-bg: transparent;
         --icon-control-color: var(--accent-ink);
@@ -1833,19 +1780,22 @@ body.modal-open .tab-bar { pointer-events: none; }
         --field-size: var(--field-font-size);
       }
       .field--search {
+        --field-size: var(--search-font-size);
         --field-inset: 0 44px 0 40px;
       }
+      .field.field--surface, .field.field--surface[data-filter-active] { --field-bg: var(--surface-raised); }
+      .field.field--surface:focus { background-color: var(--surface-raised); }
       .field--compact {
         --field-inset: 0 10px;
         --field-bg: var(--field-fill);
         --field-color: var(--text-secondary);
-        --field-size: var(--font-small);
+        --field-size: var(--filter-font-size);
       }
       .field--inline-select {
         --field-inset: 0 8px;
         --field-bg: var(--field-fill);
         --field-color: var(--text-secondary);
-        --field-size: var(--field-font-size);
+        --field-size: var(--select-font-size);
         width: auto;
         min-width: 0;
         max-width: 100%;
@@ -1862,6 +1812,11 @@ body.modal-open .tab-bar { pointer-events: none; }
         --field-bg: var(--state-complete-bg);
         --field-color: var(--state-complete-color);
         border-color: var(--state-complete-border);
+      }
+      .field--header-select {
+        align-self: center;
+        min-height: var(--card-header-control-height); height: var(--card-header-control-height); max-height: var(--card-header-control-height);
+        --field-size: var(--card-header-control-font-size); --field-inset: 0 8px; --field-select-arrow-space: 26px;
       }
       .field--modal-textarea {
         min-height: var(--modal-textarea-min-height);
@@ -1956,12 +1911,6 @@ body.modal-open .tab-bar { pointer-events: none; }
       .collection-meta-item--danger {
         color: var(--state-danger-color);
       }
-      .collection-item--memo .collection-item__title {
-        font-size: var(--card-title-size);
-        font-weight: var(--weight-semibold);
-        line-height: 1.55;
-        white-space: pre-wrap;
-      }
 
       .inner-card--theme-item, .inner-card--category, .inner-card--panel, .inner-card--recovery {
         --inner-card-bg: var(--inner-surface-bg);
@@ -1994,11 +1943,9 @@ body.modal-open .tab-bar { pointer-events: none; }
         width: 100%;
         min-width: 0;
         overflow: hidden;
-        border-top: 1px solid var(--section-divider);
-        border-bottom: 1px solid var(--section-divider);
         border-radius: 0;
       }
-      .inner-card--grouped-list:has(.status-state) { border-top: 0; border-bottom: 0; }
+      .inner-card--top-divided-list:not(:has(.status-state)) { border-top: 1px solid var(--section-divider); }
       .inner-card--stacked-list {
         display: flex;
         flex-direction: column;
@@ -2042,6 +1989,7 @@ body.modal-open .tab-bar { pointer-events: none; }
       }
       .card-footer-row--baseline { align-items: baseline; }
       .form--settings-stack { --form-gap: var(--space-4); }
+      .segmented-control--filter { --segment-font-size: var(--filter-font-size); }
       .segmented-control--auth { grid-template-columns: repeat(2,minmax(0,1fr)); }
       .action-row--auth { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; --action-row-gap: var(--space-2); --action-row-margin-top: var(--space-1); }
       .action-row--auth > .btn { width: 100%; white-space: normal; min-height: var(--control-height-large); }
@@ -2133,7 +2081,7 @@ body.modal-open .tab-bar { pointer-events: none; }
       @media (max-width: 600px) {
         .field--toolbar {
           --field-inset: 0 8px;
-          --field-size: var(--font-small);
+          --field-size: var(--filter-font-size);
         }
 
       }
@@ -2167,8 +2115,6 @@ body.modal-open .tab-bar { pointer-events: none; }
         --list-divider-border: 1px solid color-mix(in srgb, var(--separator) 65%, transparent);
       }
       .task-list-host.inner-card--grouped-list {
-        border-top: 0;
-        border-bottom: 0;
         margin-top: 0;
         overflow: visible;
       }
@@ -2229,24 +2175,12 @@ body.modal-open .tab-bar { pointer-events: none; }
       .collection-row--task .collection-meta-item + .collection-meta-item::before,
       .collection-row--event .collection-meta-item + .collection-meta-item::before { content: none; }
 
-      .field--plan-status { min-height: 36px; height: 36px; max-height: 36px; border-color: transparent; border-radius: var(--radius-compact); --field-size: var(--font-small); }
+      .field--plan-status { min-height: 36px; height: 36px; max-height: 36px; border-color: transparent; border-radius: var(--radius-compact); --field-size: var(--filter-font-size); }
       .field--plan-status[data-ui-state] { border-color: transparent; }
       @media (pointer: coarse) { .field--plan-status { min-height: 44px; height: 44px; max-height: 44px; } }
 
       .card--item {
-        --card-content-padding: 20px;
         --card-header-gap: 12px;
-      }
-      .collection-item--memo {
-        border: 0;
-        padding: 20px;
-        background: var(--card);
-        border-radius: var(--radius-surface);
-        box-shadow: var(--surface-shadow);
-      }
-      @media (max-width: 420px) {
-        .card--item { --card-content-padding: 16px; }
-        .collection-item--memo { padding: 16px; }
       }
 
       .metric-summary--money .metric-value { font-size: var(--metric-money-size); }
@@ -2273,7 +2207,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 
       .card--widget { border-radius: var(--widget-radius); box-shadow: var(--widget-shadow); min-height: 206px; }
       @media (max-width:699px) {
-        .card--widget { --card-content-padding: var(--space-4); --card-header-margin-bottom: var(--space-2); }
+        .card--widget { --card-header-margin-bottom: var(--space-2); }
         .card--widget[data-widget="progress"], .card--widget[data-widget="plans"] { min-height: 206px; }
         .card--widget[data-widget="budget"] { min-height: 164px; }
         .card--widget[data-widget="plans"] .plan-status-grid { margin-top: var(--space-2); }
@@ -2357,31 +2291,6 @@ body.modal-open .tab-bar { pointer-events: none; }
         display: flex;
         flex-direction: column;
         gap: var(--space-2);
-      }
-      .calendar-period-block {
-        min-width: 0;
-        display: grid;
-        grid-template-columns: var(--control-height) minmax(0,1fr) var(--control-height);
-        grid-template-areas:
-          "prev title next"
-          "hint hint hint";
-        justify-content: start;
-        align-items: center;
-        column-gap: 2px;
-        row-gap: 2px;
-      }
-      .calendar-period-block > [data-delta="-1"] { grid-area: prev; }
-      .calendar-period-block > [data-delta="1"] { grid-area: next; }
-      .calendar-period-block > .calendar-period-title {
-        grid-area: title;
-        min-width: 0;
-        text-align: center;
-      }
-      .calendar-period-block > .calendar-period-hint {
-        grid-area: hint;
-        min-width: 0;
-        max-width: 100%;
-        text-align: center;
       }
       .calendar-week {
         margin-bottom: 3px;
@@ -2530,10 +2439,9 @@ body.modal-open .tab-bar { pointer-events: none; }
       .settings-status-note {
         font-size: var(--settings-status-font-size);
       }
-      .memo-item .collection-item__body { font-size: var(--memo-text-font-size); line-height: 1.65; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+      .memo-body { margin-top: var(--space-3); font-size: var(--memo-text-font-size); line-height: 1.65; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
       .budget-card-list, .plan-card-list, .memo-card-list { gap: var(--space-4); }
 
-      .budget-line .card-header-action, .plan .card-header-action { margin-top: -4px; }
       .budget-line .card-title, .plan .card-title { text-wrap: pretty; word-break: keep-all; }
       .budget-value-group {
         display: grid;
@@ -3044,9 +2952,9 @@ body.modal-open .tab-bar { pointer-events: none; }
                       <h3 class="card-title">먼저 해야 할 일</h3>
                     </div>
                     <div class="card-header-action">
-                      <select
+                      <label class="field-shell field-shell--header-select"><select
                         aria-label="홈에서 표시할 할 일 개수"
-                        class="field field--inline-select"
+                        class="field field--inline-select field--header-select"
                         data-action="home-limit"
                         data-limit-type="tasks"
                         data-dom="homeTaskLimit"
@@ -3056,7 +2964,7 @@ body.modal-open .tab-bar { pointer-events: none; }
                         <option value="8">8개</option>
                         <option value="10">10개</option>
                         <option value="15">15개</option>
-                      </select>
+                      </select></label>
                     </div>
                   </div>
                   <div data-ui-component="CardBody" class="card-body">
@@ -3071,9 +2979,9 @@ body.modal-open .tab-bar { pointer-events: none; }
                       <h3 class="card-title">다가오는 일정</h3>
                     </div>
                     <div class="card-header-action">
-                      <select
+                      <label class="field-shell field-shell--header-select"><select
                         aria-label="홈에서 표시할 일정 개수"
-                        class="field field--inline-select"
+                        class="field field--inline-select field--header-select"
                         data-action="home-limit"
                         data-limit-type="events"
                         data-dom="homeEventLimit"
@@ -3083,7 +2991,7 @@ body.modal-open .tab-bar { pointer-events: none; }
                         <option value="8">8개</option>
                         <option value="10">10개</option>
                         <option value="15">15개</option>
-                      </select>
+                      </select></label>
                     </div>
                   </div>
                   <div data-ui-component="CardBody" class="card-body">
@@ -3114,7 +3022,7 @@ body.modal-open .tab-bar { pointer-events: none; }
                     <span class="field-search-icon" aria-hidden="true"><span data-ui-icon="search"></span></span>
                   <input
                     aria-label="할 일 검색"
-                    class="field field--compact-text field--search"
+                    class="field field--compact-text field--search field--surface"
                     data-dom="taskSearch"
                     data-action="tasks-search"
                     placeholder="할 일 검색 (제목·분야·메모)"
@@ -3126,7 +3034,7 @@ body.modal-open .tab-bar { pointer-events: none; }
                 <div data-ui-static="TaskStatusSegments"></div>
                 <div class="collection-toolbar__controls collection-toolbar__controls--tasks task-toolbar-controls">
                   <select
-                    class="field field--compact field--toolbar"
+                    class="field field--compact field--toolbar field--surface"
                     aria-label="할 일 분야 필터"
                     data-dom="taskCat"
                     data-action="tasks-filter"
@@ -3136,7 +3044,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 
                   <select
                     aria-label="할 일 정렬"
-                    class="field field--compact field--toolbar"
+                    class="field field--compact field--toolbar field--surface"
                     data-dom="taskSort"
                     data-action="tasks-filter"
                   >
@@ -3162,7 +3070,11 @@ body.modal-open .tab-bar { pointer-events: none; }
               <div class="schedule-main-item">
                 <div data-ui-component="Card" class="card calendar-card">
                   <div data-ui-component="CardHeader" class="card-header">
-                    <div class="card-header-copy calendar-period-block">
+                    <div class="card-header-copy">
+                      <h3 class="card-title" data-dom="calendarTitle" aria-live="polite" aria-atomic="true"></h3>
+                      <div class="card-description calendar-period-hint" data-dom="calendarHint"></div>
+                    </div>
+                    <div class="card-header-action">
                       <button
                         aria-label="이전 달"
                         class="icon-control icon-control--calendar-nav"
@@ -3172,7 +3084,6 @@ body.modal-open .tab-bar { pointer-events: none; }
                       >
                         <span data-ui-icon="left"></span>
                       </button>
-                      <h3 class="card-title calendar-period-title" data-dom="calendarTitle" aria-live="polite" aria-atomic="true"></h3>
                       <button
                         aria-label="다음 달"
                         class="icon-control icon-control--calendar-nav"
@@ -3182,7 +3093,6 @@ body.modal-open .tab-bar { pointer-events: none; }
                       >
                         <span data-ui-icon="right"></span>
                       </button>
-                      <div class="card-description calendar-period-hint" data-dom="calendarHint"></div>
                     </div>
                   </div>
                   <div data-ui-component="CardBody" class="card-body">
@@ -3214,16 +3124,16 @@ body.modal-open .tab-bar { pointer-events: none; }
                   <h3 class="card-title">전체 일정 목록</h3>
                 </div>
                 <div class="card-header-action">
-                  <select
+                  <label class="field-shell field-shell--header-select"><select
                     aria-label="일정 기간 필터"
-                    class="field field--inline-select"
+                    class="field field--inline-select field--header-select"
                     data-dom="scheduleFilter"
                     data-action="schedule-filter"
                   >
                     <option value="all">전체</option>
                     <option value="upcoming">다가오는</option>
                     <option value="past">지난</option>
-                  </select>
+                  </select></label>
                 </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
@@ -3286,7 +3196,7 @@ body.modal-open .tab-bar { pointer-events: none; }
                     <span class="field-search-icon" aria-hidden="true"><span data-ui-icon="search"></span></span>
                     <input
                       aria-label="메모 검색"
-                      class="field field--compact-text field--search"
+                      class="field field--compact-text field--search field--surface"
                       data-dom="memoSearch"
                       data-action="memo-search"
                       placeholder="메모 검색"
@@ -3682,7 +3592,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "560",
+          version: "562",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4188,17 +4098,16 @@ body.modal-open .tab-bar { pointer-events: none; }
         }
         const UI_VARIANTS = Object.freeze({
           Button: ["", "primary", "tertiary", "danger", "danger-quiet"],
-          Field: ["compact", "compact-text", "inline-select", "plan-status", "search", "modal-textarea", "money", "sync", "sync-code", "join-code", "toolbar"],
+          Field: ["compact", "compact-text", "inline-select", "plan-status", "search", "modal-textarea", "money", "sync", "sync-code", "join-code", "toolbar", "surface", "header-select"],
           IconControl: [ "calendar-nav", "modal-close", "field-clear"],
           Card: ["", "item", "summary", "widget"],
           MetricSummary: ["", "money"],
           SettingsRow: ["", "account", "filled"],
           CardBody: ["", "fill-stack"],
           CardFooter: ["", "baseline"],
-          InnerCard: ["", "compact", "theme-item", "category", "panel", "loading", "recovery", "grouped-list", "stacked-list"],
+          InnerCard: ["", "compact", "theme-item", "category", "panel", "loading", "recovery", "grouped-list", "stacked-list", "top-divided-list"],
           CollectionRow: ["task", "event"],
           CollectionMetaItem: ["", "key", "numeric", "danger"],
-          CollectionItem: ["memo"],
           Callout: ["warning", "conflict"],
           CardHeader: ["fixed-actions", "flush", "memo"],
           ActionRow: ["wrap", "flush", "compact", "spaced", "dialog", "sheet-dialog", "item", "footer", "auth"],
@@ -4424,7 +4333,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           return true;
         }
         function TaskStatusSegments() {
-          return `<div data-ui-component="SegmentedControl" class="segmented-control" data-dom="taskStatusControl" role="group" aria-label="할 일 상태 필터">
+          return `<div data-ui-component="SegmentedControl" class="segmented-control segmented-control--filter" data-dom="taskStatusControl" role="group" aria-label="할 일 상태 필터">
             ${[[TASK_STATUS_FILTER.ALL,"전체"],[TASK_STATUS_FILTER.OPEN,"미완료"],[TASK_STATUS_FILTER.DONE,"완료"]].map(([value,label]) =>
               `<button type="button" data-action="tasks-status" data-status="${attr(value)}" aria-pressed="${value === TASK_STATUS_FILTER.ALL}">${esc(label)} <span class="segment-count">0</span></button>`).join("")}</div>`;
         }
@@ -4468,21 +4377,6 @@ body.modal-open .tab-bar { pointer-events: none; }
               ${note ? `<div class="collection-row__note">${note}</div>` : ""}
             </div>
             ${actions ? `<div class="collection-row__actions">${actions}</div>` : ""}
-          </div>`;
-        }
-        function CollectionItem({ component, variant, title = "", meta = "", body = "", actions = "", classes = [], attributes = {} } = {}) {
-          const variantClasses = uiVariantClasses("CollectionItem", "collection-item", variant);
-          const stateClasses = Array.isArray(classes) ? classes : [classes];
-          const className = ["collection-item", ...variantClasses, "list-divided-item", ...stateClasses.filter(Boolean), actions ? "has-actions" : ""].join(" ");
-          return `<div data-ui-component="${attr(component)}" data-ui-layout="collection-item" data-ui-item-variant="${attr(variant)}"${htmlAttributes(attributes)} class="${attr(className)}">
-            <div class="collection-item__content">
-              <div class="collection-item__heading">
-                <div class="collection-item__title">${title}</div>
-                ${meta ? `<div class="collection-item__meta">${meta}</div>` : ""}
-              </div>
-              ${body ? `<div class="collection-item__body">${body}</div>` : ""}
-            </div>
-            ${actions ? `<div class="collection-item__actions">${actions}</div>` : ""}
           </div>`;
         }
         function ActionRow(content, variant = "") {
@@ -6850,7 +6744,7 @@ function createDerivedViewService({
             "scheduleList",
             Collection.html("event", selectedEvents, {
               today: v.today, leadingMode: "time", emptyMessage: "선택한 날짜에 일정이 없어요.",
-              hostVariant: "stacked-list",
+              hostVariant: "stacked-list top-divided-list",
             }),
           );
 
@@ -6883,7 +6777,7 @@ function createDerivedViewService({
           });
 
           Collection.render("event", allEvents, {
-            today: v.today,
+            today: v.today, hostVariant: "top-divided-list",
             emptyMessage: v.events.length && activeCount ? "현재 검색·필터 조건에 맞는 일정이 없어요." : undefined,
           });
         }
@@ -6990,14 +6884,10 @@ function createDerivedViewService({
         // ===== 05 DOMAIN / Memos =====
         function MemoCard(m) {
           const [heading, ...lines] = String(m.text || "").split(/\r?\n/);
-          return CollectionItem({
-            component: "MemoCard",
-            variant: "memo",
-            title: esc(heading),
-            body: esc(lines.join("\n")),
-            actions: MoreMenu("메모", "" + m.id, "memo", { variant: "quiet" }),
-            classes: ["memo-item"],
-          });
+          const body = lines.join("\n");
+          return UIComponentRoot("MemoCard", "card card--item memo-item",
+            CardHeader(heading, "", MoreMenu("메모", String(m.id), "memo", { variant: "quiet" }), "flush") +
+            (body ? CardBody(`<div class="memo-body">${esc(body)}</div>`) : ""));
         }
         function renderMemos(view = getViewData()) {
           const queryLabel = selectedValue("memoSearch").trim();
