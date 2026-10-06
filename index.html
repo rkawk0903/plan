@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v555 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v556 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-ag3PLGp7EPtdG1ghuChafNyi/6yTGIx7nON8GFLJqyY=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-FeakTzGCsZyxtiUbP152Uw5UgtQ1KwqLb8msO1EdiV0='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-1RANWPmcqLDwhRlRPqmCnm7nWdGI4MvuvcI5Vj8lVVM=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-mSIOaObayl0NecWSjPmJ05kFWixIROBy28yRBA0t5tc='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -90,8 +90,8 @@
         --textarea-height: 100px;
 
 
-        --header-title-size: var(--font-small);
-        --header-title-size-mobile: var(--font-small);
+        --header-title-size: var(--text-5xl);
+        --header-title-size-mobile: var(--text-5xl);
         --home-summary-columns: repeat(3, minmax(0, 1fr));
         --task-check-size: 24px;
         --collection-leading-width: max(36px, calc(var(--font-small) * 3));
@@ -140,8 +140,13 @@
         --overlay-surface-bg: color-mix(in srgb, var(--card) 99%, var(--bg) 1%);
 
         --layout-max-width: 1240px;
-        --nav-bar-height: 72px;
-        --layout-bottom-space: calc(var(--nav-bar-height) + env(safe-area-inset-bottom, 0px) + var(--space-5));
+        --nav-bar-height: 64px;
+        --tab-float-gap: 12px;
+        --tab-blur: 8px;
+        --tab-surface: color-mix(in srgb,var(--card) 90%,transparent);
+        --widget-radius: calc(var(--radius-surface) * 1.2);
+        --widget-shadow: 0 2px 4px rgba(42,34,26,.025), 0 8px 22px rgba(42,34,26,.06);
+        --layout-bottom-space: calc(var(--nav-bar-height) + var(--tab-float-gap) + env(safe-area-inset-bottom, 0px) + var(--space-5));
         --page-side-space: var(--space-5);
         --page-top-space: 20px; /* deliberate page-title optical offset */
         --page-section-gap: 14px;
@@ -411,12 +416,16 @@
         from { opacity: 0; }
         to { opacity: 1; }
       }
-/* Opaque edge-to-edge tab bar; shared by every page and clear of modal layers. */
-.tab-bar { position: fixed; inset: auto 0 0; z-index: var(--layer-nav); background: var(--card); border-top: 1px solid var(--separator); padding: var(--space-2) max(4px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(4px, env(safe-area-inset-left, 0px)); isolation: isolate; }
-.nav { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); max-width: 720px; margin: 0 auto; gap: 0; }
-.nav .ui-icon { width: 22px; height: 22px; }
-.nav-label { min-width: 0; }
+/* Only the floating tab surface blurs its background; no optical/distortion layers. */
+.tab-bar { position: fixed; left: 50%; bottom: calc(var(--tab-float-gap) + env(safe-area-inset-bottom,0px)); transform: translateX(-50%); z-index: var(--layer-nav); width: min(720px,calc(100% - 24px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px))); min-height: var(--nav-bar-height); background: var(--card); padding: 8px 6px; border: 0; border-radius: 999px; box-shadow: 0 3px 10px rgba(42,34,26,.06),0 12px 30px rgba(42,34,26,.11); isolation: isolate; }
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+ .tab-bar { background: var(--tab-surface); -webkit-backdrop-filter: blur(var(--tab-blur)); backdrop-filter: blur(var(--tab-blur)); }
+}
+.nav { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 0; margin: 0; }
+.nav .ui-icon { width: 21px; height: 21px; }
 body.modal-open .tab-bar { pointer-events: none; }
+@media (max-width:360px) { .tab-bar { width: calc(100% - 16px); padding-inline: 4px; } }
+@media (prefers-reduced-transparency:reduce) { .tab-bar { background: var(--card); -webkit-backdrop-filter: none; backdrop-filter: none; } }
       .card {
         min-width: 0;
         /* Every top-level Card shares one exact surface. Domain emphasis belongs inside the card. */
@@ -955,15 +964,14 @@ body.modal-open .tab-bar { pointer-events: none; }
 .settings-row > summary > .ui-icon, .settings-link > .ui-icon:last-child { width: 16px; height: 16px; color: var(--muted); }
 .settings-row[open] > summary > .ui-icon { transform: rotate(90deg); }
 .settings-row-panel { padding: 0 var(--space-5) var(--space-5); }
-.settings-row-panel > .card-header:not(:has(.more-menu:not(.u-hidden))) { display: none; }
-.settings-row-panel > .card-header .card-header-copy { display: none; }
-.settings-row-panel .card-header { grid-template-columns: minmax(0,1fr); }
-.settings-row-panel .card-header-action { justify-content: flex-end; }
 .settings-link { background: transparent; border: 0; font: inherit; }
 .settings-link > .ui-icon:first-child { padding: 6px; box-sizing: content-box; width: 20px; height: 20px; border-radius: 8px; background: var(--inner-surface-bg); color: var(--accent-ink); }
 
 .settings-stack:has([data-dom="syncLoginBox"].u-hidden) .settings-signin-note { display: none; }
 .settings-signin-note p { margin: 0 0 var(--space-3); line-height: 1.6; }
+
+.settings-actions { display: grid; margin-bottom: var(--space-4); }
+.settings-actions > .btn + .btn { border-top: 1px solid var(--separator); }
 /* MetricSummary: shared overview typography and progress rhythm. */
 .metric-summary { min-width: 0; display: flex; flex-direction: column; flex: 1 1 auto; }
 .metric-values { display: grid; gap: var(--space-1); min-width: 0; }
@@ -1099,7 +1107,7 @@ body.modal-open .tab-bar { pointer-events: none; }
       .toast-stack {
         position: fixed;
         right: clamp(12px, 2vw, 16px);
-        bottom: calc(var(--nav-bar-height) + env(safe-area-inset-bottom, 0px) + var(--space-3));
+        bottom: calc(var(--nav-bar-height) + var(--tab-float-gap) + env(safe-area-inset-bottom, 0px) + var(--space-3));
         z-index: var(--layer-toast);
         width: min(360px, calc(100% - 24px));
         display: flex;
@@ -1757,14 +1765,14 @@ body.modal-open .tab-bar { pointer-events: none; }
         flex: 0 0 auto;
       }
       .btn--nav {
-        --btn-width: 100%; --btn-height: 44px; --btn-padding: 0; --btn-bg: transparent;
+        --btn-width: 100%; --btn-height: 48px; --btn-padding: 0; --btn-bg: transparent;
         --btn-hover-bg: transparent; --btn-active-bg: transparent; --btn-border: 0;
         --btn-hover-border: transparent; --btn-color: var(--nav-idle-ink);
-        --btn-font-size: var(--font-micro); --btn-font-weight: var(--weight-medium);
+        --btn-font-size: 10px; --btn-font-weight: var(--weight-medium);
         --btn-shadow: none; --btn-hover-shadow: none; --btn-active-shadow: none;
         display: flex; flex-direction: column; gap: 4px; white-space: nowrap;
       }
-      .btn--nav.active { --btn-color: var(--nav-selected-ink); --btn-font-weight: var(--weight-semibold); }
+      .btn--nav.active { --btn-bg: var(--inner-surface-bg); --btn-hover-bg: var(--inner-surface-bg); --btn-active-bg: var(--inner-surface-bg); --btn-radius: 999px; --btn-color: var(--nav-selected-ink); --btn-font-weight: var(--weight-semibold); }
       .btn--theme-swatch {
         --btn-active-bg: var(--swatch-color);
         --btn-corner-shape: round;
@@ -2244,6 +2252,17 @@ body.modal-open .tab-bar { pointer-events: none; }
       .settings-row--account .settings-row-title { font-size: var(--card-title-size); font-weight: var(--weight-semibold); }
       .settings-row--account .settings-row-action { grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; min-height: 44px; margin-top: 4px; border-radius: var(--radius-compact); background: var(--accent); color: var(--accent-contrast); font-size: var(--font-small); font-weight: var(--weight-semibold); }
       .collection-row--task { --collection-title-weight: var(--weight-medium); --collection-title-size: var(--font-body); }
+
+      .card--widget { border-radius: var(--widget-radius); box-shadow: var(--widget-shadow); min-height: 216px; }
+      @media (max-width:699px) {
+        .card--widget { --card-content-padding: var(--space-4); --card-header-margin-bottom: var(--space-2); }
+        .card--widget[data-widget="progress"], .card--widget[data-widget="plans"] { min-height: 242px; }
+        .card--widget[data-widget="budget"] { min-height: 184px; }
+        .card--widget[data-widget="plans"] .plan-status-grid { display: grid; grid-template-columns: minmax(0,1fr); justify-content: stretch; gap: 4px; margin-top: 8px; }
+        .card--widget[data-widget="plans"] .plan-status-grid > span { display: flex; justify-content: space-between; gap: 4px; }
+      }
+
+      .btn--settings-action { --btn-width: 100%; --btn-height: auto; --btn-padding: 12px 0; --btn-font-size: var(--text-lg); --btn-font-weight: var(--weight-medium); min-height: 44px; justify-content: flex-start; border-radius: 0; }
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
       .calendar-grid {
@@ -2258,7 +2277,7 @@ body.modal-open .tab-bar { pointer-events: none; }
       }
       .top {
         background: transparent;
-        padding: var(--space-6) var(--page-side-space) var(--space-2);
+        padding: var(--space-6) var(--page-side-space) var(--space-5);
         min-width: 0;
         display: flex;
         align-items: center;
@@ -2422,13 +2441,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         .theme-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         .category-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
       }
-      @media (max-width: 699px) {
-        .home-top-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: var(--card-section-gap);
-        }
-        .home-top-grid > :last-child { grid-column: 1 / -1; }
-      }
+
 
       @media (max-width: 380px) {
         .top {
@@ -2448,9 +2461,13 @@ body.modal-open .tab-bar { pointer-events: none; }
         .collection-toolbar__controls--tasks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
 
-      @media (max-width: 430px) {
-        .home-top-grid { grid-template-columns: minmax(0, 1fr); }
-      }
+
+
+      .home-top-grid { grid-template-areas: "progress budget plans"; }
+      .home-top-grid > [data-widget="progress"] { grid-area: progress; }
+      .home-top-grid > [data-widget="budget"] { grid-area: budget; }
+      .home-top-grid > [data-widget="plans"] { grid-area: plans; }
+      @media (max-width:699px) { .home-top-grid { grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-areas: "progress plans" "budget budget"; } }
 /* ===== 06 DOMAIN VIEWS — composition and domain-specific typography ===== */
       .plan-status-grid { display: flex; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; font-size: var(--font-caption); color: var(--muted); }
       .plan-status-grid b { font-weight: var(--weight-semibold); color: var(--ink); margin-left: 4px; font-variant-numeric: tabular-nums; }
@@ -2470,12 +2487,14 @@ body.modal-open .tab-bar { pointer-events: none; }
       h1.title {
         margin: 0;
       }
-      .title { margin: 0; font-size: var(--header-title-size); color: var(--muted); font-weight: var(--weight-regular); line-height: 1.5; }
-      .dday { position: absolute; right: max(var(--page-side-space), calc((100vw - var(--layout-max-width)) / 2 + var(--page-side-space))); top: var(--space-6); display: grid; gap: 4px; text-align: right; padding: 0; min-height: 44px; background: transparent; border: 0; color: var(--accent-ink); }
-      .dday small { font-size: var(--font-micro); font-weight: var(--weight-regular); color: var(--muted); }
-      .dday strong { font-size: var(--text-5xl); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
+      .eyebrow { font-size: var(--font-micro); color: var(--accent-ink); letter-spacing: .07em; font-weight: var(--weight-medium); margin-bottom: 6px; }
+      .title { margin: 0; font-size: var(--header-title-size); color: var(--ink); font-weight: var(--weight-bold); letter-spacing: -.04em; line-height: 1.25; }
+      .dday { display: grid; align-content: center; justify-items: center; gap: 5px; min-width: 86px; max-width: 35%; min-height: 66px; padding: 10px 12px; border: 0; border-radius: var(--radius-compact); background: var(--inner-surface-bg); color: var(--accent-ink); }
+      .dday small { font-size: var(--font-micro); font-weight: var(--weight-medium); color: var(--muted); }
+      .dday strong { font-size: var(--text-4xl); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; white-space: nowrap; }
       .app:has(.page.active:not([data-page-root="home"])) .dday { display: none; }
       .dday:active { opacity: var(--state-pressed-opacity); }
+      @media (max-width:360px) { .dday { min-width: 78px; padding-inline: 8px; } }
       .page {
         display: none;
       }
@@ -2962,7 +2981,7 @@ body.modal-open .tab-bar { pointer-events: none; }
     <div class="app" data-dom="appRoot" data-planner-root>
       <header class="top">
         <div>
-          
+          <div class="eyebrow">WEDDING PLANNER</div>
           <h1 class="title">우리의 결혼 준비</h1>
         </div>
         <button
@@ -2986,17 +3005,17 @@ body.modal-open .tab-bar { pointer-events: none; }
           <div class="card-stack">
             <!-- ===== HOME: SUMMARY ===== -->
             <div class="card-grid home-top-grid">
-              <div data-ui-component="Card" data-ui-layout="body-only" class="card card--summary">
+              <div data-ui-component="Card" data-ui-layout="body-only" class="card card--summary card--widget" data-widget="progress">
                 <div data-ui-component="CardBody" class="card-body card-body--fill-stack">
                   <div data-ui-static="MetricSummary" data-title="전체 준비 진행률" data-value-dom="overallPct" data-footer-dom="overallText" data-bar-dom="overallBar" data-money="false"></div>
                 </div>
               </div>
-              <div data-ui-component="Card" data-ui-layout="body-only" class="card card--summary">
+              <div data-ui-component="Card" data-ui-layout="body-only" class="card card--summary card--widget" data-widget="budget">
                 <div data-ui-component="CardBody" class="card-body card-body--fill-stack">
                   <div data-ui-static="MetricSummary" data-title="예산 사용 현황" data-value-dom="homeTotalActual" data-detail-dom="homeTotalPlan" data-footer-dom="homeBudgetPct" data-bar-dom="homeBudgetBar" data-money="true"></div>
                 </div>
               </div>
-              <div data-ui-component="Card" data-ui-layout="body-only" class="card card--summary">
+              <div data-ui-component="Card" data-ui-layout="body-only" class="card card--summary card--widget" data-widget="plans">
                 <div data-ui-component="CardBody" class="card-body card-body--fill-stack">
                   <div data-ui-static="MetricSummary" data-title="부부계획 합의 현황" data-value-dom="homePlanRatio" data-footer-dom="homePlanDonePct" data-footer-label="합의 완료" data-plan-status="true" data-bar-dom="homePlanBar" data-money="false"></div>
                 </div>
@@ -3283,28 +3302,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         <!-- ===== PAGE: SETTINGS · 설정 ===== -->
 <section class="page settings-page" data-page-root="settings"><div data-ui-static="PageHeading"></div><div class="settings-stack">
 <div data-ui-static="SettingsRow" data-key="account" data-title="함께 준비하는 공간" data-description="로그인하고 결혼 준비를 공유해요." data-icon="heart" data-variant="account" data-description-dom="syncCardDescription">
-              <div data-ui-component="CardHeader" class="card-header">
-                <div class="card-header-copy">
-                  <h3 class="card-title">공유 동기화</h3>
-                  
-                </div>
-                <div class="card-header-action">
-                  <div
-                    data-ui-component="MoreMenu"
-                    data-ui-variant="default"
-                    data-ui-menu-kind="commands"
-                    class="more-menu u-hidden"
-                    data-dom="syncAccountMenu"
-                  >
-                    <button type="button" class="more-menu-trigger" aria-expanded="false" aria-haspopup="menu" aria-controls="sync-account-more-menu" aria-label="공유 계정 메뉴"><span data-ui-icon="more"></span></button>
-                    <div id="sync-account-more-menu" class="more-menu-pop" data-menu-kind="commands" role="menu" aria-label="공유 계정 작업">
-                      <button role="menuitem" class="more-menu-item" data-action="shared-sign-out" type="button">로그아웃</button>
-                      <button role="menuitem" class="more-menu-item" data-action="shared-update-password" type="button">비밀번호 변경</button>
-                      <button role="menuitem" class="more-menu-item more-menu-item--danger" data-action="shared-delete-account" type="button">계정 삭제</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <div data-ui-static="SettingsActions" data-kind="account" data-dom="syncAccountMenu"></div>
               <div data-ui-component="CardBody" class="card-body">
                 <div class="sync-status-row u-hidden" data-dom="syncStatusRow" role="status" aria-live="polite">
                   <span class="sync-status-indicator" aria-hidden="true"></span>
@@ -3392,29 +3390,7 @@ body.modal-open .tab-bar { pointer-events: none; }
             </div>
 <section data-ui-component="SettingsGroup" class="settings-group" aria-labelledby="settings-shared"><h3 id="settings-shared" class="settings-group-title">공유와 프로젝트</h3><div class="card settings-group-surface"><div data-ui-static="SettingsRow" data-key="project" data-title="프로젝트 관리" data-description="초대 코드와 공동 준비 공간" data-icon="home">
 <div class="settings-signin-note"><p class="small">계정에 로그인한 뒤 프로젝트를 만들거나 참여할 수 있어요.</p><button class="btn btn--app-action" data-action="open-settings-account" type="button">로그인 입력 열기</button></div>
-              <div data-ui-component="CardHeader" class="card-header">
-                <div class="card-header-copy">
-                  <h4 class="card-title">프로젝트</h4>
-                  <div class="card-description">
-                    두 사람이 같은 코드를 사용하면 데이터가 실시간으로 공유됩니다.
-                  </div>
-                </div>
-                <div class="card-header-action">
-                  <div
-                    data-ui-component="MoreMenu"
-                    data-ui-variant="default"
-                    data-ui-menu-kind="commands"
-                    class="more-menu u-hidden"
-                    data-dom="syncProjectMenu"
-                  >
-                    <button type="button" class="more-menu-trigger" aria-expanded="false" aria-haspopup="menu" aria-controls="sync-project-more-menu" aria-label="프로젝트 메뉴"><span data-ui-icon="more"></span></button>
-                    <div id="sync-project-more-menu" class="more-menu-pop" data-menu-kind="commands" role="menu" aria-label="공유 프로젝트 작업">
-                      <button role="menuitem" class="more-menu-item" data-action="shared-rotate-code" type="button">초대 코드 재발급</button>
-                      <button role="menuitem" class="more-menu-item more-menu-item--danger" data-action="shared-leave-project" type="button">프로젝트 나가기</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <div data-ui-static="SettingsActions" data-kind="project" data-dom="syncProjectMenu"></div>
               <div data-ui-component="CardBody" class="card-body">
                 <div data-ui-component="InnerCard" class="inner-card inner-card--panel inner-card--loading project-panel u-hidden" data-dom="syncProjectLoading" aria-hidden="true">
                   <div class="skeleton-stack">
@@ -3475,14 +3451,7 @@ body.modal-open .tab-bar { pointer-events: none; }
               </div>
             </div></div></section>
 <section data-ui-component="SettingsGroup" class="settings-group" aria-labelledby="settings-appearance"><h3 id="settings-appearance" class="settings-group-title">화면과 테마</h3><div class="card settings-group-surface"><div data-ui-static="SettingsRow" data-key="theme" data-title="테마" data-description="색상과 모서리" data-icon="settings">
-              <div data-ui-component="CardHeader" class="card-header">
-                <div class="card-header-copy">
-                  <h3 class="card-title">테마</h3>
-                  <div class="card-description">
-                    배경, 카드, 글자, 포인트 색상 등을 원하는 분위기로 바꿔보세요.
-                  </div>
-                </div>
-              </div>
+              
               <div data-ui-component="CardBody" class="card-body">
                 <div class="theme-presets" data-dom="themePresets"></div>
                 <details data-ui-component="Disclosure" class="disclosure">
@@ -3511,12 +3480,7 @@ body.modal-open .tab-bar { pointer-events: none; }
               </div>
             </div><button type="button" class="settings-link" data-action="open-modal" data-modal="settings"><span data-ui-icon="calendar"></span><span class="settings-row-copy"><span class="settings-row-title">결혼식 날짜</span><span class="settings-row-description">일정과 디데이의 기준</span></span><span data-ui-icon="right"></span></button></div></section>
 <section data-ui-component="SettingsGroup" class="settings-group" aria-labelledby="settings-data"><h3 id="settings-data" class="settings-group-title">기록과 데이터</h3><div class="card settings-group-surface"><div data-ui-static="SettingsRow" data-key="history" data-title="변경 복구" data-description="최근 변경 되돌리기" data-icon="checklist">
-              <div data-ui-component="CardHeader" class="card-header">
-                <div class="card-header-copy">
-                  <h3 class="card-title">변경 복구</h3>
-                  <div class="card-description">최근 변경을 되돌리거나 다시 적용할 수 있어요.</div>
-                </div>
-              </div>
+              
               <div data-ui-component="CardBody" class="card-body">
                 <div class="small settings-status-note" data-dom="historyStatus">변경 복구 기록 없음</div>
                 <div data-ui-component="ActionRow" class="action-row action-row--spaced action-row--wrap">
@@ -3526,14 +3490,7 @@ body.modal-open .tab-bar { pointer-events: none; }
               </div>
             </div>
 <div data-ui-static="SettingsRow" data-key="recovery" data-title="자동 복구 지점" data-description="저장된 상태 확인" data-icon="memo">
-              <div data-ui-component="CardHeader" class="card-header">
-                <div class="card-header-copy">
-                  <h4 class="card-title">자동 복구 지점</h4>
-                  <div class="card-description">
-                    백업 복구나 공동 데이터 교체 전에 최근 상태를 최대 5개까지 자동으로 보관해요.
-                  </div>
-                </div>
-              </div>
+              
               <div data-ui-component="CardBody" class="card-body">
                 <div class="small settings-status-note" data-dom="recoveryStatus">복구 지점 없음</div>
                 <div class="recovery-list u-mt-sm" data-dom="recoveryList"></div>
@@ -3545,14 +3502,7 @@ body.modal-open .tab-bar { pointer-events: none; }
               </div>
             </div>
 <div data-ui-static="SettingsRow" data-key="backup" data-title="데이터 백업" data-description="백업 파일 저장 및 복구" data-icon="wallet">
-              <div data-ui-component="CardHeader" class="card-header">
-                <div class="card-header-copy">
-                  <h4 class="card-title">데이터 백업</h4>
-                  <div class="card-description">
-                    로그아웃 상태에선 이 브라우저에 저장됩니다. 중요한 내용은 정기적으로 백업 파일을 만들어두세요.
-                  </div>
-                </div>
-              </div>
+              
               <div data-ui-component="CardBody" class="card-body">
                 <div data-ui-component="ActionRow" class="action-row action-row--spaced">
                   <button class="btn btn--app-action" data-action="export-data" type="button">
@@ -3615,7 +3565,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "555",
+          version: "556",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4123,7 +4073,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           Button: ["", "primary", "tertiary", "danger", "danger-quiet"],
           Field: ["compact", "compact-text", "inline-select", "plan-status", "search", "modal-textarea", "money", "sync", "sync-code", "join-code", "toolbar"],
           IconControl: [ "calendar-nav", "modal-close", "field-clear"],
-          Card: ["", "item", "summary"],
+          Card: ["", "item", "summary", "widget"],
           MetricSummary: ["", "money"],
           SettingsRow: ["", "account"],
           CardBody: ["", "fill-stack"],
@@ -4146,6 +4096,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           "modal-action": "btn--modal-action",
           "sheet-action": "btn--sheet-action",
           "status-action": "btn--status-action",
+          "settings-action": "btn--settings-action",
           nav: "btn--nav",
           "theme-swatch": "btn--theme-swatch",
         });
@@ -4329,6 +4280,14 @@ body.modal-open .tab-bar { pointer-events: none; }
           return `<div class="plan-status-grid">${PLAN_STATUS_DEFINITIONS.map(status =>
             `<span>${esc(status.label)} <b data-dom="${attr(status.dom)}">0</b></span>`).join("")}</div>`;
         }
+        const SETTINGS_COMMANDS = Object.freeze({
+          account: [{label:"로그아웃",action:"shared-sign-out"},{label:"비밀번호 변경",action:"shared-update-password"},{label:"계정 삭제",action:"shared-delete-account",danger:true}],
+          project: [{label:"초대 코드 재발급",action:"shared-rotate-code"},{label:"프로젝트 나가기",action:"shared-leave-project",danger:true}],
+        });
+        function SettingsActions({kind, dom}) {
+          return `<div data-ui-component="SettingsActions" class="settings-actions u-hidden" data-dom="${attr(dom)}">${SETTINGS_COMMANDS[kind].map(command =>
+            Button(command.label, {action:command.action, role:"settings-action", variant:command.danger ? "danger-quiet" : "tertiary"})).join("")}</div>`;
+        }
         function SettingsRow({key, title, description, icon, variant = "", descriptionDom = ""}, content) {
           const classes = ["settings-row", ...uiVariantClasses("SettingsRow", "settings-row", variant)].join(" ");
           const account = variant === "account";
@@ -4356,6 +4315,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           document.querySelectorAll('span[data-ui-icon]').forEach(host => {
             host.outerHTML = Icon(host.dataset.uiIcon);
           });
+          document.querySelectorAll('[data-ui-static="SettingsActions"]').forEach(host => { host.outerHTML = SettingsActions(host.dataset); });
           document.querySelectorAll('[data-ui-static="SettingsRow"]').forEach(host => {
             host.outerHTML = SettingsRow(host.dataset, host.innerHTML);
           });
@@ -12395,6 +12355,7 @@ const modalController = createModalController({
             PageHeading,
             MetricSummary,
             SettingsRow,
+            SettingsActions,
             TaskStatusSegments,
             CollectionGroup,
             CardBody,
