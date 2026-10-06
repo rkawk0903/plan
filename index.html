@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v562 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v565 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-CyzZap1fB0grFYjb6nd/CqPqyRAj5O3BdO8Zlyy4QK8=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-OSNFS5llg8F5BTiNZyb2oT7e1QeAMxmM5sZTbhj2D78='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-/rhw8+dWFRFMEurJyVw97HX5ytwJtVaAD5rjb0xG7+E=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-TOrbBDAh7QlzoZtXtS+hEIqHh1ckwSO33bg4NfR6zyI='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -98,18 +98,18 @@
         --header-title-size-mobile: var(--text-5xl);
         --home-summary-columns: repeat(3, minmax(0, 1fr));
         --task-check-size: 24px;
-        --collection-leading-width: max(36px, calc(var(--font-small) * 3));
-        --collection-title-size: var(--text-xl);
+        --collection-leading-width: 44px;
+        --collection-title-size: var(--text-lg);
         --collection-title-weight: var(--weight-medium);
         --collection-meta-font-size: var(--text-sm);
         --collection-meta-font-weight: var(--weight-regular);
         --collection-note-size: var(--text-lg);
-        --collection-action-width: var(--control-height);
-        --calendar-cell-height: clamp(48px, 6vw, 60px);
+        --collection-action-width: 32px;
+        --calendar-cell-height: clamp(48px, 5vw, 52px);
         --calendar-cell-padding: 3px 2px;
         --calendar-number-size: var(--text-lg);
         --calendar-holiday-size: var(--font-tiny);
-        --calendar-dot-size: 4px;
+        --calendar-dot-size: 3px;
 
         /* Role-specific typography remains centralized for every screen. */
         --confirm-title-font-size: var(--text-4xl);
@@ -118,14 +118,14 @@
 
         --settings-status-font-size: var(--font-small);
         --memo-text-font-size: var(--text-lg);
-        --plan-text-font-size: var(--text-xl);
+        --plan-text-font-size: var(--text-lg);
 
         --calendar-more-font-size: var(--font-tiny);
         --category-card-title-font-size: var(--font-small);
         --sync-note-font-size: var(--font-caption);
 
         --recovery-meta-font-size: var(--font-caption);
-        --metric-value-size: clamp(26px, 2.6vw, 30px);
+        --metric-value-size: 26px;
         --metric-money-size: var(--metric-value-size);
         --page-heading-size: 17px;
         --app-header-content-height: 50px;
@@ -134,7 +134,7 @@
         --modal-padding: var(--space-6);
         --modal-max-height: 88dvh;
         --modal-section-gap: var(--space-4);
-        --modal-content-gap: var(--space-4);
+        --modal-content-gap: 14px;
         --modal-field-label-gap: 6px;
         --modal-textarea-min-height: 88px;
         --modal-footer-gap: var(--space-3);
@@ -219,8 +219,8 @@
         --radius-compact: calc(var(--radius) * 0.58);
         --corner-shape-continuous: superellipse(1.3);
         /* Derived semantic surfaces follow the user's selected theme automatically. */
-        --text-secondary: color-mix(in srgb, var(--muted) 92%, var(--ink));
-        --text-tertiary: color-mix(in srgb, var(--muted) 98%, var(--ink));
+        --text-secondary: color-mix(in srgb, var(--muted) 72%, var(--ink));
+        --text-tertiary: color-mix(in srgb, var(--muted) 94%, var(--ink));
         --surface-border: color-mix(in srgb, var(--line) 58%, transparent);
         --control-border: color-mix(in srgb, var(--line) 70%, transparent);
         --separator: color-mix(in srgb, var(--line) 64%, transparent);
@@ -318,21 +318,21 @@
         --card-title-size: var(--text-lg);
         --card-title-line-height: 1.4;
         --card-title-weight: var(--weight-semibold);
-        --card-title-letter-spacing: -0.015em;
+        --card-title-letter-spacing: -0.025em;
         --card-description-size: clamp(var(--text-md), 1.3vw, var(--text-lg));
         --card-description-line-height: clamp(17px, 1.8vw, 19px);
         --card-header-gap: clamp(8px, 1.2vw, 12px);
         --card-header-copy-gap: var(--space-1);
         --card-header-margin-bottom: var(--space-3);
         --card-action-gap: var(--space-2);
-        --card-header-control-height: 28px;
+        --card-header-control-height: 24px;
         --card-header-control-font-size: var(--font-caption);
         --card-header-hit-slop: calc((var(--control-height-large) - var(--card-header-control-height)) / 2);
         --empty-state-min-height: 112px;
         --status-state-padding: var(--space-5) var(--space-3);
         --status-state-gap: var(--space-2);
         --status-state-marker-size: 28px;
-        --status-state-title-size: var(--text-xl);
+        --status-state-title-size: var(--text-lg);
         --status-state-message-size: var(--font-small);
         --card-section-gap: var(--page-section-gap);
         --action-row-gap: var(--space-2);
@@ -350,7 +350,7 @@
         --menu-viewport-margin: 8px;
         --menu-min-width: 124px;
         --menu-max-width: 240px;
-        --menu-max-height: 132px;
+        --menu-max-height: 280px;
         --menu-padding: 6px;
         --menu-item-gap: 2px;
         --menu-item-min-height: 44px;
@@ -936,6 +936,9 @@ body.modal-open .tab-bar { pointer-events: none; }
         text-wrap: balance;
         word-break: keep-all;
       }
+      .card-header-title-row { display: flex; align-items: flex-start; gap: var(--space-2); min-width: 0; }
+      .card-header-title-row > .card-title { min-width: 0; }
+      .card-header-title-control { flex: 0 0 auto; height: calc(var(--card-title-size) * var(--card-title-line-height)); display: flex; align-items: center; }
       .card-description {
         margin: 0;
         padding: 0;
@@ -946,6 +949,10 @@ body.modal-open .tab-bar { pointer-events: none; }
         overflow-wrap: anywhere;
       }
       .card-header-action {
+        /* Equal visible top/right inset, without moving the title or its first-line center. */
+        --card-header-optical-offset: calc((var(--card-header-control-height) - var(--card-title-size) * var(--card-title-line-height)) / 2);
+        position: relative;
+        right: calc(-1 * var(--card-header-optical-offset));
         min-width: 0;
         height: calc(var(--card-title-size) * var(--card-title-line-height));
         display: flex;
@@ -976,17 +983,17 @@ body.modal-open .tab-bar { pointer-events: none; }
 .settings-group-title { margin: 0 18px 8px; font-size: var(--font-caption); font-weight: var(--weight-regular); color: var(--muted); }
 .settings-group-surface { padding: 0; overflow: hidden; }
 .settings-row { min-width: 0; }
-.settings-row > summary, .settings-link { position: relative; display: grid; grid-template-columns: 32px minmax(0,1fr) 18px; align-items: center; gap: var(--space-3); width: 100%; min-height: 66px; padding: 17px 16px; list-style: none; cursor: pointer; text-align: left; }
+.settings-row > summary, .settings-link { position: relative; display: grid; grid-template-columns: 32px minmax(0,1fr) 18px; align-items: center; gap: var(--space-3); width: 100%; min-height: 66px; padding: var(--space-4); list-style: none; cursor: pointer; text-align: left; }
 .settings-row > summary::-webkit-details-marker { display: none; }
 .settings-row + .settings-row > summary::before, .settings-link::before { content: ""; position: absolute; left: 60px; right: 0; top: 0; height: 1px; background: var(--separator); }
 .settings-row-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: var(--inner-surface-bg); color: var(--accent-ink); }
-.settings-row-icon .ui-icon { width: 19px; height: 19px; }
-.settings-row-copy { min-width: 0; display: grid; gap: 4px; }
-.settings-row-title { font-size: var(--text-xl); font-weight: var(--weight-medium); line-height: 1.4; overflow-wrap: anywhere; }
+.settings-row-icon .ui-icon { width: var(--ui-icon-size); height: var(--ui-icon-size); }
+.settings-row-copy { min-width: 0; display: grid; gap: 3px; }
+.settings-row-title { font-size: var(--text-lg); font-weight: var(--weight-medium); line-height: 1.4; overflow-wrap: anywhere; }
 .settings-row-description { font-size: var(--font-caption); color: var(--muted); line-height: 1.5; overflow-wrap: anywhere; }
 .settings-row > summary > .ui-icon, .settings-link > .ui-icon:last-child { width: 16px; height: 16px; color: var(--muted); }
 .settings-row[open] > summary > .ui-icon { transform: rotate(90deg); }
-.settings-row-panel { padding: 0 var(--space-5) var(--space-5); }
+.settings-row-panel { padding: 0 var(--space-4) var(--space-4); }
 .settings-content { display: grid; gap: var(--space-4); min-width: 0; }
 .settings-link { background: transparent; border: 0; font: inherit; }
 .settings-link > .ui-icon:first-child { padding: 6px; box-sizing: content-box; width: 20px; height: 20px; border-radius: 8px; background: var(--inner-surface-bg); color: var(--accent-ink); }
@@ -999,7 +1006,8 @@ body.modal-open .tab-bar { pointer-events: none; }
 /* MetricSummary: shared overview typography and progress rhythm. */
 .metric-summary { min-width: 0; display: flex; flex-direction: column; flex: 1 1 auto; }
 .metric-values { display: grid; gap: var(--space-1); min-width: 0; }
-.metric-value { font-size: var(--metric-value-size); font-weight: var(--weight-bold); letter-spacing: -.025em; line-height: 1.25; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.metric-value { font-size: var(--metric-value-size); font-weight: var(--weight-semibold); letter-spacing: -.035em; line-height: 1.15; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.metric-unit { font-size: .8em; font-weight: var(--weight-medium); white-space: nowrap; }
 .metric-detail { font-size: var(--font-caption); color: var(--muted); line-height: 1.5; }
 .metric-footer { display: grid; gap: var(--space-2); margin-top: auto; padding-top: var(--space-4); }
 .metric-summary > .plan-status-grid { margin-top: var(--space-3); }
@@ -1009,10 +1017,12 @@ body.modal-open .tab-bar { pointer-events: none; }
 .plan-status-grid > span { display: flex; justify-content: space-between; gap: var(--space-1); }
 .plan-status-grid b { font-weight: var(--weight-semibold); color: var(--ink); font-variant-numeric: tabular-nums; }
       .calendar-period-hint {
-        margin-top: 2px;
+        margin-top: var(--space-3);
+        font-size: var(--font-caption);
         color: var(--text-tertiary);
         line-height: 1.35;
       }
+      .calendar-period-hint:empty { display: none; }
       .calendar-cell {
         position: relative;
         min-width: 0;
@@ -1057,7 +1067,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         align-items: center;
         justify-content: center;
         font-size: var(--calendar-number-size);
-        font-weight: var(--weight-semibold);
+        font-weight: var(--weight-medium);
         line-height: 1;
         text-align: center;
         font-variant-numeric: tabular-nums;
@@ -1065,18 +1075,18 @@ body.modal-open .tab-bar { pointer-events: none; }
       .calendar-cell.today .calendar-num {
         background: var(--accent);
         color: var(--accent-contrast);
-        font-weight: var(--weight-bold);
+        font-weight: var(--weight-semibold);
         box-shadow: 0 1px 3px color-mix(in srgb, var(--accent) 18%, transparent);
       }
       .calendar-cell.selected .calendar-num {
-        font-weight: var(--weight-bold);
+        font-weight: var(--weight-semibold);
       }
       .selected-date-title {
         display: flex;
         align-items: center;
         gap: var(--space-2);
-        color: var(--state-selected-color);
-        font-weight: var(--weight-bold);
+        color: var(--ink);
+        font-weight: var(--weight-semibold);
       }
       .calendar-holiday {
         max-width: 100%;
@@ -1528,9 +1538,8 @@ body.modal-open .tab-bar { pointer-events: none; }
         gap: var(--space-sm);
         min-height: 0;
         margin: 0;
-        /* Reserve the reset lane in every state. Showing the button must not reflow the summary. */
-        padding-right: 82px;
       }
+      .filter-feedback:has(> .filter-feedback-summary[hidden]) { display: none; }
       .filter-feedback-summary {
         min-width: 0;
         color: var(--text-tertiary);
@@ -1539,16 +1548,6 @@ body.modal-open .tab-bar { pointer-events: none; }
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
         overflow-wrap: anywhere;
-      }
-      .filter-feedback > .btn {
-        position: absolute;
-        top: 50%;
-        right: 0;
-        transform: translateY(-50%);
-        --btn-height: 26px;
-      }
-      .filter-feedback > .btn[hidden] {
-        display: none;
       }
       @media (max-width: 380px) {
         .filter-feedback {
@@ -1589,11 +1588,11 @@ body.modal-open .tab-bar { pointer-events: none; }
         flex-wrap: wrap;
         column-gap: 0;
         row-gap: var(--collection-copy-gap);
-        margin-top: var(--collection-copy-gap);
+        margin-top: 3px;
         color: var(--muted);
         font-size: var(--collection-meta-font-size);
         font-weight: var(--collection-meta-font-weight);
-        line-height: 1.3;
+        line-height: 1.5;
       }
       .collection-meta-item {
         min-width: 0;
@@ -1614,7 +1613,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         color: var(--ink);
         font-size: var(--collection-title-size);
         font-weight: var(--collection-title-weight);
-        line-height: 1.42;
+        line-height: 1.55;
       }
       .collection-row__title-text {
         min-width: 0;
@@ -1625,11 +1624,11 @@ body.modal-open .tab-bar { pointer-events: none; }
         display: block;
         width: 100%;
         min-width: 0;
-        margin-top: var(--collection-copy-gap);
+        margin-top: 6px;
         color: var(--text-secondary);
         font-size: var(--collection-note-size);
         font-weight: var(--weight-regular);
-        line-height: 1.5;
+        line-height: 1.6;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
       }
@@ -1912,12 +1911,13 @@ body.modal-open .tab-bar { pointer-events: none; }
         color: var(--state-danger-color);
       }
 
-      .inner-card--theme-item, .inner-card--category, .inner-card--panel, .inner-card--recovery {
+      .inner-card--category, .inner-card--panel, .inner-card--recovery {
         --inner-card-bg: var(--inner-surface-bg);
       }
       .inner-card--theme-item {
-        --inner-card-padding: var(--nested-surface-padding);
-        gap: var(--collection-row-gap);
+        --inner-card-bg: transparent;
+        --inner-card-padding: var(--space-2) 0;
+        gap: var(--space-2);
       }
       .inner-card--category {
         --inner-card-padding: var(--card-padding-compact);
@@ -1945,7 +1945,6 @@ body.modal-open .tab-bar { pointer-events: none; }
         overflow: hidden;
         border-radius: 0;
       }
-      .inner-card--top-divided-list:not(:has(.status-state)) { border-top: 1px solid var(--section-divider); }
       .inner-card--stacked-list {
         display: flex;
         flex-direction: column;
@@ -1994,9 +1993,6 @@ body.modal-open .tab-bar { pointer-events: none; }
       .action-row--auth { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; --action-row-gap: var(--space-2); --action-row-margin-top: var(--space-1); }
       .action-row--auth > .btn { width: 100%; white-space: normal; min-height: var(--control-height-large); }
       .action-row--auth > .btn--primary { grid-column: 1 / -1; }
-      .filter-feedback--actions-only { padding: 0; justify-content: flex-end; }
-      .filter-feedback--actions-only:not(:has(.btn:not([hidden]))) { display: none; }
-      .filter-feedback--actions-only > .btn { position: static; transform: none; --btn-height: 32px; }
       .form--modal {
         --field-label-gap: var(--modal-field-label-gap);
         --field-label-font-size: var(--font-small);
@@ -2014,9 +2010,10 @@ body.modal-open .tab-bar { pointer-events: none; }
       .form--modal .field-error:empty {
         display: none;
       }
-      /* Empty/search results stay message-only; owning headers already carry the actions. */
+      /* Empty states stay quiet; search states can offer a contextual reset action. */
       .status-state--empty .status-state-marker { display: none; }
-      .status-state--search .status-state-marker { display: none; }
+      .status-state--search .status-state-marker { border: 0; background: var(--inner-surface-bg); }
+      .inner-card--stacked-list.memo-card-list > .status-state--search { background: var(--card); border-radius: var(--radius-surface); box-shadow: var(--card-surface-shadow); }
       .status-state--empty .status-state-message { color: var(--text-tertiary); }
       .status-state--search .status-state-message { color: var(--text-secondary); }
       .status-state--complete .status-state-marker {
@@ -2145,16 +2142,16 @@ body.modal-open .tab-bar { pointer-events: none; }
 
       /* Event rows: a stable date/time column and one shared reading rhythm. */
       .collection-row--event {
-        --collection-leading-width: 54px;
-        --collection-row-gap: 14px;
+        --collection-leading-width: 44px;
+        --collection-row-gap: 10px;
         --collection-row-padding-x: 0px;
         --collection-primary-row-padding-y: var(--space-4);
         --collection-copy-gap: 6px;
         --list-divider-border: 1px solid color-mix(in srgb, var(--separator) 65%, transparent);
       }
       .collection-row--event .collection-row__title { line-height: 1.5; letter-spacing: -0.025em; }
-      .collection-row--event .collection-row__meta { margin-top: 6px; column-gap: 10px; row-gap: 4px; font-size: var(--font-caption); line-height: 1.6; }
-      .collection-row--event .collection-row__note { margin-top: 8px; font-size: var(--collection-note-size); line-height: 1.65; word-break: keep-all; }
+      .collection-row--event .collection-row__meta { margin-top: 3px; column-gap: 0; row-gap: 4px; font-size: var(--font-caption); line-height: 1.6; }
+      .collection-row--event .collection-row__note { margin-top: 6px; font-size: var(--font-small); line-height: 1.6; word-break: keep-all; }
       .collection-row--event .collection-row__actions { margin-top: -4px; }
       .collection-row--event .collection-meta-item--key {
         padding: 0;
@@ -2169,15 +2166,14 @@ body.modal-open .tab-bar { pointer-events: none; }
       }
 
       @media (max-width: 360px) {
-        .collection-row--event { --collection-row-gap: 10px; --collection-leading-width: 48px; }
+        .collection-row--event { --collection-row-gap: 10px; --collection-leading-width: 44px; }
       }
 
-      .collection-row--task .collection-meta-item + .collection-meta-item::before,
-      .collection-row--event .collection-meta-item + .collection-meta-item::before { content: none; }
+      .collection-row--task .collection-meta-item + .collection-meta-item::before { content: none; }
 
-      .field--plan-status { min-height: 36px; height: 36px; max-height: 36px; border-color: transparent; border-radius: var(--radius-compact); --field-size: var(--filter-font-size); }
+      .field--plan-status { align-self: center; min-height: 26px; height: 26px; max-height: 26px; border-color: transparent; border-radius: var(--radius-compact); --field-size: var(--filter-font-size); }
       .field--plan-status[data-ui-state] { border-color: transparent; }
-      @media (pointer: coarse) { .field--plan-status { min-height: 44px; height: 44px; max-height: 44px; } }
+
 
       .card--item {
         --card-header-gap: 12px;
@@ -2196,10 +2192,10 @@ body.modal-open .tab-bar { pointer-events: none; }
       .card--summary { display: flex; flex-direction: column; }
 
       .settings-row--account { background: var(--card); border-radius: var(--radius-surface); box-shadow: var(--card-surface-shadow); }
-      .settings-row--account > summary { grid-template-columns: 48px minmax(0,1fr); padding: var(--space-5); gap: var(--space-3); }
-      .settings-row--account .settings-row-icon { width: 48px; height: 48px; border-radius: 50%; font-size: var(--font-small); }
+      .settings-row--account > summary { grid-template-columns: 40px minmax(0,1fr); padding: var(--space-4); gap: var(--space-3); }
+      .settings-row--account .settings-row-icon { width: 40px; height: 40px; border-radius: 50%; font-size: var(--font-small); }
       .settings-row--account > summary > .ui-icon { display: none; }
-      .settings-row--account[open] > summary { grid-template-columns: 48px minmax(0,1fr) 18px; }
+      .settings-row--account[open] > summary { grid-template-columns: 40px minmax(0,1fr) 18px; }
       .settings-row--account[open] > summary > .ui-icon { display: block; }
       .settings-row--account[open] .settings-row-action { display: none; }
       .settings-row--account .settings-row-title { font-size: var(--card-title-size); font-weight: var(--weight-semibold); }
@@ -2213,9 +2209,11 @@ body.modal-open .tab-bar { pointer-events: none; }
         .card--widget[data-widget="plans"] .plan-status-grid { margin-top: var(--space-2); }
       }
 
-      .btn--settings-action { --btn-width: 100%; --btn-height: auto; --btn-padding: 12px 0; --btn-font-size: var(--text-lg); --btn-font-weight: var(--weight-medium); min-height: 44px; justify-content: flex-start; border-radius: 0; }
+      .btn--settings-action { --btn-width: 100%; --btn-height: auto; --btn-padding: 12px 0; --btn-font-size: var(--font-small); --btn-font-weight: var(--weight-medium); min-height: 44px; justify-content: flex-start; border-radius: 0; }
 
-      .settings-row--account .settings-row-panel, .settings-row--filled .settings-row-panel { display: grid; gap: var(--space-4); margin: 0 var(--space-4) var(--space-4); padding: var(--space-4); background: var(--inner-surface-bg); border-radius: var(--radius-compact); }
+      .settings-row--account .settings-row-panel { display: grid; gap: var(--space-4); margin: 0 var(--space-4) var(--space-4); padding: var(--space-4); background: var(--inner-surface-bg); border-radius: var(--radius-compact); }
+      .settings-row--filled .settings-row-panel { display: grid; gap: var(--space-3); padding: 0 var(--space-4) var(--space-4); }
+      .settings-row--filled .project-panel, .settings-row--filled .settings-signin-note, .settings-row--filled .sync-project-actions { margin: 0; padding: var(--space-4); background: var(--inner-surface-bg); border-radius: var(--radius-compact); }
       .settings-row--account .action-row, .settings-row--filled .action-row { justify-content: flex-start; }
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
@@ -2342,20 +2340,20 @@ body.modal-open .tab-bar { pointer-events: none; }
         width: 100%;
         height: 100%;
       }
+      .page--reading { max-width: 760px; }
       .schedule-main-grid {
         grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-        align-items: stretch;
+        align-items: start;
         width: 100%;
       }
       .schedule-main-item {
         min-width: 0;
         display: flex;
-        align-items: stretch;
+        align-items: start;
         width: 100%;
       }
       .schedule-main-item > .card {
         width: 100%;
-        height: 100%;
       }
       .category-cards {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2377,7 +2375,6 @@ body.modal-open .tab-bar { pointer-events: none; }
         .top {
         gap: 10px; }
         .collection-toolbar__controls { gap: 6px; }
-        .theme-grid { grid-template-columns: minmax(0, 1fr); }
       }
 
       @supports (padding: max(0px)) {
@@ -2439,16 +2436,16 @@ body.modal-open .tab-bar { pointer-events: none; }
       .settings-status-note {
         font-size: var(--settings-status-font-size);
       }
-      .memo-body { margin-top: var(--space-3); font-size: var(--memo-text-font-size); line-height: 1.65; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+      .memo-body { margin-top: var(--space-2); font-size: var(--memo-text-font-size); line-height: 1.65; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
       .budget-card-list, .plan-card-list, .memo-card-list { gap: var(--space-4); }
 
       .budget-line .card-title, .plan .card-title { text-wrap: pretty; word-break: keep-all; }
       .budget-value-group {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--space-4);
-        margin: 17px 0 0;
-        padding: 16px 14px;
+        gap: var(--space-3);
+        margin: 14px 0 0;
+        padding: var(--space-3);
         border-radius: var(--radius-compact);
         background: var(--inner-surface-bg);
       }
@@ -2460,27 +2457,25 @@ body.modal-open .tab-bar { pointer-events: none; }
         line-height: 1.5;
       }
       .budget-value-row dd {
-        margin: 6px 0 0;
+        margin: 4px 0 0;
         font-size: var(--text-3xl);
-        font-weight: var(--weight-semibold);
+        font-weight: var(--weight-medium);
         color: var(--ink);
         line-height: 1.45;
         letter-spacing: -0.03em;
         font-variant-numeric: tabular-nums;
         overflow-wrap: anywhere;
       }
-      .budget-value-row.is-actual dd { color: var(--accent-ink); font-weight: var(--weight-bold); }
+      .budget-value-row.is-actual dd { color: var(--accent-ink); font-weight: var(--weight-semibold); }
       .budget-unit { font-size: var(--font-small); font-weight: var(--weight-regular); color: var(--muted); white-space: nowrap; }
       .budget-difference { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-top: var(--space-3); font-size: var(--font-caption); color: var(--muted); }
       .budget-over-badge { padding: 3px 8px; border-radius: 6px; color: var(--state-danger-color); background: var(--state-danger-soft-bg); font-weight: var(--weight-semibold); }
       .budget-detail { margin-top: var(--space-4); padding-top: 14px; border-top: 1px solid var(--separator); }
       .collection-section-label, .plan-label { margin-bottom: 6px; font-weight: var(--weight-semibold); }
       .budget-detail > div:last-child, .plan-text { font-size: var(--collection-note-size); line-height: 1.65; color: var(--text-secondary); white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }
-      .plan-status-control { display: flex; margin-top: var(--space-3); }
-      .plan-discussion { display: grid; gap: 16px; min-width: 0; margin-top: var(--space-4); }
+      .plan-discussion { display: grid; gap: var(--space-3); min-width: 0; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--separator); }
       .plan-block { min-width: 0; }
-      .plan-block:not(.plan-block--decision) { border-top: 1px solid var(--separator); padding-top: 16px; }
-      .plan-block--decision { background: var(--inner-surface-bg); border-radius: var(--radius-compact); padding: 13px 14px; }
+      .plan-block--decision { background: var(--inner-surface-bg); border-radius: var(--radius-compact); padding: var(--space-3); }
       .plan-block--decision .plan-label { color: var(--accent-ink); }
       .plan-text.is-empty { color: var(--muted); font-size: var(--font-small); }
       @media (max-width: 420px) {
@@ -2501,14 +2496,14 @@ body.modal-open .tab-bar { pointer-events: none; }
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 5px;
-        min-height: 56px;
-        padding: 8px 4px;
+        gap: 2px;
+        min-height: 52px;
+        padding: 6px 2px;
         border-radius: var(--radius-compact);
         background: var(--inner-surface-bg);
         line-height: 1.15;
       }
-      .event-leading-main { font-size: var(--text-xl); font-weight: var(--weight-semibold); letter-spacing: -0.035em; white-space: nowrap; }
+      .event-leading-main { font-size: var(--text-lg); font-weight: var(--weight-semibold); letter-spacing: -0.035em; white-space: nowrap; }
       .event-leading-sub { color: var(--muted); font-size: var(--font-micro); font-weight: var(--weight-regular); }
       /* Selected-day time blocks share the date tiles' geometry. */
       .event-leading--time {
@@ -2516,9 +2511,9 @@ body.modal-open .tab-bar { pointer-events: none; }
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 5px;
-        min-height: 56px;
-        padding: 8px 4px;
+        gap: 2px;
+        min-height: 52px;
+        padding: 6px 2px;
         border-radius: var(--radius-compact);
         background: var(--inner-surface-bg);
         font-size: var(--font-small);
@@ -2574,7 +2569,7 @@ body.modal-open .tab-bar { pointer-events: none; }
       }
 
       .category-progress-meta {
-        margin-top: var(--space-2);
+        margin-top: 5px;
         text-align: right;
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
@@ -3021,11 +3016,11 @@ body.modal-open .tab-bar { pointer-events: none; }
                 <div class="field-shell field-shell--search">
                     <span class="field-search-icon" aria-hidden="true"><span data-ui-icon="search"></span></span>
                   <input
-                    aria-label="할 일 검색"
+                    aria-label="할 일 검색 (제목, 분야, 메모)"
                     class="field field--compact-text field--search field--surface"
                     data-dom="taskSearch"
                     data-action="tasks-search"
-                    placeholder="할 일 검색 (제목·분야·메모)"
+                    placeholder="할 일 검색"
                     type="search"
                   />
                   <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span data-ui-icon="close"></span></button>
@@ -3055,9 +3050,6 @@ body.modal-open .tab-bar { pointer-events: none; }
                     <option value="custom">기본순</option>
                   </select>
                 </div>
-                <div class="filter-feedback filter-feedback--actions-only">
-                  <button class="btn btn--status-action btn--tertiary" data-action="reset-task-filters" data-dom="taskFilterReset" type="button" hidden>필터 초기화</button>
-                </div>
               </div>
           <div class="task-list-mount" data-collection="task"></div>
         </section>
@@ -3072,7 +3064,6 @@ body.modal-open .tab-bar { pointer-events: none; }
                   <div data-ui-component="CardHeader" class="card-header">
                     <div class="card-header-copy">
                       <h3 class="card-title" data-dom="calendarTitle" aria-live="polite" aria-atomic="true"></h3>
-                      <div class="card-description calendar-period-hint" data-dom="calendarHint"></div>
                     </div>
                     <div class="card-header-action">
                       <button
@@ -3101,6 +3092,7 @@ body.modal-open .tab-bar { pointer-events: none; }
                       ><span>금</span><span>토</span>
                     </div>
                     <div class="calendar-grid" data-dom="calendarGrid"></div>
+                    <div class="calendar-period-hint" data-dom="calendarHint" aria-live="polite"></div>
                   </div>
                 </div>
               </div>
@@ -3123,37 +3115,23 @@ body.modal-open .tab-bar { pointer-events: none; }
                 <div class="card-header-copy">
                   <h3 class="card-title">전체 일정 목록</h3>
                 </div>
-                <div class="card-header-action">
-                  <label class="field-shell field-shell--header-select"><select
-                    aria-label="일정 기간 필터"
-                    class="field field--inline-select field--header-select"
-                    data-dom="scheduleFilter"
-                    data-action="schedule-filter"
-                  >
-                    <option value="all">전체</option>
-                    <option value="upcoming">다가오는</option>
-                    <option value="past">지난</option>
-                  </select></label>
-                </div>
               </div>
               <div data-ui-component="CardBody" class="card-body">
                 <div class="collection-toolbar">
                   <div class="field-shell field-shell--search">
                     <span class="field-search-icon" aria-hidden="true"><span data-ui-icon="search"></span></span>
                     <input
-                      aria-label="전체 일정 검색"
+                      aria-label="전체 일정 검색 (제목, 날짜, 시간, 장소, 분야, 메모)"
                       class="field field--compact-text field--search"
                       data-dom="scheduleAllSearch"
                       data-action="schedule-search"
-                      placeholder="일정 검색 (제목, 장소, 분야, 메모)"
+                      placeholder="일정 검색"
                       type="search"
                     />
                     <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span data-ui-icon="close"></span></button>
                   </div>
-                  <div class="filter-feedback" aria-live="polite">
-                    <span class="filter-feedback-summary" data-dom="scheduleFilterSummary">0개 표시 · 활성 조건 0개</span>
-                    <button class="btn btn--status-action btn--tertiary" data-action="reset-schedule-filters" data-dom="scheduleFilterReset" type="button" hidden>필터 초기화</button>
-                  </div>
+                  <input type="hidden" data-dom="scheduleFilter" value="all"/>
+                  <div data-ui-static="SchedulePeriodSegments"></div>
                 </div>
                 <div data-collection="event"></div>
               </div>
@@ -3161,12 +3139,12 @@ body.modal-open .tab-bar { pointer-events: none; }
           </div>
         </section>
         <!-- ===== PAGE: BUDGET · 예산 ===== -->
-        <section class="page" data-page-root="budget">
+        <section class="page page--reading" data-page-root="budget">
           <div data-ui-static="PageHeading"></div>
           <!-- ===== BUDGET: SUMMARY ===== -->
           <div class="card-stack">
             <div data-ui-component="Card" class="card card--summary">
-              <div data-ui-static="MetricSummary" data-title="총 실제금액" data-value-dom="totalActual" data-detail-dom="totalPlan" data-bar-dom="budgetBar" data-footer-dom="budgetPctBig" data-money="true" data-balance-dom="overBudget"></div>
+              <div data-ui-static="MetricSummary" data-title="총 사용 금액" data-value-dom="totalActual" data-detail-dom="totalPlan" data-bar-dom="budgetBar" data-footer-dom="budgetPctBig" data-money="true" data-balance-dom="overBudget"></div>
             </div>
             <!-- ===== BUDGET: ITEMS ===== -->
             <div class="collection-section">
@@ -3177,7 +3155,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           </div>
         </section>
         <!-- ===== PAGE: PLANS · 부부계획 ===== -->
-        <section class="page" data-page-root="plans">
+        <section class="page page--reading" data-page-root="plans">
           <div data-ui-static="PageHeading"></div>
           <div class="collection-section">
             <div data-ui-component="CardBody" class="card-body">
@@ -3186,7 +3164,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           </div>
         </section>
         <!-- ===== PAGE: MEMOS · 메모 ===== -->
-        <section class="page" data-page-root="memos">
+        <section class="page page--reading" data-page-root="memos">
           <div data-ui-static="PageHeading"></div>
           <div class="card-grid">
             <div class="collection-section">
@@ -3214,7 +3192,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           </div>
         </section>
         <!-- ===== PAGE: SETTINGS · 설정 ===== -->
-<section class="page settings-page" data-page-root="settings">
+<section class="page page--reading settings-page" data-page-root="settings">
   <div data-ui-static="PageHeading">
   </div>
   <div class="settings-stack">
@@ -3449,7 +3427,7 @@ body.modal-open .tab-bar { pointer-events: none; }
             <span class="settings-row-title">
               결혼식 날짜
             </span>
-            <span class="settings-row-description">
+            <span class="settings-row-description" data-dom="settingsWeddingDateSummary">
               일정과 디데이의 기준
             </span>
           </span>
@@ -3551,7 +3529,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 </main>
 <!-- ===== APP FOOTER / STATUS TEXT ===== -->
       <div class="footer" data-dom="footerText">
-        우리 둘이 같이 쓰는 결혼 준비 공간 · 현재는 이 브라우저에 저장됩니다.
+        이 브라우저에 저장됨
       </div>
     </div>
     <!-- ===== GLOBAL MODAL ===== -->
@@ -3592,7 +3570,7 @@ body.modal-open .tab-bar { pointer-events: none; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "562",
+          version: "565",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4105,7 +4083,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           SettingsRow: ["", "account", "filled"],
           CardBody: ["", "fill-stack"],
           CardFooter: ["", "baseline"],
-          InnerCard: ["", "compact", "theme-item", "category", "panel", "loading", "recovery", "grouped-list", "stacked-list", "top-divided-list"],
+          InnerCard: ["", "compact", "theme-item", "category", "panel", "loading", "recovery", "grouped-list", "stacked-list"],
           CollectionRow: ["task", "event"],
           CollectionMetaItem: ["", "key", "numeric", "danger"],
           Callout: ["warning", "conflict"],
@@ -4269,11 +4247,12 @@ body.modal-open .tab-bar { pointer-events: none; }
         function Callout(content = "", variant = "warning") {
           return UIComponentRoot("Callout", ["callout", ...uiVariantClasses("Callout", "callout", variant)].join(" "), content);
         }
-        function CardHeader(title, description = "", action = "", variant = "") {
+        function CardHeader(title, description = "", action = "", variant = "", titleControl = "") {
           const variantClasses = uiVariantClasses("CardHeader", "card-header", variant);
+          const heading = `<h3 class="card-title">${esc(title)}</h3>`;
           return UIComponentRoot("CardHeader", ["card-header", ...variantClasses].join(" "), `
             <div class="card-header-copy">
-              <h3 class="card-title">${esc(title)}</h3>
+              ${titleControl ? `<div class="card-header-title-row">${heading}<div class="card-header-title-control">${titleControl}</div></div>` : heading}
               ${description ? `<div class="card-description">${esc(description)}</div>` : ""}
             </div>
             ${action ? `<div class="card-header-action">${action}</div>` : ""}`);
@@ -4287,6 +4266,9 @@ body.modal-open .tab-bar { pointer-events: none; }
         }
         function Progress(value, variant = "") {
           return `<div class="${["progress", ...uiVariantClasses("Progress", "progress", variant)].join(" ")}"><i data-progress-value="${attr(value)}"></i></div>`;
+        }
+        function MetricAmount(value) {
+          return `${esc(won(value).replace(/\s*원$/, ""))} <span class="metric-unit">원</span>`;
         }
         function MetricSummary({ title, valueDom, detailDom = "", barDom, footerDom, footerLabel = "", money = "false", planStatus = "false", balanceDom = "" }) {
           const classes = ["metric-summary", ...uiVariantClasses("MetricSummary", "metric-summary", money === "true" ? "money" : "")];
@@ -4332,10 +4314,27 @@ body.modal-open .tab-bar { pointer-events: none; }
           row.scrollIntoView({block: "nearest"});
           return true;
         }
+        function FilterSegments({dom, label, action, valueKey, choices}) {
+          return `<div data-ui-component="SegmentedControl" class="segmented-control segmented-control--filter" data-dom="${attr(dom)}" role="group" aria-label="${attr(label)}">
+            ${choices.map(([value,text]) =>
+              `<button type="button" data-action="${attr(action)}" data-${attr(valueKey)}="${attr(value)}" aria-pressed="${value === "all"}">${esc(text)} <span class="segment-count">0</span></button>`).join("")}</div>`;
+        }
+        function renderFilterSegments(owner, dom, valueKey, selected, counts) {
+          const host = ownedElement(owner, dom);
+          if (!host) return;
+          host.querySelectorAll("button").forEach(button => {
+            const value = button.dataset[valueKey];
+            button.setAttribute("aria-pressed", String(value === selected));
+            button.querySelector(".segment-count").textContent = formatNumber(counts[value] || 0);
+          });
+        }
         function TaskStatusSegments() {
-          return `<div data-ui-component="SegmentedControl" class="segmented-control segmented-control--filter" data-dom="taskStatusControl" role="group" aria-label="할 일 상태 필터">
-            ${[[TASK_STATUS_FILTER.ALL,"전체"],[TASK_STATUS_FILTER.OPEN,"미완료"],[TASK_STATUS_FILTER.DONE,"완료"]].map(([value,label]) =>
-              `<button type="button" data-action="tasks-status" data-status="${attr(value)}" aria-pressed="${value === TASK_STATUS_FILTER.ALL}">${esc(label)} <span class="segment-count">0</span></button>`).join("")}</div>`;
+          return FilterSegments({dom: "taskStatusControl", label: "할 일 상태 필터", action: "tasks-status", valueKey: "status",
+            choices: [[TASK_STATUS_FILTER.ALL,"전체"],[TASK_STATUS_FILTER.OPEN,"미완료"],[TASK_STATUS_FILTER.DONE,"완료"]]});
+        }
+        function SchedulePeriodSegments() {
+          return FilterSegments({dom: "schedulePeriodControl", label: "일정 기간 필터", action: "schedule-period", valueKey: "period",
+            choices: [["all","전체"],["upcoming","다가오는"],["past","지난"]]});
         }
         function mountStaticUiComponents() {
           document.querySelectorAll('span[data-ui-icon]').forEach(host => {
@@ -4347,6 +4346,9 @@ body.modal-open .tab-bar { pointer-events: none; }
           });
           document.querySelectorAll('[data-ui-static="TaskStatusSegments"]').forEach(host => {
             host.outerHTML = TaskStatusSegments();
+          });
+          document.querySelectorAll('[data-ui-static="SchedulePeriodSegments"]').forEach(host => {
+            host.outerHTML = SchedulePeriodSegments();
           });
           document.querySelectorAll('[data-ui-static="PageHeading"]').forEach(host => {
             host.outerHTML = PageHeading(PAGE_REGISTRY[host.closest('[data-page-root]').dataset.pageRoot]);
@@ -4387,7 +4389,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           const role = variant === "error" ? "alert" : "status";
           const classes = ["status-state", ...uiVariantClasses("StatusState", "status-state", variant)].join(" ");
           return `<div data-ui-component="StatusState" data-ui-variant="${attr(variant)}" class="${classes}" role="${role}">
-            <div class="status-state-marker" aria-hidden="true"></div>
+            <div class="status-state-marker" aria-hidden="true">${variant === "search" ? Icon("search") : ""}</div>
             <div class="status-state-copy">
               ${title ? `<div class="status-state-title">${esc(title)}</div>` : ""}
               <div class="status-state-message">${esc(message)}</div>
@@ -4396,29 +4398,29 @@ body.modal-open .tab-bar { pointer-events: none; }
           </div>`;
         }
 
-        function updateFilterFeedback(owner, { summaryDom = "", resultCount, controls = [], resetDom = "", resetActive = false } = {}) {
+        function updateFilterFeedback(owner, { summaryDom = "", resultCount, controls = [] } = {}) {
           let activeCount = 0;
           for (const [element, active] of controls) {
             const isActive = !!active;
             activeCount += Number(isActive);
             if (element instanceof HTMLElement) element.toggleAttribute("data-filter-active", isActive);
           }
-          if (summaryDom) setOwnedText(owner, summaryDom, `${formatCount(resultCount)} 표시 · 활성 조건 ${formatCount(activeCount)}`);
-          if (resetDom) {
-            const reset = ownedElement(owner, resetDom);
-            if (reset) reset.hidden = !resetActive;
+          if (summaryDom) {
+            setOwnedText(owner, summaryDom, `${formatCount(resultCount)} 검색 결과`);
+            const summary = ownedElement(owner, summaryDom);
+            if (summary) summary.hidden = activeCount === 0;
           }
           return activeCount;
         }
-        function EmptyState(message, action = "", variant = "empty") {
-          return StatusState(message, { action, variant });
+        function EmptyState(message, action = "", variant = "empty", title = "") {
+          return StatusState(message, { action, variant, title });
         }
         function ErrorState(message, action = "", title = "문제가 발생했어요") {
           return StatusState(message, { action, variant: "error", title });
         }
-        function List(items, renderer, emptyMessage = "", emptyAction = "", emptyVariant = "empty") {
+        function List(items, renderer, emptyMessage = "", emptyAction = "", emptyVariant = "empty", emptyTitle = "") {
           return items?.length ? items.map((item, index) => renderer(item, index, items.length)).join("")
-            : emptyMessage ? EmptyState(emptyMessage, emptyAction, emptyVariant) : "";
+            : emptyMessage ? EmptyState(emptyMessage, emptyAction, emptyVariant, emptyTitle) : "";
         }
         const MORE_MENU_VARIANTS = Object.freeze(["default", "bare", "quiet"]);
         let moreMenuInstanceSequence = 0;
@@ -4488,7 +4490,7 @@ body.modal-open .tab-bar { pointer-events: none; }
             const initial = typeof field.initial === "function" ? field.initial() : field.initial ?? field.default;
             return FormField(field, item ? item[field.key] ?? "" : initial ?? "");
           }).join("");
-          return ModalFrame(title, Form(controls, "modal"), ModalActions(actions), actions.description || (item ? "내용을 수정하고 저장해요." : "내용을 입력하고 저장해요."));
+          return ModalFrame(title, Form(controls, "modal"), ModalActions(actions), actions.description || "");
         }
 // ===== 03 COLLECTION / FORM / PAGE / ACTION / DOM REGISTRIES =====
         // Edit COLLECTION_SCHEMAS, not its derived FORM_SCHEMAS/CRUD actions. Fields own storage + form rules.
@@ -4531,8 +4533,8 @@ body.modal-open .tab-bar { pointer-events: none; }
             fields: [
               { key: "name", id: "bName", label: "항목", maxLength: 300,
                 required: "항목을 입력해주세요.", repairEmpty: "(이름 없음)", placeholder: "예: 본식 식대" },
-              { key: "planned", id: "bPlan", layout: "half", label: "예상금액", type: "money", placeholder: "0" },
-              { key: "actual", id: "bActual", layout: "half", label: "실제금액", type: "money", placeholder: "0" },
+              { key: "planned", id: "bPlan", layout: "half", label: "예상 금액", type: "money", placeholder: "0" },
+              { key: "actual", id: "bActual", layout: "half", label: "사용 금액", type: "money", placeholder: "0" },
               { key: "details", id: "bDetails", label: "세부 내용", type: "textarea", maxLength: 2000,
                 placeholder: "계약 내용, 포함 항목, 메모 등을 적어보세요." },
             ],
@@ -4574,7 +4576,7 @@ body.modal-open .tab-bar { pointer-events: none; }
                 required: "제목을 입력해주세요.", repairEmpty: "(제목 없음)", placeholder: "예: 자녀 계획" },
               { key: "status", id: "pStatus", label: "상태", options: PLAN_STATUSES,
                 default: PLAN_STATUSES[0], read: (value) => value || PLAN_STATUSES[0] },
-              { key: "details", id: "pDetails", label: "논의할 세부 사항", display: "block", type: "textarea", maxLength: 2000,
+              { key: "details", id: "pDetails", label: "논의할 내용", display: "block", type: "textarea", maxLength: 2000,
                 placeholder: "서로 이야기해야 할 질문이나 기준을 적어주세요." },
               { key: "note", id: "pNote", label: "논의된 사항", display: "block", type: "textarea", maxLength: 2000,
                 placeholder: "실제로 이야기하고 합의한 내용을 기록하세요." },
@@ -4589,23 +4591,33 @@ body.modal-open .tab-bar { pointer-events: none; }
             feedback: { saved: "메모를 저장했어요.", deleted: "메모를 삭제했어요." },
             retain: (item) => !!item.text.trim(),
             fields: [
-              { key: "text", id: "mText", label: "메모", type: "textarea", maxLength: 5000,
-                required: "메모 내용을 입력해주세요.", placeholder: "메모 내용을 입력하세요." },
+              { key: "text", label: "메모", maxLength: 5000, required: "메모 내용을 입력해주세요." },
             ],
+            form: {
+              decode: memoFormData, encode: memoStoredData,
+              fields: [
+                { key: "title", id: "mTitle", label: "제목", maxLength: 5000, read: value => value,
+                  required: "메모 제목을 입력해주세요.", placeholder: "예: 예식장 상담 체크" },
+                { key: "body", id: "mText", label: "본문", type: "textarea", maxLength: 5000, read: value => value,
+                  placeholder: "확인할 내용을 적어보세요.",
+                  validate: (value, data) => memoStoredData(data).text.length > 5000 ? "제목과 본문은 합쳐서 5,000자 이하로 입력해주세요." : "" },
+              ],
+            },
           },
         };
         const COLLECTION_KEYS = Object.freeze(Object.fromEntries(
           Object.values(COLLECTION_SCHEMAS).map(({ stateKey }) => [stateKey.toUpperCase(), stateKey])));
         const FORM_SCHEMAS = Object.freeze(Object.fromEntries(
           Object.entries(COLLECTION_SCHEMAS).map(([name, schema]) => {
-            const fields = schema.fields.filter((field) => field.id);
+            const fields = schema.form?.fields || schema.fields.filter((field) => field.id);
             return [name, {
               name, title: schema.title || schema.label, collection: schema.stateKey, view: schema.view,
               fields,
+              decode: schema.form?.decode, encode: schema.form?.encode,
               // INTENTIONAL COMPAT: Planner.Forms.schemas[name].read/validate/createItem remain callable.
               read: () => readFormFields(name),
               validate: (data, validation) => (validation || validateFieldsDetailed(fields, data, true)).error,
-              createItem: (data) => normalizeCollectionItem(schema, { id: newId(), ...data }),
+              createItem: (data) => normalizeCollectionItem(schema, { id: newId(), ...(schema.form?.encode ? schema.form.encode(data) : data) }),
               notFoundMessage: `수정할 ${schema.title || schema.label} 항목을 찾지 못했어요.`,
             }];
           })));
@@ -4622,7 +4634,7 @@ body.modal-open .tab-bar { pointer-events: none; }
           budget: { icon: "wallet", description: "예상과 실제 지출을 함께 관리해요.", addLabel: "예산 추가", addModal: "budget", label: COLLECTION_SCHEMAS.budget.label, collection: "budget" },
           plans: { icon: "heart", description: "함께 이야기하고 결정한 내용을 남겨요.", addLabel: "계획 추가", addModal: "plan", label: COLLECTION_SCHEMAS.plan.label, collection: "plan" },
           memos: { icon: "memo", description: "기억할 내용을 한곳에 모아두세요.", addLabel: "메모 추가", addModal: "memo", label: COLLECTION_SCHEMAS.memo.label, render: renderMemos },
-          settings: { icon: "settings", label: "설정", description: "공동 준비와 데이터·화면 설정을 관리해요.", render: renderSettings, dependsOn: ["theme", "recovery"] },
+          settings: { icon: "settings", label: "설정", description: "공동 준비와 데이터·화면 설정을 관리해요.", render: renderSettings, dependsOn: ["theme", "recovery", "wedding"] },
         };
         const MODAL_RENDERERS = Object.freeze({
           ...Object.fromEntries(Object.keys(COLLECTION_SCHEMAS).map((name) =>
@@ -4672,15 +4684,13 @@ body.modal-open .tab-bar { pointer-events: none; }
           Tasks: {
             "tasks-search": onInput(() => requestRenderDebounced("tasks")),
             "tasks-filter": onChange(() => renderFilteredPage("tasks")),
-            "reset-task-filters": onClick(() => resetTaskFilters()),
             "tasks-status": onClick((el) => selectTaskStatus(el.dataset.status)),
             "open-settings-account": onClick(() => openSettingsRow("account")),
             "toggle-task": onClick((el) => toggleTask(el.dataset.id)),
           },
           Schedule: {
-            "schedule-filter": onChange(() => renderFilteredPage("schedule")),
+            "schedule-period": onClick((el) => selectSchedulePeriod(el.dataset.period)),
             "schedule-search": onInput(() => requestRenderDebounced("schedule")),
-            "reset-schedule-filters": onClick(() => resetScheduleFilters()),
             "calendar-month": onClick((el) => changeCalendarMonth(Number(el.dataset.delta || 0))),
             "select-date": onClick((el) => selectScheduleDate(el.dataset.date)),
           },
@@ -4753,15 +4763,14 @@ body.modal-open .tab-bar { pointer-events: none; }
             homeTasks: "homeTasks", homeTaskLimit: "homeTaskLimit", homeEvents: "homeEvents", homeEventLimit: "homeEventLimit",
             homePlanRatio: "homePlanRatio", homePlanBar: "homePlanBar", categoryProgressList: "categoryProgressList", homePlanDonePct: "homePlanDonePct",
           },
-          tasks: { taskCat: "taskCat", taskSearch: "taskSearch", taskStatus: "taskStatus", taskStatusControl: "taskStatusControl", taskSort: "taskSort",
-            taskFilterReset: "taskFilterReset" },
+          tasks: { taskCat: "taskCat", taskSearch: "taskSearch", taskStatus: "taskStatus", taskStatusControl: "taskStatusControl", taskSort: "taskSort" },
           schedule: {
             calendarTitle: "calendarTitle", calendarGrid: "calendarGrid", calendarHint: "calendarHint",
             selectedDateTitle: "selectedDateTitle", scheduleList: "scheduleList",
-            scheduleFilter: "scheduleFilter", scheduleAllSearch: "scheduleAllSearch",
-            scheduleFilterSummary: "scheduleFilterSummary", scheduleFilterReset: "scheduleFilterReset",
+            scheduleFilter: "scheduleFilter", schedulePeriodControl: "schedulePeriodControl", scheduleAllSearch: "scheduleAllSearch",
           },
           memos: { memoSearch: "memoSearch", memoSearchSummary: "memoSearchSummary" },
+          settings: { settingsWeddingDateSummary: "settingsWeddingDateSummary" },
           history: { undoButton: "undoButton", redoButton: "redoButton", historyStatus: "historyStatus" },
           theme: { themeFields: "themeFields", themePresets: "themePresets", themeRadiusControl: "themeRadiusControl", thRadiusVal: "thRadiusVal" },
           shared: {
@@ -4796,9 +4805,9 @@ body.modal-open .tab-bar { pointer-events: none; }
             areas[owner][key] = id;
           };
           Object.entries(PAGE_REGISTRY).forEach(([key, page]) => register("pages", key, page.id || key));
-          Object.values(COLLECTION_SCHEMAS).forEach((schema) => {
+          Object.entries(COLLECTION_SCHEMAS).forEach(([name, schema]) => {
             register(schema.view, schema.target);
-            schema.fields.filter((field) => field.id).forEach((field) => register("modal", field.id));
+            FORM_SCHEMAS[name].fields.forEach((field) => register("modal", field.id));
           });
           PLAN_STATUS_DEFINITIONS.forEach(status => register("home", status.dom));
           Object.values(THEME_FIELDS).filter((field) => field.id).forEach((field) => register("theme", field.id));
@@ -4898,9 +4907,11 @@ function createFormService({
     const schema = FORM_SCHEMAS[name];
     if (!schema) throw new Error(`알 수 없는 폼 스키마: ${name}`);
     const data = schema.read();
-    const baseline = getEditBaseline()?.name === name && getEditBaseline().id === String(id)
+    const storedBaseline = getEditBaseline()?.name === name && getEditBaseline().id === String(id)
       ? getEditBaseline().item : null;
-    const current = baseline ? findById(getCollection(schema.collection), id) : null;
+    const storedCurrent = storedBaseline ? findById(getCollection(schema.collection), id) : null;
+    const baseline = storedBaseline && schema.decode ? schema.decode(storedBaseline) : storedBaseline;
+    const current = storedCurrent && schema.decode ? schema.decode(storedCurrent) : storedCurrent;
     let submitted = data;
     if (baseline && !isNewId(id)) {
       if (!current) {
@@ -4924,14 +4935,14 @@ function createFormService({
     const validation = validateFieldsDetailed(schema.fields, validationData, true);
     const validationError = validation.error || validateFormData(schema, validationData, validation);
     if (validationError) {
-      showModalFieldError(validation.field, validationError);
-      notifyError(validationError);
+      // A field error already announces the message and focuses the invalid control.
+      if (!showModalFieldError(validation.field, validationError)) notifyError(validationError);
       return null;
     }
     const changed = !baseline || !!Object.keys(submitted).length;
     const item = baseline && !changed
-      ? cloneValue(current)
-      : writeItem(name, id, submitted);
+      ? cloneValue(storedCurrent)
+      : writeItem(name, id, schema.encode ? schema.encode(validationData) : submitted);
     return item ? { item, data, changed } : null;
   }
 
@@ -5169,7 +5180,7 @@ function createCollectionService({
             const emptyVariant = options.emptyVariant || (collectionEmpty ? "empty" : "search");
             const content = List(items,
               (item, index, total) => schema.renderer(item, index, total, options),
-              options.emptyMessage ?? schema.empty, "", emptyVariant);
+              options.emptyMessage ?? schema.empty, options.emptyAction || "", emptyVariant, options.emptyTitle || "");
             const hostClass = [schema.hostClass, options.hostClass].filter(Boolean).join(" ");
             const hostVariant = [schema.hostVariant, options.hostVariant].filter(Boolean).join(" ");
             if (!hostClass && !hostVariant) return content;
@@ -5230,8 +5241,7 @@ function createCollectionService({
             return null;
           }
           const form = FORM_SCHEMAS[name];
-          return FormModal(`${form.title} ${item ? "수정" : "추가"}`, form.fields, item, {
-            description: PAGE_REGISTRY[schema.view]?.description || "",
+          return FormModal(`${form.title} ${item ? "수정" : "추가"}`, form.fields, item && form.decode ? form.decode(item) : item, {
             saveAction: schema.saveAction || `save-${name}`, saveId: item ? item.id : "null",
             deleteAction: item && schema.deleteInModal ? `delete-${name}` : null, deleteId: item?.id,
           });
@@ -6531,13 +6541,8 @@ function createDerivedViewService({
           return true;
         }
         function renderTaskStatusSegments(view, selected) {
-          const host = ownedElement("tasks", DOM_IDS.taskStatusControl);
-          if (!host) return;
           const counts = {all: view.taskTotal, todo: view.taskTotal - view.taskDone, done: view.taskDone};
-          host.querySelectorAll("button[data-status]").forEach(button => {
-            button.setAttribute("aria-pressed", String(button.dataset.status === selected));
-            button.querySelector(".segment-count").textContent = formatNumber(counts[button.dataset.status]);
-          });
+          renderFilterSegments("tasks", DOM_IDS.taskStatusControl, "status", selected, counts);
         }
         function renderTasks(view = getViewData()) {
           const filters = getTaskFilters();
@@ -6552,19 +6557,11 @@ function createDerivedViewService({
               [$(DOM_IDS.taskCat), categoryActive],
               [$(DOM_IDS.taskStatus), statusActive],
             ],
-            resetDom: DOM_IDS.taskFilterReset,
-            resetActive: categoryActive || statusActive,
           });
           renderTaskList(items, {
             groupByDue: [TASK_SORT.DUE_ASC, TASK_SORT.DUE_DESC].includes(filters.sort),
             emptyMessage: view.tasks.length && activeCount ? "현재 검색·필터 조건에 맞는 할 일이 없어요." : undefined,
           });
-        }
-        function resetTaskFilters() {
-          setOwnedValue("tasks", DOM_IDS.taskCat, TASK_STATUS_FILTER.ALL);
-          setOwnedValue("tasks", DOM_IDS.taskStatus, TASK_STATUS_FILTER.ALL);
-          requestRender("tasks");
-          return true;
         }
 
         // ===== 05 DOMAIN / Schedule =====
@@ -6673,7 +6670,7 @@ function createDerivedViewService({
             aria-pressed="${selected ? "true" : "false"}"${today ? ' aria-current="date"' : ""}
             data-action="select-date" data-date="${attr(iso)}">
             <span class="calendar-num">${day}</span>
-            ${holiday ? `<span class="calendar-holiday" title="${attr(holiday)}">${esc(holiday)}</span>` : ""}
+            ${holiday ? `<span class="calendar-holiday" title="${attr(holiday)}">${esc(holiday.includes("대체") ? "대체" : holiday.slice(0, 3))}</span>` : ""}
             ${dots}${count > 4 ? `<span class="calendar-more">+${formatNumber(count - 4)}</span>` : ""}
           </button>`;
         }
@@ -6737,14 +6734,15 @@ function createDerivedViewService({
           setOwnedText(
             "schedule",
             "selectedDateTitle",
-            `${formatDateLong(selectedScheduleDate)} 일정`,
+            `${parseLocalDate(selectedScheduleDate).getMonth() + 1}월 ${parseLocalDate(selectedScheduleDate).getDate()}일 ${WEEKDAY_SHORT[parseLocalDate(selectedScheduleDate).getDay()]}요일`,
           );
+          ownedElement("schedule", "selectedDateTitle")?.setAttribute("aria-label", `${formatDateLong(selectedScheduleDate)} 일정`);
           setOwnedHTML(
             "schedule",
             "scheduleList",
             Collection.html("event", selectedEvents, {
               today: v.today, leadingMode: "time", emptyMessage: "선택한 날짜에 일정이 없어요.",
-              hostVariant: "stacked-list top-divided-list",
+              hostVariant: "stacked-list",
             }),
           );
 
@@ -6752,6 +6750,11 @@ function createDerivedViewService({
         }
         function renderScheduleAllList(v = getViewData()) {
           const filter = selectedValue("scheduleFilter", "all");
+          renderFilterSegments("schedule", DOM_IDS.schedulePeriodControl, "period", filter, {
+            all: v.sortedEvents.length,
+            upcoming: v.upcomingEvents.length,
+            past: v.sortedEvents.filter(e => parseLocalDate(e.date) < v.today).length,
+          });
           const searchLabel = selectedValue("scheduleAllSearch").trim();
           const search = searchLabel.toLowerCase();
           let allEvents = v.sortedEvents;
@@ -6766,23 +6769,23 @@ function createDerivedViewService({
           }
           const filterActive = filter !== "all";
           const activeCount = updateFilterFeedback("schedule", {
-            summaryDom: DOM_IDS.scheduleFilterSummary,
             resultCount: allEvents.length,
             controls: [
               [$(DOM_IDS.scheduleAllSearch), !!search],
               [$(DOM_IDS.scheduleFilter), filterActive],
             ],
-            resetDom: DOM_IDS.scheduleFilterReset,
-            resetActive: filterActive,
           });
 
           Collection.render("event", allEvents, {
-            today: v.today, hostVariant: "top-divided-list",
-            emptyMessage: v.events.length && activeCount ? "현재 검색·필터 조건에 맞는 일정이 없어요." : undefined,
+            today: v.today,
+            emptyMessage: v.events.length && activeCount ? "다른 조건으로 검색하거나 선택한 기간을 바꿔보세요." : undefined,
+            emptyTitle: activeCount ? "조건에 맞는 일정이 없어요" : "",
+            emptyAction: search ? Button("검색 지우기", {action: "clear-search", attributes: {"data-search-dom": "scheduleAllSearch"}}) : "",
           });
         }
-        function resetScheduleFilters() {
-          setOwnedValue("schedule", DOM_IDS.scheduleFilter, "all");
+        function selectSchedulePeriod(value) {
+          if (!["all", "upcoming", "past"].includes(value)) return false;
+          setOwnedValue("schedule", DOM_IDS.scheduleFilter, value);
           renderFilteredPage("schedule");
           return true;
         }
@@ -6804,7 +6807,7 @@ function createDerivedViewService({
         }
         function BudgetCard(item, index, total) {
           const actions = SortableCardActions(item.id, index, total, "budget", COLLECTION_SCHEMAS.budget.label);
-          const amounts = [["예상금액", item.planned], ["실제금액", item.actual]].map(([label, amount], column) =>
+          const amounts = [["예상 금액", item.planned], ["사용 금액", item.actual]].map(([label, amount], column) =>
             `<div class="budget-value-row${column ? " is-actual" : ""}"><dt>${label}</dt><dd>${moneyFmt.format(num(amount))}<span class="budget-unit"> 원</span></dd></div>`).join("");
           const over = Math.max(0, Number(item.actual || 0) - Number(item.planned || 0));
           const difference = over > 0 ? `<div class="budget-difference"><span>예상 대비</span><span class="budget-over-badge">${Math.round(over) > 0 ? `${won(over)} 초과` : "예상금액 초과"}</span></div>` : "";
@@ -6876,17 +6879,32 @@ function createDerivedViewService({
           });
           const actions = SortableCardActions(item.id, index, total, "plan", COLLECTION_SCHEMAS.plan.label);
           const blocks = COLLECTION_SCHEMAS.plan.fields.filter(field => field.display === "block").map(({ key, label }) =>
-            `<div class="plan-block${key === "note" ? " plan-block--decision" : ""}"><div class="plan-label">${label}</div><div class="plan-text${item[key] ? "" : " is-empty"}">${esc(item[key] || (key === "details" ? "함께 이야기할 내용을 적어보세요." : "이야기한 내용을 정리해보세요."))}</div></div>`
+            key === "note" && !String(item[key] || "").trim()
+              ? `<div class="plan-text is-empty">논의한 내용을 여기에 남길 수 있어요.</div>`
+              : `<div class="plan-block${key === "note" ? " plan-block--decision" : ""}"><div class="plan-label">${label}</div><div class="plan-text${item[key] ? "" : " is-empty"}">${esc(item[key] || (key === "details" ? "함께 이야기할 내용을 적어보세요." : "이야기한 내용을 정리해보세요."))}</div></div>`
           ).join("");
-          return UIComponentRoot("PlanCard", "card card--item plan", CardHeader(item.name, "", actions, "flush") + `<div class="plan-status-control">${status}</div><div class="plan-discussion">${blocks}</div>`);
+          const titleControl = `<label class="field-shell field-shell--header-select">${status}</label>`;
+          return UIComponentRoot("PlanCard", "card card--item plan", CardHeader(item.name, "", actions, "flush", titleControl) + `<div class="plan-discussion">${blocks}</div>`);
         }
 
         // ===== 05 DOMAIN / Memos =====
+        function memoFormData(item) {
+          const [, title, separator = "", storedBody] = /^([^\r\n]*)(\r?\n|\r)?([\s\S]*)$/.exec(String(item.text || ""));
+          // Textareas normalize line endings; retain the original when the body was not edited.
+          return { title, body: storedBody.replace(/\r\n?/g, "\n"), storedBody, separator };
+        }
+        function memoStoredData(data) {
+          // Keep the existing text contract for backups, shared storage and older clients.
+          if (typeof data.text === "string") return data;
+          const title = String(data.title || ""), submittedBody = String(data.body || "");
+          const body = typeof data.storedBody === "string" && data.storedBody.replace(/\r\n?/g, "\n") === submittedBody
+            ? data.storedBody : submittedBody;
+          return { text: title + (data.separator || (body ? "\n" : "")) + body };
+        }
         function MemoCard(m) {
-          const [heading, ...lines] = String(m.text || "").split(/\r?\n/);
-          const body = lines.join("\n");
+          const { title, body } = memoFormData(m);
           return UIComponentRoot("MemoCard", "card card--item memo-item",
-            CardHeader(heading, "", MoreMenu("메모", String(m.id), "memo", { variant: "quiet" }), "flush") +
+            CardHeader(title || "메모", "", MoreMenu("메모", String(m.id), "memo", { variant: "quiet" }), "flush") +
             (body ? CardBody(`<div class="memo-body">${esc(body)}</div>`) : ""));
         }
         function renderMemos(view = getViewData()) {
@@ -6900,7 +6918,9 @@ function createDerivedViewService({
           });
           setOwnedHTML("memos", COLLECTION_SCHEMAS.memo.target,
             List(items, MemoCard,
-              query ? `“${summarizeSearchQuery(queryLabel)}” 검색 결과가 없어요.` : COLLECTION_SCHEMAS.memo.empty, "", query ? "search" : "empty"));
+              query ? `“${summarizeSearchQuery(queryLabel)}” 대신 다른 단어로 검색해보세요.` : COLLECTION_SCHEMAS.memo.empty,
+              query ? Button("검색 지우기", {action: "clear-search", attributes: {"data-search-dom": "memoSearch"}}) : "",
+              query ? "search" : "empty", query ? "검색 결과가 없어요" : ""));
         }
 
         // Derived views read immutable state and collection schemas; the home renderer consumes those views.
@@ -6922,12 +6942,12 @@ function createDerivedViewService({
         function renderBudgetSummary(view) {
           const { budgetPlan: plan, budgetActual: actual, budgetOver: over, budgetPct: pct } = view;
           setOwnedText("budgetSummary", DOM_IDS.totalPlan, "예상 " + won(plan));
-          setOwnedText("budgetSummary", DOM_IDS.totalActual, won(actual));
+          setOwnedHTML("budgetSummary", DOM_IDS.totalActual, MetricAmount(actual));
           const balance = over > 0 ? "초과 지출 " + won(over) : "남은 예산 " + won(Math.max(0, plan - actual));
           [DOM_IDS.overBudget, DOM_IDS.homeBudgetBalance].forEach(id => setOwnedText("budgetSummary", id, balance));
           setOwnedText("budgetSummary", DOM_IDS.budgetPctBig, formatPercent(pct));
           setOwnedText("budgetSummary", DOM_IDS.homeTotalPlan, "예상 " + won(plan));
-          setOwnedText("budgetSummary", DOM_IDS.homeTotalActual, won(actual));
+          setOwnedHTML("budgetSummary", DOM_IDS.homeTotalActual, MetricAmount(actual));
           setOwnedText("budgetSummary", DOM_IDS.homeBudgetPct, formatPercent(pct));
           [DOM_IDS.budgetBar, DOM_IDS.homeBudgetBar].forEach(id => {
             ownedElement("budgetSummary", id)?.style.setProperty("--progress-value", `${Math.max(0, Math.min(100, pct))}%`);
@@ -7164,7 +7184,8 @@ function createDerivedViewService({
         function applyPreset(name) {
           return commitTheme(THEME_PRESETS[name] || THEME_PRESETS.warm, "테마 프리셋 적용");
         }
-        function renderSettings() {
+        function renderSettings(view = getViewData()) {
+          setOwnedText("settings", "settingsWeddingDateSummary", view.weddingDate ? formatDateLong(view.weddingDate) : "일정과 디데이의 기준");
           renderSharedStatusUI();
           renderSharedProject();
           updateHistoryUI();
@@ -7982,9 +8003,12 @@ const { mergePlainObjectsDetailed, mergeSharedCollectionDetailed, mergeSharedSta
         function renderSharedFooter() {
           const footer = ownedElement("shared", DOM_IDS.footerText);
           if (footer)
-            footer.textContent = sharedSync.projectId
-              ? "우리 둘이 같이 쓰는 결혼 준비 공간 · 실시간 공유 중"
-              : "우리 둘이 같이 쓰는 결혼 준비 공간 · 현재는 이 브라우저에 저장됩니다.";
+            footer.textContent = !sharedSync.projectId ? "이 브라우저에 저장됨"
+              : sharedSync.phase === "offline" ? "오프라인 · 변경 사항은 이 기기에 보관됨"
+              : sharedSync.phase === "conflict" ? "동시 수정 확인 필요 · 설정에서 확인해주세요"
+              : sharedSync.phase === "error" ? "연결 확인 필요 · 설정에서 확인해주세요"
+              : sharedSync.needsPush || ["pushing", "pulling"].includes(sharedSync.phase) ? "공유 데이터 동기화 중"
+              : "공유 공간에 연결됨";
         }
         function renderFutureSchemaWarning() {
           const box = ownedElement("shared", DOM_IDS.futureSchemaBox);
@@ -12385,6 +12409,7 @@ const modalController = createModalController({
             SettingsRow,
             SettingsActions,
             TaskStatusSegments,
+            SchedulePeriodSegments,
             CollectionGroup,
             CardBody,
             CardHeader,
