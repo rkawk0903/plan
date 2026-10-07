@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v568 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v569 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-b/i4ronsOPosMhluA47K9KjPldfhQu/HPTmhq+daEEg=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-S97BSAswMnx8/WApeusHA7HAvE1jtZa5UXW3B4hAkwI='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-S1WFaEpKMAJhB0NFaqaCbilAhVD04Sr1QkUTaSiZsZ4=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-yTzLtk+zpTkWSPRWhRK0EH+rKTeRLjyzRzvuQRbfm5E='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -1991,6 +1991,61 @@ body.modal-open .tab-bar{pointer-events:none;}
 .auth-switches{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;}
 .auth-mode-link{min-height:44px;background:none;border:0;padding:10px 0;color:var(--accent);font-size:13px;}
 .shared-auth-form[data-auth-mode="login"] [data-mode="login"],.shared-auth-form[data-auth-mode="signup"] [data-mode="signup"]{display:none;}
+
+
+/* v569 — complete account, project and recovery sheets. */
+.more-menu-list>.settings-link:first-child:before{display:none;}
+.modal [data-settings-slot] .settings-row-panel{padding:0;background:transparent;border:0;}
+.modal [data-settings-slot] .settings-content{padding:0;border:0;background:none;display:block;}
+.modal [data-settings-slot] .auth-field-group{border-radius:15px;overflow:hidden;background:var(--card);}
+.modal [data-settings-slot] .auth-field-group .form-field{padding:12px 15px;display:block;margin:0;background:none;border-radius:0;}
+.modal [data-settings-slot] .auth-field-group .form-field+.form-field{border-top:1px solid var(--line);}
+.modal [data-settings-slot] .auth-field-group label{font-size:15px;color:var(--ink);line-height:1.45;font-weight:400;margin:0 0 8px;}
+.modal [data-settings-slot] .auth-field-group .field{width:100%;height:32px;min-height:32px;padding:0;background:none;border:0;border-radius:0;font-size:16px;line-height:1.45;color:var(--ink);box-shadow:none;}
+.auth-reset-description{display:none;font-size:14px;color:var(--muted);line-height:1.65;margin:0 0 19px;}
+.shared-auth-form[data-auth-mode="reset"] .auth-description,.shared-auth-form[data-auth-mode="reset"] .form-field:has(input[type="password"]),.shared-auth-form[data-auth-mode="reset"] [data-mode="signup"],.shared-auth-form[data-auth-mode="reset"] [data-mode="reset"],.shared-auth-form[data-auth-mode="signup"] [data-mode="reset"]{display:none;}
+.shared-auth-form[data-auth-mode="reset"] .auth-reset-description{display:block;}
+.modal [data-settings-slot] .shared-account-row{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:13px;padding:19px;background:var(--card);border-radius:20px;}
+.account-avatar{width:48px;height:48px;flex-shrink:0;display:grid;place-items:center;background:var(--ui-tint);border-radius:50%;color:var(--accent);font-size:17px;}
+.account-identity{min-width:0;}.account-identity-label{display:block;font-size:13px;line-height:1.5;color:var(--muted);margin-bottom:4px;}
+.modal [data-settings-slot] .shared-account-text{white-space:normal;overflow-wrap:anywhere;font-size:16px;line-height:1.45;font-weight:500;color:var(--ink);}
+.modal [data-settings-slot] .settings-actions{display:block;background:var(--card);border-radius:20px;overflow:hidden;padding:0;margin:20px 0 0;border:0;}
+.settings-command{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;padding:10px 14px;background:none;color:var(--ink);border:0;text-align:left;font-size:16px;line-height:1.45;font-weight:500;}
+.settings-command+.settings-command{border-top:1px solid var(--line);}.command-icon{display:grid;place-items:center;width:32px;height:32px;flex-shrink:0;border-radius:8px;background:var(--ui-tint);color:var(--accent);}
+.command-icon .ui-icon{width:20px;height:20px;}.settings-command>.ui-icon{margin-left:auto;width:16px;height:16px;color:var(--muted);}.settings-command.is-danger{color:var(--danger-ink);}
+.modal [data-settings-slot] .sync-status-row{padding:0 4px 18px;border:0;background:none;border-radius:0;gap:9px;}.modal [data-settings-slot] .sync-status-indicator{box-shadow:none;width:5px;height:5px;margin-top:8px;}
+.modal [data-settings-slot] .sync-detail-text{font-size:14px;font-weight:500;line-height:1.5;}.modal [data-settings-slot] .sync-status-meta{font-size:12px;line-height:1.6;margin-top:3px;}
+.modal [data-settings-slot="account"] .card-footer-row{padding:0;border:0;margin-top:20px;display:block;}
+.modal [data-settings-slot="project"] .project-panel{padding:0;border:0;border-radius:0;background:none;box-shadow:none;}
+.modal [data-settings-slot="project"] .sync-project-actions{margin:0;}
+.project-form-label{font-size:13px;color:var(--muted);margin:26px 0 9px 12px;}
+.modal [data-settings-slot="project"] .current-project-title{font-size:13px;color:var(--muted);font-weight:400;margin:0 0 9px 12px;}
+.modal [data-settings-slot="project"] .project-panel .row:has(input){display:flex;align-items:center;gap:12px;padding:12px 15px;border-radius:15px;background:var(--card);margin:0;}
+.modal [data-settings-slot="project"] input[readonly]{height:38px;min-height:38px;padding:0;border:0;box-shadow:none;background:none;font-size:22px;font-weight:600;letter-spacing:.1em;text-align:left;min-width:0;flex:1;}
+.modal [data-settings-slot="project"] .settings-status-note{font-size:12px;line-height:1.6;color:var(--muted);margin:12px 15px;}
+.modal [data-settings-slot="project"] .settings-signin-note{padding:0;margin:0;}.modal [data-settings-slot="project"] .settings-signin-note p{font-size:14px;line-height:1.65;color:var(--muted);margin:0 0 20px;}
+.modal [data-settings-slot="history"] .history-summary{padding:18px 16px;background:var(--card);border-radius:20px;min-height:78px;}
+.history-entry-title{font-size:16px;line-height:1.45;font-weight:500;overflow-wrap:anywhere;color:var(--ink);}.history-entry-meta{font-size:13px;line-height:1.5;color:var(--muted);margin-top:4px;}
+.modal [data-settings-slot="history"] .action-row,.modal [data-settings-slot="recovery"] .action-row{margin-top:10px;gap:10px;}
+.modal [data-settings-slot="recovery"] .recovery-list{display:block;background:var(--card);border-radius:20px;overflow:hidden;margin:0;}
+.recovery-point-row{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;padding:10px 14px;background:none;color:var(--ink);border:0;text-align:left;}
+.recovery-point-row+.recovery-point-row{border-top:1px solid var(--line);}.recovery-point-row>span{flex:1;min-width:0;}.recovery-point-title{display:block;font-size:16px;font-weight:500;line-height:1.45;}.recovery-point-meta{display:block;font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px;overflow-wrap:anywhere;}.recovery-point-row>.ui-icon{width:16px;height:16px;color:var(--muted);}
+.modal [data-settings-slot="recovery"] .settings-status-note{padding:18px 16px;border-radius:20px;background:var(--card);font-size:14px;line-height:1.65;margin:0;}
+.recovery-detail-card{background:var(--card);border-radius:20px;padding:18px 16px;margin-bottom:20px;}.recovery-detail-card strong{font-size:16px;font-weight:500;}.recovery-detail-card p{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.5;}
+.modal [data-settings-slot="theme"] .theme-grid{display:block;background:var(--card);border-radius:15px;overflow:hidden;margin-top:20px;}
+.modal [data-settings-slot="theme"] .theme-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 15px;min-height:58px;background:none;border:0;border-radius:0;box-shadow:none;}
+.modal [data-settings-slot="theme"] .theme-item+.theme-item{border-top:1px solid var(--line);}.modal [data-settings-slot="theme"] .theme-item label{font-size:15px;color:var(--ink);line-height:1.45;}
+.modal [data-settings-slot="theme"] .theme-color-control{width:40px;height:36px;border-radius:8px;border:1px solid var(--line);}
+.modal [data-settings-slot="theme"] .theme-controls{padding:14px 15px;border-radius:15px;background:var(--card);display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:16px;}
+.modal [data-settings-slot="theme"] .theme-controls label{font-size:15px;color:var(--ink);}.modal [data-settings-slot="theme"] .theme-range{grid-row:2;grid-column:1/-1;width:100%;height:32px;margin:0;}
+.modal [data-settings-slot="theme"] .theme-radius-value{grid-column:2;grid-row:1;font-size:13px;}
+.modal [data-settings-slot="theme"] .theme-choice[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
+.sheet-options.status-options{display:block;}.sheet-options.status-options>button{min-height:50px;padding:13px 16px;}.sheet-options.status-options>button[aria-pressed="true"]{color:var(--accent);font-weight:600;}
+.modal-copy:has(.budget-order-toggle){display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;}.modal-copy:has(.budget-order-toggle) .modal-title{min-width:0;}
+.budget-order-toggle{display:flex;align-items:center;justify-content:center;gap:3px;min-width:44px;height:44px;padding:0 4px;border:0;background:none;color:var(--accent);font-size:12px;white-space:nowrap;}.budget-order-toggle .ui-icon{width:15px;height:15px;}
+.budget-order-panel{background:var(--card);border-radius:15px;margin-bottom:20px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);}
+.budget-order-panel>div{display:flex;gap:8px;}.budget-order-panel button{min-height:44px;min-width:60px;border:0;border-radius:9px;background:var(--ui-tint);color:var(--accent);font-size:14px;padding:8px 10px;}
+@media(max-width:360px){.modal-copy:has(.budget-order-toggle){gap:0;}.budget-order-toggle span{display:none;}}
 /* ===== 04 COMPONENT VARIANTS — explicit semantic overrides ===== */
       /* Surface / status variants */
 
@@ -2662,6 +2717,14 @@ body.modal-open .tab-bar{pointer-events:none;}
 .form--modal select.field{appearance:auto;-webkit-appearance:auto;background-image:none;padding-right:0;}.plan .card-header--flush{min-height:26.1px;align-items:center;}.plan .card-title{font-size:18px;font-weight:600;line-height:1.45;}.plan-status-control .field-shell--header-select{min-height:44px;display:flex;align-items:flex-start;width:max-content;}.plan-status-control .btn--tertiary{height:44px;}.form--modal:has(#mText) .form-caption{text-align:right;margin:-12px 0 16px;}.form--modal:has(.field-shell--money) .form-caption{line-height:1.6;margin:12px 15px;}
 
 .form--modal>.form-input-group:last-child{margin-bottom:20px;}.action-row--auth{margin-top:20px;}.action-row--auth>.btn--primary{min-height:50px;}
+
+/* v569 — sheet commands share the reference button system. */
+.modal [data-settings-slot="project"] .sync-project-actions>.btn,.modal [data-settings-slot="project"] .settings-signin-note>.btn,.modal [data-settings-slot="project"] .project-panel .action-row>.btn,.modal [data-settings-slot="account"] .card-footer-row .btn,.modal [data-settings-slot="theme"] .disclosure .action-row>.btn,.recovery-detail-actions>.btn{display:flex;justify-content:center;align-items:center;width:100%;min-height:50px;padding:12px 15px;border:0;border-radius:13px;font-size:16px;font-weight:600;line-height:1.45;background:var(--card);color:var(--accent);box-shadow:none;}
+.modal [data-settings-slot="project"] .sync-project-actions>.btn--primary,.modal [data-settings-slot="project"] .settings-signin-note>.btn,.modal [data-settings-slot="theme"] .disclosure .action-row>.btn--primary,.recovery-detail-actions>.btn--primary{background:var(--accent);color:var(--accent-contrast);}
+.modal [data-settings-slot="project"] .sync-project-actions>[data-action="shared-join-project"]{margin-top:20px;}
+.modal [data-settings-slot="project"] [data-action="shared-copy-code"]{border:0;background:var(--ui-tint);color:var(--accent);border-radius:8px;font-size:13px;padding:8px 11px;min-height:44px;}
+.modal [data-settings-slot="theme"] .disclosure .action-row{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px;}
+.recovery-detail-actions{display:grid;gap:10px;}.recovery-detail-actions>.btn--danger-quiet{color:var(--danger-ink);}
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
       .calendar-grid {
@@ -3673,7 +3736,7 @@ h1.title { margin: 0; }
         <div data-ui-component="Callout" data-ui-variant="warning" class="callout callout--warning u-hidden" data-dom="futureSchemaBox" role="status" aria-live="polite" >
         </div>
         <form class="form form--settings-stack shared-auth-form" data-dom="syncLoginBox" data-auth-mode="login" novalidate>
-          <p class="auth-description">두 사람이 같은 결혼 준비 기록을 함께 볼 수 있어요.</p><div class="auth-field-group">
+          <p class="auth-description">두 사람이 같은 결혼 준비 기록을 함께 볼 수 있어요.</p><p class="auth-reset-description">가입한 이메일로 재설정 링크를 보내드려요.</p><div class="auth-field-group">
           <div class="form-field">
             <label for="syncEmail">
               이메일
@@ -3689,9 +3752,7 @@ h1.title { margin: 0; }
           <div class="form-field u-hidden" data-dom="syncPasswordConfirmWrap">
             <label for="syncPasswordConfirm">
               비밀번호 확인
-              <span class="small">
-                (회원가입 시)
-              </span>
+
             </label >
             <input class="field field--compact-text" aria-label="공유 동기화 비밀번호 확인" autocomplete="new-password" data-dom="syncPasswordConfirm" placeholder="비밀번호를 한 번 더 입력" type="password" />
           </div>
@@ -3702,18 +3763,18 @@ h1.title { margin: 0; }
             <button class="btn btn--app-action btn--primary u-hidden" data-action="shared-sign-up" type="button">
               회원가입
             </button>
-            <div class="auth-switches"><button class="auth-mode-link" type="button" data-action="shared-auth-mode" data-mode="signup">회원가입</button><button class="auth-mode-link" type="button" data-action="shared-auth-mode" data-mode="login">로그인으로 돌아가기</button>
-            <button class="btn btn--app-action btn--tertiary" data-action="shared-reset-password" type="button">
+            <button class="btn btn--app-action btn--primary u-hidden" data-action="shared-reset-password" type="button">재설정 메일 보내기</button><div class="auth-switches"><button class="auth-mode-link" type="button" data-action="shared-auth-mode" data-mode="signup">회원가입</button><button class="auth-mode-link" type="button" data-action="shared-auth-mode" data-mode="login">로그인으로 돌아가기</button>
+            <button class="auth-mode-link" data-action="shared-auth-mode" data-mode="reset" type="button">
               비밀번호 재설정
             </button>
             </div>
           </div>
         </form>
         <div class="shared-account-panel u-hidden" data-dom="syncLoggedInBox">
-          <div class="shared-account-row">
+          <div class="shared-account-row"><span class="account-avatar" aria-hidden="true">우리</span><div class="account-identity"><span class="account-identity-label">로그인 계정</span>
             <div class="small shared-account-text" data-dom="syncUserText">
               로그인 계정
-            </div>
+            </div></div>
           </div>
         </div>
         <div data-ui-component="Callout" data-ui-variant="conflict" class="callout callout--conflict u-hidden" data-dom="syncConflictBox">
@@ -3762,13 +3823,13 @@ h1.title { margin: 0; }
           <span data-ui-icon="right">
           </span>
         </button>
-        <div data-ui-static="SettingsRow" data-key="project" data-variant="filled" data-title="프로젝트 관리" data-description="초대 코드와 공동 준비 공간" data-icon="users">
+        <div data-ui-static="SettingsRow" data-key="project" data-variant="filled" data-title="프로젝트 관리" data-description="함께 준비할 공간을 만들거나, 상대방이 보낸 코드로 참여하세요." data-icon="users">
           <div class="settings-signin-note">
             <p class="small">
               계정에 로그인한 뒤 프로젝트를 만들거나 참여할 수 있어요.
             </p>
             <button class="btn btn--app-action" data-action="open-settings-account" type="button">
-              로그인 입력 열기
+              로그인하고 시작하기
             </button>
           </div>
           <div data-ui-component="InnerCard" class="inner-card inner-card--panel inner-card--loading project-panel u-hidden" data-dom="syncProjectLoading" aria-hidden="true">
@@ -3801,7 +3862,7 @@ h1.title { margin: 0; }
           </div>
           <div data-ui-component="InnerCard" data-dom="syncProjectDiscoveryError" class="inner-card inner-card--panel project-panel u-hidden">
             <div class="small settings-status-note">
-              기존 프로젝트 연결을 확인하지 못했어요. 네트워크 또는 Supabase 권한을 확인한 뒤 다시 시도해주세요.
+              프로젝트 연결을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.
             </div>
             <div data-ui-component="ActionRow" class="action-row action-row--compact u-mt-sm">
               <button class="btn btn--app-action" data-action="shared-refresh-project" type="button">
@@ -3810,21 +3871,10 @@ h1.title { margin: 0; }
             </div>
           </div>
           <div data-dom="syncProjectActions" class="sync-project-actions u-hidden">
-            <label for="syncJoinCode" class="sync-join-code-label" >
-              프로젝트 초대 코드
-              <span class="sync-join-code-note">
-                (기존 프로젝트에 참여할 때만)
-              </span>
-            </label >
-            <input aria-label="프로젝트 초대 코드" autocomplete="off" class="field field--sync field--join-code" data-dom="syncJoinCode" maxlength="8" placeholder="8자리 코드" value="" />
-            <div data-ui-component="ActionRow" class="action-row action-row--compact">
-              <button class="btn btn--app-action" data-action="shared-create-project" type="button">
-                새 프로젝트 만들기
-              </button >
-              <button class="btn btn--app-action" data-action="shared-join-project" type="button">
-                코드로 참여
-              </button>
-            </div>
+            <button class="btn btn--app-action btn--primary" data-action="shared-create-project" type="button">새 프로젝트 만들기</button>
+            <p class="project-form-label">초대받은 프로젝트에 참여</p>
+            <div class="auth-field-group"><div class="form-field"><label for="syncJoinCode">초대 코드</label><input aria-label="프로젝트 초대 코드" autocomplete="off" class="field field--sync field--join-code" data-dom="syncJoinCode" maxlength="8" placeholder="8자리 코드" value="" /></div></div>
+            <button class="btn btn--app-action" data-action="shared-join-project" type="button">코드로 참여</button>
           </div>
           <div data-ui-static="SettingsActions" data-kind="project" data-dom="syncProjectMenu">
           </div>
@@ -3875,6 +3925,7 @@ h1.title { margin: 0; }
 
                 </div>
 
+                <p class="project-form-label">다른 색상</p><div class="theme-presets theme-extra-presets" data-dom="themeExtraPresets"></div>
                 <div data-ui-component="ActionRow" class="action-row action-row--spaced">
 
                   <button class="btn btn--app-action btn--tertiary" data-action="theme-reset" type="button">
@@ -3908,7 +3959,7 @@ h1.title { margin: 0; }
 
               <div data-ui-component="CardBody" class="card-body">
 
-                <div class="small settings-status-note" data-dom="historyStatus">변경 복구 기록 없음</div>
+                <div class="history-summary" data-dom="historyStatus">변경 복구 기록 없음</div>
 
                 <div data-ui-component="ActionRow" class="action-row action-row--spaced action-row--wrap">
 
@@ -4032,7 +4083,7 @@ h1.title { margin: 0; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "568",
+          version: "569",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4613,6 +4664,8 @@ h1.title { margin: 0; }
         }
         // Shared vector geometry: every icon uses the same viewport, stroke and size.
         const UI_ICON_SHAPES = Object.freeze({
+          lock: '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
+          logout: '<path d="M10 4H5v16h5M14 8l4 4-4 4M8 12h10"/>',
           users: '<path d="M8 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM16 4a3 3 0 0 1 0 6M2 21v-4a6 6 0 0 1 12 0v4M17 13a5 5 0 0 1 5 5v3"/>',
           restore: '<path d="M4 10a8 8 0 1 1 0 6M4 4v6h6M12 7v5l3 2"/>',
           backup: '<path d="M12 16V3m-4 4 4-4 4 4M4 14v7h16v-7"/>',
@@ -4765,8 +4818,9 @@ h1.title { margin: 0; }
           project: [{label:"초대 코드 재발급",action:"shared-rotate-code"},{label:"프로젝트 나가기",action:"shared-leave-project",danger:true}],
         });
         function SettingsActions({kind, dom}) {
+          const icons = {"shared-sign-out":"logout", "shared-update-password":"lock", "shared-delete-account":"settings", "shared-rotate-code":"restore", "shared-leave-project":"users"};
           return `<div data-ui-component="SettingsActions" class="settings-actions u-hidden" data-dom="${attr(dom)}">${SETTINGS_COMMANDS[kind].map(command =>
-            Button(command.label, {action:command.action, role:"settings-action", variant:command.danger ? "danger-quiet" : "tertiary"})).join("")}</div>`;
+            `<button type="button" class="settings-command${command.danger ? " is-danger" : ""}" data-action="${attr(command.action)}"><span class="command-icon">${Icon(icons[command.action])}</span><span>${esc(command.label)}</span>${Icon("right")}</button>`).join("")}</div>`;
         }
         function SettingsRow({key, title, description, icon, variant = "", descriptionDom = ""}, content) {
           const classes = ["settings-row", ...uiVariantClasses("SettingsRow", "settings-row", variant)].join(" ");
@@ -4788,7 +4842,7 @@ h1.title { margin: 0; }
         function renderSettingsPanelModal(key) {
           const row = [...document.querySelectorAll("[data-settings-row]")].find(el => el.dataset.settingsRow === key);
           if (!row) return null;
-          return ModalFrame(key === "account" && !sharedSync.user ? (ownedElement("shared", DOM_IDS.syncLoginBox)?.dataset.authMode === "signup" ? "회원가입" : "로그인") : row.querySelector(".settings-row-title")?.textContent || "설정", `<div data-settings-slot="${attr(key)}"></div>`);
+          return ModalFrame(key === "account" && !sharedSync.user ? (ownedElement("shared", DOM_IDS.syncLoginBox)?.dataset.authMode === "signup" ? "회원가입" : "로그인") : key === "account" ? "계정 관리" : row.querySelector(".settings-row-title")?.textContent || "설정", `<div data-settings-slot="${attr(key)}"></div>`);
         }
         function renderHomePreferencesModal() {
           return ModalFrame("홈 보기 설정", '<div data-settings-slot="home-preferences"></div>');
@@ -4802,6 +4856,7 @@ h1.title { margin: 0; }
           if (!panel || !slot) return;
           settingsAttachment = {panel, parent:panel.parentNode, key};
           slot.append(panel);
+          if (key === "account") renderSharedAuthMode();
         }
         function restoreSettingsPanel() {
           if (!settingsAttachment) return;
@@ -4961,13 +5016,13 @@ h1.title { margin: 0; }
         function ModalCloseButton() {
           return `<button type="button" class="icon-control icon-control--modal-close" data-action="close-modal" aria-label="닫기" title="닫기">${Icon("close")}</button>`;
         }
-        function ModalFrame(title, content, actions = "", description = "") {
+        function ModalFrame(title, content, actions = "", description = "", headerAction = "") {
           const save = [...actions.matchAll(/<button[\s\S]*?<\/button>/g)].find(([html]) => /data-action="(?:save-|shared-submit-password-change)/.test(html))?.[0] || "";
           const footer = actions.replace(save, "").replace(/<button[^>]*data-action="close-modal"[\s\S]*?<\/button>/g, "");
           const hasFooter = /<button/.test(footer);
           return `<div class="modal-frame">
             <div class="modal-header">${Button(save ? "취소" : "닫기", {action:"close-modal", variant:"tertiary", role:"sheet-action"})}
-              <div class="modal-copy"><h2 id="${attr(DOM_IDS.modalTitle)}" tabindex="-1" class="modal-title">${esc(title)}</h2></div>
+              <div class="modal-copy"><h2 id="${attr(DOM_IDS.modalTitle)}" tabindex="-1" class="modal-title">${esc(title)}</h2>${headerAction}</div>
               <div class="modal-save">${save.replace(">비밀번호 변경<", ' aria-label="비밀번호 변경">변경<')}</div>
             </div>
             <div class="modal-content">${description ? `<div class="modal-description">${esc(description)}</div>` : ""}${content}</div>
@@ -4992,7 +5047,7 @@ h1.title { margin: 0; }
           flush();
           const note = fields.some(f => f.id === "mText") ? '<p class="form-caption">제목과 본문 합계 5,000자까지</p>'
             : fields.some(f => f.type === "money") ? '<p class="form-caption">금액은 원 단위로 입력해 주세요.</p>' : "";
-          return ModalFrame(title, Form(blocks.join("") + note, "modal") + (actions.extra || ""), ModalActions(actions), actions.description || "");
+          return ModalFrame(title, (actions.extra || "") + Form(blocks.join("") + note, "modal"), ModalActions(actions), actions.description || "", actions.headerAction || "");
         }
 
 /* v568 — measured against the supplied prototype. */
@@ -5020,6 +5075,26 @@ h1.title { margin: 0; }
           Object.assign(proxy.dataset, button.dataset, {action:button.dataset.command});
           if (!proxy.dataset.action.startsWith("edit-")) closeModal();
           return handleAction(proxy);
+        }
+
+
+/* v569 — complete settings states and ordering controls. */
+
+        function BudgetOrderButton(id) {
+          return `<button type="button" class="budget-order-toggle" data-action="toggle-budget-order" data-id="${attr(id)}" aria-expanded="false" aria-controls="budgetOrderPanel" aria-label="예산 항목 순서">${Icon("filter")}<span>순서</span></button>`;
+        }
+        function BudgetOrderPanel(id) {
+          return `<div id="budgetOrderPanel" class="budget-order-panel" hidden><span>항목 순서</span><div><button type="button" data-action="move-budget" data-id="${attr(id)}" data-delta="-1" aria-label="예산 항목 위로 이동">↑ 위로</button><button type="button" data-action="move-budget" data-id="${attr(id)}" data-delta="1" aria-label="예산 항목 아래로 이동">↓ 아래로</button></div></div>`;
+        }
+        function refreshBudgetOrderControls(id) {
+          const list = getCollection(COLLECTION_SCHEMAS.budget.stateKey), index = list.findIndex(item => sameId(item, id));
+          document.querySelectorAll('#budgetOrderPanel [data-action="move-budget"]').forEach(button => {
+            const next = index + Number(button.dataset.delta);button.disabled = index < 0 || next < 0 || next >= list.length;
+          });
+        }
+        function toggleBudgetOrder(button) {
+          const panel = document.getElementById("budgetOrderPanel");if (!panel) return false;
+          panel.hidden = !panel.hidden;button.setAttribute("aria-expanded", String(!panel.hidden));refreshBudgetOrderControls(button.dataset.id);return true;
         }
 // ===== 03 COLLECTION / FORM / PAGE / ACTION / DOM REGISTRIES =====
         // Edit COLLECTION_SCHEMAS, not its derived FORM_SCHEMAS/CRUD actions. Fields own storage + form rules.
@@ -5167,6 +5242,7 @@ h1.title { margin: 0; }
           settings: { icon: "settings", label: "설정", description: "공동 준비와 데이터·화면 설정을 관리해요.", render: renderSettings, dependsOn: ["theme", "recovery", "wedding"] },
         };
         const MODAL_RENDERERS = Object.freeze({
+          "recovery-detail": renderRecoveryDetail,
           "filter-select": renderFilterSelectModal,
             "entity-menu": renderEntityMenuModal,
             "settings-panel": renderSettingsPanelModal,
@@ -5239,6 +5315,7 @@ h1.title { margin: 0; }
             "select-date": onClick((el) => selectScheduleDate(el.dataset.date)),
           },
           Budget: {
+            "toggle-budget-order": onClick(toggleBudgetOrder),
             "format-money": onInput((el) => formatMoneyInput(el)),
           },
           Plans: {
@@ -5253,6 +5330,8 @@ h1.title { margin: 0; }
             "import-data": onChange((el) => importData(el)),
           },
           Recovery: {
+            "open-recovery-detail": onClick(el => openModal("recovery-detail", el.dataset.id)),
+            "remove-recovery-detail": onClick(el => { if (deleteRecoveryPoint(el.dataset.id)) closeModal(); }),
             "create-recovery": onClick(() => createRecoveryPoint("수동 복구 지점")),
             "restore-recovery": onClick((el) => restoreRecoveryPoint(el.dataset.id)),
             "delete-recovery": onClick((el) => deleteRecoveryPoint(el.dataset.id)),
@@ -5316,7 +5395,7 @@ h1.title { margin: 0; }
           memos: { memoSearch: "memoSearch", memoSearchSummary: "memoSearchSummary" },
           settings: { settingsThemeSummary: "settingsThemeSummary", settingsWeddingDateSummary: "settingsWeddingDateSummary" },
           history: { undoButton: "undoButton", redoButton: "redoButton", historyStatus: "historyStatus" },
-          theme: { themeFields: "themeFields", themePresets: "themePresets", themeRadiusControl: "themeRadiusControl", thRadiusVal: "thRadiusVal" },
+          theme: { themeFields: "themeFields", themePresets: "themePresets", themeExtraPresets: "themeExtraPresets", themeRadiusControl: "themeRadiusControl", thRadiusVal: "thRadiusVal" },
           shared: {
             syncUserText: "syncUserText", syncAccountEntry: "syncAccountEntry", syncCardDescription: "syncCardDescription", syncDetailText: "syncDetailText",
             syncStatusRow: "syncStatusRow", syncStatusMeta: "syncStatusMeta", syncStatusAction: "syncStatusAction", syncConflictBox: "syncConflictBox", syncConflictText: "syncConflictText", syncConflictPreview: "syncConflictPreview",
@@ -5719,9 +5798,7 @@ function createCollectionService({
           move(...args) {
             const moved = collectionService.move(...args);
             if (moved && args[0] === "budget") {
-              const host = document.querySelector(".editor-order-menu");
-              const items = getCollection(this.schema("budget").stateKey);
-              if (host) { FloatingMenu.closeWithin(host); host.innerHTML = SortableCardActions(args[1], items.findIndex(b => sameId(b.id, args[1])), items.length, "budget", "예산 항목"); }
+              refreshBudgetOrderControls(args[1]);
             }
             return moved;
           },
@@ -5798,7 +5875,8 @@ function createCollectionService({
           return FormModal(`${form.title} ${item ? "수정" : "추가"}`, form.fields, item && form.decode ? form.decode(item) : item, {
             saveAction: schema.saveAction || `save-${name}`, saveId: item ? item.id : "null",
             deleteAction: item && schema.deleteInModal ? `delete-${name}` : null, deleteId: item?.id,
-            extra: name === "budget" && item ? `<div class="editor-order"><span>항목 순서</span><span class="editor-order-menu">${SortableCardActions(item.id, getCollection(schema.stateKey).findIndex(b=>b.id===item.id), getCollection(schema.stateKey).length, name, "예산 항목")}</span></div>` : "",
+            headerAction: name === "budget" && item ? BudgetOrderButton(item.id) : "",
+            extra: name === "budget" && item ? BudgetOrderPanel(item.id) : "",
           });
         }
         function getCollectionFrom(source, key) {
@@ -7479,7 +7557,7 @@ function createDerivedViewService({
         function renderPlanStatusModal(id) {
           const item = findById(state.plans, id);
           if (!item) return null;
-          return ModalFrame("계획 상태", `<p class="settings-panel-description">${esc(item.name)}</p><div class="status-options">${PLAN_STATUSES.map(status => Button(status, {action:"choose-plan-status", id:item.id, selected:status===item.status, attributes:{"data-status":status,"aria-pressed":String(status===item.status)}})).join("")}</div>`);
+          return ModalFrame("계획 상태", `<p class="settings-panel-description">${esc(item.name)}</p><div class="sheet-options status-options">${PLAN_STATUSES.map(status => `<button type="button" data-action="choose-plan-status" data-id="${attr(item.id)}" data-status="${attr(status)}" aria-pressed="${status === item.status}"><span>${esc(status)}</span>${status === item.status ? Icon("check") : ""}</button>`).join("")}</div>`);
         }
 
         // ===== 05 DOMAIN / Memos =====
@@ -7731,10 +7809,11 @@ function createDerivedViewService({
                 <span class="theme-color-preview" aria-hidden="true"></span>
                 <input id="${attr(DOM_IDS[field.id])}" type="color" data-action="preview-theme">
               </span>`, "theme-item", "compact theme-item")).join(""));
-          setOwnedHTML("theme", "themePresets", Object.entries(THEME_PRESETS).map(([key, preset]) =>
-            `<button type="button" class="theme-choice${["warm","neutral","dark"].includes(key) ? "" : " theme-choice-extra"}" data-action="theme-preset" data-preset="${attr(key)}" aria-label="${attr(preset.label)} 테마"><span class="theme-choice-swatch"></span><span>${esc(preset.label)}</span></button>`).join(""));
-          $$('[data-preset]', $("themePresets")).forEach((button) =>
-            button.style.setProperty("--swatch-color", button.dataset.preset === "dark" ? THEME_PRESETS.dark.card : THEME_PRESETS[button.dataset.preset].accent));
+          for (const [dom, extra] of [["themePresets",false],["themeExtraPresets",true]]) {
+            setOwnedHTML("theme", dom, Object.entries(THEME_PRESETS).filter(([key]) => !["warm","neutral","dark"].includes(key) === extra).map(([key,preset]) =>
+              `<button type="button" class="theme-choice" data-action="theme-preset" data-preset="${attr(key)}" aria-label="${attr(preset.label)} 테마"><span class="theme-choice-swatch"></span><span>${esc(preset.label)}</span></button>`).join(""));
+            $$('[data-preset]', $(dom)).forEach(button => button.style.setProperty("--swatch-color", button.dataset.preset === "dark" ? THEME_PRESETS.dark.card : THEME_PRESETS[button.dataset.preset].accent));
+          }
           const radius = $(THEME_FIELDS.radius.id);
           radius.min = THEME_FIELDS.radius.min;
           radius.max = THEME_FIELDS.radius.max;
@@ -7748,6 +7827,7 @@ function createDerivedViewService({
               $(field.id)?.closest(".theme-color-control")?.style.setProperty("--theme-preview-color", normalized[key]);
           });
           setOwnedText("theme", "thRadiusVal", normalized.radius + "px");
+          document.querySelectorAll(".theme-choice").forEach(button => button.setAttribute("aria-pressed", String(Object.keys(THEME_DEFAULTS).every(key => normalized[key] === THEME_PRESETS[button.dataset.preset][key]))));
         }
         function readThemeInputs() {
           const theme = themeData();
@@ -8612,7 +8692,7 @@ const { mergePlainObjectsDetailed, mergeSharedCollectionDetailed, mergeSharedSta
           const user = ownedElement("shared", DOM_IDS.syncUserText);
           if (user)
             user.textContent = sharedSync.user
-              ? `로그인: ${sharedSync.user.email}`
+              ? `${sharedSync.user.email}`
               : "아직 공유 계정에 연결되지 않았어요.";
         }
         function renderSharedFooter() {
@@ -8891,6 +8971,7 @@ const { mergePlainObjectsDetailed, mergeSharedCollectionDetailed, mergeSharedSta
             (sharedSync.projectDiscovery === "loading" || sharedSync.projectDiscovery === "error")
           );
           const showKnownProject = connected || verifyingKnownProject;
+          document.querySelectorAll(".settings-signin-note").forEach(el => el.classList.toggle("u-hidden", logged));
           const allowProjectActions = logged && !showKnownProject && sharedSync.projectDiscovery === "idle";
           const showDiscoveryError = logged && sharedSync.projectDiscovery === "error";
 
@@ -9538,11 +9619,11 @@ function createSharedAuthService({
         function renderSharedAuthMode() {
           const form = ownedElement("shared", DOM_IDS.syncLoginBox);
           if (!form) return;
-          const signup = form.dataset.authMode === "signup";
-          if (form.closest(".modal.open") && !sharedSync.user) setOwnedText("modal", DOM_IDS.modalTitle, signup ? "회원가입" : "로그인");
-          form.querySelectorAll('[data-action="shared-auth-mode"]').forEach(button => button.setAttribute("aria-pressed", String(button.dataset.mode === (signup ? "signup" : "login"))));
+          const signup = form.dataset.authMode === "signup", reset = form.dataset.authMode === "reset";
+          if (form.closest(".modal")) setOwnedText("modal", DOM_IDS.modalTitle, sharedSync.user ? "계정 관리" : reset ? "비밀번호 재설정" : signup ? "회원가입" : "로그인");
+          form.querySelectorAll('[data-action="shared-auth-mode"]').forEach(button => button.setAttribute("aria-pressed", String(button.dataset.mode === form.dataset.authMode)));
           ownedElement("shared", DOM_IDS.syncPasswordConfirmWrap)?.classList.toggle("u-hidden", !signup || !!sharedSync.user);
-          for (const [action, visible] of [["shared-sign-in", !signup], ["shared-sign-up", signup]]) {
+          for (const [action, visible] of [["shared-sign-in", !signup && !reset], ["shared-sign-up", signup], ["shared-reset-password", reset]]) {
             const button = form.querySelector(`[data-action="${action}"]`);
             button.classList.toggle("u-hidden", !visible);
             button.type = visible ? "submit" : "button";
@@ -9550,7 +9631,7 @@ function createSharedAuthService({
           ownedElement("shared", DOM_IDS.syncPassword)?.setAttribute("autocomplete", signup ? "new-password" : "current-password");
         }
         function selectSharedAuthMode(mode) {
-          if (sharedSync.busy || sharedSync.user || !["login", "signup"].includes(mode)) return false;
+          if (sharedSync.busy || sharedSync.user || !["login", "signup", "reset"].includes(mode)) return false;
           const form = ownedElement("shared", DOM_IDS.syncLoginBox);
           if (!form) return false;
           form.dataset.authMode = mode;
@@ -12408,11 +12489,11 @@ function createRecoveryService({
             redo.disabled = !counts.redo;
             redo.setAttribute("aria-disabled", String(!counts.redo));
           }
-          if (status)
-            status.textContent =
-              counts.undo || counts.redo
-                ? `실행 취소 ${counts.undo} · 다시 실행 ${counts.redo}`
-                : "변경 복구 기록 없음";
+          if (status) {
+            const snapshot = historySnapshot(), previous = snapshot.undo.at(-1), next = snapshot.redo.at(-1);
+            const summary = summarizeHistoryChange(previous || state, previous ? state : next);
+            status.innerHTML = `<div class="history-entry-title">${esc(summary.title)}</div><div class="history-entry-meta">${esc(summary.detail)}</div>`;
+          }
         }
         function notifyUndoableChange(message) {
           const changedState = state;
@@ -12435,35 +12516,43 @@ function createRecoveryService({
         function createRecoveryPoint(...args) { return recoveryStore.createRecoveryPoint(...args); }
         function ensureRecoveryPoint(...args) { return recoveryService.ensurePoint(...args); }
         function sharedImpactNotice(...args) { return recoveryService.sharedImpactNotice(...args); }
+        function recoveryDate(point) {
+          const date = new Date(point.createdAt);
+          return Number.isFinite(date.getTime()) ? date.toLocaleString("ko-KR", {month:"long",day:"numeric",hour:"numeric",minute:"2-digit"}) : "시간 정보 없음";
+        }
         function RecoveryItem(point) {
-          const when = new Date(point.createdAt);
-          const time = Number.isFinite(when.getTime()) ? when.toLocaleString("ko-KR", {
-            month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit",
-          }) : "시간 정보 없음";
           const sameScope = recoveryScopeMatches(point);
-          const userScoped = point?.scopeKind === "user";
-          const scopeLabel = userScoped ? "참여 전 로컬 백업" : point.projectId ? "공동 프로젝트" : "로컬";
-          const actions = ActionRow(
-            Button("복원", { action: "restore-recovery", id: point.id, attributes: {
-              disabled: !sameScope, "aria-disabled": sameScope ? null : "true",
-              title: sameScope ? null : userScoped ? "이 백업을 만든 사용자로 로그인한 뒤 복원할 수 있어요." : "해당 사용자/프로젝트로 전환한 뒤 복원할 수 있어요.",
-            } }) + Button("삭제", { action: "delete-recovery", id: point.id, attributes: {
-              disabled: !sameScope, "aria-disabled": sameScope ? null : "true",
-              title: sameScope ? null : userScoped ? "이 백업을 만든 사용자만 삭제할 수 있어요." : "해당 사용자/프로젝트의 복구 지점만 삭제할 수 있어요.",
-            } }), "item");
-          return InnerCard(`<div class="recovery-copy"><div class="recovery-title">${esc(point.reason)}</div>
-              <div class="recovery-meta">${esc(time)} · ${scopeLabel}${sameScope ? "" : " · 다른 사용자/프로젝트"}</div>
-            </div>${actions}`, "recovery-item", "recovery");
+          return `<button type="button" class="recovery-point-row" data-action="open-recovery-detail" data-id="${attr(point.id)}"><span><span class="recovery-point-title">${esc(recoveryDate(point))}</span><span class="recovery-point-meta">${esc(point.reason || "자동 저장된 복구 지점")}${sameScope ? "" : " · 다른 사용자/프로젝트"}</span></span>${Icon("right")}</button>`;
         }
         function renderRecoveryPoints() {
           const points = readRecoveryPoints();
-          setOwnedText(
-            "recovery",
-            DOM_IDS.recoveryStatus,
-            points.length ? `최근 복구 지점 ${points.length}개` : "복구 지점 없음",
-          );
-          const html = List(points, RecoveryItem);
-          setOwnedHTML("recovery", DOM_IDS.recoveryList, html);
+          setOwnedText("recovery", DOM_IDS.recoveryStatus, points.length ? "" : "아직 저장된 복구 지점이 없어요.");
+          setOwnedDisplay("recovery", DOM_IDS.recoveryStatus, !points.length);
+          setOwnedHTML("recovery", DOM_IDS.recoveryList, points.map(RecoveryItem).join(""));
+        }
+        function renderRecoveryDetail(id) {
+          const point = readRecoveryPoints().find(item => sameId(item,id));if (!point) return null;
+          const allowed = recoveryScopeMatches(point);
+          return ModalFrame("복구 지점", `<div class="recovery-detail-card"><strong>${esc(recoveryDate(point))}</strong><p>${esc(point.reason || "자동 저장된 복구 지점")}</p></div><p class="settings-panel-description">${allowed ? "이 시점의 기록으로 되돌립니다. 복원하기 전에 현재 기록을 보관하고 변경 내용을 확인해요." : "이 복구 지점을 만든 사용자와 프로젝트로 전환한 뒤 복원하거나 삭제할 수 있어요."}</p><div class="recovery-detail-actions">${Button("이 시점으로 복원",{action:"restore-recovery",id:point.id,variant:"primary",attributes:{disabled:!allowed}})}${Button("복구 지점 삭제",{action:"remove-recovery-detail",id:point.id,variant:"danger-quiet",attributes:{disabled:!allowed}})}</div>`);
+        }
+        function summarizeHistoryChange(before, after) {
+          if (!before || !after) return {title:"변경 복구 기록 없음",detail:"이 기기에서 변경한 내용이 여기에 표시돼요."};
+          const changes = [];
+          for (const [key, label] of [["tasks","할 일"],["events","일정"],["budgets","예산"],["plans","부부계획"],["memos","메모"]]) {
+            const a = before[key] || [], b = after[key] || [];
+            const oldItems = new Map(a.map(item => [String(item.id),item])), newItems = new Map(b.map(item => [String(item.id),item]));
+            for (const id of new Set([...oldItems.keys(),...newItems.keys()])) {
+              const old = oldItems.get(id), item = newItems.get(id);
+              if (valuesEqual(old,item)) continue;
+              const value = item || old;
+              changes.push({title:value.title || value.name || String(value.text || "").split("\n")[0] || label,detail:`${label} ${!old ? "추가" : !item ? "삭제" : key === "tasks" && old.status !== item.status ? (item.status === "done" ? "완료로 변경" : "미완료로 변경") : "수정"}`});
+            }
+            if (!changes.length && !valuesEqual(a.map(i=>i.id),b.map(i=>i.id))) changes.push({title:`${label} 순서`,detail:"항목 순서 변경"});
+          }
+          if (changes.length) return {...changes[0],title:changes[0].title+(changes.length>1 ? ` 외 ${changes.length-1}개` : "")};
+          if (before.weddingDate !== after.weddingDate) return {title:"결혼식 날짜",detail:"날짜 변경"};
+          if (!valuesEqual(before.theme,after.theme)) return {title:"테마",detail:"화면 설정 변경"};
+          return {title:"화면과 준비 설정",detail:"설정 변경"};
         }
         function recoveryOperationSnapshot(...args) { return recoveryService.recoveryOperationSnapshot(...args); }
         function recoveryOperationIsCurrent(...args) { return recoveryService.recoveryOperationIsCurrent(...args); }
