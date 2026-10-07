@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v569 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v570 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-S1WFaEpKMAJhB0NFaqaCbilAhVD04Sr1QkUTaSiZsZ4=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-yTzLtk+zpTkWSPRWhRK0EH+rKTeRLjyzRzvuQRbfm5E='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-PFDYVS2EPnMEfL5P/Elwqka8bXHurelASIuBRVvDaVE=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-+wblzxLkRyvWfCE5/gSf+RWWL2VmwAmZ1pexgctFk98='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -1111,7 +1111,6 @@ body.modal-open .tab-bar{pointer-events:none;}
 
 .page-heading{min-height:44px;margin-bottom:24px;gap:8px;}.page-heading h2{font-size:32px;line-height:1.2;letter-spacing:-.055em;font-weight:700;}
 .page-heading-copy{max-width:none;}.heading-actions{display:flex;align-items:center;gap:0;flex-shrink:0;}
-.heading-settings{display:grid;place-items:center;min-width:44px;height:44px;border:0;background:none;color:var(--accent);border-radius:50%;}
 .heading-actions>.btn{width:44px;min-width:44px;height:44px;border-radius:50%;padding:0;margin:2px;}.heading-actions>.btn span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
 .settings-stack{gap:22px;}.settings-group-title{margin:0 0 9px 4px;font-size:13px;}.settings-row>summary,.settings-link{min-height:62px;padding:10px 14px;gap:12px;}
 .settings-row-copy{gap:0;}.settings-row-description{display:none;}.settings-row-title{font-size:16px;font-weight:400;}
@@ -1343,8 +1342,16 @@ body.modal-open .tab-bar{pointer-events:none;}
 .calendar-week span:first-child,.calendar-week span:last-child{color:var(--muted);}.calendar-grid{gap:0;}.calendar-week{gap:0;}.calendar-cell.saturday,.calendar-cell.sunday{--calendar-day-color:var(--ink);}.calendar-cell.holiday{--calendar-day-color:var(--holiday-color);}
 
 /* v568 final prototype alignment. */
-.calendar-week span{padding:4px 0;}.calendar-cell{height:42px;min-height:42px;}.calendar-num{width:100%;height:42px;}.calendar-cell.today .calendar-num{font-weight:700;}
+.calendar-week span{padding:4px 0;}.calendar-cell{height:42px;min-height:42px;}.calendar-num{width:42px;max-width:100%;min-width:0;height:auto;aspect-ratio:1;padding:0;flex-shrink:0;border-radius:50%;corner-shape:round;}.calendar-cell.today .calendar-num{font-weight:700;}
 @media(max-width:380px),(min-width:900px){.calendar-cell{height:44px;min-height:44px;}}
+
+/* Keep the month and weekday labels aligned with the seven date columns. */
+.calendar-week span{text-align:center;}
+.calendar-card .card-header{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;}
+.calendar-card .card-header-copy{grid-column:2;grid-row:1;text-align:center;}
+.calendar-card .card-header-action{display:contents;}
+.calendar-card .card-header-action>button:first-child{grid-column:1;grid-row:1;justify-self:start;}
+.calendar-card .card-header-action>button:last-child{grid-column:3;grid-row:1;justify-self:end;}
       .toast-stack {
         position: fixed;
         right: clamp(12px, 2vw, 16px);
@@ -2674,7 +2681,7 @@ body.modal-open .tab-bar{pointer-events:none;}
 .collection-row--task .collection-row__actions{margin-top:0;}
 .event-leading--date{background:none;padding:0;min-height:44px;gap:2px;color:var(--accent);}.event-leading--date .event-leading-sub{order:-1;font-size:10px;color:var(--accent);}.event-leading--date .event-leading-main{font-size:26px;font-weight:500;}
 .plan-status-control .btn--tertiary{background:var(--ui-tint,color-mix(in srgb,var(--accent) 14%,var(--card)));color:var(--accent);border:0;border-radius:8px;padding:8px 11px;min-height:44px;font-size:13px;font-weight:400;}
-.plan-status-control .btn--tertiary:after{content:"";border-right:1px solid currentColor;border-bottom:1px solid currentColor;width:5px;height:5px;transform:rotate(45deg);margin:-3px 3px 0 8px;}
+.plan-status-control .btn--tertiary .ui-icon{order:1;width:12px;height:12px;margin-left:2px;}
 
 
 
@@ -3504,7 +3511,7 @@ h1.title { margin: 0; }
   </head>
   <body>
     <div class="app" data-dom="appRoot" data-planner-root data-current-page="home">
-      <header class="top"><div><div class="eyebrow">두 사람이 함께 만드는 하루</div><h1 class="title">우리의 결혼 준비</h1></div><button class="heading-settings" type="button" data-action="show-page" data-page="settings" aria-label="설정"><span data-ui-icon="settings"></span></button></header>
+      <header class="top"><div><div class="eyebrow">두 사람이 함께 만드는 하루</div><h1 class="title">우리의 결혼 준비</h1></div></header>
       <div class="tab-bar"><div class="sidebar-brand">우리의 결혼 준비</div><nav aria-label="주요 메뉴" class="nav" data-dom="nav"></nav></div>
       <main>
         <!-- ===== APP CONTENT / PAGES ===== -->
@@ -4083,7 +4090,7 @@ h1.title { margin: 0; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "569",
+          version: "570",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4646,7 +4653,7 @@ h1.title { margin: 0; }
           }) : "";
           return UIComponentRoot("PageHeading", "page-heading", `
             <div class="page-heading-copy"><h2>${esc(page.label)}</h2><p>${esc(page.description || "")}</p></div>
-              <div class="heading-actions">${page.label === "설정" ? "" : `<button class="heading-settings" type="button" data-action="show-page" data-page="settings" aria-label="설정">${Icon("settings")}</button>`}${action}</div>`);
+              <div class="heading-actions">${action}</div>`);
         }
 
         function CollectionGroup(title = "") {
@@ -7541,7 +7548,7 @@ function createDerivedViewService({
             planDonePct: plans.length ? Math.round((completed / plans.length) * 100) : 0 };
         }
         function PlanCard(item, index, total) {
-          const status = Button(item.status, {action:"plan-status", id:item.id, variant:"tertiary", attributes:{"aria-label":`${item.name} 상태: ${item.status}`}});
+          const status = Button(item.status, {action:"plan-status", id:item.id, variant:"tertiary", icon:"chevronDown", attributes:{"aria-label":`${item.name} 상태: ${item.status}`}});
           const actions = SortableCardActions(item.id, index, total, "plan", COLLECTION_SCHEMAS.plan.label);
           const blocks = COLLECTION_SCHEMAS.plan.fields.filter(field => field.display === "block").map(({ key, label }) =>
             key === "note" && !String(item[key] || "").trim()
