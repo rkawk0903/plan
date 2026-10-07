@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v571 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v572 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-dz7Ndu0DxnRlKRtFFKcCluOK8AolAUq+IVpXd2JNd6s=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-y/PcUcCv9EYcoF7X6QpMMQyVcs1k2IGRbASY4RRiVfY='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-BYmZM0GfkZekKQ0pfkHJSaDGvBY50Rdh7HDBji19s94=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-Y/C0w3bt/5z3wPF8e4ww2LrbDMYjohbG+KwIoVYDhjw='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -580,6 +580,17 @@ body.modal-open .tab-bar{pointer-events:none;}
 
 /* v568 final prototype alignment. */
 .theme-preview p{font-size:15px;line-height:1.65;margin-top:10px;}.theme-preview .progress{margin-bottom:8px;}
+
+
+.has-loading-placeholder{display:none!important;}
+.records-loading>p{font-size:13px;color:var(--muted);line-height:1.6;margin:12px 4px 10px;}
+.records-loading-group{background:var(--card);border-radius:var(--radius-surface);overflow:hidden;}
+.records-loading-row{position:relative;padding:21px 14px;display:grid;gap:9px;min-height:81px;}
+.records-loading-row+.records-loading-row::before{content:"";position:absolute;top:0;left:56px;right:0;border-top:1px solid var(--line);}
+.skeleton-record-title{--skeleton-width:80%;--skeleton-height:15px;border-radius:5px;}
+.skeleton-record-meta{--skeleton-width:45%;--skeleton-height:15px;border-radius:5px;}
+.records-loading[hidden]{display:none;}
+
       .btn {
         position: relative;
         display: inline-flex;
@@ -1769,6 +1780,16 @@ body.modal-open .tab-bar{pointer-events:none;}
 .modal-frame--editor .modal-footer{background:var(--bg);border-top:1px solid var(--line);padding:14px 20px 20px;}
 .modal-frame--editor .modal-content{padding-bottom:24px;}
 
+
+
+/* Alert dividers belong to one edge each, without inherited action-row padding. */
+.confirm-card{overflow:hidden;corner-shape:round;}
+.confirm-card .action-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:0;padding:0;border:0;border-top:1px solid var(--line);}
+.confirm-card .action-row>.btn{margin:0;width:100%;height:54px;min-height:54px;max-height:none;border:0;border-radius:0;corner-shape:round;padding:10px 8px;}
+.confirm-card .action-row>.btn+.btn{border-left:1px solid var(--line);}
+.confirm-card .action-row>.btn::after{inset:0;}
+.form-save-error{color:var(--muted);font-size:13px;line-height:1.75;margin:0 0 20px;outline:none;}
+
       /* ===== v384 grouped/form refinement ===== */
       .form-field {
         display: grid;
@@ -2071,6 +2092,12 @@ body.modal-open .tab-bar{pointer-events:none;}
 .item-order-controls>button:disabled{opacity:.28;cursor:default;}
 .entity-edit-button:focus-visible,.item-order-controls>button:focus-visible{outline:2px solid var(--focus-outline);outline-offset:2px;}
 @media(hover:hover){.entity-edit-button:hover,.item-order-controls>button:not(:disabled):hover{background:var(--row-hover);}}
+
+
+
+.danger-summary{background:var(--card);border-radius:16px;padding:18px 16px;grid-column:1/-1;margin:0;}
+.danger-summary strong{display:block;font-size:16px;line-height:1.5;font-weight:600;}
+.danger-summary p{font-size:13px;line-height:1.75;color:var(--muted);margin:8px 0 0;}
 /* ===== 04 COMPONENT VARIANTS — explicit semantic overrides ===== */
       /* Surface / status variants */
 
@@ -2756,6 +2783,22 @@ body.modal-open .tab-bar{pointer-events:none;}
 .modal-frame--editor .action-row--sheet-dialog:has(.btn--danger-quiet){grid-template-columns:repeat(3,minmax(0,1fr));}
 .modal-frame--editor .modal-footer .btn{width:100%;min-width:0;--btn-height:50px;--btn-font-size:15px;--btn-padding:0 8px;--btn-radius:12px;}
 .modal-frame--editor .modal-footer .btn--primary{--btn-bg:var(--accent);--btn-color:var(--accent-contrast);--btn-border:0;}
+
+
+
+.modal-frame:has(.danger-summary) .modal-footer .btn--danger{--btn-bg:var(--danger);--btn-color:var(--accent-contrast);--btn-border:0;--btn-height:50px;--btn-radius:12px;--btn-font-size:15px;}
+.conflict-choice-actions>.btn{width:100%;--btn-height:50px;--btn-radius:12px;--btn-font-size:15px;}
+.conflict-choice-actions>.btn--primary{--btn-bg:var(--accent);--btn-color:var(--accent-contrast);--btn-border:0;}
+.conflict-choice-actions>.btn:not(.btn--primary){--btn-bg:var(--card);--btn-border:0;--btn-color:var(--accent);}
+.confirm-card .action-row>.btn--danger{color:var(--danger);}
+
+
+.form--modal:has(.danger-summary){display:grid;grid-template-columns:minmax(0,1fr);gap:18px;}
+.form--modal .danger-password .form-field{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-height:86px;padding:14px 16px;}
+.form--modal .danger-password label{font-size:14px;color:var(--ink);width:auto;}
+.form--modal .danger-password .field{width:100%;min-height:30px;font-size:15px;}
+.modal-frame--editor.is-save-error .action-row--sheet-dialog{grid-template-columns:minmax(0,1fr);}
+.modal-frame--editor.is-save-error .modal-footer .btn:not(.btn--primary){display:none;}
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
       .calendar-grid {
@@ -3415,6 +3458,22 @@ h1.title { margin: 0; }
 .conflict-values h4{font-size:13px;color:var(--muted);margin:0 0 8px;font-weight:500;}
 .conflict-record pre{font:inherit;font-size:15px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;max-height:280px;overflow:auto;}
 @media(max-width:600px){.conflict-values{grid-template-columns:minmax(0,1fr);}}
+
+
+.connection-banner{display:flex;align-items:center;gap:12px;background:var(--ui-tint,var(--accent-soft));color:var(--accent);border-radius:12px;padding:12px 14px;margin:0 0 22px;font-size:13px;line-height:1.65;}
+.connection-banner>.ui-icon{width:18px;height:18px;flex:0 0 auto;}
+.connection-banner>span{flex:1;min-width:0;}
+.connection-banner>button{border:0;background:none;color:inherit;font-size:13px;min-height:44px;min-width:44px;padding:6px;}
+.connection-banner[hidden]{display:none;}
+.conflict-sheet .conflict-intro{font-size:14px;line-height:1.65;color:var(--muted);margin:0 0 22px;}
+.conflict-change>h3{font-size:13px;font-weight:400;color:var(--muted);margin:0 12px 10px;line-height:1.6;}
+.conflict-sheet .conflict-values{grid-template-columns:minmax(0,1fr);gap:12px;margin:0 0 18px;}
+.conflict-sheet .conflict-values>div{border-radius:16px;padding:18px 16px;}
+.conflict-sheet .conflict-values h4{font-size:12px;font-weight:400;line-height:1.5;margin:0 0 10px;}
+.conflict-sheet .conflict-values pre{font:inherit;font-size:15px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;}
+.conflict-choice-actions{display:grid;gap:12px;}
+.conflict-policy{font-size:12px;line-height:1.7;color:var(--muted);margin:14px 15px 0;}
+
       .current-project-title {
         font-size: var(--font-small);
         font-weight: var(--weight-bold);
@@ -3829,15 +3888,7 @@ h1.title { margin: 0; }
           <div class="small shared-conflict-desc" data-dom="syncConflictText">
           </div>
           <div class="shared-conflict-preview" data-dom="syncConflictPreview"></div>
-          <p class="small">아래 선택은 충돌한 항목 전체에 적용돼요. 충돌하지 않은 변경은 함께 유지하며, 선택 전 복구 지점을 남깁니다.</p>
-          <div data-ui-component="ActionRow" class="action-row action-row--compact">
-            <button class="btn btn--app-action" data-action="resolve-conflict-local" type="button">
-              내 변경 유지
-            </button >
-            <button class="btn btn--app-action btn--primary" data-action="resolve-conflict-remote" type="button">
-              상대방 변경 사용
-            </button>
-          </div>
+          <button class="btn btn--app-action btn--primary" data-action="open-shared-conflict" type="button">변경 내용 확인</button>
         </div>
       </div>
       <div data-ui-component="CardFooter" class="card-footer-row u-hidden" data-dom="syncDataActions">
@@ -4128,7 +4179,7 @@ h1.title { margin: 0; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "571",
+          version: "572",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4709,6 +4760,7 @@ h1.title { margin: 0; }
         }
         // Shared vector geometry: every icon uses the same viewport, stroke and size.
         const UI_ICON_SHAPES = Object.freeze({
+          offline: '<path d="m3 3 18 18M7 7a6 6 0 0 1 10 3h1a4 4 0 0 1 3 6M17 18H6a4 4 0 0 1-2-7M9 18l-2 3"/>',
           lock: '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
           logout: '<path d="M10 4H5v16h5M14 8l4 4-4 4M8 12h10"/>',
           users: '<path d="M8 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM16 4a3 3 0 0 1 0 6M2 21v-4a6 6 0 0 1 12 0v4M17 13a5 5 0 0 1 5 5v3"/>',
@@ -5136,6 +5188,26 @@ h1.title { margin: 0; }
 
 
 /* v569 — complete settings states and ordering controls. */
+
+
+
+        let formSaveInProgress = false;
+        function presentFormSaveFailure() {
+          const frame = document.querySelector(".modal.open .modal-frame--editor");
+          if (!formSaveInProgress || !frame) return false;
+          frame.classList.add("is-save-error");
+          const content = frame.querySelector(".modal-content");
+          let notice = content.querySelector(".form-save-error");
+          if (!notice) {
+            notice = document.createElement("div");notice.className = "form-save-error";notice.setAttribute("role","alert");notice.tabIndex = -1;
+            notice.textContent = "작성한 내용은 이 창에 남아 있어요. 저장 공간과 브라우저 설정을 확인한 뒤 다시 시도해 주세요.";
+            content.prepend(notice);
+          }
+          setOwnedText("modal", DOM_IDS.modalTitle, "저장하지 못했어요");
+          const save = frame.querySelector('[data-action^="save-"]');if (save) { save.dataset.idleLabel = "다시 저장"; save.textContent = "다시 저장"; }
+          content.scrollTop = 0;notice.focus({preventScroll:true});
+          return true;
+        }
 // ===== 03 COLLECTION / FORM / PAGE / ACTION / DOM REGISTRIES =====
         // Edit COLLECTION_SCHEMAS, not its derived FORM_SCHEMAS/CRUD actions. Fields own storage + form rules.
         // Static HTML uses symbolic data-dom anchors; DOM_AREAS owns physical IDs and area ownership.
@@ -5283,6 +5355,7 @@ h1.title { margin: 0; }
         };
         const MODAL_RENDERERS = Object.freeze({
           "recovery-detail": renderRecoveryDetail,
+          "shared-conflict": renderSharedConflictModal,
           "filter-select": renderFilterSelectModal,
           "schedule-period": renderSchedulePeriodModal,
             "entity-menu": renderEntityMenuModal,
@@ -5396,8 +5469,9 @@ h1.title { margin: 0; }
             "shared-delete-account": onClick(() => SharedDomains.Auth.deleteAccount()),
             "shared-confirm-delete-account": { ...onClick(() => SharedDomains.Auth.confirmDeleteAccount()), modalSave: true },
             "shared-pull": onClick(() => SharedDomains.Transport.pull()),
-            "resolve-conflict-local": onClick(() => SharedDomains.Merge.resolve("local")),
-            "resolve-conflict-remote": onClick(() => SharedDomains.Merge.resolve("remote")),
+            "open-shared-conflict": onClick(() => openModal("shared-conflict")),
+            "resolve-conflict-local": onClick(() => resolveSharedConflictChoice("local")),
+            "resolve-conflict-remote": onClick(() => resolveSharedConflictChoice("remote")),
             "shared-copy-code": onClick(() => SharedDomains.Projects.copyCode()),
             "shared-refresh-project": onClick(() => SharedDomains.Projects.refreshConnection()),
             "shared-rotate-code": onClick(() => SharedDomains.Projects.rotateCode()),
@@ -5779,7 +5853,9 @@ function createCollectionService({
           schema(...args) { return collectionService.schema(...args); },
           write(...args) { return collectionService.write(...args); },
           save(name, id) {
-            const result = saveFormBySchema(name, id);
+            let result;
+            formSaveInProgress = true;
+            try { result = saveFormBySchema(name, id); } finally { formSaveInProgress = false; }
             if (!result) return null;
             const schema = this.schema(name);
             const previous = getModalPreviousFocus();
@@ -6057,6 +6133,7 @@ function createCollectionService({
           // Navigation itself does not invalidate data, so never schedule a second render just for switching tabs.
           renderPageImmediately(id);
           Object.keys(PAGE_REGISTRY).forEach((key) => ownedElement("pages", key)?.classList.toggle("active", key === id));
+          renderConnectionStates();
           let activeNavButton = null;
           $$("button", ownedElement("navigation", "nav")).forEach((button) => {
             const mobile = window.matchMedia("(max-width: 899px)").matches;
@@ -6488,7 +6565,7 @@ function createModalController({
     }
     if (el?.isConnected) {
       el.setAttribute("aria-busy", "false");
-      el.textContent = token.label;
+      el.textContent = el.dataset?.idleLabel || token.label;
       if (modal?.classList.contains("open")) el.disabled = false;
     }
   }
@@ -8906,6 +8983,7 @@ const { mergePlainObjectsDetailed, mergeSharedCollectionDetailed, mergeSharedSta
           }
         }
         function renderSharedStatusUI() {
+          renderConnectionStates();
           renderSharedAuthSummary();
           renderSharedFooter();
           renderFutureSchemaWarning();
@@ -8938,9 +9016,9 @@ const { mergePlainObjectsDetailed, mergeSharedCollectionDetailed, mergeSharedSta
             const itemName = item?.title || item?.name || item?.text?.split(/\r?\n/)[0] || "";
             const kind = labels[match?.[1] || path.split(".")[0]] || "기록";
             const field = match?.[3] ? labels[match[3]] || "변경 내용" : "";
-            return `<details class="conflict-record"><summary>${esc([kind,itemName,field].filter(Boolean).join(" · "))}</summary><div class="conflict-values">` +
+            return `<section class="conflict-change"><h3>${esc([itemName || kind,field].filter(Boolean).join(" · "))}</h3><div class="conflict-values">` +
               [["내가 수정한 내용",context.local],["상대방이 수정한 내용",context.remote]].map(([label,snapshot]) =>
-                `<div><h4>${label}</h4><pre>${esc(format(sharedConflictPreviewValue(snapshot,path)))}</pre></div>`).join("") + '</div></details>';
+                `<div><h4>${label}</h4><pre>${esc(format(sharedConflictPreviewValue(snapshot,path)))}</pre></div>`).join("") + '</div></section>';
           }).join("");
         }
         function renderSharedConflictBox() {
@@ -8951,9 +9029,9 @@ const { mergePlainObjectsDetailed, mergeSharedCollectionDetailed, mergeSharedSta
           box.classList.toggle("u-hidden", !(sharedSync.phase === "conflict" && paths.length));
           if (text)
             text.textContent = paths.length
-              ? `같은 내용을 두 사람이 수정했어요. ${formatNumber(paths.length)}개의 변경을 펼쳐 보고 사용할 내용을 선택하세요.`
+              ? `같은 내용을 두 사람이 수정했어요. ${formatNumber(paths.length)}개의 변경을 확인하고 사용할 내용을 선택하세요.`
               : "";
-          setOwnedHTML("shared", "syncConflictPreview", sharedSync.phase === "conflict" ? SharedConflictPreview(sharedSync.lastConflictContext) : "");
+          setOwnedHTML("shared", "syncConflictPreview", "");
         }
         function setSharedConflictContext(context) {
           sharedSync.lastConflictContext = context ? { ...context, appliedState: cloneValue(state) } : null;
@@ -9056,8 +9134,8 @@ const { mergePlainObjectsDetailed, mergeSharedCollectionDetailed, mergeSharedSta
         }
         function renderSharedDeleteAccountModal() {
           return ModalFrame("계정 삭제", Form(`
-            <div class="modal-note"><strong>계정을 삭제할까요?</strong>계정과 공동 프로젝트 연결을 복구할 수 없어요. 필요한 기록은 먼저 백업해 주세요.</div><div class="form-input-group">
-            ${FormField({ key: "password", id: "syncDeletePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "현재 비밀번호" }, "")}
+            <div class="danger-summary"><strong>계정을 삭제할까요?</strong><p>계정과 공동 프로젝트 연결을 복구할 수 없어요. 필요한 기록은 먼저 백업해 주세요.</p></div><div class="form-input-group danger-password">
+            ${FormField({ key: "password", id: "syncDeletePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "본인 확인을 위해 입력" }, "")}
           </div>`, "modal"), ActionRow([
             Button("취소", { action: "close-modal", variant: "tertiary", role: "sheet-action" }),
             Button("계정 삭제", { action: "shared-confirm-delete-account", variant: "danger", role: "sheet-action" }),
@@ -9065,12 +9143,63 @@ const { mergePlainObjectsDetailed, mergeSharedCollectionDetailed, mergeSharedSta
         }
         function renderSharedLeaveProjectModal() {
           return ModalFrame("프로젝트 나가기", Form(`
-            <div class="modal-note"><strong>이 프로젝트에서 나갈까요?</strong>이 계정의 프로젝트 연결과 이 기기의 공동 프로젝트 데이터가 제거됩니다.</div><div class="form-input-group">
-            ${FormField({ key: "password", id: "syncLeavePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "현재 비밀번호" }, "")}
+            <div class="danger-summary"><strong>이 프로젝트에서 나갈까요?</strong><p>이 계정의 프로젝트 연결과 이 기기의 공동 프로젝트 데이터가 제거됩니다.</p></div><div class="form-input-group danger-password">
+            ${FormField({ key: "password", id: "syncLeavePasswordModal", label: "현재 비밀번호", type: "password", placeholder: "본인 확인을 위해 입력" }, "")}
           </div>`, "modal"), ActionRow([
             Button("취소", { action: "close-modal", variant: "tertiary", role: "sheet-action" }),
             Button("프로젝트 나가기", { action: "shared-confirm-leave-project", variant: "danger", role: "sheet-action" }),
           ].join(""), "sheet-dialog"));
+        }
+
+
+        let displayedConflictContext = null;
+        function renderSharedConflictModal() {
+          const context = sharedSync.lastConflictContext;
+          displayedConflictContext = context;
+          if (!context?.conflicts?.length) return ModalFrame("변경 내용 확인", '<p class="settings-panel-description">확인할 동시 수정 내용이 없어요.</p>');
+          return ModalFrame("변경 내용 확인", `<div class="conflict-sheet"><p class="conflict-intro">두 사람이 같은 항목을 수정했어요.<br>사용할 내용을 확인해 주세요.</p>${SharedConflictPreview(context)}<div class="conflict-choice-actions">${Button("내 변경 유지",{action:"resolve-conflict-local",variant:"primary",role:"sheet-action"})}${Button("상대방 변경 사용",{action:"resolve-conflict-remote",role:"sheet-action"})}</div><p class="conflict-policy">선택은 위에 표시된 충돌 전체에 적용돼요. 충돌하지 않은 변경은 함께 유지하며, 선택 전 복구 지점을 남깁니다.</p></div>`);
+        }
+        function resolveSharedConflictChoice(preference) {
+          if (document.querySelector(".modal.open .conflict-sheet") && displayedConflictContext !== sharedSync.lastConflictContext) {
+            notifyInfo("확인하는 동안 변경 내용이 달라졌어요. 최신 내용을 다시 확인해 주세요.");
+            openModal("shared-conflict");
+            return false;
+          }
+          const resolved = resolveSharedConflicts(preference);
+          if (resolved && document.querySelector(".modal.open .conflict-sheet")) closeModal();
+          return resolved;
+        }
+        function renderConnectionStates() {
+          const offline = !sharedIsOnline() || sharedSync.phase === "offline";
+          const conflict = sharedSync.phase === "conflict" && !!sharedSync.lastConflictPaths?.length;
+          const loading = !offline && (sharedSync.projectDiscovery === "loading" || sharedSync.phase === "pulling");
+          document.querySelectorAll(".page").forEach(page => {
+            let banner = page.querySelector(":scope > .connection-banner");
+            if (!banner) {
+              banner = document.createElement("div");banner.className = "connection-banner";banner.setAttribute("role","status");banner.setAttribute("aria-live","polite");
+              const heading = page.querySelector(":scope > .page-heading");
+              if (heading) heading.after(banner);else page.prepend(banner);
+            }
+            const content = conflict ? `${Icon("restore")}<span>동시 수정된 내용이 있어요.<br>사용할 변경을 확인해 주세요.</span><button type="button" data-action="open-shared-conflict">확인</button>`
+              : offline ? `${Icon("offline")}<span>오프라인이에요.<br>변경 내용은 이 기기에 보관돼요.</span>` : "";
+            if (banner.dataset.connectionState !== `${conflict}:${offline}`) { banner.innerHTML = content; banner.dataset.connectionState = `${conflict}:${offline}`; }
+            banner.hidden = !content;
+          });
+          for (const [key,targets] of [["tasks",["taskList"]],["events",["scheduleList","scheduleAllList"]],["budgets",["budgetLines"]],["plans",["planList"]],["memos",["memoList"]]]) {
+            for (const id of targets) {
+              const host = $(id);if (!host) continue;
+              const show = loading && !getCollection(key).length;
+              let skeleton = host.previousElementSibling?.classList.contains("records-loading") ? host.previousElementSibling : null;
+              if (!skeleton && show) {
+                skeleton = document.createElement("div");skeleton.className = "records-loading";skeleton.setAttribute("role","status");
+                skeleton.innerHTML = '<p>기록을 불러오는 중이에요</p><div class="records-loading-group" aria-hidden="true">' + '<div class="records-loading-row"><i class="skeleton-line skeleton-record-title"></i><i class="skeleton-line skeleton-record-meta"></i></div>'.repeat(4) + '</div>';
+                host.before(skeleton);
+              }
+              if (skeleton) skeleton.hidden = !show;
+              host.classList.toggle("has-loading-placeholder",show);
+              host.setAttribute("aria-busy",String(show));
+            }
+          }
         }
 // Project context service. All application dependencies enter through this factory.
 // getRuntime/getState always read the current instance, including after account changes.
@@ -11622,7 +11751,7 @@ function createStateController({
   getState, guardFutureSchemaWrite, isFutureSchemaState, logger,
   maybeWarnLocalStorageBudget, normalizeState, noteLocalSharedMutation, notifyError,
   pushUndoCheckpoint, queueSharedSave, renderRecoveryPoints, renderThemeControls,
-  requestRender, saveLocalOnly, serializedByteLength, setState,
+  requestRender, saveLocalOnly, serializedByteLength, setState, onPersistenceFailure = () => false,
   storageSet, updateHistoryUI, validateStateIntegrity, valuesEqual,
 }) {
   let lastPersistedState;
@@ -11737,7 +11866,7 @@ function createStateController({
       renderThemeControls();
       requestRender("all");
       logger.warn("변경 사항을 저장하지 못해 마지막 저장 상태로 되돌렸습니다.");
-      notifyError("저장하지 못해 변경을 되돌렸어요. 브라우저 저장 공간이 부족하거나 저장이 차단되어 있을 수 있어요."
+      if (!onPersistenceFailure()) notifyError("저장하지 못해 변경을 되돌렸어요. 브라우저 저장 공간이 부족하거나 저장이 차단되어 있을 수 있어요."
         + ($(DOM_IDS.modal)?.classList.contains("open") ? " 입력 내용은 유지돼요. 저장 공간과 브라우저 설정을 확인한 뒤 다시 저장해주세요." : ""));
       return false;
     }
@@ -12908,6 +13037,7 @@ const stateController = createStateController({
   normalizeState: (...args) => normalizeState(...args),
   noteLocalSharedMutation: (...args) => noteLocalSharedMutation(...args),
   notifyError: (...args) => notifyError(...args),
+  onPersistenceFailure: () => presentFormSaveFailure(),
   pushUndoCheckpoint: (...args) => pushUndoCheckpoint(...args),
   queueSharedSave: (...args) => queueSharedSave(...args),
   renderRecoveryPoints: (...args) => renderRecoveryPoints(...args),
@@ -13259,6 +13389,7 @@ const modalController = createModalController({
         document.addEventListener("visibilitychange", handleVisibilityChange);
         // pagehide/visibilitychange 의 flush 가 대기 저장을 동기적으로 기록하므로 beforeunload 리스너는 두지 않습니다(bfcache 호환).
         window.addEventListener("online", () => {
+          renderConnectionStates();
           if (!sharedSync.client) {
             void sharedConnect({ silent: true });
             return;
@@ -13273,6 +13404,7 @@ const modalController = createModalController({
         });
         window.addEventListener("offline", () => {
           if (sharedSync.projectId) setSharedPhase("offline");
+          renderConnectionStates();
         });
         deepFreeze(Planner);
         Object.defineProperty(window, "Planner", {
