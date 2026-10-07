@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v570 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v571 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-PFDYVS2EPnMEfL5P/Elwqka8bXHurelASIuBRVvDaVE=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-+wblzxLkRyvWfCE5/gSf+RWWL2VmwAmZ1pexgctFk98='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-dz7Ndu0DxnRlKRtFFKcCluOK8AolAUq+IVpXd2JNd6s=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-y/PcUcCv9EYcoF7X6QpMMQyVcs1k2IGRbASY4RRiVfY='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -1177,6 +1177,12 @@ body.modal-open .tab-bar{pointer-events:none;}
 [data-settings-slot="backup"] .settings-note{font-size:12px;line-height:1.6;color:var(--muted);margin:12px 15px;}
 
 [data-settings-slot="theme"] .disclosure>summary{min-height:50px;}[data-settings-slot="history"] .action-row>.btn,[data-settings-slot="recovery"] .action-row>.btn{min-height:50px;}
+
+
+.collection-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px;min-height:44px;}
+.collection-section-heading .budget-section-title{margin:0;}
+.collection-heading-action{background:none;border:0;color:var(--accent);font-size:13px;font-weight:400;min-height:44px;padding:10px 0;white-space:nowrap;}
+
 /* MetricSummary: shared overview typography and progress rhythm. */
 .metric-summary { min-width: 0; display: flex; flex-direction: column; flex: 1 1 auto; }
 .metric-values { display: grid; gap: var(--space-1); min-width: 0; }
@@ -1756,6 +1762,13 @@ body.modal-open .tab-bar{pointer-events:none;}
 .modal-note:has(>strong){padding:16px;margin:0 0 18px;border-radius:14px;background:var(--card);color:var(--muted);font-size:14px;line-height:1.7;}.modal-note>strong{display:block;font-size:16px;color:var(--ink);margin-bottom:6px;}
 
 .modal-content:has(#syncDeletePasswordModal,#syncLeavePasswordModal){padding-bottom:0;}.modal-frame:has(#syncDeletePasswordModal,#syncLeavePasswordModal) .modal-footer{padding:0 20px 32px;}
+
+/* Collection editors keep actions visible while the form scrolls. */
+.modal-frame--editor .modal-header{grid-template-columns:44px minmax(0,1fr) 44px;}
+.modal-frame--editor .modal-header>.icon-control{position:relative;inset:auto;justify-self:end;}
+.modal-frame--editor .modal-footer{background:var(--bg);border-top:1px solid var(--line);padding:14px 20px 20px;}
+.modal-frame--editor .modal-content{padding-bottom:24px;}
+
       /* ===== v384 grouped/form refinement ===== */
       .form-field {
         display: grid;
@@ -2048,11 +2061,16 @@ body.modal-open .tab-bar{pointer-events:none;}
 .modal [data-settings-slot="theme"] .theme-radius-value{grid-column:2;grid-row:1;font-size:13px;}
 .modal [data-settings-slot="theme"] .theme-choice[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
 .sheet-options.status-options{display:block;}.sheet-options.status-options>button{min-height:50px;padding:13px 16px;}.sheet-options.status-options>button[aria-pressed="true"]{color:var(--accent);font-weight:600;}
-.modal-copy:has(.budget-order-toggle){display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;}.modal-copy:has(.budget-order-toggle) .modal-title{min-width:0;}
-.budget-order-toggle{display:flex;align-items:center;justify-content:center;gap:3px;min-width:44px;height:44px;padding:0 4px;border:0;background:none;color:var(--accent);font-size:12px;white-space:nowrap;}.budget-order-toggle .ui-icon{width:15px;height:15px;}
-.budget-order-panel{background:var(--card);border-radius:15px;margin-bottom:20px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);}
-.budget-order-panel>div{display:flex;gap:8px;}.budget-order-panel button{min-height:44px;min-width:60px;border:0;border-radius:9px;background:var(--ui-tint);color:var(--accent);font-size:14px;padding:8px 10px;}
-@media(max-width:360px){.modal-copy:has(.budget-order-toggle){gap:0;}.budget-order-toggle span{display:none;}}
+
+
+.entity-edit-button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:transparent;color:var(--muted);}
+.entity-edit-button .ui-icon{width:22px;height:22px;stroke-width:2.4;}
+.item-order-controls{position:relative;z-index:1;display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;}
+.item-order-controls>button{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:var(--bg);color:var(--accent);}
+.item-order-controls>button .ui-icon{width:18px;height:18px;}
+.item-order-controls>button:disabled{opacity:.28;cursor:default;}
+.entity-edit-button:focus-visible,.item-order-controls>button:focus-visible{outline:2px solid var(--focus-outline);outline-offset:2px;}
+@media(hover:hover){.entity-edit-button:hover,.item-order-controls>button:not(:disabled):hover{background:var(--row-hover);}}
 /* ===== 04 COMPONENT VARIANTS — explicit semantic overrides ===== */
       /* Surface / status variants */
 
@@ -2732,6 +2750,12 @@ body.modal-open .tab-bar{pointer-events:none;}
 .modal [data-settings-slot="project"] [data-action="shared-copy-code"]{border:0;background:var(--ui-tint);color:var(--accent);border-radius:8px;font-size:13px;padding:8px 11px;min-height:44px;}
 .modal [data-settings-slot="theme"] .disclosure .action-row{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px;}
 .recovery-detail-actions{display:grid;gap:10px;}.recovery-detail-actions>.btn--danger-quiet{color:var(--danger-ink);}
+
+
+.modal-frame--editor .action-row--sheet-dialog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.modal-frame--editor .action-row--sheet-dialog:has(.btn--danger-quiet){grid-template-columns:repeat(3,minmax(0,1fr));}
+.modal-frame--editor .modal-footer .btn{width:100%;min-width:0;--btn-height:50px;--btn-font-size:15px;--btn-padding:0 8px;--btn-radius:12px;}
+.modal-frame--editor .modal-footer .btn--primary{--btn-bg:var(--accent);--btn-color:var(--accent-contrast);--btn-border:0;}
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
       .calendar-grid {
@@ -3049,6 +3073,17 @@ h1.title { margin: 0; }
 
 
 .plan-label{display:inline;line-height:1.5;margin:0;}.plan-text{margin-top:5px;}.plan-discussion{gap:18px;}
+
+
+.plan-status-control{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.budget-line{display:grid;gap:5px;padding:18px 17px;}
+.budget-line>.budget-open{position:static;padding:0;}
+.budget-open::after{content:"";position:absolute;inset:0;}
+.budget-detail-row{align-items:center;}
+.budget-detail-row .budget-planned{flex:1 1 120px;}
+.budget-line.is-over .budget-progress::-webkit-progress-value{background:var(--danger);}
+.budget-line.is-over .budget-progress::-moz-progress-bar{background:var(--danger);}
+
       .event-leading {
         width: 100%;
         min-width: 0;
@@ -3098,6 +3133,14 @@ h1.title { margin: 0; }
 
 /* v568 — measured against the supplied prototype. */
 .event-detail-button{border:0;background:none;color:var(--muted);width:44px;height:44px;display:grid;place-items:center;margin-right:-8px;}.event-detail-button .ui-icon{width:20px;height:20px;}
+
+
+.schedule-all-view .collection-toolbar{gap:8px;margin:0 0 12px;}
+.schedule-filter-line{display:flex;align-items:center;min-height:44px;}
+.schedule-period-button{display:inline-flex;align-items:center;gap:6px;min-height:44px;border:0;background:transparent;padding:6px 0;color:var(--muted);font-size:13px;}
+.schedule-period-button .ui-icon{width:12px;height:12px;}
+.schedule-all-view .event-list-host{background:var(--card);border-radius:var(--radius-surface);overflow:hidden;}
+
       .task-check {
         position: relative;
         width: var(--task-check-size);
@@ -3637,12 +3680,7 @@ h1.title { margin: 0; }
               </div>
             </div>
             <!-- ===== SCHEDULE: ALL EVENTS ===== -->
-            <div data-ui-component="Card" class="card" data-schedule-view="all" hidden>
-              <div data-ui-component="CardHeader" class="card-header">
-                <div class="card-header-copy">
-                  <h3 class="card-title">전체 일정 목록</h3>
-                </div>
-              </div>
+            <div class="schedule-all-view" data-schedule-view="all" hidden>
               <div data-ui-component="CardBody" class="card-body">
                 <div class="collection-toolbar">
                   <div class="field-shell field-shell--search">
@@ -3674,7 +3712,7 @@ h1.title { margin: 0; }
               <div data-ui-static="MetricSummary" data-title="지금까지 사용한 금액" data-value-dom="totalActual" data-detail-dom="totalPlan" data-bar-dom="budgetBar" data-footer-dom="budgetPctBig" data-money="true" data-balance-dom="overBudget"></div>
             </div>
             <!-- ===== BUDGET: ITEMS ===== -->
-            <div class="collection-section"><h2 class="budget-section-title">항목별 지출</h2>
+            <div class="collection-section"><div class="collection-section-heading"><h2 class="budget-section-title">항목별 지출</h2><button type="button" class="collection-heading-action" data-action="toggle-budget-order" aria-pressed="false">순서 변경</button></div>
               <div data-ui-component="CardBody" class="card-body">
                 <div data-ui-component="InnerCard" class="inner-card inner-card--stacked-list budget-card-list" data-collection="budget"></div>
               </div>
@@ -4090,7 +4128,7 @@ h1.title { margin: 0; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "570",
+          version: "571",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4891,8 +4929,7 @@ h1.title { margin: 0; }
             choices: [[TASK_STATUS_FILTER.OPEN,"미완료"],[TASK_STATUS_FILTER.ALL,"전체"],[TASK_STATUS_FILTER.DONE,"완료"]]});
         }
         function SchedulePeriodSegments() {
-          return FilterSegments({dom: "schedulePeriodControl", label: "일정 기간 필터", action: "schedule-period", valueKey: "period",
-            choices: [["all","전체"],["upcoming","다가오는"],["past","지난"]]});
+          return `<div class="schedule-filter-line"><button type="button" class="schedule-period-button" data-dom="schedulePeriodControl" data-action="open-schedule-period" aria-haspopup="dialog">전체 기간${Icon("chevronDown")}</button></div>`;
         }
         function mountStaticUiComponents() {
           document.querySelectorAll('span[data-ui-icon]').forEach(host => {
@@ -4980,6 +5017,14 @@ h1.title { margin: 0; }
           return items?.length ? items.map((item, index) => renderer(item, index, items.length)).join("")
             : emptyMessage ? EmptyState(emptyMessage, emptyAction, emptyVariant, emptyTitle) : "";
         }
+
+        function EntityEditButton(type, id, label) {
+          return `<button type="button" class="entity-edit-button" data-action="edit-${attr(type)}" data-id="${attr(id)}" aria-label="${attr(label)} 수정">${Icon("more")}</button>`;
+        }
+        function ItemOrderControls(type, id, index, total, label) {
+          return `<span class="item-order-controls">${[[-1,"up","위로",index <= 0],[1,"down","아래로",index >= total - 1]].map(([delta,icon,text,disabled]) =>
+            `<button${htmlAttributes({type:"button", "data-action":`move-${type}`, "data-id":id, "data-delta":delta, disabled, "aria-label":`${label} ${text} 이동`})}>${Icon(icon)}</button>`).join("")}</span>`;
+        }
         const MORE_MENU_VARIANTS = Object.freeze(["default", "bare", "quiet"]);
         let moreMenuInstanceSequence = 0;
         function nextMoreMenuPopupId(type, id) {
@@ -5023,7 +5068,12 @@ h1.title { margin: 0; }
         function ModalCloseButton() {
           return `<button type="button" class="icon-control icon-control--modal-close" data-action="close-modal" aria-label="닫기" title="닫기">${Icon("close")}</button>`;
         }
-        function ModalFrame(title, content, actions = "", description = "", headerAction = "") {
+        function ModalFrame(title, content, actions = "", description = "", headerAction = "", footerActions = false) {
+          if (footerActions) return `<div class="modal-frame modal-frame--editor">
+            <div class="modal-header"><span></span><div class="modal-copy"><h2 id="${attr(DOM_IDS.modalTitle)}" tabindex="-1" class="modal-title">${esc(title)}</h2></div>${ModalCloseButton()}</div>
+            <div class="modal-content">${description ? `<div class="modal-description">${esc(description)}</div>` : ""}${content}</div>
+            <div class="modal-footer">${actions}</div>
+          </div>`;
           const save = [...actions.matchAll(/<button[\s\S]*?<\/button>/g)].find(([html]) => /data-action="(?:save-|shared-submit-password-change)/.test(html))?.[0] || "";
           const footer = actions.replace(save, "").replace(/<button[^>]*data-action="close-modal"[\s\S]*?<\/button>/g, "");
           const hasFooter = /<button/.test(footer);
@@ -5054,7 +5104,7 @@ h1.title { margin: 0; }
           flush();
           const note = fields.some(f => f.id === "mText") ? '<p class="form-caption">제목과 본문 합계 5,000자까지</p>'
             : fields.some(f => f.type === "money") ? '<p class="form-caption">금액은 원 단위로 입력해 주세요.</p>' : "";
-          return ModalFrame(title, (actions.extra || "") + Form(blocks.join("") + note, "modal"), ModalActions(actions), actions.description || "", actions.headerAction || "");
+          return ModalFrame(title, (actions.extra || "") + Form(blocks.join("") + note, "modal"), ModalActions(actions), actions.description || "", actions.headerAction || "", !!actions.footerActions);
         }
 
 /* v568 — measured against the supplied prototype. */
@@ -5086,23 +5136,6 @@ h1.title { margin: 0; }
 
 
 /* v569 — complete settings states and ordering controls. */
-
-        function BudgetOrderButton(id) {
-          return `<button type="button" class="budget-order-toggle" data-action="toggle-budget-order" data-id="${attr(id)}" aria-expanded="false" aria-controls="budgetOrderPanel" aria-label="예산 항목 순서">${Icon("filter")}<span>순서</span></button>`;
-        }
-        function BudgetOrderPanel(id) {
-          return `<div id="budgetOrderPanel" class="budget-order-panel" hidden><span>항목 순서</span><div><button type="button" data-action="move-budget" data-id="${attr(id)}" data-delta="-1" aria-label="예산 항목 위로 이동">↑ 위로</button><button type="button" data-action="move-budget" data-id="${attr(id)}" data-delta="1" aria-label="예산 항목 아래로 이동">↓ 아래로</button></div></div>`;
-        }
-        function refreshBudgetOrderControls(id) {
-          const list = getCollection(COLLECTION_SCHEMAS.budget.stateKey), index = list.findIndex(item => sameId(item, id));
-          document.querySelectorAll('#budgetOrderPanel [data-action="move-budget"]').forEach(button => {
-            const next = index + Number(button.dataset.delta);button.disabled = index < 0 || next < 0 || next >= list.length;
-          });
-        }
-        function toggleBudgetOrder(button) {
-          const panel = document.getElementById("budgetOrderPanel");if (!panel) return false;
-          panel.hidden = !panel.hidden;button.setAttribute("aria-expanded", String(!panel.hidden));refreshBudgetOrderControls(button.dataset.id);return true;
-        }
 // ===== 03 COLLECTION / FORM / PAGE / ACTION / DOM REGISTRIES =====
         // Edit COLLECTION_SCHEMAS, not its derived FORM_SCHEMAS/CRUD actions. Fields own storage + form rules.
         // Static HTML uses symbolic data-dom anchors; DOM_AREAS owns physical IDs and area ownership.
@@ -5167,7 +5200,7 @@ h1.title { margin: 0; }
               { key: "date", id: "eDate", label: "날짜", type: "date", initial: () => selectedScheduleDate,
                 invalid: "날짜가 올바른 날짜인지 확인해주세요." },
               { key: "time", id: "eTime", layout: "half", label: "시작 시간", type: "time", clearable: true },
-              { key: "endTime", id: "eEndTime", layout: "half", label: "종료 시간 (선택)", type: "time", clearable: true,
+              { key: "endTime", id: "eEndTime", layout: "half", label: "종료 시간", type: "time", clearable: true,
                 validate: (value, item) => value && !item.time ? "종료 시간을 지정하려면 시작 시간도 입력해주세요." : "" },
               { key: "location", id: "eLocation", label: "장소", maxLength: 500, placeholder: "예: 강남 ○○식당" },
               { key: "note", id: "eNote", label: "메모 · 선택", type: "textarea", maxLength: 2000,
@@ -5251,6 +5284,7 @@ h1.title { margin: 0; }
         const MODAL_RENDERERS = Object.freeze({
           "recovery-detail": renderRecoveryDetail,
           "filter-select": renderFilterSelectModal,
+          "schedule-period": renderSchedulePeriodModal,
             "entity-menu": renderEntityMenuModal,
             "settings-panel": renderSettingsPanelModal,
           "home-preferences": renderHomePreferencesModal,
@@ -5294,7 +5328,7 @@ h1.title { margin: 0; }
             "open-modal": onClick((el) => openModal(el.dataset.modal)),
             "settings-panel": onClick((el) => openSettingsRow(el.dataset.settingsKey)),
             "schedule-view": onClick((el) => setScheduleView(el.dataset.view)),
-            "read-memo": onClick((el) => openModal("memo-reader", el.dataset.id)),
+            "read-memo": onClick((el) => Collection.edit("memo", el.dataset.id)),
             "plan-status": onClick((el) => openModal("plan-status", el.dataset.id)),
             "choose-plan-status": onClick((el) => { if (updatePlan(el.dataset.id, el.dataset.status)) closeModal(); }),
             "close-modal": onClick(() => requestCloseModal()),
@@ -5316,6 +5350,8 @@ h1.title { margin: 0; }
             "toggle-task": onClick((el) => toggleTask(el.dataset.id)),
           },
           Schedule: {
+            "open-schedule-period": onClick(() => openModal("schedule-period")),
+            "choose-schedule-period": onClick(el => { if (selectSchedulePeriod(el.dataset.period)) closeModal(); }),
             "schedule-period": onClick((el) => selectSchedulePeriod(el.dataset.period)),
             "schedule-search": onInput(() => requestRenderDebounced("schedule")),
             "calendar-month": onClick((el) => changeCalendarMonth(Number(el.dataset.delta || 0))),
@@ -5747,8 +5783,7 @@ function createCollectionService({
             if (!result) return null;
             const schema = this.schema(name);
             const previous = getModalPreviousFocus();
-            const hostName = previous?.matches?.(".more-menu-trigger")
-              ? previous.closest("[data-dom], [data-collection]")?.id : null;
+            const hostName = previous?.closest?.("[data-dom], [data-collection]")?.id;
             closeModal({ restoreFocus: false });
             schema.afterSave?.(result.item);
             const generation = getModalGeneration(), pageId = getActivePageId();
@@ -5756,7 +5791,7 @@ function createCollectionService({
               if (getModalGeneration() !== generation || getActivePageId() !== pageId) return;
               const root = ownedElement("pages", pageId);
               const list = $(hostName || schema.target);
-              const selector = `.more-menu[data-item-collection="${CSS.escape(name)}"][data-item-id="${CSS.escape(String(result.item.id))}"] > .more-menu-trigger`;
+              const selector = `[data-action="edit-${CSS.escape(name)}"][data-id="${CSS.escape(String(result.item.id))}"]`;
               const isShown = element => !!element?.getClientRects().length;
               const inList = list?.querySelector(selector);
               const target = isShown(inList) ? inList : [...(root?.querySelectorAll(selector) || [])].find(isShown);
@@ -5803,10 +5838,14 @@ function createCollectionService({
             return committed;
           },
           move(...args) {
+            const focused = document.activeElement;
             const moved = collectionService.move(...args);
-            if (moved && args[0] === "budget") {
-              refreshBudgetOrderControls(args[1]);
-            }
+            if (moved && focused?.dataset?.action === `move-${args[0]}`) queueMicrotask(() => {
+              const selector = `[data-action="move-${CSS.escape(args[0])}"][data-id="${CSS.escape(String(args[1]))}"]`;
+              const controls = [...document.querySelectorAll(selector)].filter(el => el.getClientRects().length);
+              const target = controls.find(el => el.dataset.delta === String(args[2]) && !el.disabled) || controls.find(el => !el.disabled);
+              target?.focus({preventScroll:true});
+            });
             return moved;
           },
           update(...args) { return collectionService.update(...args); },
@@ -5882,8 +5921,7 @@ function createCollectionService({
           return FormModal(`${form.title} ${item ? "수정" : "추가"}`, form.fields, item && form.decode ? form.decode(item) : item, {
             saveAction: schema.saveAction || `save-${name}`, saveId: item ? item.id : "null",
             deleteAction: item && schema.deleteInModal ? `delete-${name}` : null, deleteId: item?.id,
-            headerAction: name === "budget" && item ? BudgetOrderButton(item.id) : "",
-            extra: name === "budget" && item ? BudgetOrderPanel(item.id) : "",
+            footerActions: true,
           });
         }
         function getCollectionFrom(source, key) {
@@ -7125,7 +7163,7 @@ function createDerivedViewService({
             metaItems,
             title: esc(item.title),
             note: "",
-            actions: showActions ? MoreMenu(COLLECTION_SCHEMAS.task.label, item.id, "task", { variant: "quiet" }) : "",
+            actions: showActions ? EntityEditButton("task", item.id, item.title) : "",
             classes: ["task", done ? "done" : "", item.priority === "높음" && !done ? "is-priority" : ""],
           });
         }
@@ -7304,7 +7342,7 @@ function createDerivedViewService({
               </time>`
             : "";
         }
-        function EventItem(e, { today = null, showActions = true, leadingMode = "date", showNote = true } = {}) {
+        function EventItem(e, { today = null, showActions = true, leadingMode = "date", showNote = false } = {}) {
           const ed = parseLocalDate(e.date);
           const isToday = today instanceof Date && ed.getTime() === today.getTime();
           const leading = EventLeading(e, leadingMode);
@@ -7409,18 +7447,14 @@ function createDerivedViewService({
             Collection.html("event", selectedEvents, {
               today: v.today, leadingMode: "date", showNote: false, emptyMessage: "선택한 날짜에 일정이 없어요.",
               hostVariant: "stacked-list", emptyAction: Button("일정 추가", {action:"open-modal", variant:"tertiary", attributes:{"data-modal":"event"}}),
-            }) + selectedEvents.filter(e => e.note).map(e => `<p class="selected-event-note">${esc(e.note)}</p>`).join(""),
+            }),
           );
 
           renderScheduleAllList(v);
         }
         function renderScheduleAllList(v = getViewData()) {
           const filter = selectedValue("scheduleFilter", "all");
-          renderFilterSegments("schedule", DOM_IDS.schedulePeriodControl, "period", filter, {
-            all: v.sortedEvents.length,
-            upcoming: v.upcomingEvents.length,
-            past: v.sortedEvents.filter(e => parseLocalDate(e.date) < v.today).length,
-          });
+          setOwnedHTML("schedule", DOM_IDS.schedulePeriodControl, `${esc(SCHEDULE_PERIOD_LABELS[filter] || SCHEDULE_PERIOD_LABELS.all)}${Icon("chevronDown")}`);
           const searchLabel = selectedValue("scheduleAllSearch").trim();
           const search = searchLabel.toLowerCase();
           let allEvents = v.sortedEvents;
@@ -7465,6 +7499,13 @@ function createDerivedViewService({
           return true;
         }
 
+
+        const SCHEDULE_PERIOD_LABELS = Object.freeze({all:"전체 기간", upcoming:"다가오는 일정", past:"지난 일정"});
+        function renderSchedulePeriodModal() {
+          const selected = selectedValue("scheduleFilter", "all");
+          return ModalFrame("일정 기간", `<div class="sheet-options">${Object.entries(SCHEDULE_PERIOD_LABELS).map(([value,label]) =>
+            `<button type="button" data-action="choose-schedule-period" data-period="${attr(value)}" aria-pressed="${selected === value}"><span>${esc(label)}</span>${selected === value ? Icon("check") : ""}</button>`).join("")}</div>`);
+        }
         // ===== 05 DOMAIN / Budget and Plans =====
         function buildBudgetViewData(budgets) {
           let budgetPlan = 0,
@@ -7480,6 +7521,7 @@ function createDerivedViewService({
             budgetPct: budgetPlan ? Math.round((budgetActual / budgetPlan) * 100) : 0,
           };
         }
+        let budgetOrdering = false;
         function BudgetCard(item, index, total) {
           const actions = "";
           const planned = Number(item.planned || 0), actual = Number(item.actual || 0);
@@ -7488,12 +7530,12 @@ function createDerivedViewService({
             : actual < 0 ? "환급 반영" : planned === 0 && actual === 0 ? "지출 전"
             : actual === planned ? "예산 내 사용 완료" : "상세 보기";
           const pct = planned > 0 ? Math.min(100, Math.max(0, actual / planned * 100)) : (actual > 0 ? 100 : 0);
-          return UIComponentRoot("BudgetCard", "card card--item budget-line", `
+          return UIComponentRoot("BudgetCard", `card card--item budget-line${over > 0 ? " is-over" : ""}`, `
             <button type="button" class="budget-open" data-action="edit-budget" data-id="${attr(item.id)}" aria-label="${attr(item.name)} 상세 및 수정">
               <span class="budget-main"><span class="budget-name">${esc(item.name)}</span><span class="budget-actual">${MetricAmount(actual)}</span></span>
-              <span class="budget-detail-row"><span class="budget-planned">예상 ${esc(won(planned))}</span><span class="budget-status${over > 0 ? " is-over" : ""}">${esc(budgetStatus)}</span></span>
-              <progress class="budget-progress" value="${pct}" max="100" aria-label="${attr(item.name)} 예산 사용률"></progress>
-            </button>`);
+            </button>
+            <div class="budget-detail-row"><span class="budget-planned">예상 ${esc(won(planned))}</span>${budgetOrdering ? ItemOrderControls("budget", item.id, index, total, item.name) : `<span class="budget-status${over > 0 ? " is-over" : ""}">${esc(budgetStatus)}</span>`}</div>
+            <progress class="budget-progress" value="${pct}" max="100" aria-label="${attr(item.name)} 예산 사용률"></progress>`);
         }
         function cleanMoneyInput(value) {
           return String(value ?? "").replace(/[,\s₩￦]/g, "").replace(/원$/, "");
@@ -7549,14 +7591,14 @@ function createDerivedViewService({
         }
         function PlanCard(item, index, total) {
           const status = Button(item.status, {action:"plan-status", id:item.id, variant:"tertiary", icon:"chevronDown", attributes:{"aria-label":`${item.name} 상태: ${item.status}`}});
-          const actions = SortableCardActions(item.id, index, total, "plan", COLLECTION_SCHEMAS.plan.label);
+          const actions = EntityEditButton("plan", item.id, item.name);
           const blocks = COLLECTION_SCHEMAS.plan.fields.filter(field => field.display === "block").map(({ key, label }) =>
             key === "note" && !String(item[key] || "").trim()
               ? `<div class="plan-text is-empty">논의한 내용을 여기에 남길 수 있어요.</div>`
               : `<div class="plan-block${key === "note" ? " plan-block--decision" : ""}"><div class="plan-label">${key === "note" && item.status === "합의 완료" ? "합의한 내용" : label}</div><div class="plan-text${item[key] ? "" : " is-empty"}">${esc(item[key] || (key === "details" ? "함께 이야기할 내용을 적어보세요." : "이야기한 내용을 정리해보세요."))}</div></div>`
           ).join("");
           const titleControl = `<label class="field-shell field-shell--header-select">${status}</label>`;
-          return UIComponentRoot("PlanCard", "card card--item plan", CardHeader(item.name, "", actions, "flush") + `<div class="plan-status-control">${titleControl}</div>` + `<div class="plan-discussion">${blocks}</div>`);
+          return UIComponentRoot("PlanCard", "card card--item plan", CardHeader(item.name, "", actions, "flush") + `<div class="plan-status-control">${titleControl}${ItemOrderControls("plan", item.id, index, total, item.name)}</div>` + `<div class="plan-discussion">${blocks}</div>`);
         }
 
 
@@ -7567,6 +7609,14 @@ function createDerivedViewService({
           return ModalFrame("계획 상태", `<p class="settings-panel-description">${esc(item.name)}</p><div class="sheet-options status-options">${PLAN_STATUSES.map(status => `<button type="button" data-action="choose-plan-status" data-id="${attr(item.id)}" data-status="${attr(status)}" aria-pressed="${status === item.status}"><span>${esc(status)}</span>${status === item.status ? Icon("check") : ""}</button>`).join("")}</div>`);
         }
 
+
+        function toggleBudgetOrder(button) {
+          budgetOrdering = !budgetOrdering;
+          button.setAttribute("aria-pressed", String(budgetOrdering));
+          button.textContent = budgetOrdering ? "완료" : "순서 변경";
+          requestRender("budget");
+          return true;
+        }
         // ===== 05 DOMAIN / Memos =====
         function memoFormData(item) {
           const [, title, separator = "", storedBody] = /^([^\r\n]*)(\r?\n|\r)?([\s\S]*)$/.exec(String(item.text || ""));
@@ -7585,7 +7635,7 @@ function createDerivedViewService({
           const { title, body } = memoFormData(m);
           return UIComponentRoot("MemoCard", "card card--item memo-item",
             CardHeader(title || "메모", "", "", "flush") +
-            (body ? CardBody(`<div class="memo-body">${esc(body)}</div>`) : "") + `<button type="button" class="memo-open" data-action="read-memo" data-id="${attr(m.id)}" aria-label="${attr(title || "메모")} 전체 읽기"></button>`);
+            (body ? CardBody(`<div class="memo-body">${esc(body)}</div>`) : "") + `<button type="button" class="memo-open" data-action="edit-memo" data-id="${attr(m.id)}" aria-label="${attr(title || "메모")} 수정"></button>`);
         }
         function renderMemos(view = getViewData()) {
           const queryLabel = selectedValue("memoSearch").trim();
