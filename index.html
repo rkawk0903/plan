@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v572 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v573 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-BYmZM0GfkZekKQ0pfkHJSaDGvBY50Rdh7HDBji19s94=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-Y/C0w3bt/5z3wPF8e4ww2LrbDMYjohbG+KwIoVYDhjw='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-6UdrYzF+cBAUH8/7LEi+0QDTmhefNdlaStUtFkK2Bno=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-oq244+JWF71tOY5mK5SEvCPyP1rkynqCpOp9oYgrAVs='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -372,6 +372,16 @@
 
 /* v568 — measured against the supplied prototype. */
 :root{--modal-max-width:520px;--modal-overlay-bg:rgba(25,24,22,.3);--confirm-overlay-bg:rgba(25,24,22,.3);}
+
+/* Floating creation action shares the mobile navigation's actual height. */
+:root {
+  --floating-add-size: 56px;
+  --floating-add-bottom: calc(54px + max(10px, env(safe-area-inset-bottom, 0px)) + 16px);
+  --floating-add-right: max(20px, env(safe-area-inset-right, 0px));
+}
+@media (min-width: 900px) {
+  :root { --floating-add-bottom: max(28px, env(safe-area-inset-bottom, 0px)); --floating-add-right: max(28px, env(safe-area-inset-right, 0px)); }
+}
 @font-face {
   font-family: 'Pretendard Variable';
   src: url('fonts/PretendardVariable.woff2') format('woff2');
@@ -470,6 +480,12 @@ body.modal-open .tab-bar{pointer-events:none;}
 .tab-bar{padding:4px max(8px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-bottom));}.nav .ui-icon{width:22px;height:22px;stroke-width:1.7;}
 @media(min-width:900px){.tab-bar{width:188px;padding:26px 12px;}.sidebar-brand{font-size:15px;margin:4px 12px 28px;}.nav{gap:4px;}.nav .ui-icon{width:19px;height:19px;}}
 
+
+/* v573: navigation floats directly over the page. */
+@media (max-width: 899px) {
+  .tab-bar { background: transparent; border-top: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .nav .ui-icon { filter: drop-shadow(0 1px 2px var(--bg)); }
+}
       .card {
         min-width: 0;
         /* Every top-level Card shares one exact surface. Domain emphasis belongs inside the card. */
@@ -1194,6 +1210,15 @@ body.modal-open .tab-bar{pointer-events:none;}
 .collection-section-heading .budget-section-title{margin:0;}
 .collection-heading-action{background:none;border:0;color:var(--accent);font-size:13px;font-weight:400;min-height:44px;padding:10px 0;white-space:nowrap;}
 
+
+/* v573 — whole-app optical and reading refinements. */
+.page-heading h2 { line-height: 1.25; letter-spacing: -.045em; }
+.page-heading p { letter-spacing: -.02em; }
+.settings-row-title, .settings-row-description, .settings-panel-description, .card-description { word-break: keep-all; overflow-wrap: anywhere; }
+.settings-row-copy { min-width: 0; }
+.settings-row-icon { flex-shrink: 0; }
+.settings-link, .settings-row > summary { column-gap: 12px; }
+.settings-link:focus-visible, .settings-row > summary:focus-visible { outline-offset: -3px; }
 /* MetricSummary: shared overview typography and progress rhythm. */
 .metric-summary { min-width: 0; display: flex; flex-direction: column; flex: 1 1 auto; }
 .metric-values { display: grid; gap: var(--space-1); min-width: 0; }
@@ -1790,6 +1815,14 @@ body.modal-open .tab-bar{pointer-events:none;}
 .confirm-card .action-row>.btn::after{inset:0;}
 .form-save-error{color:var(--muted);font-size:13px;line-height:1.75;margin:0 0 20px;outline:none;}
 
+
+
+/* v573 — whole-app optical and reading refinements. */
+.modal-description, .modal-note, .confirm-message, .toast-message { word-break: keep-all; overflow-wrap: anywhere; }
+.modal-title { letter-spacing: -.025em; line-height: 1.45; }
+.confirm-card h2 { letter-spacing: -.025em; line-height: 1.5; }
+.modal-content { overscroll-behavior: contain; }
+.modal-content:has(textarea) { scroll-padding-block: 20px; }
       /* ===== v384 grouped/form refinement ===== */
       .form-field {
         display: grid;
@@ -2799,6 +2832,53 @@ body.modal-open .tab-bar{pointer-events:none;}
 .form--modal .danger-password .field{width:100%;min-height:30px;font-size:15px;}
 .modal-frame--editor.is-save-error .action-row--sheet-dialog{grid-template-columns:minmax(0,1fr);}
 .modal-frame--editor.is-save-error .modal-footer .btn:not(.btn--primary){display:none;}
+
+/* v573: one creation action, anchored above the bottom navigation. */
+.btn--floating-add {
+  --btn-width: var(--floating-add-size);
+  --btn-height: var(--floating-add-size);
+  --btn-padding: 0;
+  --btn-radius: 50%;
+  --btn-corner-shape: round;
+  --btn-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 22%, transparent), 0 1px 3px #00000014;
+  --btn-hover-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 28%, transparent), 0 2px 4px #00000014;
+  --btn-active-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 20%, transparent);
+  position: fixed;
+  right: var(--floating-add-right);
+  bottom: var(--floating-add-bottom);
+  z-index: var(--layer-nav);
+  margin: 0;
+  transition: transform var(--motion-feedback) var(--ease-interaction), box-shadow var(--motion-feedback) var(--ease-interaction), background-color var(--motion-fast) linear;
+}
+.btn--floating-add .ui-icon { width: 26px; height: 26px; stroke-width: 1.8; }
+.btn--floating-add > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.btn--floating-add::after { inset: 0; border-radius: 50%; }
+.btn--floating-add:active { transform: scale(.94); }
+body.modal-open .btn--floating-add { visibility: hidden; pointer-events: none; }
+@media (hover: hover) and (pointer: fine) {
+  .btn--floating-add:hover { transform: translateY(-2px); }
+  .btn--floating-add:active { transform: scale(.94); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn--floating-add, .btn--floating-add:hover, .btn--floating-add:active { transition: none; transform: none; }
+}
+
+/* The last record can scroll fully above the floating creation action. */
+.app:has(.page.active > .btn--floating-add) { padding-bottom: calc(var(--floating-add-bottom) + var(--floating-add-size) + 24px); }
+html:has(.page.active > .btn--floating-add) { scroll-padding-bottom: calc(var(--floating-add-bottom) + var(--floating-add-size) + 24px); }
+
+/* Keep transient feedback clear of the floating action on narrow screens. */
+@media (max-width: 899px) {
+  body:not(.modal-open):has(.page.active > .btn--floating-add) .toast-stack { bottom: calc(var(--floating-add-bottom) + var(--floating-add-size) + 12px); }
+}
+
+/* v573 — whole-app optical and reading refinements. */
+.form--modal textarea.field { resize: none; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere; }
+.form--modal .field[type="date"], .form--modal .field[type="time"], .form--modal .danger-password .field { font-size: 16px; }
+.form--modal .form-caption { word-break: keep-all; overflow-wrap: anywhere; }
+@media (max-width: 899px) {
+ .btn--nav { text-shadow: 0 1px 3px var(--bg), 0 0 5px var(--bg); }
+}
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
       .calendar-grid {
@@ -3049,6 +3129,35 @@ h1.title { margin: 0; }
 /* v567 — proposal geometry and hierarchy. */
 .eyebrow{font-size:13px;letter-spacing:-.015em;color:var(--muted);font-weight:400;margin-bottom:5px;}.title{font-size:30px;font-weight:700;letter-spacing:-.055em;line-height:1.2;}
 
+/* v573 launch identity. CSS fallback prevents a stuck overlay if startup fails. */
+.app-intro { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--bg); color: var(--ink); pointer-events: none; animation: intro-failsafe 0s 4s forwards; }
+.intro-composition { text-align: center; padding: 28px; transform: translateY(-18px); }
+.intro-kicker { color: var(--accent); font-size: 10px; font-weight: 600; letter-spacing: .24em; margin-bottom: 27px; }
+.intro-rings { display: block; width: 160px; height: 110px; margin: 0 auto 30px; overflow: visible; }
+.intro-ring { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 214; stroke-dashoffset: 214; animation: intro-draw 750ms cubic-bezier(.2,.7,.3,1) forwards; }
+.intro-ring-second { stroke: color-mix(in srgb, var(--accent) 45%, var(--ink)); animation-delay: 120ms; }
+.intro-spark { stroke: var(--accent); stroke-width: 1.4; stroke-linecap: round; animation: intro-copy 650ms 150ms both; }
+.intro-title { font-size: clamp(25px, 6.7vw, 31px); font-weight: 500; letter-spacing: -.055em; line-height: 1.55; animation: intro-copy 650ms 80ms both; }
+.intro-caption { margin-top: 17px; font-size: 13px; font-weight: 400; letter-spacing: -.015em; color: var(--muted); animation: intro-copy 650ms 180ms both; }
+.intro-signature { position: absolute; bottom: max(44px, env(safe-area-inset-bottom)); font-size: 11px; letter-spacing: .04em; color: var(--muted); }
+.app-intro.is-leaving { animation: intro-exit 300ms ease-out forwards; }
+@keyframes intro-draw { to { stroke-dashoffset: 0; } }
+@keyframes intro-copy { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes intro-exit { to { opacity: 0; visibility: hidden; transform: translateY(-6px); } }
+@keyframes intro-failsafe { to { visibility: hidden; } }
+@media (max-height: 450px) {
+ .intro-composition { transform: none; padding: 16px; }
+ .intro-kicker { margin-bottom: 8px; }
+ .intro-rings { width: 100px; height: 68px; margin-bottom: 10px; }
+ .intro-title { font-size: 23px; line-height: 1.4; }
+ .intro-caption { margin-top: 9px; }
+ .intro-signature { bottom: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+ .app-intro { display: none; }
+ .intro-ring, .intro-spark, .intro-title, .intro-caption { animation: none; }
+}
+
 .memo-item{position:relative;}
 .memo-body{font-size:15px;line-height:1.65;color:var(--text-secondary);white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
 .memo-open{position:absolute;inset:0;z-index:1;background:transparent;border:0;border-radius:inherit;}
@@ -3127,6 +3236,13 @@ h1.title { margin: 0; }
 .budget-line.is-over .budget-progress::-webkit-progress-value{background:var(--danger);}
 .budget-line.is-over .budget-progress::-moz-progress-bar{background:var(--danger);}
 
+
+/* v573 — whole-app optical and reading refinements. */
+.memo-body, .plan-text { word-break: keep-all; overflow-wrap: anywhere; line-height: 1.65; }
+.memo-item .card-title { letter-spacing: -.02em; line-height: 1.5; }
+.memo-item:focus-visible { outline-offset: -3px; }
+.budget-actual, .budget-expected { font-variant-numeric: tabular-nums; }
+.budget-note { word-break: keep-all; overflow-wrap: anywhere; }
       .event-leading {
         width: 100%;
         min-width: 0;
@@ -3474,6 +3590,11 @@ h1.title { margin: 0; }
 .conflict-choice-actions{display:grid;gap:12px;}
 .conflict-policy{font-size:12px;line-height:1.7;color:var(--muted);margin:14px 15px 0;}
 
+
+/* v573 — whole-app optical and reading refinements. */
+.settings-note, .settings-signin-note, .settings-panel-description, .danger-summary p { word-break: keep-all; overflow-wrap: anywhere; }
+.settings-note { line-height: 1.65; }
+.settings-user-email { overflow-wrap: anywhere; }
       .current-project-title {
         font-size: var(--font-small);
         font-weight: var(--weight-bold);
@@ -3612,6 +3733,19 @@ h1.title { margin: 0; }
 </style>
   </head>
   <body>
+    <div class="app-intro" aria-hidden="true">
+      <div class="intro-composition">
+        <div class="intro-kicker">OUR WEDDING</div>
+        <svg class="intro-rings" viewBox="0 0 160 110" fill="none" aria-hidden="true">
+          <circle class="intro-ring intro-ring-first" cx="61" cy="57" r="34" />
+          <circle class="intro-ring intro-ring-second" cx="99" cy="57" r="34" />
+          <path class="intro-spark" d="M80 9v10M75 14h10" />
+        </svg>
+        <div class="intro-title">함께 준비하는,<br>우리의 새로운 시작.</div>
+        <div class="intro-caption">둘의 내일을 하나씩 기록해요</div>
+      </div>
+      <div class="intro-signature">우리 결혼 플래너</div>
+    </div>
     <div class="app" data-dom="appRoot" data-planner-root data-current-page="home">
       <header class="top"><div><div class="eyebrow">두 사람이 함께 만드는 하루</div><h1 class="title">우리의 결혼 준비</h1></div></header>
       <div class="tab-bar"><div class="sidebar-brand">우리의 결혼 준비</div><nav aria-label="주요 메뉴" class="nav" data-dom="nav"></nav></div>
@@ -4179,7 +4313,7 @@ h1.title { margin: 0; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "572",
+          version: "573",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -4709,6 +4843,7 @@ h1.title { margin: 0; }
         });
         const BUTTON_ROLES = Object.freeze({
           "app-action": "btn--app-action",
+          "floating-add": "btn--floating-add",
           "modal-action": "btn--modal-action",
           "sheet-action": "btn--sheet-action",
           "status-action": "btn--status-action",
@@ -4738,11 +4873,11 @@ h1.title { margin: 0; }
 
         function PageHeading(page) {
           const action = page.addModal ? Button(page.addLabel, { icon: "plus",
-            action: "open-modal", variant: "primary", attributes: { "data-modal": page.addModal },
+            action: "open-modal", variant: "primary", role: "floating-add",
+            attributes: { "data-modal": page.addModal, "aria-label": page.addLabel, "aria-haspopup": "dialog", "title": page.addLabel },
           }) : "";
           return UIComponentRoot("PageHeading", "page-heading", `
-            <div class="page-heading-copy"><h2>${esc(page.label)}</h2><p>${esc(page.description || "")}</p></div>
-              <div class="heading-actions">${action}</div>`);
+            <div class="page-heading-copy"><h2>${esc(page.label)}</h2><p>${esc(page.description || "")}</p></div>`) + action;
         }
 
         function CollectionGroup(title = "") {
@@ -6372,7 +6507,7 @@ function createModalController({
   MODAL_RENDERERS, appConfirm, cloneValue, closeFloatingMenu,
   deepFreeze, findById, focusModalInitial, getCollection,
   getDocument, getHistory, getLocation, getWindow,
-  hasPendingConfirm, isHTMLElement, isNewId, logger,
+  hasPendingConfirm, settleConfirm = () => {}, requestExit = () => {}, isHTMLElement, isNewId, logger,
   attachContent = () => {}, restoreContent = () => {}, contentDirty = () => null,
   modalHasUnsavedChanges, ownedElement, renderModalShell, reportActionError,
   reportActionResult, scheduleFrame, scheduleMicrotask, setOwnedHTML,
@@ -6385,8 +6520,26 @@ function createModalController({
   let modalInitialSnapshot = "";
   let modalEditBaseline = null;
   let modalHistoryToken = null;
+  const APP_HISTORY_KEY = "plannerAppNavigation";
+  let historyBound = false;
+  let consumingModalHistory = false;
+  let exitAllowed = false;
+  function pushAppGuard() {
+    const state = { ...(getHistory().state || {}), [APP_HISTORY_KEY]: "active" };
+    delete state[MODAL_HISTORY_KEY];
+    getHistory().pushState(state, "", getLocation().href);
+  }
+  function askToExit() {
+    void appConfirm("다음에 돌아와서 결혼 준비를 이어갈 수 있어요.", {
+      title: "종료하시겠습니까?", confirmText: "종료", cancelText: "계속 사용",
+    }).then(accepted => {
+      if (!accepted) return;
+      exitAllowed = true;
+      requestExit(() => { exitAllowed = false; if (getHistory().state?.[APP_HISTORY_KEY] !== "active") pushAppGuard(); });
+    });
+  }
   function pushModalHistoryEntry() {
-    if (modalHistoryToken) return;
+    if (modalHistoryToken || consumingModalHistory) return;
     const token = `${Date.now()}-${Math.random()}`;
     try {
       getHistory().pushState({ ...(getHistory().state || {}), [MODAL_HISTORY_KEY]: token }, "", getLocation().href);
@@ -6396,28 +6549,54 @@ function createModalController({
     }
   }
   function handleModalPopstate() {
-    if (!modalHistoryToken || getHistory().state?.[MODAL_HISTORY_KEY] === modalHistoryToken) return;
-    if (!$(DOM_IDS.modal)?.classList.contains("open")) {
-      modalHistoryToken = null;
+    if (exitAllowed) return;
+    if (consumingModalHistory) {
+      consumingModalHistory = false;
+      // A new editor may have opened before the preceding history.back completed.
+      if ($(DOM_IDS.modal)?.classList.contains("open")) pushModalHistoryEntry();
       return;
     }
-    if (modalActionBusy || modalHasUnsavedChanges()) {
-      // Back consumed the modal entry; keep the app here until the discard prompt is answered.
-      getHistory().pushState({ ...(getHistory().state || {}), [MODAL_HISTORY_KEY]: modalHistoryToken }, "", getLocation().href);
-      requestCloseModal();
-    } else {
-      modalHistoryToken = null;
-      closeModal();
+    if (modalHistoryToken && getHistory().state?.[MODAL_HISTORY_KEY] !== modalHistoryToken) {
+      if (!$(DOM_IDS.modal)?.classList.contains("open")) { modalHistoryToken = null; return; }
+      if (hasPendingConfirm() || modalActionBusy || modalHasUnsavedChanges()) {
+        getHistory().pushState({ ...(getHistory().state || {}), [MODAL_HISTORY_KEY]: modalHistoryToken }, "", getLocation().href);
+        if (hasPendingConfirm()) settleConfirm(false);
+        else requestCloseModal();
+      } else {
+        modalHistoryToken = null;
+        closeModal();
+      }
+      return;
     }
+    if (!historyBound || getHistory().state?.[APP_HISTORY_KEY] === "active") return;
+    pushAppGuard();
+    if (hasPendingConfirm()) settleConfirm(false);
+    else if ($(DOM_IDS.modal)?.classList.contains("open")) requestCloseModal();
+    else if (!closeFloatingMenu()) askToExit();
   }
   function bindModalHistory() {
-    // Reloading an open dialog may leave a stale entry in this tab's history.
-    if (getHistory().state?.[MODAL_HISTORY_KEY]) {
-      const state = { ...getHistory().state };
-      delete state[MODAL_HISTORY_KEY];
+    if (historyBound) return;
+    historyBound = true;
+    const state = { ...(getHistory().state || {}) };
+    const staleModal = !!state[MODAL_HISTORY_KEY] && state[APP_HISTORY_KEY] === "active";
+    delete state[MODAL_HISTORY_KEY];
+    // Reuse the sentinel on reload instead of adding an entry on every launch.
+    if (state[APP_HISTORY_KEY] === "active") getHistory().replaceState(state, "", getLocation().href);
+    else {
+      state[APP_HISTORY_KEY] = "base";
       getHistory().replaceState(state, "", getLocation().href);
+      pushAppGuard();
     }
     getWindow().addEventListener("popstate", handleModalPopstate);
+    if (staleModal) {
+      consumingModalHistory = true;
+      getHistory().back();
+    }
+    getWindow().addEventListener("pageshow", event => {
+      if (!event.persisted) return;
+      exitAllowed = false;
+      if (getHistory().state?.[APP_HISTORY_KEY] !== "active") pushAppGuard();
+    });
   }
   function modalFormSnapshot() {
     const body = ownedElement("modal", DOM_IDS.modalBody);
@@ -6500,7 +6679,10 @@ function createModalController({
     if (modalHistoryToken) {
       const token = modalHistoryToken;
       modalHistoryToken = null;
-      if (getHistory().state?.[MODAL_HISTORY_KEY] === token) getHistory().back();
+      if (getHistory().state?.[MODAL_HISTORY_KEY] === token) {
+        consumingModalHistory = historyBound;
+        getHistory().back();
+      }
     }
     renderModalShell({ open: false, labelledBy: null });
     clearSensitiveModalInputs();
@@ -13228,6 +13410,19 @@ const modalController = createModalController({
   getLocation: () => location,
   getWindow: () => window,
   hasPendingConfirm: () => !!confirmPending,
+  settleConfirm: (...args) => settleAppConfirm(...args),
+  requestExit: rearm => {
+    void SharedDomains.Transport.flush("pagehide");
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+    if (standalone) window.close();
+    // Cross the app's sentinel and return to the page that opened the planner.
+    history.go(-2);
+    setTimeout(() => {
+      if (document.visibilityState !== "visible") return;
+      rearm();
+      if (standalone || history.length <= 2) notifyInfo("이 기기에서는 앱 화면을 직접 닫아 주세요.");
+    }, 600);
+  },
   isHTMLElement: value => value instanceof HTMLElement,
   isNewId: (...args) => isNewId(...args),
   logger: { warn: (...args) => console.warn(...args), error: (...args) => console.error(...args) },
@@ -13453,6 +13648,19 @@ const modalController = createModalController({
         renderSharedStatusUI();
         renderRecoveryPoints();
         void sharedConnect({ silent: true });
+
+        // Reveal the ready local UI; do not wait for authentication or a network request.
+        const intro = document.querySelector(".app-intro");
+        if (intro) {
+          const dismissIntro = () => {
+            if (!intro.isConnected || intro.classList.contains("is-leaving")) return;
+            intro.classList.add("is-leaving");
+            setTimeout(() => intro.remove(), 320);
+          };
+          requestAnimationFrame(() => setTimeout(dismissIntro, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 950));
+          window.addEventListener("pointerdown", dismissIntro, {once:true});
+          window.addEventListener("keydown", dismissIntro, {once:true});
+        }
 })();
 </script>
   </body>
