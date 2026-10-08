@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v573 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v574 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-6UdrYzF+cBAUH8/7LEi+0QDTmhefNdlaStUtFkK2Bno=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-oq244+JWF71tOY5mK5SEvCPyP1rkynqCpOp9oYgrAVs='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-RXfSEV+byJVlMLm+wt+lAfyGBNt9aOZMw7hM13CotqA=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-HyZ4UU9QxWSlsrRqdkFSNS+yGpJEAB8Ax2w5OF7ubuk='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -373,11 +373,16 @@
 /* v568 — measured against the supplied prototype. */
 :root{--modal-max-width:520px;--modal-overlay-bg:rgba(25,24,22,.3);--confirm-overlay-bg:rgba(25,24,22,.3);}
 
-/* Floating creation action shares the mobile navigation's actual height. */
+/* The dock stays above system gestures; the page can extend beneath them. */
 :root {
+  --system-bottom-inset: env(safe-area-inset-bottom, 0px);
+  --mobile-nav-height: 66px;
+  --mobile-nav-max-width: 520px;
+  --mobile-nav-side: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  --mobile-nav-bottom: calc(var(--system-bottom-inset) + 12px);
   --floating-add-size: 56px;
-  --floating-add-bottom: calc(54px + max(10px, env(safe-area-inset-bottom, 0px)) + 16px);
-  --floating-add-right: max(20px, env(safe-area-inset-right, 0px));
+  --floating-add-bottom: calc(var(--mobile-nav-bottom) + var(--mobile-nav-height) + 16px);
+  --floating-add-right: max(20px, env(safe-area-inset-right, 0px), calc((100vw - var(--mobile-nav-max-width)) / 2));
 }
 @media (min-width: 900px) {
   :root { --floating-add-bottom: max(28px, env(safe-area-inset-bottom, 0px)); --floating-add-right: max(28px, env(safe-area-inset-right, 0px)); }
@@ -460,31 +465,42 @@ button,input,select,textarea{touch-action:manipulation;}
 
 /* v567 — proposal geometry and hierarchy. */
 body{letter-spacing:-.025em;line-height:1.45;} @media(max-width:899px){html{scrollbar-gutter:auto;}}
-/* Responsive application navigation: one DOM, five mobile destinations. */
-.tab-bar {position:fixed;inset:auto 0 0;z-index:var(--layer-nav);background:var(--card);border-top:1px solid var(--line);padding:4px max(8px,env(safe-area-inset-left)) max(8px,env(safe-area-inset-bottom));}
-.nav {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));max-width:560px;margin:auto;gap:0;}
-.nav [data-page="plans"],.nav [data-page="memos"],.nav [data-page="settings"] {display:none;}
-.nav .ui-icon{width:24px;height:24px;}
-.sidebar-brand{display:none;}
-body.modal-open .tab-bar{pointer-events:none;}
-@media(min-width:900px){
- .tab-bar{inset:0 auto 0 0;width:216px;border-top:0;border-right:1px solid var(--line);padding:32px 16px;}
- .sidebar-brand{display:block;font-size:17px;font-weight:600;margin:8px 12px 36px;}
- .nav{display:flex;flex-direction:column;gap:5px;}
- .nav [data-page="plans"],.nav [data-page="memos"],.nav [data-page="settings"]{display:flex;}
- .nav [data-page="more"]{display:none;}
+/* One navigation DOM: mobile floating dock, desktop sidebar. */
+.tab-bar {
+  position: fixed;
+  z-index: var(--layer-nav);
+  bottom: var(--mobile-nav-bottom);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(var(--mobile-nav-max-width), calc(100% - 2 * var(--mobile-nav-side)));
+  height: var(--mobile-nav-height);
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  border-radius: 27px;
+  background: var(--card);
+  box-shadow: 0 8px 28px #00000012, 0 2px 6px #00000008, inset 0 1px 0 #ffffff24;
+  isolation: isolate;
 }
-
-/* v567 — proposal geometry and hierarchy. */
-
-.tab-bar{padding:4px max(8px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-bottom));}.nav .ui-icon{width:22px;height:22px;stroke-width:1.7;}
-@media(min-width:900px){.tab-bar{width:188px;padding:26px 12px;}.sidebar-brand{font-size:15px;margin:4px 12px 28px;}.nav{gap:4px;}.nav .ui-icon{width:19px;height:19px;}}
-
-
-/* v573: navigation floats directly over the page. */
-@media (max-width: 899px) {
-  .tab-bar { background: transparent; border-top: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .nav .ui-icon { filter: drop-shadow(0 1px 2px var(--bg)); }
+.nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); width: 100%; height: 100%; margin: auto; gap: 2px; }
+.nav [data-page="plans"], .nav [data-page="memos"], .nav [data-page="settings"] { display: none; }
+.nav .ui-icon { width: 22px; height: 22px; stroke-width: 1.7; flex-shrink: 0; }
+.sidebar-brand { display: none; }
+body.modal-open .tab-bar { pointer-events: none; }
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  @media (max-width: 899px) {
+    .tab-bar { background: color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter: blur(24px) saturate(135%); -webkit-backdrop-filter: blur(24px) saturate(135%); }
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .tab-bar { background: var(--card); backdrop-filter: none; -webkit-backdrop-filter: none; border-color: var(--line); }
+}
+@media (min-width: 900px) {
+  .tab-bar { inset: 0 auto 0 0; transform: none; width: 188px; height: auto; border: 0; border-right: 1px solid var(--line); border-radius: 0; padding: 26px 12px; background: var(--card); box-shadow: none; }
+  .sidebar-brand { display: block; font-size: 15px; font-weight: 600; margin: 4px 12px 28px; }
+  .nav { display: flex; flex-direction: column; gap: 4px; height: auto; }
+  .nav [data-page="plans"], .nav [data-page="memos"], .nav [data-page="settings"] { display: flex; }
+  .nav [data-page="more"] { display: none; }
+  .nav .ui-icon { width: 19px; height: 19px; }
 }
       .card {
         min-width: 0;
@@ -1823,6 +1839,10 @@ body.modal-open .tab-bar{pointer-events:none;}
 .confirm-card h2 { letter-spacing: -.025em; line-height: 1.5; }
 .modal-content { overscroll-behavior: contain; }
 .modal-content:has(textarea) { scroll-padding-block: 20px; }
+
+@media (max-width: 899px) {
+  .toast-stack { bottom: calc(var(--mobile-nav-bottom) + var(--mobile-nav-height) + 12px); }
+}
       /* ===== v384 grouped/form refinement ===== */
       .form-field {
         display: grid;
@@ -2877,7 +2897,24 @@ html:has(.page.active > .btn--floating-add) { scroll-padding-bottom: calc(var(--
 .form--modal .field[type="date"], .form--modal .field[type="time"], .form--modal .danger-password .field { font-size: 16px; }
 .form--modal .form-caption { word-break: keep-all; overflow-wrap: anywhere; }
 @media (max-width: 899px) {
- .btn--nav { text-shadow: 0 1px 3px var(--bg), 0 0 5px var(--bg); }
+ .btn--nav {
+   --btn-height: 52px;
+   --btn-radius: 20px;
+   --btn-font-size: 11px;
+   --btn-padding: 0;
+   --btn-font-weight: 500;
+   min-width: 0;
+   gap: 3px;
+   text-shadow: none;
+ }
+ .btn--nav.active {
+   --btn-bg: color-mix(in srgb, var(--accent) 11%, transparent);
+   --btn-hover-bg: color-mix(in srgb, var(--accent) 14%, transparent);
+   --btn-active-bg: color-mix(in srgb, var(--accent) 17%, transparent);
+   --btn-radius: 20px;
+ }
+ .btn--nav::after { inset: 0; border-radius: 20px; }
+ .btn--nav:focus-visible { outline-offset: -3px; }
 }
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
@@ -3100,6 +3137,13 @@ html:has(.page.active > .btn--floating-add) { scroll-padding-bottom: calc(var(--
 
 /* v568 final prototype alignment. */
 .calendar-week{gap:0;}.calendar-grid{column-gap:0;row-gap:3px;}
+
+
+/* Reserve dock clearance without painting over the OS gesture area. */
+@media (max-width: 899px) {
+  .app { padding-bottom: calc(var(--mobile-nav-bottom) + var(--mobile-nav-height) + 24px); }
+  html { scroll-padding-bottom: calc(var(--mobile-nav-bottom) + var(--mobile-nav-height) + 24px); }
+}
 h1.title { margin: 0; }
       .eyebrow { font-size: var(--font-micro); color: var(--accent-ink); letter-spacing: .07em; font-weight: var(--weight-medium); margin-bottom: 6px; }
       .title { margin: 0; font-size: var(--header-title-size); color: var(--ink); font-weight: var(--weight-semibold); letter-spacing: -.025em; line-height: 1.25; }
@@ -4313,7 +4357,7 @@ h1.title { margin: 0; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "573",
+          version: "574",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -8115,6 +8159,9 @@ function createDerivedViewService({
             root.setProperty("--accent-contrast", pickAccentInk(normalized.accent));
             root.setProperty("--danger-contrast", pickAccentInk(normalized.danger));
             root.setProperty("--danger-ink", contrastRatio(normalized.danger, normalized.card) >= 4.5 ? normalized.danger : normalized.ink);
+          // Request matching native controls/system chrome where the host supports it.
+          // Transparency of Android's navigation bar is owned by the browser/OS.
+          root.setProperty("color-scheme", relativeLuminance(normalized.bg) < 0.179 ? "dark" : "light");
           bySelector("meta[name=theme-color]")?.setAttribute("content", normalized.bg);
         }
         function mountThemeEditor() {
