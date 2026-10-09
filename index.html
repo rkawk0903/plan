@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v574 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v575 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-RXfSEV+byJVlMLm+wt+lAfyGBNt9aOZMw7hM13CotqA=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-HyZ4UU9QxWSlsrRqdkFSNS+yGpJEAB8Ax2w5OF7ubuk='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-1stvctxXZ+bRcFilubUNHtsYRsNpwT9TIffhmjrYkPY=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-BANoG6qidU1ilfakvYaTzAZeGVifz4KjcXaKP6/MSYw='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -368,7 +368,7 @@
 @media (max-width:699px) { :root { --card-content-padding: var(--space-4); } }
 
 /* v567 — proposal geometry and hierarchy. */
-:root{--radius-surface:max(0px,var(--radius));--corner-shape-continuous:round;--surface-shadow:none;--card-surface-shadow:none;--page-side-space:20px;--page-heading-size:32px;--header-title-size:30px;--progress-height:4px;--accent-ink:var(--accent);--nav-selected-ink:var(--accent);--separator:var(--line);--collection-title-size:16px;--collection-title-weight:500;--collection-meta-font-size:13px;}
+:root{--radius-surface:max(0px,var(--radius));--corner-shape-continuous:round;--surface-shadow:none;--card-surface-shadow:none;--page-side-space:20px;--page-heading-size:32px;--header-title-size:30px;--progress-height:4px;--accent-ink:var(--accent-text);--nav-selected-ink:var(--accent-text);--separator:var(--line);--collection-title-size:16px;--collection-title-weight:500;--collection-meta-font-size:13px;}
 
 /* v568 — measured against the supplied prototype. */
 :root{--modal-max-width:520px;--modal-overlay-bg:rgba(25,24,22,.3);--confirm-overlay-bg:rgba(25,24,22,.3);}
@@ -386,6 +386,14 @@
 }
 @media (min-width: 900px) {
   :root { --floating-add-bottom: max(28px, env(safe-area-inset-bottom, 0px)); --floating-add-right: max(28px, env(safe-area-inset-right, 0px)); }
+}
+
+:root {
+  --accent-text: var(--accent);
+  --control-outline: var(--muted);
+  --font-micro: 13px;
+  --font-tiny: 13px;
+  --focus-outline: var(--accent-text);
 }
 @font-face {
   font-family: 'Pretendard Variable';
@@ -502,6 +510,9 @@ body.modal-open .tab-bar { pointer-events: none; }
   .nav [data-page="more"] { display: none; }
   .nav .ui-icon { width: 19px; height: 19px; }
 }
+
+
+
       .card {
         min-width: 0;
         /* Every top-level Card shares one exact surface. Domain emphasis belongs inside the card. */
@@ -584,7 +595,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 .home-hero .dday{display:block;max-width:none;min-width:0;height:auto;padding:0;margin:9px 0;color:var(--ink);}
 .home-hero .dday strong{font-size:46px;line-height:1.1;font-weight:550;letter-spacing:-.045em;white-space:normal;overflow-wrap:anywhere;}
 .home-hero .dday small{font-size:17px;font-weight:450;color:var(--ink);margin-left:4px;}
-.home-wedding-date{flex-shrink:0;max-width:48%;min-height:44px;border:0;border-radius:9px;background:var(--ui-tint,color-mix(in srgb,var(--accent) 14%,var(--card)));color:var(--accent);font-size:12px;line-height:1.5;padding:5px 8px;margin:0;}
+.home-wedding-date{flex-shrink:0;max-width:48%;min-height:44px;border:0;border-radius:9px;background:var(--ui-tint,color-mix(in srgb,var(--accent) 14%,var(--card)));color:var(--accent-text);font-size:12px;line-height:1.5;padding:5px 8px;margin:0;}
 .home-hero .progress{height:4px;margin:15px 0 8px;background:var(--line);}
 .hero-footer{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);}.hero-footer strong{font-weight:550;color:var(--ink);}
 .home-summary-tile{padding:17px;border-radius:max(0px,calc(var(--radius-surface) - 2px));background:var(--card);min-width:0;}
@@ -622,6 +633,9 @@ body.modal-open .tab-bar { pointer-events: none; }
 .skeleton-record-title{--skeleton-width:80%;--skeleton-height:15px;border-radius:5px;}
 .skeleton-record-meta{--skeleton-width:45%;--skeleton-height:15px;border-radius:5px;}
 .records-loading[hidden]{display:none;}
+
+
+.home-wedding-date,.theme-choice {font-size:13px;}
 
       .btn {
         position: relative;
@@ -1192,7 +1206,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 
 /* v568 — measured against the supplied prototype. */
 
-[data-settings-slot="theme"] .disclosure{margin-top:10px;}[data-settings-slot="theme"] .disclosure>summary{min-height:48px;justify-content:center;padding:12px 15px;border-radius:13px;background:var(--card);color:var(--accent);font-size:16px;font-weight:600;}
+[data-settings-slot="theme"] .disclosure{margin-top:10px;}[data-settings-slot="theme"] .disclosure>summary{min-height:48px;justify-content:center;padding:12px 15px;border-radius:13px;background:var(--card);color:var(--accent-text);font-size:16px;font-weight:600;}
 [data-settings-slot="theme"] .disclosure>summary:after{display:none;}
 .settings-panel-description{font-size:14px;line-height:1.65;margin-bottom:19px;}
 
@@ -1200,12 +1214,12 @@ body.modal-open .tab-bar { pointer-events: none; }
 /* v568 — measured against the supplied prototype. */
 
 [data-settings-slot="history"] .action-row,[data-settings-slot="recovery"] .action-row{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;}
-[data-settings-slot="history"] .action-row>.btn,[data-settings-slot="recovery"] .action-row>.btn{width:100%;min-height:48px;border-radius:13px;background:var(--card);color:var(--accent);font-size:16px;font-weight:600;}
+[data-settings-slot="history"] .action-row>.btn,[data-settings-slot="recovery"] .action-row>.btn{width:100%;min-height:48px;border-radius:13px;background:var(--card);color:var(--accent-text);font-size:16px;font-weight:600;}
 [data-settings-slot="history"] .settings-status-note{background:var(--card);padding:18px 16px;border-radius:20px;font-size:15px;line-height:1.6;}
 [data-settings-slot="backup"] .action-row{display:block;margin:0;background:var(--card);border-radius:20px;overflow:hidden;}
 [data-settings-slot="backup"] .action-row>.btn{display:flex;gap:12px;justify-content:flex-start;width:100%;min-height:62px;padding:10px 14px;border-radius:0;border:0;background:none;color:var(--ink);font-size:16px;font-weight:500;}
 [data-settings-slot="backup"] .action-row>.btn+.btn{border-top:1px solid var(--line);}
-[data-settings-slot="backup"] .btn>.ui-icon:first-child{width:20px;height:20px;color:var(--accent);padding:6px;box-sizing:content-box;background:var(--ui-tint);border-radius:8px;}
+[data-settings-slot="backup"] .btn>.ui-icon:first-child{width:20px;height:20px;color:var(--accent-text);padding:6px;box-sizing:content-box;background:var(--ui-tint);border-radius:8px;}
 [data-settings-slot="backup"] .btn>.ui-icon:last-child{width:16px;height:16px;color:var(--muted);margin-left:auto;}
 
 
@@ -1224,7 +1238,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 
 .collection-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px;min-height:44px;}
 .collection-section-heading .budget-section-title{margin:0;}
-.collection-heading-action{background:none;border:0;color:var(--accent);font-size:13px;font-weight:400;min-height:44px;padding:10px 0;white-space:nowrap;}
+.collection-heading-action{background:none;border:0;color:var(--accent-text);font-size:13px;font-weight:400;min-height:44px;padding:10px 0;white-space:nowrap;}
 
 
 /* v573 — whole-app optical and reading refinements. */
@@ -1235,6 +1249,12 @@ body.modal-open .tab-bar { pointer-events: none; }
 .settings-row-icon { flex-shrink: 0; }
 .settings-link, .settings-row > summary { column-gap: 12px; }
 .settings-link:focus-visible, .settings-row > summary:focus-visible { outline-offset: -3px; }
+
+.settings-link:has([data-dom="settingsWeddingDateSummary"]) .settings-row-copy {display:block;}
+.settings-link [data-dom="settingsWeddingDateSummary"],.settings-theme-value {display:block;flex-shrink:0;margin:0 4px 0 0;text-align:right;font-size:13px;white-space:nowrap;color:var(--muted);}
+.collection-heading-action {font-size:14px;}
+
+.settings-link:has([data-dom="settingsWeddingDateSummary"]) {grid-template-columns:32px minmax(0,1fr) auto 16px;}
 /* MetricSummary: shared overview typography and progress rhythm. */
 .metric-summary { min-width: 0; display: flex; flex-direction: column; flex: 1 1 auto; }
 .metric-values { display: grid; gap: var(--space-1); min-width: 0; }
@@ -1390,7 +1410,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 
 .calendar-cell{min-height:44px;height:44px;padding:0;justify-content:center;gap:0;border:0;background:transparent;border-radius:50%;}
 .calendar-num{width:42px;height:42px;font-size:16px;font-weight:400;}.calendar-cell.muted{visibility:hidden;pointer-events:none;}
-.calendar-cell.today .calendar-num{background:none;color:var(--accent);box-shadow:none;font-weight:650;}
+.calendar-cell.today .calendar-num{background:none;color:var(--accent-text);box-shadow:none;font-weight:650;}
 .calendar-cell.selected{background:none;}.calendar-cell.selected .calendar-num{background:var(--accent);color:var(--accent-contrast);font-weight:600;}
 .calendar-holiday{display:none;}.calendar-dots{position:absolute;bottom:3px;min-height:3px;margin:0;}.calendar-dot{width:3px;height:3px;}.calendar-cell.selected .calendar-dot{background:var(--accent-contrast);}
 .calendar-week span{font-size:11px;font-weight:400;padding:4px 0 6px;color:var(--muted);}.calendar-week span:first-child,.calendar-week span:last-child{color:var(--muted);}
@@ -1410,6 +1430,11 @@ body.modal-open .tab-bar { pointer-events: none; }
 .calendar-card .card-header-action{display:contents;}
 .calendar-card .card-header-action>button:first-child{grid-column:1;grid-row:1;justify-self:start;}
 .calendar-card .card-header-action>button:last-child{grid-column:3;grid-row:1;justify-self:end;}
+
+.calendar-week span {font-size:13px;}
+.calendar-period-hint {font-size:14px;line-height:1.6;}
+.calendar-cell.today:not(.selected) .calendar-num {text-decoration:underline;text-underline-offset:4px;}
+
       .toast-stack {
         position: fixed;
         right: clamp(12px, 2vw, 16px);
@@ -1771,10 +1796,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 .modal-header>.btn{--btn-padding:0 6px;--btn-font-size:15px;}
 .modal-footer .action-row{margin-top:0;}
 .modal-footer .action-row>.btn:only-child{width:100%;margin:0;}
-.sheet:has(.memo-reader){max-width:720px;}
-.memo-reader{font-size:17px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;min-height:180px;}
-.memo-reader-title{font-size:24px;line-height:1.4;overflow-wrap:anywhere;margin:0 0 18px;}
-@media(max-width:699px){.sheet:has(.memo-reader),.sheet:has(#mText){height:calc(100dvh - max(24px,env(safe-area-inset-top)));}.sheet:has(#mText) #mText{min-height:240px;}}
+@media(max-width:699px){.sheet:has(#mText){height:calc(100dvh - max(24px,env(safe-area-inset-top)));}.sheet:has(#mText) #mText{min-height:240px;}}
 
 
 /* v567 — proposal geometry and hierarchy. */
@@ -1787,7 +1809,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 .confirm-card{width:min(330px,100%);padding:25px 0 0;border-radius:calc(var(--radius-surface) + 2px);text-align:center;background:var(--card);}
 .confirm-card h2{font-size:19px;font-weight:650;padding:0 23px;line-height:1.4;}.confirm-message{font-size:14px;line-height:1.6;margin:10px 23px 23px;}
 .confirm-card .action-row{display:flex;gap:0;margin:0;border-top:1px solid var(--line);}
-.confirm-card .action-row>.btn{flex:1;min-width:0;min-height:53px;border-radius:0;border:0;box-shadow:none;background:none;color:var(--accent);font-size:16px;font-weight:550;padding:10px;}
+.confirm-card .action-row>.btn{flex:1;min-width:0;min-height:53px;border-radius:0;border:0;box-shadow:none;background:none;color:var(--accent-text);font-size:16px;font-weight:550;padding:10px;}
 .confirm-card .action-row>.btn+.btn{border-left:1px solid var(--line);}
 .toast{background:var(--ink);color:var(--card);border:0;border-radius:14px;padding:13px 16px;font-size:14px;line-height:1.5;}
 .toast-marker{background:transparent;color:inherit;}.toast-action{color:inherit;font-size:13px;font-weight:500;}
@@ -1800,7 +1822,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 .modal-content{padding:21px 20px 32px;}.modal-description{font-size:14px;line-height:1.65;margin:0 0 19px;}
 .sheet:has(#mText){height:auto;max-width:520px;}.modal-content:has(#mText) #mText,.sheet:has(#mText) #mText{min-height:235px;}
 .sheet-options{background:var(--card);border-radius:20px;overflow:hidden;}.sheet-options>button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:13px 16px;min-height:48px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;color:var(--ink);text-align:left;font-size:16px;font-weight:400;}
-.sheet-options>button:last-child{border-bottom:0;}.sheet-options>button[disabled]{opacity:.45;}.sheet-options>button .ui-icon{width:18px;height:18px;color:var(--accent);}
+.sheet-options>button:last-child{border-bottom:0;}.sheet-options>button[disabled]{opacity:.45;}.sheet-options>button .ui-icon{width:18px;height:18px;color:var(--accent-text);}
 .sheet-options>button[data-command^="delete-"]{color:var(--danger-ink,var(--danger));}
 .modal.open .sheet{animation:planner-sheet-in .24s cubic-bezier(.2,.7,.3,1);}
 .confirm-overlay.open .confirm-card{animation:planner-alert-in .16s ease-out;}
@@ -1843,6 +1865,13 @@ body.modal-open .tab-bar { pointer-events: none; }
 @media (max-width: 899px) {
   .toast-stack { bottom: calc(var(--mobile-nav-bottom) + var(--mobile-nav-height) + 12px); }
 }
+
+/* Editor headers keep the destructive action separate from Cancel / Save. */
+.modal-frame--editor .modal-header {grid-template-columns:64px minmax(0,1fr) 64px;}
+.modal-header-delete {justify-self:start;}
+.modal-header-delete .btn {min-width:44px;min-height:44px;padding:8px 4px;}
+.modal-frame--editor .modal-footer .action-row>.btn {flex:1;min-width:0;}
+
       /* ===== v384 grouped/form refinement ===== */
       .form-field {
         display: grid;
@@ -2083,7 +2112,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 .auth-field-group label{display:block;font-size:15px;font-weight:400;line-height:1.45;letter-spacing:-.425px;margin-bottom:8px;color:var(--ink);}
 .auth-field-group .field{min-height:32px;line-height:1.45;height:auto;border:0;border-radius:0;background:none;box-shadow:none;padding:0;font-size:16px;}
 .auth-switches{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;}
-.auth-mode-link{min-height:44px;background:none;border:0;padding:10px 0;color:var(--accent);font-size:13px;}
+.auth-mode-link{min-height:44px;background:none;border:0;padding:10px 0;color:var(--accent-text);font-size:13px;}
 .shared-auth-form[data-auth-mode="login"] [data-mode="login"],.shared-auth-form[data-auth-mode="signup"] [data-mode="signup"]{display:none;}
 
 
@@ -2100,12 +2129,12 @@ body.modal-open .tab-bar { pointer-events: none; }
 .shared-auth-form[data-auth-mode="reset"] .auth-description,.shared-auth-form[data-auth-mode="reset"] .form-field:has(input[type="password"]),.shared-auth-form[data-auth-mode="reset"] [data-mode="signup"],.shared-auth-form[data-auth-mode="reset"] [data-mode="reset"],.shared-auth-form[data-auth-mode="signup"] [data-mode="reset"]{display:none;}
 .shared-auth-form[data-auth-mode="reset"] .auth-reset-description{display:block;}
 .modal [data-settings-slot] .shared-account-row{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:13px;padding:19px;background:var(--card);border-radius:20px;}
-.account-avatar{width:48px;height:48px;flex-shrink:0;display:grid;place-items:center;background:var(--ui-tint);border-radius:50%;color:var(--accent);font-size:17px;}
+.account-avatar{width:48px;height:48px;flex-shrink:0;display:grid;place-items:center;background:var(--ui-tint);border-radius:50%;color:var(--accent-text);font-size:17px;}
 .account-identity{min-width:0;}.account-identity-label{display:block;font-size:13px;line-height:1.5;color:var(--muted);margin-bottom:4px;}
 .modal [data-settings-slot] .shared-account-text{white-space:normal;overflow-wrap:anywhere;font-size:16px;line-height:1.45;font-weight:500;color:var(--ink);}
 .modal [data-settings-slot] .settings-actions{display:block;background:var(--card);border-radius:20px;overflow:hidden;padding:0;margin:20px 0 0;border:0;}
 .settings-command{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;padding:10px 14px;background:none;color:var(--ink);border:0;text-align:left;font-size:16px;line-height:1.45;font-weight:500;}
-.settings-command+.settings-command{border-top:1px solid var(--line);}.command-icon{display:grid;place-items:center;width:32px;height:32px;flex-shrink:0;border-radius:8px;background:var(--ui-tint);color:var(--accent);}
+.settings-command+.settings-command{border-top:1px solid var(--line);}.command-icon{display:grid;place-items:center;width:32px;height:32px;flex-shrink:0;border-radius:8px;background:var(--ui-tint);color:var(--accent-text);}
 .command-icon .ui-icon{width:20px;height:20px;}.settings-command>.ui-icon{margin-left:auto;width:16px;height:16px;color:var(--muted);}.settings-command.is-danger{color:var(--danger-ink);}
 .modal [data-settings-slot] .sync-status-row{padding:0 4px 18px;border:0;background:none;border-radius:0;gap:9px;}.modal [data-settings-slot] .sync-status-indicator{box-shadow:none;width:5px;height:5px;margin-top:8px;}
 .modal [data-settings-slot] .sync-detail-text{font-size:14px;font-weight:500;line-height:1.5;}.modal [data-settings-slot] .sync-status-meta{font-size:12px;line-height:1.6;margin-top:3px;}
@@ -2134,13 +2163,13 @@ body.modal-open .tab-bar { pointer-events: none; }
 .modal [data-settings-slot="theme"] .theme-controls label{font-size:15px;color:var(--ink);}.modal [data-settings-slot="theme"] .theme-range{grid-row:2;grid-column:1/-1;width:100%;height:32px;margin:0;}
 .modal [data-settings-slot="theme"] .theme-radius-value{grid-column:2;grid-row:1;font-size:13px;}
 .modal [data-settings-slot="theme"] .theme-choice[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
-.sheet-options.status-options{display:block;}.sheet-options.status-options>button{min-height:50px;padding:13px 16px;}.sheet-options.status-options>button[aria-pressed="true"]{color:var(--accent);font-weight:600;}
+.sheet-options.status-options{display:block;}.sheet-options.status-options>button{min-height:50px;padding:13px 16px;}.sheet-options.status-options>button[aria-pressed="true"]{color:var(--accent-text);font-weight:600;}
 
 
 .entity-edit-button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:transparent;color:var(--muted);}
 .entity-edit-button .ui-icon{width:22px;height:22px;stroke-width:2.4;}
 .item-order-controls{position:relative;z-index:1;display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;}
-.item-order-controls>button{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:var(--bg);color:var(--accent);}
+.item-order-controls>button{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:var(--bg);color:var(--accent-text);}
 .item-order-controls>button .ui-icon{width:18px;height:18px;}
 .item-order-controls>button:disabled{opacity:.28;cursor:default;}
 .entity-edit-button:focus-visible,.item-order-controls>button:focus-visible{outline:2px solid var(--focus-outline);outline-offset:2px;}
@@ -2151,6 +2180,14 @@ body.modal-open .tab-bar { pointer-events: none; }
 .danger-summary{background:var(--card);border-radius:16px;padding:18px 16px;grid-column:1/-1;margin:0;}
 .danger-summary strong{display:block;font-size:16px;line-height:1.5;font-weight:600;}
 .danger-summary p{font-size:13px;line-height:1.75;color:var(--muted);margin:8px 0 0;}
+
+
+/* v575: focus indication only; resting input-group borders are unchanged. */
+.form-field:focus-within {position:relative;outline:3px solid var(--focus-outline);outline-offset:-3px;border-radius:8px;}
+.form-field .field:focus-visible {outline:none;}
+.field[aria-invalid="true"] {outline:2px solid var(--danger-ink);outline-offset:0;}
+.collection-row__meta,.collection-group-title,.task-filter-button,.segmented-control>button,.form-caption {font-size:14px;line-height:1.6;}
+.auth-mode-link {font-size:14px;}
 /* ===== 04 COMPONENT VARIANTS — explicit semantic overrides ===== */
       /* Surface / status variants */
 
@@ -2777,8 +2814,8 @@ body.modal-open .tab-bar { pointer-events: none; }
 
 .task-list-host.inner-card--grouped-list{background:transparent;box-shadow:none;border-radius:0;}
 .collection-row--task .collection-row__actions{margin-top:0;}
-.event-leading--date{background:none;padding:0;min-height:44px;gap:2px;color:var(--accent);}.event-leading--date .event-leading-sub{order:-1;font-size:10px;color:var(--accent);}.event-leading--date .event-leading-main{font-size:26px;font-weight:500;}
-.plan-status-control .btn--tertiary{background:var(--ui-tint,color-mix(in srgb,var(--accent) 14%,var(--card)));color:var(--accent);border:0;border-radius:8px;padding:8px 11px;min-height:44px;font-size:13px;font-weight:400;}
+.event-leading--date{background:none;padding:0;min-height:44px;gap:2px;color:var(--accent-text);}.event-leading--date .event-leading-sub{order:-1;font-size:10px;color:var(--accent-text);}.event-leading--date .event-leading-main{font-size:26px;font-weight:500;}
+.plan-status-control .btn--tertiary{background:var(--ui-tint,color-mix(in srgb,var(--accent) 14%,var(--card)));color:var(--accent-text);border:0;border-radius:8px;padding:8px 11px;min-height:44px;font-size:13px;font-weight:400;}
 .plan-status-control .btn--tertiary .ui-icon{order:1;width:12px;height:12px;margin-left:2px;}
 
 
@@ -2815,7 +2852,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 
 .form--settings-stack.shared-auth-form{display:block;}.action-row--auth{display:flex;flex-direction:column;gap:0;margin-top:18px;}
 .action-row--auth>.btn--primary{width:100%;min-height:48px;border-radius:13px;font-size:16px;font-weight:600;margin:0;}
-.action-row--auth .auth-switches .btn--tertiary{width:auto;min-height:44px;padding:10px 0;font-size:13px;font-weight:400;color:var(--accent);}
+.action-row--auth .auth-switches .btn--tertiary{width:auto;min-height:44px;padding:10px 0;font-size:13px;font-weight:400;color:var(--accent-text);}
 
 
 /* v568 final prototype alignment. */
@@ -2824,10 +2861,10 @@ body.modal-open .tab-bar { pointer-events: none; }
 .form--modal>.form-input-group:last-child{margin-bottom:20px;}.action-row--auth{margin-top:20px;}.action-row--auth>.btn--primary{min-height:50px;}
 
 /* v569 — sheet commands share the reference button system. */
-.modal [data-settings-slot="project"] .sync-project-actions>.btn,.modal [data-settings-slot="project"] .settings-signin-note>.btn,.modal [data-settings-slot="project"] .project-panel .action-row>.btn,.modal [data-settings-slot="account"] .card-footer-row .btn,.modal [data-settings-slot="theme"] .disclosure .action-row>.btn,.recovery-detail-actions>.btn{display:flex;justify-content:center;align-items:center;width:100%;min-height:50px;padding:12px 15px;border:0;border-radius:13px;font-size:16px;font-weight:600;line-height:1.45;background:var(--card);color:var(--accent);box-shadow:none;}
+.modal [data-settings-slot="project"] .sync-project-actions>.btn,.modal [data-settings-slot="project"] .settings-signin-note>.btn,.modal [data-settings-slot="project"] .project-panel .action-row>.btn,.modal [data-settings-slot="account"] .card-footer-row .btn,.modal [data-settings-slot="theme"] .disclosure .action-row>.btn,.recovery-detail-actions>.btn{display:flex;justify-content:center;align-items:center;width:100%;min-height:50px;padding:12px 15px;border:0;border-radius:13px;font-size:16px;font-weight:600;line-height:1.45;background:var(--card);color:var(--accent-text);box-shadow:none;}
 .modal [data-settings-slot="project"] .sync-project-actions>.btn--primary,.modal [data-settings-slot="project"] .settings-signin-note>.btn,.modal [data-settings-slot="theme"] .disclosure .action-row>.btn--primary,.recovery-detail-actions>.btn--primary{background:var(--accent);color:var(--accent-contrast);}
 .modal [data-settings-slot="project"] .sync-project-actions>[data-action="shared-join-project"]{margin-top:20px;}
-.modal [data-settings-slot="project"] [data-action="shared-copy-code"]{border:0;background:var(--ui-tint);color:var(--accent);border-radius:8px;font-size:13px;padding:8px 11px;min-height:44px;}
+.modal [data-settings-slot="project"] [data-action="shared-copy-code"]{border:0;background:var(--ui-tint);color:var(--accent-text);border-radius:8px;font-size:13px;padding:8px 11px;min-height:44px;}
 .modal [data-settings-slot="theme"] .disclosure .action-row{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px;}
 .recovery-detail-actions{display:grid;gap:10px;}.recovery-detail-actions>.btn--danger-quiet{color:var(--danger-ink);}
 
@@ -2916,6 +2953,12 @@ html:has(.page.active > .btn--floating-add) { scroll-padding-bottom: calc(var(--
  .btn--nav::after { inset: 0; border-radius: 20px; }
  .btn--nav:focus-visible { outline-offset: -3px; }
 }
+
+.field--search[data-filter-active] {color:var(--ink);}
+.modal [data-settings-slot="project"] input.field--sync-code[readonly] {font-family:var(--font-family);font-size:16px;font-weight:500;letter-spacing:normal;}
+.modal [data-settings-slot] .sync-status-meta,.modal [data-settings-slot] .settings-status-note {font-size:14px;line-height:1.6;}
+
+.nav .btn--nav>span {font-size:13px;}
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
       .calendar-grid {
@@ -3176,7 +3219,7 @@ h1.title { margin: 0; }
 /* v573 launch identity. CSS fallback prevents a stuck overlay if startup fails. */
 .app-intro { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--bg); color: var(--ink); pointer-events: none; animation: intro-failsafe 0s 4s forwards; }
 .intro-composition { text-align: center; padding: 28px; transform: translateY(-18px); }
-.intro-kicker { color: var(--accent); font-size: 10px; font-weight: 600; letter-spacing: .24em; margin-bottom: 27px; }
+.intro-kicker { color:var(--accent-text); font-size: 10px; font-weight: 600; letter-spacing: .24em; margin-bottom: 27px; }
 .intro-rings { display: block; width: 160px; height: 110px; margin: 0 auto 30px; overflow: visible; }
 .intro-ring { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 214; stroke-dashoffset: 214; animation: intro-draw 750ms cubic-bezier(.2,.7,.3,1) forwards; }
 .intro-ring-second { stroke: color-mix(in srgb, var(--accent) 45%, var(--ink)); animation-delay: 120ms; }
@@ -3287,6 +3330,10 @@ h1.title { margin: 0; }
 .memo-item:focus-visible { outline-offset: -3px; }
 .budget-actual, .budget-expected { font-variant-numeric: tabular-nums; }
 .budget-note { word-break: keep-all; overflow-wrap: anywhere; }
+
+.memo-toolbar-controls {display:flex;justify-content:flex-end;}
+.plan-label {font-size:14px;line-height:1.6;}
+
       .event-leading {
         width: 100%;
         min-width: 0;
@@ -3330,7 +3377,7 @@ h1.title { margin: 0; }
       .planner-event-item-today .event-leading-main { color: var(--state-active-color); }
 
 
-.event-leading--date{background:none;padding:0;min-height:44px;gap:2px;color:var(--accent);}.event-leading--date .event-leading-sub{order:-1;font-size:10px;color:var(--accent);}.event-leading--date .event-leading-main{font-size:26px;font-weight:500;}
+.event-leading--date{background:none;padding:0;min-height:44px;gap:2px;color:var(--accent-text);}.event-leading--date .event-leading-sub{order:-1;font-size:10px;color:var(--accent-text);}.event-leading--date .event-leading-main{font-size:26px;font-weight:500;}
 .selected-event-note{margin:12px 15px 0;font-size:12px;line-height:1.6;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;}
 
 
@@ -3343,6 +3390,11 @@ h1.title { margin: 0; }
 .schedule-period-button{display:inline-flex;align-items:center;gap:6px;min-height:44px;border:0;background:transparent;padding:6px 0;color:var(--muted);font-size:13px;}
 .schedule-period-button .ui-icon{width:12px;height:12px;}
 .schedule-all-view .event-list-host{background:var(--card);border-radius:var(--radius-surface);overflow:hidden;}
+
+
+.event-leading--date .event-leading-sub {font-size:13px;}
+.selected-event-note {font-size:14px;line-height:1.6;}
+.event-detail-button .ui-icon {width:22px;height:22px;stroke-width:2.4;}
 
       .task-check {
         position: relative;
@@ -3395,7 +3447,7 @@ h1.title { margin: 0; }
 
 /* v567 — proposal geometry and hierarchy. */
 
-.task-check,.task-check.on{position:relative;display:grid;place-items:center;min-width:44px;width:44px;height:44px;background:none;border:0;padding:0;margin:0 0 0 -6px;color:var(--accent);box-shadow:none;}
+.task-check,.task-check.on{position:relative;display:grid;place-items:center;min-width:44px;width:44px;height:44px;background:none;border:0;padding:0;margin:0 0 0 -6px;color:var(--accent-text);box-shadow:none;}
 .task-check:before{display:none;}.task-check-circle{display:grid;place-items:center;width:23px;height:23px;border:1.5px solid color-mix(in srgb,var(--muted) 42%,var(--card));border-radius:50%;font-size:15px;}
 .task-check.on .task-check-circle{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast);}
 .task.is-priority .collection-row__meta:before{content:"";width:5px;height:5px;background:var(--accent);border-radius:50%;margin-right:5px;}
@@ -3404,6 +3456,10 @@ h1.title { margin: 0; }
 
 /* v568 — measured against the supplied prototype. */
 .task-check,.task-check.on{transform:translateX(-3px);}.task-check-circle .ui-icon{width:15px;height:15px;stroke-width:1.7;}
+
+.task-check-circle {border-color:var(--control-outline);border-width:2px;}
+.task-check.on .task-check-circle {border-color:var(--accent);}
+
       .category-progress-meta {
         margin-top: 5px;
         text-align: right;
@@ -3620,7 +3676,7 @@ h1.title { margin: 0; }
 @media(max-width:600px){.conflict-values{grid-template-columns:minmax(0,1fr);}}
 
 
-.connection-banner{display:flex;align-items:center;gap:12px;background:var(--ui-tint,var(--accent-soft));color:var(--accent);border-radius:12px;padding:12px 14px;margin:0 0 22px;font-size:13px;line-height:1.65;}
+.connection-banner{display:flex;align-items:center;gap:12px;background:var(--ui-tint,var(--accent-soft));color:var(--accent-text);border-radius:12px;padding:12px 14px;margin:0 0 22px;font-size:13px;line-height:1.65;}
 .connection-banner>.ui-icon{width:18px;height:18px;flex:0 0 auto;}
 .connection-banner>span{flex:1;min-width:0;}
 .connection-banner>button{border:0;background:none;color:inherit;font-size:13px;min-height:44px;min-width:44px;padding:6px;}
@@ -3639,6 +3695,9 @@ h1.title { margin: 0; }
 .settings-note, .settings-signin-note, .settings-panel-description, .danger-summary p { word-break: keep-all; overflow-wrap: anywhere; }
 .settings-note { line-height: 1.65; }
 .settings-user-email { overflow-wrap: anywhere; }
+
+.conflict-policy,.conflict-values h4 {font-size:14px;line-height:1.6;}
+
       .current-project-title {
         font-size: var(--font-small);
         font-weight: var(--weight-bold);
@@ -3701,10 +3760,17 @@ h1.title { margin: 0; }
 
 .home-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:27px 0 10px;min-height:44px;}
 .home-section-heading h2{font-size:20px;line-height:1.4;letter-spacing:-.035em;font-weight:650;margin:0;}
-.home-section-heading button{background:none;border:0;color:var(--accent);font-size:13px;min-height:44px;padding:10px 0;white-space:nowrap;}
+.home-section-heading button{background:none;border:0;color:var(--accent-text);font-size:13px;min-height:44px;padding:10px 0;white-space:nowrap;}
 .category-cards{display:block;background:var(--card);border-radius:var(--radius-surface);overflow:hidden;}
 .category-progress-row{display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:8px;min-height:62px;padding:8px 10px 8px 17px;font-size:16px;}
 .category-progress-row+.category-progress-row{border-top:1px solid var(--line);}.category-progress-count{color:var(--muted);font-size:12px;}
+
+
+.home-section-heading button {font-size:14px;}
+.category-progress-row {display:flex;gap:10px;align-items:center;}
+.category-progress-name {flex:1;min-width:0;overflow-wrap:anywhere;}
+.category-progress-count {margin-left:auto;flex-shrink:0;text-align:right;font-size:13px;}
+.category-progress-row .item-order-controls {flex-shrink:0;}
 /* ===== 07 RESPONSIVE POLICY — cross-cutting device/accessibility rules only ===== */
       /* Component/layout-specific responsive rules live with their owning component or feature. */
 
@@ -3808,12 +3874,14 @@ h1.title { margin: 0; }
   </div>
  </div>
  <div class="home-secondary-grid">
-  <section><div class="home-section-heading"><h2>먼저 해야 할 일</h2><button type="button" data-action="show-page" data-page="tasks">전체 보기</button></div><div class="home-list" data-dom="homeTasks"></div></section>
-  <section><div class="home-section-heading"><h2>다가오는 일정</h2><button type="button" data-action="show-page" data-page="schedule">전체 보기</button></div><div class="home-list" data-dom="homeEvents"></div></section>
+  <section><div class="home-section-heading"><h2>먼저 해야 할 일</h2><button type="button" data-action="home-view-settings" data-limit-type="tasks">보기 설정</button></div><div class="home-list" data-dom="homeTasks"></div></section>
+  <section><div class="home-section-heading"><h2>다가오는 일정</h2><button type="button" data-action="home-view-settings" data-limit-type="events">보기 설정</button></div><div class="home-list" data-dom="homeEvents"></div></section>
  </div>
- <section><div class="home-section-heading"><h2>분야별 준비</h2><button type="button" data-action="open-modal" data-modal="home-preferences">보기 설정</button></div><div class="category-cards" data-dom="categoryProgressList"></div></section>
-<div class="home-preferences-storage" hidden><div data-home-preferences><p class="settings-panel-description">홈에 보여줄 할 일과 일정 개수를 선택하세요. 분야 순서는 각 분야의 메뉴에서 바꿀 수 있어요.</p><div class="form form--settings-stack"><div class="form-field"><label for="homeTaskLimit">할 일 표시 개수</label><select id="homeTaskLimit" data-dom="homeTaskLimit" class="field" data-action="home-limit" data-limit-type="tasks"><option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option></select></div><div class="form-field"><label for="homeEventLimit">일정 표시 개수</label><select id="homeEventLimit" data-dom="homeEventLimit" class="field" data-action="home-limit" data-limit-type="events"><option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option></select></div></div></div></div></section>
-        <!-- ===== PAGE: TASKS · 할 일 ===== -->
+ <section><div class="home-section-heading"><h2>분야별 준비</h2><button type="button" data-action="toggle-category-order" aria-pressed="false">순서 변경</button></div><div class="category-cards" data-dom="categoryProgressList"></div></section>
+<div class="home-preferences-storage" hidden>
+ <div data-home-preferences="tasks"><div class="form form--settings-stack"><div class="form-field"><label for="homeTaskLimit">할 일 표시 개수</label><select id="homeTaskLimit" data-dom="homeTaskLimit" class="field" data-action="home-limit" data-limit-type="tasks"><option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option></select></div></div></div>
+ <div data-home-preferences="events"><div class="form form--settings-stack"><div class="form-field"><label for="homeEventLimit">일정 표시 개수</label><select id="homeEventLimit" data-dom="homeEventLimit" class="field" data-action="home-limit" data-limit-type="events"><option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option></select></div></div></div>
+</div></section>
         <section class="page" data-page-root="tasks">
           <div data-ui-static="PageHeading"></div>
           <!-- ===== TASKS: FILTERS / ACTIONS + LIST ===== -->
@@ -3985,6 +4053,14 @@ h1.title { margin: 0; }
                     />
                     <button class="icon-control icon-control--field-clear" data-action="clear-search" type="button" aria-label="검색어 지우기" title="검색어 지우기"><span data-ui-icon="close"></span></button>
                   </div>
+                  <div class="collection-toolbar__controls task-toolbar-controls memo-toolbar-controls">
+                    <select hidden class="field" aria-label="메모 정렬" data-dom="memoSort" data-action="memo-sort">
+                      <option value="createdDesc">만든 날짜 최신순</option><option value="createdAsc">만든 날짜 오래된 순</option>
+                      <option value="updatedDesc">수정한 날짜 최신순</option><option value="updatedAsc">수정한 날짜 오래된 순</option>
+                      <option value="nameAsc">이름 오름차순</option><option value="nameDesc">이름 내림차순</option>
+                    </select>
+                    <button class="task-filter-button" type="button" data-action="open-filter-sheet" data-filter-dom="memoSort"><span data-dom="memoSortLabel">만든 날짜 최신순</span><span data-ui-icon="filter"></span></button>
+                  </div>
                   <div class="filter-feedback" aria-live="polite">
                     <span class="filter-feedback-summary" data-dom="memoSearchSummary">0개 표시 · 활성 조건 0개</span>
                   </div>
@@ -4090,10 +4166,8 @@ h1.title { margin: 0; }
             <span class="settings-row-title">
               결혼식 날짜
             </span>
-            <span class="settings-row-description" data-dom="settingsWeddingDateSummary">
-              일정과 디데이의 기준
-            </span>
           </span>
+          <span class="settings-theme-value" data-dom="settingsWeddingDateSummary">날짜 정하기</span>
           <span data-ui-icon="right">
           </span>
         </button>
@@ -4357,7 +4431,7 @@ h1.title { margin: 0; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "574",
+          version: "575",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -5120,13 +5194,14 @@ h1.title { margin: 0; }
           if (!row) return null;
           return ModalFrame(key === "account" && !sharedSync.user ? (ownedElement("shared", DOM_IDS.syncLoginBox)?.dataset.authMode === "signup" ? "회원가입" : "로그인") : key === "account" ? "계정 관리" : row.querySelector(".settings-row-title")?.textContent || "설정", `<div data-settings-slot="${attr(key)}"></div>`);
         }
-        function renderHomePreferencesModal() {
-          return ModalFrame("홈 보기 설정", '<div data-settings-slot="home-preferences"></div>');
+        function renderHomePreferencesModal(type = "tasks") {
+          if (!["tasks", "events"].includes(type)) return null;
+          return ModalFrame(type === "tasks" ? "할 일 보기 설정" : "일정 보기 설정", '<div data-settings-slot="home-preferences"></div>');
         }
         function attachSettingsPanel(type, key) {
-          if (type === "home-preferences") key = type;
+          if (type === "home-preferences") key = key || "tasks";
           if (!["settings-panel", "home-preferences"].includes(type)) return;
-          const panel = key === "home-preferences" ? document.querySelector("[data-home-preferences]")
+          const panel = type === "home-preferences" ? document.querySelector(`[data-home-preferences="${CSS.escape(key)}"]`)
             : [...document.querySelectorAll("[data-settings-row]")].find(el => el.dataset.settingsRow === key)?.querySelector(".settings-row-panel");
           const slot = document.querySelector("#modalBody [data-settings-slot]");
           if (!panel || !slot) return;
@@ -5256,6 +5331,25 @@ h1.title { margin: 0; }
           return `<span class="item-order-controls">${[[-1,"up","위로",index <= 0],[1,"down","아래로",index >= total - 1]].map(([delta,icon,text,disabled]) =>
             `<button${htmlAttributes({type:"button", "data-action":`move-${type}`, "data-id":id, "data-delta":delta, disabled, "aria-label":`${label} ${text} 이동`})}>${Icon(icon)}</button>`).join("")}</span>`;
         }
+
+// FLIP positions are measured only for explicit reorder actions, never normal rendering.
+function captureOrderMotion(type) {
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return () => {};
+  const selector = {category:".category-progress-row",budget:'.budget-line',plan:'.plan'}[type];
+  if (!selector) return () => {};
+  const keyOf = el => type === "category" ? el.dataset.orderKey : el.querySelector(`[data-action="edit-${type}"]`)?.dataset.id;
+  const before = new Map([...document.querySelectorAll(selector)].filter(el => el.getClientRects().length)
+    .map(el => [keyOf(el), el.getBoundingClientRect()]));
+  return () => queueMicrotask(() => requestAnimationFrame(() => {
+    document.querySelectorAll(selector).forEach(el => {
+      const old = before.get(keyOf(el));
+      if (!old || !el.getClientRects().length) return;
+      const rect = el.getBoundingClientRect(), x = old.left - rect.left, y = old.top - rect.top;
+      if (Math.abs(x) + Math.abs(y) < 1) return;
+      el.animate([{transform:`translate(${x}px,${y}px)`},{transform:"translate(0,0)"}], {duration:240,easing:"cubic-bezier(.2,.7,.2,1)"});
+    });
+  }));
+}
         const MORE_MENU_VARIANTS = Object.freeze(["default", "bare", "quiet"]);
         let moreMenuInstanceSequence = 0;
         function nextMoreMenuPopupId(type, id) {
@@ -5296,15 +5390,16 @@ h1.title { margin: 0; }
         function SortableCardActions(id, index, length, type, label, extra = "") {
           return MoreMenu(label, String(id), type, { variant: "quiet", order: { index, total: length } }) + extra;
         }
-        function ModalCloseButton() {
-          return `<button type="button" class="icon-control icon-control--modal-close" data-action="close-modal" aria-label="닫기" title="닫기">${Icon("close")}</button>`;
-        }
         function ModalFrame(title, content, actions = "", description = "", headerAction = "", footerActions = false) {
-          if (footerActions) return `<div class="modal-frame modal-frame--editor">
-            <div class="modal-header"><span></span><div class="modal-copy"><h2 id="${attr(DOM_IDS.modalTitle)}" tabindex="-1" class="modal-title">${esc(title)}</h2></div>${ModalCloseButton()}</div>
+          if (footerActions) {
+            const remove = [...actions.matchAll(/<button[\s\S]*?<\/button>/g)].find(([html]) => /data-action="delete-/.test(html))?.[0] || "";
+            actions = actions.replace(remove, "");
+            return `<div class="modal-frame modal-frame--editor">
+            <div class="modal-header"><div class="modal-header-delete">${remove}</div><div class="modal-copy"><h2 id="${attr(DOM_IDS.modalTitle)}" tabindex="-1" class="modal-title">${esc(title)}</h2></div><span aria-hidden="true"></span></div>
             <div class="modal-content">${description ? `<div class="modal-description">${esc(description)}</div>` : ""}${content}</div>
             <div class="modal-footer">${actions}</div>
           </div>`;
+          }
           const save = [...actions.matchAll(/<button[\s\S]*?<\/button>/g)].find(([html]) => /data-action="(?:save-|shared-submit-password-change)/.test(html))?.[0] || "";
           const footer = actions.replace(save, "").replace(/<button[^>]*data-action="close-modal"[\s\S]*?<\/button>/g, "");
           const hasFooter = /<button/.test(footer);
@@ -5341,15 +5436,15 @@ h1.title { margin: 0; }
 /* v568 — measured against the supplied prototype. */
 
         function renderFilterSelectModal(key) {
-          if (!["taskCat", "taskSort"].includes(key)) return null;
-          const select = ownedElement("tasks", key);
+          if (!["taskCat", "taskSort", "memoSort"].includes(key)) return null;
+          const select = ownedElement(key === "memoSort" ? "memos" : "tasks", key);
           return ModalFrame(key === "taskCat" ? "분야 선택" : "정렬", `<div class="sheet-options">${[...select.options].map(option =>
             `<button type="button" data-action="choose-filter" data-filter-dom="${attr(key)}" data-value="${attr(option.value)}" aria-pressed="${option.selected}">${esc(option.text)}${option.selected ? Icon("check") : ""}</button>`).join("")}</div>`);
         }
         function selectFilterChoice(button) {
           const key = button.dataset.filterDom;
-          if (!["taskCat", "taskSort"].includes(key)) return false;
-          const select = ownedElement("tasks", key);
+          if (!["taskCat", "taskSort", "memoSort"].includes(key)) return false;
+          const select = ownedElement(key === "memoSort" ? "memos" : "tasks", key);
           select.value = button.dataset.value;
           select.dispatchEvent(new Event("change", {bubbles:true}));
           closeModal();
@@ -5450,8 +5545,8 @@ h1.title { margin: 0; }
               { key: "category", id: "eCategory", label: "분야", maxLength: 200, placeholder: "예: 상견례 / 웨딩촬영 / 본식" },
               { key: "date", id: "eDate", label: "날짜", type: "date", initial: () => selectedScheduleDate,
                 invalid: "날짜가 올바른 날짜인지 확인해주세요." },
-              { key: "time", id: "eTime", layout: "half", label: "시작 시간", type: "time", clearable: true },
-              { key: "endTime", id: "eEndTime", layout: "half", label: "종료 시간", type: "time", clearable: true,
+              { key: "time", id: "eTime", layout: "half", label: "시작 시간", type: "time" },
+              { key: "endTime", id: "eEndTime", layout: "half", label: "종료 시간", type: "time",
                 validate: (value, item) => value && !item.time ? "종료 시간을 지정하려면 시작 시간도 입력해주세요." : "" },
               { key: "location", id: "eLocation", label: "장소", maxLength: 500, placeholder: "예: 강남 ○○식당" },
               { key: "note", id: "eNote", label: "메모 · 선택", type: "textarea", maxLength: 2000,
@@ -5483,6 +5578,10 @@ h1.title { margin: 0; }
             stateKey: "memos", view: "memos", label: "메모", target: "memoList",
             renderer: MemoCard, empty: "등록된 메모가 없어요.", limit: 500,
             prepend: true,
+            writeMetadata: (item) => {
+              const now = new Date().toISOString();
+              return { ...(!item ? { createdAt: now } : {}), updatedAt: now };
+            },
             feedback: { saved: "메모를 저장했어요.", deleted: "메모를 삭제했어요." },
             retain: (item) => !!item.text.trim(),
             fields: [
@@ -5541,7 +5640,6 @@ h1.title { margin: 0; }
             "settings-panel": renderSettingsPanelModal,
           "home-preferences": renderHomePreferencesModal,
           "plan-status": renderPlanStatusModal,
-          "memo-reader": renderMemoReader,
           ...Object.fromEntries(Object.keys(COLLECTION_SCHEMAS).map((name) =>
             [name, (data) => renderCollectionModal(name, data)])),
           settings: renderSettingsModal,
@@ -5580,7 +5678,6 @@ h1.title { margin: 0; }
             "open-modal": onClick((el) => openModal(el.dataset.modal)),
             "settings-panel": onClick((el) => openSettingsRow(el.dataset.settingsKey)),
             "schedule-view": onClick((el) => setScheduleView(el.dataset.view)),
-            "read-memo": onClick((el) => Collection.edit("memo", el.dataset.id)),
             "plan-status": onClick((el) => openModal("plan-status", el.dataset.id)),
             "choose-plan-status": onClick((el) => { if (updatePlan(el.dataset.id, el.dataset.status)) closeModal(); }),
             "close-modal": onClick(() => requestCloseModal()),
@@ -5590,6 +5687,8 @@ h1.title { margin: 0; }
             "clear-field": onClick((el) => clearFieldControl(el)),
           },
           Home: {
+            "home-view-settings": onClick(el => openModal("home-preferences", el.dataset.limitType)),
+            "toggle-category-order": onClick(toggleCategoryOrder),
             "move-category": onClick((el) =>
                 moveCategory(el.dataset.id, Number(el.dataset.delta || 0))),
             "home-limit": onChange((el) => setHomeLimit(el.dataset.limitType, el.value)),
@@ -5618,6 +5717,7 @@ h1.title { margin: 0; }
           },
           Memos: {
             "memo-search": onInput(() => requestRenderDebounced("memos")),
+            "memo-sort": onChange(() => renderFilteredPage("memos")),
           },
           Backup: {
             "export-data": onClick(() => exportData()),
@@ -5688,7 +5788,7 @@ h1.title { margin: 0; }
             selectedDateTitle: "selectedDateTitle", scheduleList: "scheduleList",
             scheduleFilter: "scheduleFilter", schedulePeriodControl: "schedulePeriodControl", scheduleAllSearch: "scheduleAllSearch",
           },
-          memos: { memoSearch: "memoSearch", memoSearchSummary: "memoSearchSummary" },
+          memos: { memoSearch: "memoSearch", memoSearchSummary: "memoSearchSummary", memoSort: "memoSort", memoSortLabel: "memoSortLabel" },
           settings: { settingsThemeSummary: "settingsThemeSummary", settingsWeddingDateSummary: "settingsWeddingDateSummary" },
           history: { undoButton: "undoButton", redoButton: "redoButton", historyStatus: "historyStatus" },
           theme: { themeFields: "themeFields", themePresets: "themePresets", themeExtraPresets: "themeExtraPresets", themeRadiusControl: "themeRadiusControl", thRadiusVal: "thRadiusVal" },
@@ -5966,11 +6066,11 @@ function createCollectionService({
     const committed = mutateState(draft => {
       const list = draftCollection(draft, definition.stateKey);
       if (isNewId(id)) {
-        item = normalizeCollectionItem(definition, { id: newId(), ...data });
+        item = normalizeCollectionItem(definition, { id: newId(), ...data, ...definition.writeMetadata?.(null) });
         if (definition.prepend) list.unshift(item);
         else list.push(item);
       } else {
-        item = updateById(list, id, data);
+        item = updateById(list, id, { ...data, ...definition.writeMetadata?.(findById(list, id)) });
         if (!item) {
           notifyError(FORM_SCHEMAS[name].notFoundMessage);
           return false;
@@ -6094,7 +6194,9 @@ function createCollectionService({
           },
           move(...args) {
             const focused = document.activeElement;
+            const animate = captureOrderMotion(args[0]);
             const moved = collectionService.move(...args);
+            if (moved) animate();
             if (moved && focused?.dataset?.action === `move-${args[0]}`) queueMicrotask(() => {
               const selector = `[data-action="move-${CSS.escape(args[0])}"][data-id="${CSS.escape(String(args[1]))}"]`;
               const controls = [...document.querySelectorAll(selector)].filter(el => el.getClientRects().length);
@@ -7311,7 +7413,8 @@ function createDerivedViewService({
           return getOrderedCatsFrom(state);
         }
         function moveCategory(cat, dir) {
-          return mutateState(
+          const animate = captureOrderMotion("category");
+          const moved = mutateState(
             (draft) => {
               const order = getOrderedCatsFrom(draft);
               const from = order.indexOf(String(cat));
@@ -7323,6 +7426,14 @@ function createDerivedViewService({
             "home",
             "카테고리 순서 변경",
           );
+          if (moved) {
+            animate();
+            queueMicrotask(() => {
+              const controls = [...document.querySelectorAll(`[data-action="move-category"][data-id="${CSS.escape(String(cat))}"]`)];
+              (controls.find(el => el.dataset.delta === String(dir) && !el.disabled) || controls.find(el => !el.disabled))?.focus({preventScroll:true});
+            });
+          }
+          return moved;
         }
         function flashTaskToggleFeedback(id) {
           if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
@@ -7663,7 +7774,7 @@ function createDerivedViewService({
             metaItems,
             title: esc(e.title),
             note: showNote && e.note ? esc(e.note) : "",
-            actions: showActions ? `<button class="event-detail-button" type="button" data-action="edit-event" data-id="${attr(e.id)}" aria-label="${attr(e.title)} 상세">${Icon("right")}</button>` : "",
+            actions: showActions ? `<button class="event-detail-button" type="button" data-action="edit-event" data-id="${attr(e.id)}" aria-label="${attr(e.title)} 상세">${Icon("more")}</button>` : "",
             classes: ["planner-event-item", isToday ? "planner-event-item-today" : ""],
             attributes: { "data-ui-actions": String(showActions), "data-ui-leading": leadingMode },
           });
@@ -7943,7 +8054,10 @@ function createDerivedViewService({
         function renderMemos(view = getViewData()) {
           const queryLabel = selectedValue("memoSearch").trim();
           const query = queryLabel.toLowerCase();
-          const items = view.memos.filter((item) => !query || item.text.toLowerCase().includes(query));
+          const sort = selectedValue("memoSort") || "createdDesc";
+          const items = sortMemos(view.memos.filter((item) => !query || item.text.toLowerCase().includes(query)), sort);
+          const select = ownedElement("memos", "memoSort");
+          setOwnedText("memos", "memoSortLabel", select?.selectedOptions[0]?.textContent || "만든 날짜 최신순");
           updateFilterFeedback("memos", {
             summaryDom: DOM_IDS.memoSearchSummary,
             resultCount: items.length,
@@ -7958,14 +8072,20 @@ function createDerivedViewService({
 
 
 
-        function renderMemoReader(id) {
-          const memo = findById(state.memos, id);
-          if (!memo) return null;
-          const {title, body} = memoFormData(memo);
-          return ModalFrame("메모", `<h3 class="memo-reader-title">${esc(title || "메모")}</h3><div class="memo-reader">${esc(body || "본문이 없는 메모예요.")}</div>`,
-            ActionRow(Button("수정하기", {action:"edit-memo", id:memo.id, variant:"primary", role:"sheet-action"}), "sheet-dialog"));
-        }
 
+function sortMemos(items, sort) {
+  const descending = sort.endsWith("Desc");
+  const field = sort.startsWith("updated") ? "updatedAt" : "createdAt";
+  return items.slice().sort((a, b) => {
+    if (sort.startsWith("name")) return (descending ? -1 : 1) *
+      memoFormData(a).title.localeCompare(memoFormData(b).title, "ko", {numeric:true, sensitivity:"base"});
+    const first = Date.parse(a[field]), second = Date.parse(b[field]);
+    // Legacy records have no historical timestamp. Keep them together, in their existing order.
+    if (!Number.isFinite(first) || !Number.isFinite(second))
+      return Number.isFinite(first) ? -1 : Number.isFinite(second) ? 1 : 0;
+    return (descending ? -1 : 1) * (first - second);
+  });
+}
         // Derived views read immutable state and collection schemas; the home renderer consumes those views.
         // ===== 05 DOMAIN / Home and derived view data =====
         function getTodayStart() {
@@ -8030,8 +8150,8 @@ function createDerivedViewService({
         function CategoryCard(category, index, view) {
           const stats = view.categoryStats.get(category) || { total: 0, done: 0, progress: 0 };
           const { total, done, progress } = stats;
-          const actions = MoreMenu(category, category, "category", { variant: "quiet", editable: false, removable: false, order: { index, total: view.cats.length } });
-          return `<div class="category-progress-row"><span>${esc(category)}</span><span class="category-progress-count">${formatRatio(done, total)} 완료</span>${actions}</div>`;
+          const actions = categoryOrdering ? ItemOrderControls("category", category, index, view.cats.length, category) : "";
+          return `<div class="category-progress-row" data-order-key="${attr(category)}"><span class="category-progress-name">${esc(category)}</span>${actions}<span class="category-progress-count">${formatRatio(done, total)} 완료</span></div>`;
         }
         function renderHomeCategories(view) {
           const html = view.cats.map((category, index) => CategoryCard(category, index, view)).join("");
@@ -8094,6 +8214,14 @@ function createDerivedViewService({
           }
           return committed;
         }
+
+let categoryOrdering = false;
+function toggleCategoryOrder(button) {
+  categoryOrdering = !categoryOrdering;
+  button.setAttribute("aria-pressed", String(categoryOrdering));
+  button.textContent = categoryOrdering ? "완료" : "순서 변경";
+  requestRender("home");
+}
         // ===== 05 DOMAIN / Theme and Settings =====
         function themeData() {
           return { ...THEME_DEFAULTS, ...state.theme };
@@ -8128,7 +8256,7 @@ function createDerivedViewService({
         }
         function pickAccentInk(accentHex) {
           const light = "#ffffff",
-            dark = "#141414";
+            dark = "#000000";
           return contrastRatio(light, accentHex) >= contrastRatio(dark, accentHex) ? light : dark;
         }
         function themeContrastIssues(theme) {
@@ -8154,6 +8282,10 @@ function createDerivedViewService({
             : normalized.bg === "#f4f3f0" && normalized.accent === "#815d4b" ? "#eee7e1"
             : "color-mix(in srgb,var(--accent) 14%,var(--card))";
           root.setProperty("--ui-tint", tint);
+          const tintHex = tint.startsWith("#") ? tint : mixThemeColor(normalized.card, normalized.accent, 0.14);
+          const surfaces = [normalized.bg, normalized.card, normalized.soft, tintHex];
+          root.setProperty("--accent-text", readableThemeColor(normalized.accent, surfaces, normalized.ink, 4.8));
+          root.setProperty("--control-outline", readableThemeColor(mixThemeColor(normalized.card, normalized.muted, 0.42), surfaces.slice(0,3), normalized.ink, 3.2));
           Object.entries(THEME_FIELDS).forEach(([key, field]) =>
             root.setProperty(field.css, field.format ? field.format(normalized[key]) : normalized[key]));
             root.setProperty("--accent-contrast", pickAccentInk(normalized.accent));
@@ -8248,6 +8380,19 @@ function createDerivedViewService({
           renderSharedProject();
           updateHistoryUI();
         }
+
+// Keep brand fills unchanged; reading colors must also pass on tinted surfaces.
+function mixThemeColor(first, second, amount) {
+  return "#" + [1,3,5].map(i => Math.round(parseInt(first.slice(i,i+2),16) * (1-amount) + parseInt(second.slice(i,i+2),16) * amount).toString(16).padStart(2,"0")).join("");
+}
+function readableThemeColor(color, surfaces, ink, minimum) {
+  for (let step=0; step<=100; step++) {
+    const candidate = mixThemeColor(color, ink, step/100);
+    if (surfaces.every(surface => contrastRatio(candidate,surface) >= minimum)) return candidate;
+  }
+  const score = color => Math.min(...surfaces.map(surface => contrastRatio(color,surface)));
+  return score("#000000") >= score("#ffffff") ? "#000000" : "#ffffff";
+}
 // Isolated service; all application/platform dependencies enter through these ports.
 function createSharedStorageService({
   APP_CONFIG, cloneValue, getRuntime, getState,
