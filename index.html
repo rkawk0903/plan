@@ -1,7 +1,7 @@
 <!doctype html>
 
 <!--
-우리 결혼 플래너 v575 — 분리 소스 / 단일 HTML 빌드
+우리 결혼 플래너 v576 — 분리 소스 / 단일 HTML 빌드
 앱 코드: app/src/, 수정 위치: app/src/UI_STRUCTURE.txt
 빌드·검사·설정: README.md
 공용 컴포넌트는 css/components/와 js/ui/, 공용 외형 variant는 css/04-variants.css에서 관리합니다.
@@ -23,7 +23,7 @@
     <meta content="telephone=no,email=no,address=no,date=no" name="format-detection" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-1stvctxXZ+bRcFilubUNHtsYRsNpwT9TIffhmjrYkPY=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-BANoG6qidU1ilfakvYaTzAZeGVifz4KjcXaKP6/MSYw='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' 'sha256-BJVBcgvjTWr/SZzYixOSmGacdulqDRQAH+PObBNcDnY=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js; font-src 'self'; style-src 'self' 'sha256-7qzQK5NBHD0RisLhM7NSgstNSYfPX2AusA0GG/r+/u8='; connect-src 'self' https://gcabvfdjdglyjpngvyqz.supabase.co wss://gcabvfdjdglyjpngvyqz.supabase.co; worker-src 'self' blob:; script-src-attr 'none'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <meta content="production" name="planner-build-mode" />
     <meta content="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" name="planner-supabase-sri" />
@@ -379,10 +379,10 @@
   --mobile-nav-height: 66px;
   --mobile-nav-max-width: 520px;
   --mobile-nav-side: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
-  --mobile-nav-bottom: calc(var(--system-bottom-inset) + 12px);
+  --mobile-nav-bottom: var(--system-bottom-inset);
   --floating-add-size: 56px;
   --floating-add-bottom: calc(var(--mobile-nav-bottom) + var(--mobile-nav-height) + 16px);
-  --floating-add-right: max(20px, env(safe-area-inset-right, 0px), calc((100vw - var(--mobile-nav-max-width)) / 2));
+  --floating-add-right: max(20px, env(safe-area-inset-right, 0px));
 }
 @media (min-width: 900px) {
   :root { --floating-add-bottom: max(28px, env(safe-area-inset-bottom, 0px)); --floating-add-right: max(28px, env(safe-area-inset-right, 0px)); }
@@ -473,20 +473,21 @@ button,input,select,textarea{touch-action:manipulation;}
 
 /* v567 — proposal geometry and hierarchy. */
 body{letter-spacing:-.025em;line-height:1.45;} @media(max-width:899px){html{scrollbar-gutter:auto;}}
-/* One navigation DOM: mobile floating dock, desktop sidebar. */
+/* One navigation DOM: fixed bottom tabs, desktop sidebar. */
 .tab-bar {
   position: fixed;
   z-index: var(--layer-nav);
-  bottom: var(--mobile-nav-bottom);
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(var(--mobile-nav-max-width), calc(100% - 2 * var(--mobile-nav-side)));
-  height: var(--mobile-nav-height);
-  padding: 6px;
-  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-  border-radius: 27px;
+  bottom: 0;
+  left: 0;
+  transform: none;
+  width: 100%;
+  height: calc(var(--mobile-nav-height) + var(--system-bottom-inset));
+  padding: 6px max(12px,env(safe-area-inset-right)) calc(6px + var(--system-bottom-inset)) max(12px,env(safe-area-inset-left));
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  border-radius: 0;
   background: var(--card);
-  box-shadow: 0 8px 28px #00000012, 0 2px 6px #00000008, inset 0 1px 0 #ffffff24;
+  box-shadow: none;
   isolation: isolate;
 }
 .nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); width: 100%; height: 100%; margin: auto; gap: 2px; }
@@ -496,7 +497,7 @@ body{letter-spacing:-.025em;line-height:1.45;} @media(max-width:899px){html{scro
 body.modal-open .tab-bar { pointer-events: none; }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   @media (max-width: 899px) {
-    .tab-bar { background: color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter: blur(24px) saturate(135%); -webkit-backdrop-filter: blur(24px) saturate(135%); }
+    .tab-bar { background: color-mix(in srgb, var(--card) 84%, transparent); backdrop-filter: blur(24px) saturate(135%); -webkit-backdrop-filter: blur(24px) saturate(135%); }
   }
 }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
@@ -992,9 +993,9 @@ body.modal-open .tab-bar { pointer-events: none; }
       }
       .field:focus {
         outline: none;
-        border-color: color-mix(in srgb, var(--accent) 58%, var(--control-border));
+        border-color: transparent;
         background-color: color-mix(in srgb, var(--field-bg, var(--field-fill)) 94%, var(--card) 6%);
-        box-shadow: 0 0 0 3px var(--focus-ring);
+        box-shadow: inset 0 0 0 2px var(--input-focus);
       }
       .field::placeholder {
         color: var(--field-placeholder-color);
@@ -1872,6 +1873,17 @@ body.modal-open .tab-bar { pointer-events: none; }
 .modal-header-delete .btn {min-width:44px;min-height:44px;padding:8px 4px;}
 .modal-frame--editor .modal-footer .action-row>.btn {flex:1;min-width:0;}
 
+
+/* A real drag target replaces the decorative sheet handle. */
+.sheet::before {display:none;}
+.sheet-drag-handle {display:none;}
+@media(max-width:699px) {
+ .sheet-drag-handle {display:flex;align-items:center;justify-content:center;flex:0 0 28px;width:100%;height:28px;padding:0;border:0;background:transparent;touch-action:none;cursor:grab;}
+ .sheet-drag-handle::before {content:"";width:34px;height:4px;border-radius:4px;background:var(--muted);opacity:.35;}
+ .sheet-drag-handle:active {cursor:grabbing;}
+ .sheet.is-dragging {animation:none;transition:none;user-select:none;}
+}
+
       /* ===== v384 grouped/form refinement ===== */
       .form-field {
         display: grid;
@@ -2183,8 +2195,7 @@ body.modal-open .tab-bar { pointer-events: none; }
 
 
 /* v575: focus indication only; resting input-group borders are unchanged. */
-.form-field:focus-within {position:relative;outline:3px solid var(--focus-outline);outline-offset:-3px;border-radius:8px;}
-.form-field .field:focus-visible {outline:none;}
+/* Focus geometry is owned by the field or its joined input row. */
 .field[aria-invalid="true"] {outline:2px solid var(--danger-ink);outline-offset:0;}
 .collection-row__meta,.collection-group-title,.task-filter-button,.segmented-control>button,.form-caption {font-size:14px;line-height:1.6;}
 .auth-mode-link {font-size:14px;}
@@ -2959,6 +2970,19 @@ html:has(.page.active > .btn--floating-add) { scroll-padding-bottom: calc(var(--
 .modal [data-settings-slot] .sync-status-meta,.modal [data-settings-slot] .settings-status-note {font-size:14px;line-height:1.6;}
 
 .nav .btn--nav>span {font-size:13px;}
+
+/* v576: one inset ring follows the actual control, never the outer label. */
+:root {--input-focus:color-mix(in srgb,var(--accent-text) 76%,var(--card));}
+.field:focus-visible {outline:none;}
+.form-field:focus-within {outline:none;}
+.form-input-group>.form-field,.auth-field-group>.form-field {position:relative;}
+.form--modal .form-input-group>.form-field:first-child,.modal .auth-field-group>.form-field:first-child {border-top-left-radius:15px;border-top-right-radius:15px;}
+.form--modal .form-input-group>.form-field:last-child,.modal .auth-field-group>.form-field:last-child {border-bottom-left-radius:15px;border-bottom-right-radius:15px;}
+.form-input-group>.form-field:focus-within::after,.auth-field-group>.form-field:focus-within::after {content:"";position:absolute;inset:0;border:2px solid var(--input-focus);border-radius:inherit;pointer-events:none;}
+.form-input-group .field:focus,.auth-field-group .field:focus {outline:none;box-shadow:none;border-color:transparent;}
+.form--modal textarea.field:focus {outline:none;box-shadow:inset 0 0 0 2px var(--input-focus);}
+.modal [data-settings-slot] .field:focus {outline:none;box-shadow:inset 0 0 0 2px var(--input-focus);}
+.modal [data-settings-slot] .form-input-group .field:focus,.modal [data-settings-slot] .auth-field-group .field:focus {box-shadow:none;}
 /* ===== 05 LAYOUT — placement only ===== */
       .calendar-week,
       .calendar-grid {
@@ -3334,6 +3358,9 @@ h1.title { margin: 0; }
 .memo-toolbar-controls {display:flex;justify-content:flex-end;}
 .plan-label {font-size:14px;line-height:1.6;}
 
+
+[data-page-root="memos"] .collection-toolbar {gap:0;margin-bottom:8px;}
+[data-page-root="memos"] .memo-toolbar-controls {margin-top:2px;}
       .event-leading {
         width: 100%;
         min-width: 0;
@@ -3771,6 +3798,10 @@ h1.title { margin: 0; }
 .category-progress-name {flex:1;min-width:0;overflow-wrap:anywhere;}
 .category-progress-count {margin-left:auto;flex-shrink:0;text-align:right;font-size:13px;}
 .category-progress-row .item-order-controls {flex-shrink:0;}
+
+
+.category-progress-row {padding-inline:17px;}
+.category-progress-row .item-order-controls {margin-left:auto;}
 /* ===== 07 RESPONSIVE POLICY — cross-cutting device/accessibility rules only ===== */
       /* Component/layout-specific responsive rules live with their owning component or feature. */
 
@@ -3879,8 +3910,8 @@ h1.title { margin: 0; }
  </div>
  <section><div class="home-section-heading"><h2>분야별 준비</h2><button type="button" data-action="toggle-category-order" aria-pressed="false">순서 변경</button></div><div class="category-cards" data-dom="categoryProgressList"></div></section>
 <div class="home-preferences-storage" hidden>
- <div data-home-preferences="tasks"><div class="form form--settings-stack"><div class="form-field"><label for="homeTaskLimit">할 일 표시 개수</label><select id="homeTaskLimit" data-dom="homeTaskLimit" class="field" data-action="home-limit" data-limit-type="tasks"><option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option></select></div></div></div>
- <div data-home-preferences="events"><div class="form form--settings-stack"><div class="form-field"><label for="homeEventLimit">일정 표시 개수</label><select id="homeEventLimit" data-dom="homeEventLimit" class="field" data-action="home-limit" data-limit-type="events"><option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option></select></div></div></div>
+ <div data-home-preferences="tasks"><div class="form form--modal"><div class="form-input-group"><div class="form-field" data-field-kind="select"><label for="homeTaskLimit">할 일 표시 개수</label><select id="homeTaskLimit" data-dom="homeTaskLimit" class="field" data-action="home-limit" data-limit-type="tasks"><option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option></select></div></div></div></div>
+ <div data-home-preferences="events"><div class="form form--modal"><div class="form-input-group"><div class="form-field" data-field-kind="select"><label for="homeEventLimit">일정 표시 개수</label><select id="homeEventLimit" data-dom="homeEventLimit" class="field" data-action="home-limit" data-limit-type="events"><option value="3">3개</option><option value="5">5개</option><option value="8">8개</option><option value="10">10개</option><option value="15">15개</option></select></div></div></div></div>
 </div></section>
         <section class="page" data-page-root="tasks">
           <div data-ui-static="PageHeading"></div>
@@ -4431,7 +4462,7 @@ h1.title { margin: 0; }
         // CSS tokens own geometry. THEME_FIELDS owns saved colors, editor labels and CSS bindings.
         // Seed values apply only to missing/first-run collections; migrations keep existing user data.
         const APP_CONFIG = Object.freeze({
-          version: "575",
+          version: "576",
           stateSchemaVersion: 5,
           storageKey: "wedding_planner_v2",
           corruptStoragePrefix: "wedding_planner_v2_corrupt_",
@@ -5404,9 +5435,9 @@ function captureOrderMotion(type) {
           const footer = actions.replace(save, "").replace(/<button[^>]*data-action="close-modal"[\s\S]*?<\/button>/g, "");
           const hasFooter = /<button/.test(footer);
           return `<div class="modal-frame">
-            <div class="modal-header">${Button(save ? "취소" : "닫기", {action:"close-modal", variant:"tertiary", role:"sheet-action"})}
+            <div class="modal-header">${save ? Button("취소", {action:"close-modal", variant:"tertiary", role:"sheet-action"}) : '<span aria-hidden="true"></span>'}
               <div class="modal-copy"><h2 id="${attr(DOM_IDS.modalTitle)}" tabindex="-1" class="modal-title">${esc(title)}</h2>${headerAction}</div>
-              <div class="modal-save">${save.replace(">비밀번호 변경<", ' aria-label="비밀번호 변경">변경<')}</div>
+              <div class="modal-save">${save ? save.replace(">비밀번호 변경<", ' aria-label="비밀번호 변경">변경<') : Button("닫기", {action:"close-modal",variant:"tertiary",role:"sheet-action"})}</div>
             </div>
             <div class="modal-content">${description ? `<div class="modal-description">${esc(description)}</div>` : ""}${content}</div>
             ${hasFooter ? `<div class="modal-footer">${footer}</div>` : ""}
@@ -6670,15 +6701,20 @@ function createModalController({
   let historyBound = false;
   let consumingModalHistory = false;
   let exitAllowed = false;
+  let restoringHistory = null;
+  let exitPromptPending = false;
   function pushAppGuard() {
     const state = { ...(getHistory().state || {}), [APP_HISTORY_KEY]: "active" };
     delete state[MODAL_HISTORY_KEY];
     getHistory().pushState(state, "", getLocation().href);
   }
   function askToExit() {
+    if (exitPromptPending) return;
+    exitPromptPending = true;
     void appConfirm("다음에 돌아와서 결혼 준비를 이어갈 수 있어요.", {
       title: "종료하시겠습니까?", confirmText: "종료", cancelText: "계속 사용",
     }).then(accepted => {
+      exitPromptPending = false;
       if (!accepted) return;
       exitAllowed = true;
       requestExit(() => { exitAllowed = false; if (getHistory().state?.[APP_HISTORY_KEY] !== "active") pushAppGuard(); });
@@ -6686,6 +6722,9 @@ function createModalController({
   }
   function pushModalHistoryEntry() {
     if (modalHistoryToken || consumingModalHistory) return;
+    // An automatically opened sheet must wait for the same activation as the
+    // app guard, so closing it cannot consume the guard itself.
+    if (historyBound && getHistory().state?.[APP_HISTORY_KEY] !== "active") return;
     const token = `${Date.now()}-${Math.random()}`;
     try {
       getHistory().pushState({ ...(getHistory().state || {}), [MODAL_HISTORY_KEY]: token }, "", getLocation().href);
@@ -6696,6 +6735,12 @@ function createModalController({
   }
   function handleModalPopstate() {
     if (exitAllowed) return;
+    if (restoringHistory) {
+      const complete = restoringHistory;
+      restoringHistory = null;
+      complete();
+      return;
+    }
     if (consumingModalHistory) {
       consumingModalHistory = false;
       // A new editor may have opened before the preceding history.back completed.
@@ -6705,9 +6750,11 @@ function createModalController({
     if (modalHistoryToken && getHistory().state?.[MODAL_HISTORY_KEY] !== modalHistoryToken) {
       if (!$(DOM_IDS.modal)?.classList.contains("open")) { modalHistoryToken = null; return; }
       if (hasPendingConfirm() || modalActionBusy || modalHasUnsavedChanges()) {
-        getHistory().pushState({ ...(getHistory().state || {}), [MODAL_HISTORY_KEY]: modalHistoryToken }, "", getLocation().href);
-        if (hasPendingConfirm()) settleConfirm(false);
-        else requestCloseModal();
+        restoringHistory = () => {
+          if (hasPendingConfirm()) settleConfirm(false);
+          else requestCloseModal();
+        };
+        getHistory().forward();
       } else {
         modalHistoryToken = null;
         closeModal();
@@ -6715,10 +6762,14 @@ function createModalController({
       return;
     }
     if (!historyBound || getHistory().state?.[APP_HISTORY_KEY] === "active") return;
-    pushAppGuard();
-    if (hasPendingConfirm()) settleConfirm(false);
-    else if ($(DOM_IDS.modal)?.classList.contains("open")) requestCloseModal();
-    else if (!closeFloatingMenu()) askToExit();
+    // Reuse the activated entry. Pushing from popstate creates entries that
+    // mobile browser Back gestures may skip and causes repeated-back races.
+    restoringHistory = () => {
+      if (hasPendingConfirm()) settleConfirm(false);
+      else if ($(DOM_IDS.modal)?.classList.contains("open")) requestCloseModal();
+      else if (!closeFloatingMenu()) askToExit();
+    };
+    getHistory().forward();
   }
   function bindModalHistory() {
     if (historyBound) return;
@@ -6731,9 +6782,17 @@ function createModalController({
     else {
       state[APP_HISTORY_KEY] = "base";
       getHistory().replaceState(state, "", getLocation().href);
-      pushAppGuard();
     }
+    // Android Chrome and iOS WebKit can skip history entries created without
+    // interaction. Arm before handling the first real app action, not on load.
+    const armHistory = event => {
+      if (!event.isTrusted || exitAllowed || consumingModalHistory || restoringHistory) return;
+      if (getHistory().state?.[APP_HISTORY_KEY] !== "active") pushAppGuard();
+      if ($(DOM_IDS.modal)?.classList.contains("open")) pushModalHistoryEntry();
+    };
+    for (const type of ["pointerup", "click", "keydown"]) getDocument().addEventListener(type, armHistory, true);
     getWindow().addEventListener("popstate", handleModalPopstate);
+    bindSheetDrag();
     if (staleModal) {
       consumingModalHistory = true;
       getHistory().back();
@@ -6741,7 +6800,45 @@ function createModalController({
     getWindow().addEventListener("pageshow", event => {
       if (!event.persisted) return;
       exitAllowed = false;
-      if (getHistory().state?.[APP_HISTORY_KEY] !== "active") pushAppGuard();
+      restoringHistory = null;
+      // A trusted interaction will rearm a base entry after BFCache restore.
+    });
+  }
+  function bindSheetDrag() {
+    const sheet = $(DOM_IDS.modalBody);
+    if (!sheet?.addEventListener) return;
+    let drag = null;
+    const reset = () => {
+      sheet.classList.remove("is-dragging");
+      sheet.style.removeProperty("transform");
+      drag = null;
+    };
+    sheet.addEventListener("pointerdown", event => {
+      const handle = event.target.closest?.(".sheet-drag-handle");
+      if (!handle || event.button !== 0 || event.isPrimary === false || modalActionBusy || hasPendingConfirm()) return;
+      drag = {id:event.pointerId, start:event.clientY, distance:0, generation:modalGeneration};
+      sheet.getAnimations?.().forEach(animation => animation.cancel());
+      sheet.classList.add("is-dragging");
+      handle.setPointerCapture(event.pointerId);
+    });
+    sheet.addEventListener("pointermove", event => {
+      if (!drag || event.pointerId !== drag.id) return;
+      drag.distance = Math.max(0, event.clientY - drag.start);
+      sheet.style.transform = `translateY(${drag.distance}px)`;
+    });
+    sheet.addEventListener("pointerup", event => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const distance = drag.distance;
+      const dismiss = drag.generation === modalGeneration && distance >= Math.min(140, Math.max(80, sheet.clientHeight * .22));
+      reset();
+      // Returning the finger upwards reduces distance again and cancels dismissal.
+      if (dismiss) requestCloseModal();
+      if ($(DOM_IDS.modal)?.classList.contains("open") && !getWindow().matchMedia("(prefers-reduced-motion: reduce)").matches)
+        sheet.animate?.([{transform:`translateY(${distance}px)`},{transform:"translateY(0)"}], {duration:180,easing:"ease-out"});
+    });
+    for (const type of ["pointercancel", "lostpointercapture"]) sheet.addEventListener(type, reset);
+    sheet.addEventListener("click", event => {
+      if (event.detail === 0 && event.target.closest?.(".sheet-drag-handle")) requestCloseModal();
     });
   }
   function modalFormSnapshot() {
@@ -6797,7 +6894,10 @@ function createModalController({
     if (!alreadyOpen) modalPreviousFocus = getDocument().querySelector(".more-menu.is-open > .more-menu-trigger")
       || (isHTMLElement(priorFocus) ? priorFocus : null);
     closeFloatingMenu();
-    setOwnedHTML("modal", DOM_IDS.modalBody, body);
+    const sheet = $(DOM_IDS.modalBody);
+    sheet?.style?.removeProperty("transform");
+    sheet?.classList.toggle("is-dragging", false);
+    setOwnedHTML("modal", DOM_IDS.modalBody, '<button type="button" class="sheet-drag-handle" aria-label="창 닫기. 아래로 끌어 닫거나 위로 되돌려 취소"></button>' + body);
     attachContent(type, data);
     if (COLLECTION_SCHEMAS[type] && !isNewId(data)) {
       const id = typeof data === "object" ? data.id : data;
@@ -8151,7 +8251,7 @@ function sortMemos(items, sort) {
           const stats = view.categoryStats.get(category) || { total: 0, done: 0, progress: 0 };
           const { total, done, progress } = stats;
           const actions = categoryOrdering ? ItemOrderControls("category", category, index, view.cats.length, category) : "";
-          return `<div class="category-progress-row" data-order-key="${attr(category)}"><span class="category-progress-name">${esc(category)}</span>${actions}<span class="category-progress-count">${formatRatio(done, total)} 완료</span></div>`;
+          return `<div class="category-progress-row" data-order-key="${attr(category)}"><span class="category-progress-name">${esc(category)}</span>${categoryOrdering ? actions : `<span class="category-progress-count">${formatRatio(done, total)} 완료</span>`}</div>`;
         }
         function renderHomeCategories(view) {
           const html = view.cats.map((category, index) => CategoryCard(category, index, view)).join("");
@@ -8191,7 +8291,7 @@ function sortMemos(items, sort) {
         function renderSettingsModal() {
           return FormModal("결혼식 날짜", [
             { key: "weddingDate", id: "weddingDate", label: "결혼식 날짜", type: "date" },
-          ], state, { saveAction: "save-wedding-date", description:"이 날짜를 기준으로 결혼식까지 남은 날을 보여드려요." });
+          ], state, { saveAction: "save-wedding-date", footerActions:true, description:"이 날짜를 기준으로 결혼식까지 남은 날을 보여드려요." });
         }
         function saveWeddingDate() {
           const nextDate = $(DOM_IDS.weddingDate).value;
@@ -13606,13 +13706,17 @@ const modalController = createModalController({
   requestExit: rearm => {
     void SharedDomains.Transport.flush("pagehide");
     const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-    if (standalone) window.close();
+    if (standalone) {
+      rearm();
+      notifyInfo("앱을 닫으려면 기기의 홈 화면 또는 앱 전환 기능을 사용해 주세요.");
+      return;
+    }
     // Cross the app's sentinel and return to the page that opened the planner.
     history.go(-2);
     setTimeout(() => {
       if (document.visibilityState !== "visible") return;
       rearm();
-      if (standalone || history.length <= 2) notifyInfo("이 기기에서는 앱 화면을 직접 닫아 주세요.");
+      if (history.length <= 2) notifyInfo("이 기기에서는 앱 화면을 직접 닫아 주세요.");
     }, 600);
   },
   isHTMLElement: value => value instanceof HTMLElement,
